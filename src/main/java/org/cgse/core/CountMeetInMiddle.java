@@ -449,7 +449,10 @@ final class CountMeetInMiddle implements AutoCloseable {
         budget.note("count_match_admission", "left=" + leftStates + "; right=" + rightStates +
                 "; dimensions=" + dims + "; coefficient_bits=" + bits + "; estimated_bytes=" + estimatedBytes +
                 "; estimated_work=" + estimatedWork + "; allowance=" + allowance + "; scout=" + costProbe);
-        long bytes = 48L * dims * width + 256L * dims * domains.size();
+        // Prefix snapshots retain each depth's partial sums. Restoring the
+        // parent then needs no inverse BigInteger arithmetic on every row.
+        long prefixBytes = (domains.size() + 2L) * (32L + dims * (88L + (bits + 31L) / 8));
+        long bytes = 48L * dims * width + 256L * dims * domains.size() + prefixBytes;
         if (!budget.tryReserve(bytes)) return finish(false, "memory_limit");
         memory += bytes;
         coefficients = new BigInteger[domains.size()][][];
@@ -522,7 +525,8 @@ final class CountMeetInMiddle implements AutoCloseable {
         final int[] next, chosen, strides;
         final BigInteger[][] low, high;
         final BigInteger[][] reachable;
-        final BigInteger[] values;
+        final BigInteger[][] prefixes;
+        BigInteger[] values;
         int depth, code;
         boolean ready, done;
 
@@ -532,7 +536,8 @@ final class CountMeetInMiddle implements AutoCloseable {
             next = new int[size + 1];
             chosen = new int[size];
             strides = new int[size];
-            values = new BigInteger[goalHigh.length];
+            prefixes = new BigInteger[size + 1][goalHigh.length];
+            values = prefixes[0];
             Arrays.fill(values, BigInteger.ZERO);
             low = new BigInteger[size + 1][values.length];
             high = new BigInteger[size + 1][values.length];
@@ -611,31 +616,30 @@ final class CountMeetInMiddle implements AutoCloseable {
                 }
                 int option = next[depth]++;
                 chosen[depth] = option;
-                code += strides[depth] * option;
                 boolean viable = true;
-                int changed = 0;
+                BigInteger[] child = prefixes[depth + 1];
                 for (int d = 0; d < values.length; d++) {
                     charge();
-                    values[d] = values[d].add(coefficients[start + depth][option][d]);
-                    changed++;
+                    child[d] = values[d].add(coefficients[start + depth][option][d]);
                     BigInteger suffix = reachable[depth + 1][d];
                     if (suffix != null) {
                         // For an equality, the exact suffix set already checks
                         // both range endpoints as well as the holes. Avoid a
                         // separate interval check and its BigInteger additions.
-                        BigInteger needed = goalHigh[d].subtract(values[d]).subtract(low[depth + 1][d]);
+                        BigInteger needed = goalHigh[d].subtract(child[d]).subtract(low[depth + 1][d]);
                         if (needed.signum() < 0 || needed.bitLength() > 31 || !suffix.testBit(needed.intValue())) {
                             viable = false;
                             break;
                         }
-                    } else if (goalHigh[d] != null && values[d].add(low[depth + 1][d]).compareTo(goalHigh[d]) > 0 ||
-                            goalLow[d] != null && values[d].add(high[depth + 1][d]).compareTo(goalLow[d]) < 0) {
+                    } else if (goalHigh[d] != null && child[d].add(low[depth + 1][d]).compareTo(goalHigh[d]) > 0 ||
+                            goalLow[d] != null && child[d].add(high[depth + 1][d]).compareTo(goalLow[d]) < 0) {
                         viable = false;
                         break;
                     }
                 }
-                if (!viable) undo(changed);
-                else {
+                if (viable) {
+                    code += strides[depth] * option;
+                    values = child;
                     depth++;
                     next[depth] = 0;
                 }
@@ -653,16 +657,9 @@ final class CountMeetInMiddle implements AutoCloseable {
         }
 
         void undo() {
-            undo(values.length);
-        }
-
-        void undo(int changed) {
-            int option = chosen[depth];
-            code -= strides[depth] * option;
-            for (int d = 0; d < changed; d++) {
-                charge();
-                values[d] = values[d].subtract(coefficients[start + depth][option][d]);
-            }
+            charge();
+            code -= strides[depth] * chosen[depth];
+            values = prefixes[depth];
         }
     }
 

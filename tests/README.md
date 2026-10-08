@@ -18,7 +18,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
 | Stable oracles | `--suite oracles` | 21 independent exhaustive/integer/BFS/seed/proof oracle programs |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
-| Fixed counterexamples | `--suite fixtures --keep-going` | All 234 curated fixtures, three deterministic order permutations by default |
+| Fixed counterexamples | `--suite fixtures --keep-going` | All 239 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
 | Count models | `--suite models --keep-going` | 274 exact integer models, independent bounds/constraint witness verification |
 | Planner/runtime benchmark | `--suite benchmarks --timeout 600` | Original `GraphBenchmark`: chain, shared diamond, coproducts, growth/cycles and runtime batch dispatch |
@@ -122,14 +122,36 @@ contradiction, and checks changed-stock/sibling reuse, beyond-long arithmetic,
 scaled-search cancellation and reservation release. Restricted scaled failures
 must not become infeasibility proofs for the original integer domain.
 
-The 2026-10-08 campaign used seeds 100 through 107, all five generator families,
+At `3b63a578`, the campaign used seeds 100 through 107, all five generator families,
 three order permutations, and a 256 MiB request reservation limit. It returned
 475 independently verified plans and five unresolved search limits at 20M work;
-the same 480 requests all returned verified plans at 40M. The 20M command can
-therefore exit with an inconclusive status. All five are known SAT cases, not
+the same 480 requests all returned verified plans at 40M. On that revision the 20M
+command exited with an inconclusive status. All five are known SAT cases, not
 infeasibility results. This quantity campaign is separate from the 234 fixed
 fixtures, which all passed at 20M across three permutations. Neither result
 establishes performance or completeness on arbitrary recipe catalogs.
+
+The retained-prefix follow-up solves all 480 original requests at 20M by restoring
+parent partial sums instead of subtracting every coefficient on backtracking.
+The additional depth snapshots are reserved against the existing memory limit.
+The expanded campaign uses seeds 100 through 131 and amounts `1,2,3,16,1000`:
+800 inputs across three order permutations, all 2,400 plans independently verified
+at 20M with the same 256 MiB limit. `CountMatchingPrefixTest` adds 96 exhaustive
+models, 1100-bit coefficients, partial-prefix rejection, cancellation and local
+work/memory cutoffs; a cutoff must remain undecided.
+
+The five formerly unresolved input orders are preserved in
+`regression/fixtures/retained-prefix`. Their metadata names the original generator
+seed, campaign permutation and baseline. Ordinary fixture runs also shuffle these
+cases. To reproduce their recorded order exactly and compare the prior revision:
+
+```text
+python tests/benchmarks/compare_planning.py --java-home <jdk17> --baseline 3b63a578 --fixture-dir tests/regression/fixtures/retained-prefix --preserve-order --permutations 1 --work 20000000 --milliseconds 0 --memory-mib 256
+```
+
+`--preserve-order` retains recipe order and input/output insertion order; its value
+is recorded in the comparison summary. Repeated permutations with this flag are
+repeated trials of the recorded order, not distinct shuffled inputs.
 
 At migration validation, all 2,944 selected finite/cover oracle inputs passed.
 The count corpus produced 187 independently verified conclusions and 87 unresolved

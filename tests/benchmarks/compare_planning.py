@@ -37,6 +37,7 @@ def main():
     parser.add_argument('--case', default='.*')
     parser.add_argument('--fixture-dir', type=Path, default=ROOT / 'tests/regression/fixtures')
     parser.add_argument('--permutations', type=int, default=3)
+    parser.add_argument('--preserve-order', action='store_true', help='Replay recorded recipe/slot order without shuffling')
     parser.add_argument('--milliseconds', type=int, default=3000)
     parser.add_argument('--work', type=int, default=20_000_000)
     parser.add_argument('--memory-mib', type=int, default=64)
@@ -95,14 +96,15 @@ def main():
     rows = []
     for permutation in range(args.permutations):
         permuted = json.loads(json.dumps(cases))
-        rng = random.Random(20260926 + permutation)
-        for case in permuted:
-            rng.shuffle(case['recipes'])
-            for recipe in case['recipes']:
-                for field in ('inputs', 'outputs'):
-                    entries = list(recipe[field].items())
-                    rng.shuffle(entries)
-                    recipe[field] = dict(entries)
+        if not args.preserve_order:
+            rng = random.Random(20260926 + permutation)
+            for case in permuted:
+                rng.shuffle(case['recipes'])
+                for recipe in case['recipes']:
+                    for field in ('inputs', 'outputs'):
+                        entries = list(recipe[field].items())
+                        rng.shuffle(entries)
+                        recipe[field] = dict(entries)
         fixture = output / f'fixtures-{permutation}.bin'
         fixtures.write_cases(fixture, permuted)
         for mode in args.modes:
@@ -148,6 +150,7 @@ def main():
                    candidate_source_sha256=candidate_fingerprint, harness_source_sha256=harness_fingerprint,
                    fixture_source_sha256=fixture_fingerprint,
                    milliseconds=args.milliseconds, work=args.work, memory_mib=args.memory_mib, modes=args.modes,
+                   recipe_order='input' if args.preserve_order else 'shuffled',
                    cache_estimates='Request reservations and logical compiler-cache estimates are separate; neither measures JVM heap/RSS. Older cache telemetry is -1.', groups=groups)
     (output / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
     print(output / 'summary.json')
