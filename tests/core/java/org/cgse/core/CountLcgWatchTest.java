@@ -50,9 +50,41 @@ public final class CountLcgWatchTest {
             Collections.shuffle(rows, random);
             run(new Model(rows, low, high), width, trial % 20 == 0);
         }
+        integerFrontiers();
         pigeonAndLimits();
         System.out.println("LCG watches: " + checked + " exhaustive models, " + resumptions +
                 " resumptions, " + imported + " imported nogoods, proofs and budget/cancellation cleanup passed");
+    }
+
+    /** Wider domains make relaxed reasons strengthen an already indexed bound. */
+    private static void integerFrontiers() {
+        Random random = new Random(914_377);
+        for (int trial = 0; trial < 96; trial++) {
+            int n = new int[] { 8, 5, 4 }[trial % 3];
+            int width = new int[] { 3, 4, 16 }[trial % 3];
+            BigInteger offset = trial % 5 == 0 ? BigInteger.ONE.shiftLeft(80).negate() : BigInteger.ZERO;
+            BigInteger[] low = new BigInteger[n], high = new BigInteger[n], anchor = new BigInteger[n];
+            Arrays.fill(low, offset);
+            Arrays.fill(high, offset.add(BigInteger.valueOf(width - 1)));
+            for (int i = 0; i < n; i++) anchor[i] = offset.add(BigInteger.valueOf(random.nextInt(width)));
+            List<ExactLinearProgram.Constraint> rows = new ArrayList<>();
+            for (int d = 0; d < 3; d++) {
+                Map<Integer, BigInteger> terms = new LinkedHashMap<>(), opposite = new LinkedHashMap<>();
+                BigInteger target = BigInteger.ZERO;
+                for (int i = 0; i < n; i++) {
+                    BigInteger a = BigInteger.valueOf(random.nextInt(31) - 15);
+                    if (a.signum() == 0) continue;
+                    terms.put(i, a);
+                    opposite.put(i, a.negate());
+                    target = target.add(a.multiply(anchor[i]));
+                }
+                if (d == 0 && trial % 2 == 0) target = target.add(BigInteger.ONE);
+                rows.add(new ExactLinearProgram.Constraint(terms, target.add(BigInteger.valueOf(trial % 2))));
+                rows.add(new ExactLinearProgram.Constraint(opposite, target.negate()));
+            }
+            Collections.shuffle(rows, random);
+            run(new Model(rows, low, high), width, true);
+        }
     }
 
     private static void run(Model model, int width, boolean proof) {

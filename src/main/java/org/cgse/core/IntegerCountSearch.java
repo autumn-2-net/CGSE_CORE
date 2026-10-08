@@ -45,6 +45,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private boolean complete, infeasible, unresolved, rootProved, repairScheduled, paused;
     private boolean scouting;
     private boolean repairScoutExtended;
+    private boolean finiteTailAttempted;
     private boolean portfolioScheduled;
     private CountShellCompilation<K> shell;
     private CountShellSearch<K> shellSearch;
@@ -167,6 +168,16 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         }
         if (!scouting && work >= allowance && best == null && pending.size() == 1 && pending.peekFirst().matching != null)
             allowance = preprocessingAllowance;
+        if (!scouting && !finiteTailAttempted && work >= allowance && best == null &&
+                pending.size() == 1 && deferred.isEmpty() && pending.peekFirst().finiteProbing()) {
+            // Once a table is built, allow one small probing tail before paying
+            // another outer strategy's setup. Never grant this to construction,
+            // renew it within the same turn, or increase the shared order cap.
+            finiteTailAttempted = true;
+            long extra = Math.min(262144, Math.min(allowance / 16, budget.remainingWork() / 16));
+            allowance += Math.min(extra, Long.MAX_VALUE - allowance);
+            budget.note("integer_counts_tail", "completed_signature_table; allowance=" + allowance);
+        }
         if (work >= allowance || work >= improvementUntil) {
             if (best == null && (!pending.isEmpty() || !deferred.isEmpty())) {
                 paused = true;
@@ -283,6 +294,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         if (!paused || complete) throw new IllegalStateException("Count search is not suspended");
         allowance = work + Math.max(1, Math.min(2_000_000, budget.remainingWork() / 2));
         scouting = false;
+        finiteTailAttempted = false;
         paused = false;
         if (proofs != null) choiceConflicts.add(proofs.forModel(model));
         budget.note("integer_counts_resume", "work=" + work + "; allowance=" + allowance + "; branches=" + branches);

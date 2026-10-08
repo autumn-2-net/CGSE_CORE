@@ -1640,6 +1640,11 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         return resumeScaling();
     }
 
+    boolean finiteProbing() {
+        return matching != null && matching.probing() || scaling != null && scaling.finiteProbing() ||
+                parkedScaling != null && parkedScaling.finiteProbing();
+    }
+
     private boolean resumeScaling() {
         clearCandidate();
         jumpCandidate = neighborhoodCandidate = domainCandidate = separatorCandidate = structuralCandidate = false;

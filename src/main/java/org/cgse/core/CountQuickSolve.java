@@ -372,6 +372,10 @@ final class CountQuickSolve implements AutoCloseable {
         return lpScout == null ? estimate : estimate + estimate / 2;
     }
 
+    boolean finiteProbing() {
+        return matching != null && matching.probing();
+    }
+
     boolean infeasible() {
         return infeasible;
     }

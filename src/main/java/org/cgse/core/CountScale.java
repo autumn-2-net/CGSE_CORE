@@ -229,6 +229,10 @@ final class CountScale implements AutoCloseable {
         return paused;
     }
 
+    boolean finiteProbing() {
+        return search != null && search.finiteProbing();
+    }
+
     void resume(long quantum) {
         if (!paused || quantum <= 0) throw new IllegalStateException("Scaled search is not paused");
         budget.check();

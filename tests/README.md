@@ -140,6 +140,15 @@ at 20M with the same 256 MiB limit. `CountMatchingPrefixTest` adds 96 exhaustive
 models, 1100-bit coefficients, partial-prefix rejection, cancellation and local
 work/memory cutoffs; a cutoff must remain undecided.
 
+`CountMatchingCoordinatesTest` independently enumerates 280 additional finite
+models (181,982 assignments) plus signed boundary cases. Matching uses compact
+`long` signatures only after bounding every prefix, suffix and complement
+intermediate; wide coordinates and broad intervals retain BigInteger arithmetic.
+All witnesses are checked against the original rows. The oracle covers negative
+and 100-bit domain offsets, mixed signs, exact and ranged queries, values beyond
+signed long, and 1100-bit coefficients. This optimization reduces table storage;
+it does not increase the search or memory cap.
+
 The five formerly unresolved input orders are preserved in
 `regression/fixtures/retained-prefix`. Their metadata names the original generator
 seed, campaign permutation and baseline. Ordinary fixture runs also shuffle these
@@ -159,7 +168,7 @@ The arithmetic/propagation follow-up includes three independently checked suites
   rational arithmetic, including signs, cancellation, division by zero and the
   2,048-bit precision boundary. Avoiding redundant reduction must preserve exact
   canonical values, floor/ceiling, comparison, equality and hashing.
-- `CountLcgWatchTest`: 600 exhaustive signed-integer/Boolean models, 80-bit domain
+- `CountLcgWatchTest`: 696 exhaustive signed-integer/Boolean models, 80-bit domain
   offsets, imported forbidden assignments, short retained slices and independent
   proof replay. An eight-pigeon/seven-hole instance exercises clause-pool pruning,
   restarts and backjumps; cancellation and memory-limit cases exercise cleanup.
@@ -167,10 +176,25 @@ The arithmetic/propagation follow-up includes three independently checked suites
   uses a separate 200M verification limit.
   The two watched terms subscribe to both tightening and rollback of a variable's
   bounds; a rollback can change a false integer-bound literal into an unknown one.
+  Conflict analysis retains the earliest implication source for each strongest
+  frontier bound within that analysis only. A stronger replacement resolves its
+  own source; the cache is never read after backtracking or a restart. The same
+  exhaustive/proof tests cover this reuse, including relaxed antecedents and
+  cancellation while temporary frontier memory is reserved.
+  A heap indexed by trail position selects the next implication without scanning
+  the whole frontier after every resolution; learned-clause order is preserved.
+  The additional 96 models include domains with 16 values, negative 80-bit
+  offsets, and independent certificate replay for every model.
 - `CountDispatchCancellationTest`: deterministic cancellation and clock deadlines
   at four conflict-sharing handoffs. A branch removed from the waiting frontier
   must already belong to the running wave before any interruptible snapshot.
   Every cutoff must release its request reservations.
+
+A completed matching table can earn one short lookup tail at a count-search
+handoff. Construction does not qualify, the tail cannot renew itself within a
+turn, and the original request's work, time and memory limits still apply. The
+recorded-order benchmark above exercises this boundary as well as the ordinary
+shuffled fixture runs; report strict wall deadlines separately from work caps.
 
 The historical LP learning oracle is also runnable explicitly with its test-only
 JSON dependency (used by its shared verification helper):

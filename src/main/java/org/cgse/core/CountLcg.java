@@ -31,6 +31,98 @@ final class CountLcg implements AutoCloseable {
 
     private record LinearReason(ExactLinearProgram.Constraint row, int except, BigInteger slack, int prefix, int rowId) {}
 
+    private static final class ExplainedLiteral {
+
+        final Literal literal;
+        final int source;
+        int heapIndex;
+
+        ExplainedLiteral(Literal literal, int source, int heapIndex) {
+            this.literal = literal;
+            this.source = source;
+            this.heapIndex = heapIndex;
+        }
+    }
+
+    /** Sources are stable during one analysis; no trail change crosses this cache. */
+    private final class ConflictFrontier {
+
+        final Map<Integer, ExplainedLiteral> terms = new LinkedHashMap<>();
+        final List<ExplainedLiteral> latest = new ArrayList<>();
+
+        void addAll(Collection<Literal> literals) {
+            for (Literal literal : literals) {
+                charge();
+                if (rootTrue(literal)) continue;
+                int key = boundKey(literal.variable, literal.minimum);
+                ExplainedLiteral old = terms.get(key);
+                if (old != null && (literal.minimum ? literal.value.compareTo(old.literal.value) <= 0 :
+                        literal.value.compareTo(old.literal.value) >= 0)) continue;
+                var explained = new ExplainedLiteral(literal, source(literal), old == null ? latest.size() : old.heapIndex);
+                terms.put(key, explained);
+                if (old == null) latest.add(explained);
+                else latest.set(old.heapIndex, explained);
+                // A stronger bound can only move its earliest implication later
+                // on the unchanged trail. Preserve insertion order separately
+                // for the learned clause and its subsequent watched literals.
+                siftUp(explained);
+            }
+        }
+
+        private void siftUp(ExplainedLiteral value) {
+            int position = value.heapIndex;
+            while (position > 0) {
+                charge();
+                int parent = (position - 1) >>> 1;
+                ExplainedLiteral before = latest.get(parent);
+                if (before.source >= value.source) break;
+                latest.set(position, before);
+                before.heapIndex = position;
+                position = parent;
+            }
+            latest.set(position, value);
+            value.heapIndex = position;
+        }
+
+        int highestLevel() {
+            charge();
+            return latest.isEmpty() ? 0 : trail.get(latest.get(0).source).level;
+        }
+
+        boolean asserting() {
+            charge();
+            if (latest.size() <= 1) return true;
+            int second = latest.size() > 2 && latest.get(2).source > latest.get(1).source ? 2 : 1;
+            return trail.get(latest.get(second).source).level < trail.get(latest.get(0).source).level;
+        }
+
+        int removeLatest() {
+            charge();
+            ExplainedLiteral removed = latest.get(0);
+            terms.remove(boundKey(removed.literal.variable, removed.literal.minimum));
+            ExplainedLiteral value = latest.remove(latest.size() - 1);
+            if (latest.isEmpty()) return removed.source;
+            int position = 0;
+            while (2 * position + 1 < latest.size()) {
+                charge();
+                int child = 2 * position + 1;
+                if (child + 1 < latest.size() && latest.get(child + 1).source > latest.get(child).source) child++;
+                ExplainedLiteral after = latest.get(child);
+                if (value.source >= after.source) break;
+                latest.set(position, after);
+                after.heapIndex = position;
+                position = child;
+            }
+            latest.set(position, value);
+            value.heapIndex = position;
+            return removed.source;
+        }
+
+        List<Literal> literals() {
+            return terms.values().stream().map(value -> value.literal).toList();
+        }
+    }
+
     private static final class Change {
 
         final Literal literal;
@@ -989,32 +1081,33 @@ final class CountLcg implements AutoCloseable {
     }
 
     private void analyze() {
+        // At most one strongest literal per variable and bound direction. The
+        // cache is request-private and never consulted after a backjump/restart.
+        long bytes = 256L + 384L * low.length;
+        reserve(bytes);
+        try {
+            analyze(new ConflictFrontier());
+        } finally {
+            memory -= bytes;
+            budget.release(bytes);
+        }
+    }
+
+    private void analyze(ConflictFrontier frontier) {
         conflicts++;
-        List<Literal> frontier = normalize(conflict);
+        frontier.addAll(conflict);
         int highest;
         while (true) {
-            highest = 0;
-            int number = 0, last = -1;
-            for (Literal literal : frontier) {
-                int index = source(literal);
-                int at = index < 0 ? 0 : trail.get(index).level;
-                if (at > highest) {
-                    highest = at;
-                    number = 1;
-                    last = index;
-                } else if (at == highest && at > 0) {
-                    number++;
-                    last = Math.max(last, index);
-                }
-            }
-            if (highest == 0 || number <= 1) break;
+            highest = frontier.highestLevel();
+            if (highest == 0 || frontier.asserting()) break;
+            // Trail levels are monotone and each source changes one bound.
+            // With one strongest literal per direction, only this one frontier
+            // entry can originate at the latest implication being resolved.
+            int last = frontier.removeLatest();
             Change change = trail.get(last);
             List<Literal> reason = reason(change);
             if (reason == null) throw new IllegalStateException("Integer conflict has multiple unresolved decisions");
-            int position = last;
-            frontier.removeIf(literal -> source(literal) == position);
             frontier.addAll(reason);
-            frontier = normalize(frontier);
         }
         if (highest == 0) {
             remember(List.of());
@@ -1024,15 +1117,18 @@ final class CountLcg implements AutoCloseable {
         }
         int back = 0;
         BitSet levels = new BitSet();
-        for (Literal literal : frontier) {
-            int at = trail.get(source(literal)).level;
+        for (ExplainedLiteral explained : frontier.terms.values()) {
+            charge();
+            Literal literal = explained.literal;
+            int at = trail.get(explained.source).level;
             levels.set(at);
             if (at != highest) back = Math.max(back, at);
             activity[literal.variable] += increment;
         }
-        remember(frontier);
-        reserve(320L + 96L * frontier.size());
-        addClause(frontier, levels.cardinality());
+        List<Literal> literals = frontier.literals();
+        remember(literals);
+        reserve(320L + 96L * literals.size());
+        addClause(literals, levels.cardinality());
         learnedProgress++;
         if (back + 1 < level) jumps++;
         backtrack(back);
@@ -1057,20 +1153,7 @@ final class CountLcg implements AutoCloseable {
         }
     }
 
-    private List<Literal> normalize(Collection<Literal> literals) {
-        Map<Integer, Literal> result = new LinkedHashMap<>();
-        for (Literal literal : literals) {
-            charge();
-            if (rootTrue(literal)) continue;
-            int key = literal.variable * 2 + (literal.minimum ? 1 : 0);
-            Literal old = result.get(key);
-            if (old == null || (literal.minimum ? literal.value.compareTo(old.value) > 0 : literal.value.compareTo(old.value) < 0)) result.put(key, literal);
-        }
-        return new ArrayList<>(result.values());
-    }
-
     private int source(Literal literal) {
-        if (rootTrue(literal)) return -1;
         // Bounds tighten monotonically along each live trail. Find the first
         // implication that entailed even a relaxed literal, not the latest one
         // (which could create a circular explanation).
