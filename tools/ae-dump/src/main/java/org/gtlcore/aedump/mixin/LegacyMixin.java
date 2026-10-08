@@ -1,3 +1,6 @@
+// Copyright (c) 2026 autumn
+// SPDX-License-Identifier: MPL-2.0
+
 package org.gtlcore.aedump.mixin;
 
 import appeng.api.networking.IGrid;

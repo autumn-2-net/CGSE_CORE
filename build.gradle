@@ -15,6 +15,12 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+tasks.withType(Jar).configureEach {
+    from(rootProject.files('LICENSE', 'NOTICE')) { into 'META-INF' }
+    manifest.attributes('Bundle-License': 'https://mozilla.org/MPL/2.0/',
+            'Implementation-URL': 'https://github.com/autumn-2-net/CGSE_CORE')
+}
+
 sourceSets {
     test.java.setSrcDirs(['tests/core/java', 'tests/shared/java'])
     view {
