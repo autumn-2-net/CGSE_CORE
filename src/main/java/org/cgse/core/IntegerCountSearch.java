@@ -197,6 +197,10 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         int batchWidth = width == 1 ? 1 : width * 2;
         int residentLimit = Math.max(4, batchWidth);
         List<IntegerCountBranch<K>> wave = take(batchWidth, residentLimit);
+        // take() transfers ownership out of the frontier. Register it before
+        // any deadline/cancellation check in shared-conflict snapshots, so
+        // close() can release even a wave that never reaches its first worker.
+        dispatched = wave;
         if (wave.isEmpty()) return finish(false);
         peakWidth = Math.max(peakWidth, wave.size());
         long quantum = Math.max(1, Math.min(4096, (Math.min(allowance, improvementUntil) - work) / wave.size()));
@@ -217,7 +221,6 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                     branch.proofTask ? CountPortfolioPolicy.Mode.PROOF : goal, stopped::get);
             return branch;
         });
-        dispatched = wave;
         rounds++;
         if (slice != null && wave.size() > 1) {
             running = slice.forkStealing(PlanningBudget.Phase.SOLVE, partitions);

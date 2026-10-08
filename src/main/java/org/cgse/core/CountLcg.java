@@ -62,12 +62,25 @@ final class CountLcg implements AutoCloseable {
         final List<Literal> terms;
         final int lbd;
         long used;
+        final Watch first = new Watch(this), second = new Watch(this);
+        Nogood pendingPrevious, pendingNext;
+        boolean pending;
 
         Nogood(List<Literal> terms, int lbd, long used) {
             this.terms = terms;
             this.lbd = lbd;
             this.used = used;
         }
+    }
+
+    /** Intrusive subscriptions avoid allocating a new list entry when a watch moves. */
+    private static final class Watch {
+
+        final Nogood clause;
+        int term = -1;
+        Watch previous, next;
+
+        Watch(Nogood clause) { this.clause = clause; }
     }
 
     private static final class RowActivity {
@@ -93,6 +106,8 @@ final class CountLcg implements AutoCloseable {
     private final BitSet queued = new BitSet();
     private final List<Change> trail = new ArrayList<>();
     private final List<Nogood> clauses = new ArrayList<>();
+    private final Watch[] watches;
+    private Nogood pendingClause, lastPendingClause;
     private final List<CountConflict> learned = new ArrayList<>(), proofSteps = new ArrayList<>();
     private final Set<CountConflict> imported = new LinkedHashSet<>();
     private final Set<ExactLinearProgram.Constraint> importedRows = new LinkedHashSet<>();
@@ -101,10 +116,10 @@ final class CountLcg implements AutoCloseable {
     private long allowance;
     private List<Literal> conflict;
     private BigInteger[] counts;
-    private int level, scan, decisions, conflicts, jumps, restarts, nextRestart = 64;
+    private int level, decisions, conflicts, jumps, restarts, nextRestart = 64;
     private long work, workTicks, memory, rootProgress, learnedProgress, relaxedReasons, lazyReasons, explainedReasons;
     private double increment = 1;
-    private boolean complete, infeasible, rescan, paused, differenceChecked;
+    private boolean complete, infeasible, paused, differenceChecked;
     private final boolean retainProof;
     private CountProof.Certificate certificate;
     private CountProof.Certificate differenceProof;
@@ -226,7 +241,7 @@ final class CountLcg implements AutoCloseable {
         allowance = Math.min(maximumWork, budget.remainingWork() / 8);
         long terms = rows.stream().mapToLong(r -> r.terms().size()).sum();
         boolean admitted = allowance >= 1024 && CountModelViews.admissible(lower.length, rows.size(), terms, budget);
-        long bytes = admitted ? 2048 + 544L * lower.length + 112L * terms + 256L * rows.size() : 0;
+        long bytes = admitted ? 2112 + 552L * lower.length + 112L * terms + 256L * rows.size() : 0;
         admitted = admitted && budget.tryReserve(bytes);
         memory = admitted ? bytes : 0;
         try {
@@ -238,6 +253,7 @@ final class CountLcg implements AutoCloseable {
             levelZeroHigh = rootHigh.clone();
             activity = new double[low.length];
             rowActivity = new RowActivity[admitted ? rows.size() : 0];
+            watches = new Watch[low.length];
             if (!admitted) {
                 complete = true;
                 return;
@@ -307,12 +323,10 @@ final class CountLcg implements AutoCloseable {
                 }
                 return false;
             }
-            if (rescan) {
-                scan = 0;
-                rescan = false;
-            }
-            if (scan < clauses.size()) {
-                propagate(clauses.get(scan++));
+            if (pendingClause != null) {
+                Nogood clause = pendingClause;
+                unschedule(clause);
+                propagate(clause);
                 return false;
             }
             observeDecision(false);
@@ -836,24 +850,96 @@ final class CountLcg implements AutoCloseable {
     }
 
     private void propagate(Nogood clause) {
-        Literal remaining = null;
-        for (Literal literal : clause.terms) {
+        // A forbidden conjunction is inactive while two terms are not true.
+        // Test its existing watches first; unrelated bounds never enqueue it.
+        int first = -1, second = -1;
+        if (clause.first.term >= 0) {
             charge();
-            int truth = truth(literal);
-            if (truth == 0) return;
-            if (truth < 0) {
-                if (remaining != null) return;
-                remaining = literal;
+            if (truth(clause.terms.get(clause.first.term)) != 1) first = clause.first.term;
+        }
+        if (clause.second.term >= 0) {
+            charge();
+            if (truth(clause.terms.get(clause.second.term)) != 1) {
+                if (first < 0) first = clause.second.term;
+                else second = clause.second.term;
             }
         }
+        if (second >= 0) return;
+        for (int i = 0; i < clause.terms.size() && second < 0; i++) {
+            if (i == clause.first.term || i == clause.second.term) continue;
+            charge();
+            if (truth(clause.terms.get(i)) != 1) {
+                if (first < 0) first = i;
+                else second = i;
+            }
+        }
+        // With fewer than two non-true terms, retain a true anchor as the
+        // second watch. Undo events also wake watches: general integer bounds
+        // can change a false term into an unknown one on backtrack.
+        watch(clause.first, first >= 0 ? first : clause.terms.isEmpty() ? -1 : 0);
+        watch(clause.second, second >= 0 ? second : clause.terms.size() < 2 ? -1 : first <= 0 ? 1 : 0);
+        if (second >= 0) return;
         clause.used = conflicts;
-        if (remaining == null) {
+        if (first < 0) {
             conflict = clause.terms;
             return;
         }
+        Literal remaining = clause.terms.get(first);
+        if (truth(remaining) == 0) return;
         var why = new ArrayList<>(clause.terms);
-        why.remove(remaining);
+        why.remove(first);
         tighten(remaining.opposite(), why);
+    }
+
+    private void watch(Watch watch, int term) {
+        if (watch.term == term) return;
+        charge();
+        if (watch.term >= 0) {
+            int variable = watch.clause.terms.get(watch.term).variable;
+            if (watch.previous == null) watches[variable] = watch.next;
+            else watch.previous.next = watch.next;
+            if (watch.next != null) watch.next.previous = watch.previous;
+        }
+        watch.term = term;
+        watch.previous = watch.next = null;
+        if (term >= 0) {
+            int variable = watch.clause.terms.get(term).variable;
+            watch.next = watches[variable];
+            if (watch.next != null) watch.next.previous = watch;
+            watches[variable] = watch;
+        }
+    }
+
+    private void changed(int variable) {
+        for (Watch watch = watches[variable]; watch != null; watch = watch.next) {
+            charge();
+            schedule(watch.clause);
+        }
+    }
+
+    private void schedule(Nogood clause) {
+        if (clause.pending) return;
+        clause.pending = true;
+        clause.pendingPrevious = lastPendingClause;
+        if (lastPendingClause == null) pendingClause = clause;
+        else lastPendingClause.pendingNext = clause;
+        lastPendingClause = clause;
+    }
+
+    private void unschedule(Nogood clause) {
+        if (!clause.pending) return;
+        if (clause.pendingPrevious == null) pendingClause = clause.pendingNext;
+        else clause.pendingPrevious.pendingNext = clause.pendingNext;
+        if (clause.pendingNext == null) lastPendingClause = clause.pendingPrevious;
+        else clause.pendingNext.pendingPrevious = clause.pendingPrevious;
+        clause.pending = false;
+        clause.pendingPrevious = clause.pendingNext = null;
+    }
+
+    private void addClause(List<Literal> terms, int lbd) {
+        Nogood clause = new Nogood(List.copyOf(terms), lbd, conflicts);
+        clauses.add(clause);
+        schedule(clause);
     }
 
     private void tighten(Literal literal, List<Literal> reason) {
@@ -899,7 +985,7 @@ final class CountLcg implements AutoCloseable {
         // Only the endpoint contributing to a row's minimum can strengthen
         // propagation. Waking both directions used to rescan unrelated rows.
         updateEndpoint(literal.variable, literal.minimum, old, literal.value);
-        rescan = true;
+        changed(literal.variable);
     }
 
     private void analyze() {
@@ -945,8 +1031,8 @@ final class CountLcg implements AutoCloseable {
             activity[literal.variable] += increment;
         }
         remember(frontier);
-        reserve(128L + 96L * frontier.size());
-        clauses.add(new Nogood(List.copyOf(frontier), levels.cardinality(), conflicts));
+        reserve(320L + 96L * frontier.size());
+        addClause(frontier, levels.cardinality());
         learnedProgress++;
         if (back + 1 < level) jumps++;
         backtrack(back);
@@ -961,7 +1047,10 @@ final class CountLcg implements AutoCloseable {
             var discard = clauses.stream().filter(c -> c.lbd > 2).sorted(Comparator.comparingLong(c -> c.used)).limit(clauses.size() / 4).toList();
             for (Nogood clause : discard) {
                 clauses.remove(clause);
-                long bytes = 128L + 96L * clause.terms.size();
+                watch(clause.first, -1);
+                watch(clause.second, -1);
+                unschedule(clause);
+                long bytes = 320L + 96L * clause.terms.size();
                 memory -= bytes;
                 budget.release(bytes);
             }
@@ -1014,12 +1103,11 @@ final class CountLcg implements AutoCloseable {
             if (change.literal.minimum) low[change.literal.variable] = change.old;
             else high[change.literal.variable] = change.old;
             updateEndpoint(change.literal.variable, change.literal.minimum, change.literal.value, change.old);
+            changed(change.literal.variable);
             memory -= change.bytes;
             budget.release(change.bytes);
         }
         level = to;
-        rescan = true;
-        scan = 0;
     }
 
     private boolean rootTrue(Literal literal) {
@@ -1195,13 +1283,12 @@ final class CountLcg implements AutoCloseable {
             if (!rootTrue(literal)) literals.add(literal);
         }
         if (retainProof && !checkImportedClause(value.assumptions().stream().map(CountProof::row).toList())) return false;
-        long bytes = 256L + 512L * value.assumptions().size();
+        long bytes = 448L + 512L * value.assumptions().size();
         if (bytes > budget.availableBytes() / 8 || !budget.tryReserve(bytes)) return false;
         memory += bytes;
         imported.add(value);
         if (retainProof) proofSteps.add(value);
-        clauses.add(new Nogood(List.copyOf(literals), 0, conflicts));
-        rescan = true;
+        addClause(literals, 0);
         return true;
     }
 

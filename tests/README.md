@@ -153,6 +153,35 @@ python tests/benchmarks/compare_planning.py --java-home <jdk17> --baseline 3b63a
 is recorded in the comparison summary. Repeated permutations with this flag are
 repeated trials of the recorded order, not distinct shuffled inputs.
 
+The arithmetic/propagation follow-up includes three independently checked suites:
+
+- `ExactRationalRegressionTest`: 13,300 fraction pairs compared with full-product
+  rational arithmetic, including signs, cancellation, division by zero and the
+  2,048-bit precision boundary. Avoiding redundant reduction must preserve exact
+  canonical values, floor/ceiling, comparison, equality and hashing.
+- `CountLcgWatchTest`: 600 exhaustive signed-integer/Boolean models, 80-bit domain
+  offsets, imported forbidden assignments, short retained slices and independent
+  proof replay. An eight-pigeon/seven-hole instance exercises clause-pool pruning,
+  restarts and backjumps; cancellation and memory-limit cases exercise cleanup.
+  Its search limit remains 20M; independent replay of the long UNSAT certificate
+  uses a separate 200M verification limit.
+  The two watched terms subscribe to both tightening and rollback of a variable's
+  bounds; a rollback can change a false integer-bound literal into an unknown one.
+- `CountDispatchCancellationTest`: deterministic cancellation and clock deadlines
+  at four conflict-sharing handoffs. A branch removed from the waiting frontier
+  must already belong to the running wave before any interruptible snapshot.
+  Every cutoff must release its request reservations.
+
+The historical LP learning oracle is also runnable explicitly with its test-only
+JSON dependency (used by its shared verification helper):
+
+```text
+python tests/run.py --java-home <jdk17> --suite probes --case ProductionLearningSafety --classpath <gson.jar>
+```
+
+It compares 2,200 finite models to exhaustive enumeration and independently checks
+learned-row certificates, including deliberately corrupted derivations.
+
 At migration validation, all 2,944 selected finite/cover oracle inputs passed.
 The count corpus produced 187 independently verified conclusions and 87 unresolved
 budget limits. The fixed fixtures produced 657 verified results and 36 unresolved
