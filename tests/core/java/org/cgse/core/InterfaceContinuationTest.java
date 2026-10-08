@@ -19,13 +19,16 @@ public final class InterfaceContinuationTest {
     private static int solved, unresolved;
 
     public static void main(String[] args) throws Exception {
+        boolean measure = args.length == 1 && args[0].equals("--measure");
+        if (measure) System.out.println("interface_high,seed,order,witness,work,peak_bytes,nanos");
         Random order = new Random(71029);
-        for (int seed = 0; seed < 64; seed++) {
-            Model model = planted(seed, 8, 3);
+        for (int interfaceHigh : new int[]{3, 31}) for (int seed = 0; seed < 64; seed++) {
+            Model model = planted(seed, 8, interfaceHigh);
             check(valid(model, model.witness), "Planted witness does not satisfy the independent rows");
             for (int permutation = 0; permutation < 3; permutation++) {
                 Model input = permutation == 0 ? model : shuffle(model, order);
                 var budget = budget(64L << 20, new AtomicBoolean());
+                long started = System.nanoTime();
                 try (var search = new CountInterfaceSearch(input.rows, input.low, input.high, budget, 200_000)) {
                     while (!search.step()) {}
                     var result = search.counts();
@@ -33,21 +36,21 @@ public final class InterfaceContinuationTest {
                         check(valid(input, result), "Resumed component escaped its model or interface scope");
                         solved++;
                     } else unresolved++;
-                    if (permutation == 0 && Set.of(13, 38, 39, 49).contains(seed)) {
-                        check(result != null, "Recorded interface witness was lost: " + seed + " " + budget.diagnostics());
-                        if (seed != 13) check(search.resumptions() > 0, "Recorded case did not exercise continuation");
-                    }
+                    if (!measure) check(result != null, "Planted interface witness was lost: " + interfaceHigh + "/" + seed + "/" + permutation + " " + budget.diagnostics());
+                    if (measure) System.out.println(interfaceHigh + "," + seed + "," + permutation + "," + (result != null) + "," + budget.searchWork() +
+                            "," + budget.peakBytes() + "," + (System.nanoTime() - started));
                 }
                 check(budget.reservedBytes() == 0, "Conditional search leaked after close");
             }
         }
+        if (measure) return;
         cancellation();
         memoryPressure();
         proofs();
         sparseStars();
         sharedParallelBudget();
-        System.out.println("Interface continuation: 192 planted/order cases, witnesses=" + solved +
-                ", unresolved=" + unresolved + "; four retained witness regressions; scoped proofs, cancellation and eviction passed");
+        System.out.println("Interface continuation: 384 planted/order/domain cases, witnesses=" + solved +
+                ", unresolved=" + unresolved + "; scoped proofs, cancellation, eviction, sparse stars and parallel budgets passed");
     }
 
     private static void sharedParallelBudget() throws Exception {
@@ -116,7 +119,7 @@ public final class InterfaceContinuationTest {
     }
 
     private static void cancellation() {
-        Model model = planted(38, 8, 3);
+        Model model = unbounded(planted(38, 8, 3));
         AtomicBoolean cancelled = new AtomicBoolean();
         var budget = budget(64L << 20, cancelled);
         var search = new CountInterfaceSearch(model.rows, model.low, model.high, budget, 200_000);
@@ -138,7 +141,7 @@ public final class InterfaceContinuationTest {
     }
 
     private static void memoryPressure() {
-        Model model = planted(38, 8, 31);
+        Model model = unbounded(planted(38, 8, 31));
         long evictions = 0;
         for (long memory : new long[]{512, 32768, 65536, 131072, 262144, 1048576}) {
             var budget = budget(memory, new AtomicBoolean());
@@ -157,14 +160,14 @@ public final class InterfaceContinuationTest {
     }
 
     private static void proofs() throws Exception {
-        for (int seed : new int[]{38, 39}) {
-            Model model = planted(seed, 8, 3);
+        for (int seed : new int[]{38, 39}) for (boolean finite : new boolean[]{false, true}) {
+            Model model = finite ? planted(seed, 8, 3) : unbounded(planted(seed, 8, 3));
             var budget = budget(64L << 20, new AtomicBoolean());
             var journal = new CountProof.Journal(32L << 20);
             budget.proofJournal(journal);
             try (var search = new CountInterfaceSearch(model.rows, model.low, model.high, budget, 200_000)) {
                 while (!search.step()) {}
-                check(search.resumptions() > 0, "Proof run did not resume a scoped frontier");
+                if (!finite) check(search.resumptions() > 0, "Proof run did not resume a scoped frontier");
                 if (search.counts() != null) check(valid(model, search.counts()), "Proof mode changed witness scope");
             }
             check(!journal.entries().isEmpty(), "Missing conditional proof journal");
@@ -205,6 +208,14 @@ public final class InterfaceContinuationTest {
         return new Model(rows, low, high, witness);
     }
 
+    private static Model unbounded(Model model) {
+        var high = model.high.clone();
+        // Keep a broad local frontier that the finite lattice arm cannot admit.
+        // Faster first witnesses must not silently remove pause/eviction coverage.
+        for (int block = 0; block < 3; block++) high[1 + block * 8] = null;
+        return new Model(model.rows, model.low, high, model.witness);
+    }
+
     private static Model shuffle(Model model, Random random) {
         List<Integer> ids = new ArrayList<>();
         for (int i = 0; i < model.low.length; i++) ids.add(i);
@@ -229,7 +240,7 @@ public final class InterfaceContinuationTest {
 
     private static boolean valid(Model model, BigInteger[] values) {
         if (values.length != model.low.length) return false;
-        for (int i = 0; i < values.length; i++) if (values[i].compareTo(model.low[i]) < 0 || values[i].compareTo(model.high[i]) > 0) return false;
+        for (int i = 0; i < values.length; i++) if (values[i].compareTo(model.low[i]) < 0 || model.high[i] != null && values[i].compareTo(model.high[i]) > 0) return false;
         for (var row : model.rows) {
             BigInteger sum = BigInteger.ZERO;
             for (var term : row.terms().entrySet()) sum = sum.add(term.getValue().multiply(values[term.getKey()]));

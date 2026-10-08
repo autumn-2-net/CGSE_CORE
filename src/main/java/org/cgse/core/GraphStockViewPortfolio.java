@@ -34,7 +34,7 @@ final class GraphStockViewPortfolio<K> implements AutoCloseable {
                             Set<K> external, Map<K, Long> seeds, Set<String> excluded, boolean preserve,
                             boolean force, CatalystPolicy policy, PlanningBudget budget, long started) {
         this.budget = budget;
-        neighborhood = new GraphSupportNeighborhood<>(target, amount, stock, external, seeds, preserve, force, budget, started);
+        neighborhood = new GraphSupportNeighborhood<>(compiler, target, amount, stock, external, seeds, excluded, preserve, force, budget, started);
         allowance = Math.min(4_194_304, budget.remainingWork() / 4);
         continuationAllowance = Math.min(8_388_608, budget.remainingWork() / 2);
         until = allowance;

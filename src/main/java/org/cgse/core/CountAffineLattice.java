@@ -16,23 +16,36 @@ final class CountAffineLattice implements AutoCloseable {
     private final BigInteger[] lower, upper;
     private final PlanningBudget budget;
     private final long allowance;
+    private final boolean lowerFirst;
     private final List<ExactLinearProgram.Constraint> equations = new ArrayList<>();
     private final Map<ExactLinearProgram.Constraint, ExactLinearProgram.Constraint> oppositeFaces = new HashMap<>();
     private final List<BigInteger[]> basis = new ArrayList<>();
-    private BigInteger[] point, counts;
+    private BigInteger[] point, counts, repairPoint;
     private ExactRational[][] orthogonal, mu;
     private ExactRational[] norms;
     private int equation, phase, pivot = 1, attempt, trialFaces, equationLimit, exactEquations, faceAttempt;
     private long work, memory;
     private boolean complete;
+    private CountKernelSearch kernel;
 
     CountAffineLattice(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
                        BigInteger[] upper, PlanningBudget budget) {
+        this(rows, lower, upper, budget, 131_072);
+    }
+
+    CountAffineLattice(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
+                       BigInteger[] upper, PlanningBudget budget, long maximumWork) {
+        this(rows, lower, upper, budget, maximumWork, false);
+    }
+
+    CountAffineLattice(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
+                       BigInteger[] upper, PlanningBudget budget, long maximumWork, boolean lowerFirst) {
         this.rows = rows;
         this.lower = lower;
         this.upper = upper;
         this.budget = budget;
-        allowance = Math.min(131_072, budget.remainingWork() / 32);
+        this.lowerFirst = lowerFirst;
+        allowance = Math.min(maximumWork, Math.min(131_072, budget.remainingWork() / 32));
         if (lower.length > 48 || rows.size() > 512 || allowance < 1024) complete = true;
         for (int i = 0; i < lower.length; i++)
             if (upper[i] == null || lower[i].compareTo(upper[i]) > 0) complete = true;
@@ -63,9 +76,27 @@ final class CountAffineLattice implements AutoCloseable {
                 else {
                     phase = 3;
                 }
-            } else {
+            } else if (phase == 3) {
                 nearest();
-                if (counts != null || ++attempt == 8) return finish();
+                if (counts != null) return finish();
+                if (++attempt == (lowerFirst ? 1 : 9)) {
+                    long started = budget.threadWork();
+                    try {
+                        kernel = new CountKernelSearch(rows, lower, upper, repairPoint, basis, mu, norms, budget, allowance - work);
+                    } finally { work += budget.threadWork() - started; }
+                    phase = 4;
+                }
+            } else {
+                long started = budget.threadWork();
+                boolean done;
+                try { done = kernel.step(); }
+                finally { work += budget.threadWork() - started; }
+                if (done) {
+                    counts = kernel.counts();
+                    kernel.close();
+                    kernel = null;
+                    return finish();
+                }
             }
             return complete;
         } catch (LocalLimit | ExactRational.PrecisionLimit limit) {
@@ -146,10 +177,13 @@ final class CountAffineLattice implements AutoCloseable {
     }
 
     private void reset() {
+        if (kernel != null) kernel.close();
+        kernel = null;
         basis.clear();
         orthogonal = mu = null;
         norms = null;
         equation = attempt = 0;
+        repairPoint = null;
         pivot = 1;
         point = lower.clone();
         for (int i = 0; i < lower.length; i++) if (!lower[i].equals(upper[i])) {
@@ -323,6 +357,7 @@ final class CountAffineLattice implements AutoCloseable {
     private void nearest() {
         var candidate = nearestPoint();
         if (valid(candidate)) counts = candidate;
+        repairPoint = candidate;
     }
 
     private BigInteger[] nearestPoint() {
@@ -330,9 +365,10 @@ final class CountAffineLattice implements AutoCloseable {
         var residual = new ExactRational[point.length];
         for (int i = 0; i < residual.length; i++) {
             charge();
-            // Midpoint first, then deterministic interior targets. These only
-            // guide proposals; they never restrict the caller's feasible set.
-            int fraction = attempt == 0 ? 8 : 2 + Math.floorMod(i * 7 + attempt * 5, 13);
+            // The general arm keeps its midpoint/interior trials, then the
+            // lower corner. A short conditional turn goes straight to that
+            // corner and kernel repair. Targets never restrict feasible counts.
+            int fraction = lowerFirst ? 0 : attempt == 0 ? 8 : attempt == 8 ? 0 : 2 + Math.floorMod(i * 7 + attempt * 5, 13);
             var target = ExactRational.of(lower[i]).add(new ExactRational(upper[i].subtract(lower[i]).multiply(BigInteger.valueOf(fraction)), BigInteger.valueOf(16)));
             residual[i] = target.subtract(ExactRational.of(point[i]));
         }
@@ -453,6 +489,8 @@ final class CountAffineLattice implements AutoCloseable {
 
     @Override
     public void close() {
+        if (kernel != null) kernel.close();
+        kernel = null;
         budget.release(memory);
         memory = 0;
     }

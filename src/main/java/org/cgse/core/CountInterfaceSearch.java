@@ -8,7 +8,7 @@ import java.util.*;
 
 /**
  * Condition a small cutset, then solve the independent, possibly unbounded
- * integer blocks with LCG. Only count witnesses leave this neighborhood;
+ * integer blocks with retained LCG and integer-kernel repair. Only count witnesses leave this neighborhood;
  * local failures never become global conflicts or execution-order proofs.
  * Component memo entries belong to this exact model and their interface values.
  */
@@ -29,7 +29,7 @@ final class CountInterfaceSearch implements AutoCloseable {
 
     /** An unfinished local search is distinct from a proved local contradiction. */
     private static final class Local {
-        CountLcg search;
+        CountConditionalSearch search;
         BigInteger[] values;
         boolean impossible, retryable;
         int round = -1;
@@ -50,7 +50,7 @@ final class CountInterfaceSearch implements AutoCloseable {
     private int states = 1, state, cursor, round;
     private long memory, work, stepStarted, hits, calls, unknown, rejected, resumed, evicted;
     private long retentionFloor;
-    private boolean prepared, tupleStarted, complete;
+    private boolean prepared, tupleStarted, complete, retryVisit;
 
     CountInterfaceSearch(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower, BigInteger[] upper,
                          PlanningBudget budget, long maximumWork) {
@@ -108,6 +108,7 @@ final class CountInterfaceSearch implements AutoCloseable {
                 pending.or(retry);
                 retry.clear();
                 round++;
+                retryVisit = false;
                 state = pending.nextSetBit(0);
                 return false;
             }
@@ -345,15 +346,18 @@ final class CountInterfaceSearch implements AutoCloseable {
         }
         quantum = Math.min(quantum, allowance - used());
         if (quantum < 1024) throw new Stop();
-        local.search = new CountLcg(rows, low, high, budget, quantum);
+        local.search = new CountConditionalSearch(rows, low, high, budget, quantum);
         solving = local;
         calls++;
     }
 
     private void trimSuspended() {
-        // Optional reuse must leave room for other portfolio arms. Eviction
-        // discards only the frontier, never inventing an infeasibility result.
-        while (!suspended.isEmpty() && (suspended.size() > 8 || budget.availableBytes() < retentionFloor)) {
+        // Optional reuse must leave room for other portfolio arms. A fixed
+        // entry count evicted an entire early interface round even when its
+        // small factorizations comfortably fit. Bound retained state by the
+        // shared byte account; the finite interface enumeration bounds keys.
+        // Eviction discards only a frontier, never proving infeasibility.
+        while (!suspended.isEmpty() && budget.availableBytes() < retentionFloor) {
             var local = suspended.removeFirst();
             local.search.close();
             local.search = null;
@@ -394,7 +398,19 @@ final class CountInterfaceSearch implements AutoCloseable {
 
     private void nextTuple() {
         pending.clear(state);
-        state = pending.nextSetBit(0);
+        // Interleave a continuation with fresh interfaces. Waiting for every
+        // first visit could spend the entire local cap on factorizations and
+        // never take even one move in any retained kernel. Fresh interfaces
+        // keep alternate turns, so an inconclusive early tuple cannot monopolize.
+        if (!retryVisit && !retry.isEmpty()) {
+            state = retry.nextSetBit(0);
+            retry.clear(state);
+            round++;
+            retryVisit = true;
+        } else {
+            state = pending.nextSetBit(0);
+            retryVisit = false;
+        }
         cursor = 0;
         tupleStarted = false;
     }

@@ -86,22 +86,50 @@ delete-and-BFS connectivity (68,137 cases). Interface selection uses low-link
 separator scores when its estimated scan cost beats repeated bitset traversals;
 it preserves the original candidate domains and tie order.
 
-`InterfaceContinuationTest` preserves four planted wide-domain regressions,
-including three that need another local search round under a 200,000-work
-neighborhood cap. A 192-input seed/order campaign separately reports valid
-witnesses and unresolved cases; passing its safety assertions does not mean
-all 192 were solved. Paused LCG frontiers are scoped by component and exact
-interface values, visited once per round, and retained in a bounded cache.
+`InterfaceContinuationTest` requires witnesses for 384 planted wide-domain
+seed/order/interface cases under a 200,000-work neighborhood cap. Interfaces
+have either four or 32 values. Conditional LCG and exact integer-kernel repair
+retain state across local slices; fresh interfaces alternate with continuations.
+Both frontiers and answers belong to the component and exact interface values.
+Retention follows the shared byte allowance rather than a fixed entry count.
 Eviction discards work without asserting infeasibility; a restart receives a
 larger local allowance, while a retained frontier gets another fair slice of
 the existing request budget. The test also exercises memory-driven eviction,
 cancellation with parked children, idempotent close and independent replay of
 scoped certificates after continuation.
+`CountKernelTest` independently enumerates 480 finite boxes, including signed
+domains, offsets beyond long, large coefficients and infeasible models. Every
+returned kernel witness is restored and checked against original rows/bounds;
+the kernel strategy never publishes a negative conclusion. Its cancellation,
+memory refusal, local work limits and exhausted-budget resume also release all
+reservations. The complete conditional backend must agree with the finite oracle
+on every feasible/infeasible case, including any missed lattice-only candidate.
 Four sparse stars (33 to 241 variables, wide internal counts and many eligible
 Boolean separator vertices) must produce valid composed counts within a fixed
 20,000-work neighborhood cap, including interface preparation.
 Four conditional models also share one budget on four workers, exercising both
 settings of the production work-budget multiplier without sharing model state.
+
+For a controlled before/after comparison of the same conditional models:
+
+```text
+python tests/benchmarks/compare_conditional.py --java-home <jdk17> --baseline <commit>
+```
+
+Both revisions compile the same current harness and run with identical local,
+request and memory caps. CSV rows retain every unresolved input, work and logical
+reservation peak. Source/harness digests guard against changes during a run.
+The recorded timing includes JVM warmup and is not a wall-time performance claim.
+
+`ResidualNeighborhoodTest` covers 16 shuffled catalogs exceeding 9,000 recipes
+whose offered supports lack a necessary co-producer. Demand boundaries admit
+that source and its upstream chain into a bounded count neighborhood. Original
+configuration/reusable inputs, physical seeds, force production and full outer
+planning are checked, along with exclusions, catalog replacement, cancellation,
+memory refusal and a low-budget two-source split. Catalog scans retain their
+cursor across turns. Pages omitted by the current bounded support are never
+reported as globally infeasible; this remains a positive-witness neighborhood,
+not a complete replacement for the full-catalog model.
 
 `GraphCompiler.cacheMetrics()` observes all cache families and retained macro
 compilers, deduplicating compilers by identity without retaining old snapshots
