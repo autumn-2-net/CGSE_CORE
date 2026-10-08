@@ -80,6 +80,29 @@ answers are scoped to a component and interface assignment; no negative answer
 or UNKNOWN is exported as an infeasibility proof for the original model.
 Composed counts still go through the global execution scheduler and validator.
 
+`CountCutsetTest` checks all undirected graphs up to six vertices, live-vertex
+subsets, random larger graphs and a 256-vertex chain against independent
+delete-and-BFS connectivity (68,137 cases). Interface selection uses low-link
+separator scores when its estimated scan cost beats repeated bitset traversals;
+it preserves the original candidate domains and tie order.
+
+`InterfaceContinuationTest` preserves four planted wide-domain regressions,
+including three that need another local search round under a 200,000-work
+neighborhood cap. A 192-input seed/order campaign separately reports valid
+witnesses and unresolved cases; passing its safety assertions does not mean
+all 192 were solved. Paused LCG frontiers are scoped by component and exact
+interface values, visited once per round, and retained in a bounded cache.
+Eviction discards work without asserting infeasibility; a restart receives a
+larger local allowance, while a retained frontier gets another fair slice of
+the existing request budget. The test also exercises memory-driven eviction,
+cancellation with parked children, idempotent close and independent replay of
+scoped certificates after continuation.
+Four sparse stars (33 to 241 variables, wide internal counts and many eligible
+Boolean separator vertices) must produce valid composed counts within a fixed
+20,000-work neighborhood cap, including interface preparation.
+Four conditional models also share one budget on four workers, exercising both
+settings of the production work-budget multiplier without sharing model state.
+
 `GraphCompiler.cacheMetrics()` observes all cache families and retained macro
 compilers, deduplicating compilers by identity without retaining old snapshots
 in a global registry. It reports logical weight, estimated bytes, hits/misses,

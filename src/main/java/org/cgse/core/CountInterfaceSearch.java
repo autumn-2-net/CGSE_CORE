@@ -22,12 +22,19 @@ final class CountInterfaceSearch implements AutoCloseable {
         final int[] variables;
         final List<ExactLinearProgram.Constraint> rows = new ArrayList<>();
         int[] interfaceVariables;
-        final Map<List<BigInteger>, Answer> answers = new HashMap<>();
+        final Map<List<BigInteger>, Local> answers = new HashMap<>();
 
         Block(int[] variables) { this.variables = variables; }
     }
 
-    private record Answer(BigInteger[] values) {} // null means proved locally infeasible, never UNKNOWN
+    /** An unfinished local search is distinct from a proved local contradiction. */
+    private static final class Local {
+        CountLcg search;
+        BigInteger[] values;
+        boolean impossible, retryable;
+        int round = -1;
+        long quantum;
+    }
 
     private final List<ExactLinearProgram.Constraint> original;
     private final BigInteger[] lower, upper;
@@ -35,12 +42,14 @@ final class CountInterfaceSearch implements AutoCloseable {
     private final long allowance;
     private final List<Block> blocks = new ArrayList<>();
     private final List<ExactLinearProgram.Constraint> interfaceRows = new ArrayList<>();
+    private final Deque<Local> suspended = new ArrayDeque<>();
+    private final BitSet pending = new BitSet(), retry = new BitSet();
     private BigInteger[] assignment, counts;
     private int[] cutset, domains;
-    private CountLcg solving;
-    private List<BigInteger> solvingKey;
-    private int states = 1, state, cursor;
-    private long memory, work, stepStarted, hits, calls, unknown, rejected;
+    private Local solving;
+    private int states = 1, state, cursor, round;
+    private long memory, work, stepStarted, hits, calls, unknown, rejected, resumed, evicted;
+    private long retentionFloor;
     private boolean prepared, tupleStarted, complete;
 
     CountInterfaceSearch(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower, BigInteger[] upper,
@@ -51,7 +60,7 @@ final class CountInterfaceSearch implements AutoCloseable {
         this.budget = budget;
         allowance = Math.min(maximumWork, budget.remainingWork() / 16);
         long terms = rows.stream().mapToLong(row -> row.terms().size()).sum();
-        long bytes = 2048L + 384L * lower.length + 192L * terms + 128L * rows.size() + 8L * lower.length * lower.length;
+        long bytes = 2048L + 448L * lower.length + 192L * terms + 128L * rows.size() + 8L * lower.length * lower.length;
         if (lower.length > 256 || rows.size() > 2048 || allowance < 4096 || !budget.tryReserve(bytes)) complete = true;
         else memory = bytes;
     }
@@ -67,17 +76,26 @@ final class CountInterfaceSearch implements AutoCloseable {
                 return complete;
             }
             if (solving != null) {
-                if (!solving.step()) return false;
-                var values = solving.counts();
-                boolean impossible = solving.infeasible();
-                solving.close();
+                if (!solving.search.step()) return false;
+                var local = solving;
+                var values = local.search.counts();
+                local.impossible = local.search.infeasible();
+                local.retryable = local.search.paused();
                 solving = null;
                 var block = blocks.get(cursor);
-                // UNKNOWN is deliberately absent from the answer table. Another
-                // tuple with this local interface may retry it with fresh work.
-                if (values != null || impossible) remember(block, solvingKey, values);
+                if (local.retryable) {
+                    // Retain the trail, clauses and propagation queue. A pause
+                    // does not eliminate this tuple or any equivalent local key.
+                    suspended.addLast(local);
+                    trimSuspended();
+                    retry.set(state);
+                } else {
+                    local.search.close();
+                    local.search = null;
+                    if (values != null) remember(local, values);
+                }
                 if (values == null) {
-                    if (impossible) rejected++; else unknown++;
+                    if (local.impossible) rejected++; else unknown++;
                     nextTuple();
                 } else {
                     apply(block, values);
@@ -85,7 +103,14 @@ final class CountInterfaceSearch implements AutoCloseable {
                 }
                 return false;
             }
-            if (state >= states) return finish("interfaces_exhausted");
+            if (state < 0) {
+                if (retry.isEmpty()) return finish(unknown == 0 ? "interfaces_exhausted" : "interfaces_incomplete");
+                pending.or(retry);
+                retry.clear();
+                round++;
+                state = pending.nextSetBit(0);
+                return false;
+            }
             if (!tupleStarted) {
                 assignment = lower.clone();
                 int code = state;
@@ -107,15 +132,30 @@ final class CountInterfaceSearch implements AutoCloseable {
                 return finish("witness");
             }
             var block = blocks.get(cursor);
-            solvingKey = Arrays.stream(block.interfaceVariables).mapToObj(i -> assignment[i]).toList();
-            var answer = block.answers.get(solvingKey);
-            if (answer != null) {
+            var key = Arrays.stream(block.interfaceVariables).mapToObj(i -> assignment[i]).toList();
+            var answer = block.answers.get(key);
+            if (answer != null && (answer.values != null || answer.impossible)) {
                 hits++;
-                if (answer.values == null) { rejected++; nextTuple(); }
+                if (answer.impossible) { rejected++; nextTuple(); }
                 else { apply(block, answer.values); cursor++; }
                 return false;
             }
-            begin(block);
+            if (answer != null && (!answer.retryable || answer.round == round)) {
+                // Each distinct local condition receives at most one visit per
+                // round, regardless of how many global tuples share that key.
+                if (answer.retryable) retry.set(state);
+                nextTuple();
+                return false;
+            }
+            if (answer == null) {
+                long bytes = 192L + 64L * key.size();
+                for (var value : key) bytes += (value.bitLength() + 7L) / 8;
+                if (!budget.tryReserve(bytes)) throw new Stop();
+                memory += bytes;
+                answer = new Local();
+                block.answers.put(key, answer);
+            }
+            begin(block, answer);
             return false;
         } catch (Stop stopped) {
             return finish("local_limit");
@@ -150,18 +190,38 @@ final class CountInterfaceSearch implements AutoCloseable {
         var parts = components(graph, live);
         while (!useful(parts, initialSize)) {
             if (removed.size() == 3) { finish("no_small_interface"); return; }
-            int best = -1, bestLargest = Integer.MAX_VALUE, bestDegree = -1, bestDomain = 0;
+            int[] eligible = new int[lower.length];
+            int candidates = 0;
+            long edges = 0;
             for (int id = live.nextSetBit(0); id >= 0; id = live.nextSetBit(id + 1)) {
                 charge();
+                edges += graph[id].cardinality();
                 if (upper[id] == null) continue;
                 var width = upper[id].subtract(lower[id]);
                 if (width.signum() < 0 || width.compareTo(BigInteger.valueOf(31)) > 0) continue;
                 int domain = width.intValueExact() + 1;
                 if (domain > 256 / states) continue;
-                live.clear(id);
-                var trial = components(graph, live);
-                live.set(id);
-                int largest = largest(trial), degree = graph[id].cardinality();
+                eligible[id] = domain;
+                candidates++;
+            }
+            if (candidates == 0) { finish("no_small_interface"); return; }
+            // Score all deletions with low links when that avoids repeated
+            // traversals. For one eligible vertex or a dense graph, the old
+            // bitset connectivity pass can be cheaper than visiting every edge.
+            int size = live.cardinality();
+            int[] largestParts = 2L * candidates * size > 3L * size + edges ?
+                    CountCutset.largestParts(graph, live, this::charge) : null;
+            int best = -1, bestLargest = Integer.MAX_VALUE, bestDegree = -1, bestDomain = 0;
+            for (int id = live.nextSetBit(0); id >= 0; id = live.nextSetBit(id + 1)) {
+                if (eligible[id] == 0) continue;
+                charge();
+                int largest;
+                if (largestParts == null) {
+                    live.clear(id);
+                    largest = largest(components(graph, live));
+                    live.set(id);
+                } else largest = largestParts[id];
+                int degree = graph[id].cardinality(), domain = eligible[id];
                 if (largest < bestLargest || largest == bestLargest && (degree > bestDegree ||
                         degree == bestDegree && domain < bestDomain)) {
                     best = id;
@@ -204,6 +264,8 @@ final class CountInterfaceSearch implements AutoCloseable {
             }
             block.interfaceVariables = Arrays.stream(cutset).filter(touched::get).toArray();
         }
+        pending.set(0, states);
+        retentionFloor = budget.availableBytes() / 2;
         budget.note("count_interface", "admitted; interface=" + cutset.length + "; states=" + states +
                 "; blocks=" + blocks.size() + "; largest=" + largest(parts));
     }
@@ -237,7 +299,24 @@ final class CountInterfaceSearch implements AutoCloseable {
         return result;
     }
 
-    private void begin(Block block) {
+    private void begin(Block block, Local local) {
+        long remaining = allowance - used();
+        long fair = Math.max(4096, remaining / Math.max(1, blocks.size() + pending.cardinality()));
+        long doubled = local.quantum > remaining / 2 ? remaining : local.quantum * 2;
+        // A retained frontier needs another fair slice, not an exponentially
+        // larger one. Only an evicted/restarted search must cover its old prefix.
+        long quantum = Math.min(remaining, local.search == null ? Math.max(fair, doubled) : fair);
+        if (quantum < 1024) throw new Stop();
+        local.quantum = quantum;
+        local.round = round;
+        if (local.search != null) {
+            suspended.remove(local);
+            local.search.resume(quantum);
+            solving = local;
+            resumed++;
+            return;
+        }
+        trimSuspended();
         int[] ids = new int[lower.length];
         Arrays.fill(ids, -1);
         BigInteger[] low = new BigInteger[block.variables.length], high = new BigInteger[low.length];
@@ -264,18 +343,30 @@ final class CountInterfaceSearch implements AutoCloseable {
             }
             rows.add(new ExactLinearProgram.Constraint(terms, bound));
         }
-        long remaining = allowance - used();
-        long quantum = Math.min(remaining, Math.max(4096, remaining / Math.max(1, blocks.size() + states - state)));
+        quantum = Math.min(quantum, allowance - used());
         if (quantum < 1024) throw new Stop();
-        solving = new CountLcg(rows, low, high, budget, quantum);
+        local.search = new CountLcg(rows, low, high, budget, quantum);
+        solving = local;
         calls++;
     }
 
-    private void remember(Block block, List<BigInteger> key, BigInteger[] values) {
-        long bytes = 128L + 64L * key.size() + (values == null ? 0 : 64L * values.length);
+    private void trimSuspended() {
+        // Optional reuse must leave room for other portfolio arms. Eviction
+        // discards only the frontier, never inventing an infeasibility result.
+        while (!suspended.isEmpty() && (suspended.size() > 8 || budget.availableBytes() < retentionFloor)) {
+            var local = suspended.removeFirst();
+            local.search.close();
+            local.search = null;
+            evicted++;
+        }
+    }
+
+    private void remember(Local local, BigInteger[] values) {
+        long bytes = 32L + 48L * values.length;
+        for (var value : values) bytes += (value.bitLength() + 7L) / 8;
         if (!budget.tryReserve(bytes)) return;
         memory += bytes;
-        block.answers.put(key, new Answer(values));
+        local.values = values;
     }
 
     private void apply(Block block, BigInteger[] values) {
@@ -301,7 +392,12 @@ final class CountInterfaceSearch implements AutoCloseable {
         return true;
     }
 
-    private void nextTuple() { state++; cursor = 0; tupleStarted = false; }
+    private void nextTuple() {
+        pending.clear(state);
+        state = pending.nextSetBit(0);
+        cursor = 0;
+        tupleStarted = false;
+    }
     private long used() { return work + budget.threadSearchWork() - stepStarted; }
     private void charge() {
         budget.checkpoint();
@@ -314,15 +410,19 @@ final class CountInterfaceSearch implements AutoCloseable {
     private boolean finish(String reason) {
         complete = true;
         budget.note("count_interface", reason + "; calls=" + calls + "; hits=" + hits + "; rejected=" + rejected +
-                "; unknown=" + unknown + "; work=" + used() + "; positive_only");
+                "; unknown=" + unknown + "; resumed=" + resumed + "; evicted=" + evicted + "; rounds=" + (round + 1) +
+                "; work=" + used() + "; positive_only");
         return true;
     }
     BigInteger[] counts() { return counts == null ? null : counts.clone(); }
     long cacheHits() { return hits; }
+    long resumptions() { return resumed; }
+    long evictions() { return evicted; }
     @Override public void close() {
         complete = true;
-        if (solving != null) solving.close();
+        for (var block : blocks) for (var local : block.answers.values()) if (local.search != null) local.search.close();
         solving = null;
+        suspended.clear();
         blocks.clear();
         interfaceRows.clear();
         budget.release(memory);
