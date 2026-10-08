@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--java-home', default=os.environ.get('JAVA_HOME'))
     parser.add_argument('--suite', choices=['standard', 'core', 'view', 'oracles', 'fixtures', 'probes', 'corpus', 'models', 'benchmarks', 'all'], default='standard')
     parser.add_argument('--case', default='.*', help='Regular expression selecting names / probe IDs')
+    parser.add_argument('--fixture-dir', type=Path, default=BASE / 'regression/fixtures', help='Curated or generated graph fixtures')
     parser.add_argument('--permutations', type=int, default=3)
     parser.add_argument('--milliseconds', type=int, default=3000)
     parser.add_argument('--work', type=int, default=20_000_000)
@@ -104,8 +105,10 @@ def main():
         spec = importlib.util.spec_from_file_location('fixture_helpers', BASE / 'regression/run.py')
         fixture_helpers = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(fixture_helpers)
-        cases = [json.loads(p.read_text(encoding='utf-8')) for p in sorted((BASE / 'regression/fixtures').rglob('*.json'))]
+        cases = [json.loads(p.read_text(encoding='utf-8')) for p in sorted(args.fixture_dir.rglob('*.json'))]
         cases = selected([c for c in cases if re.search(args.case, c['name'])])
+        if not cases:
+            parser.error('No graph fixtures selected')
         for permutation in range(args.permutations):
             copied = json.loads(json.dumps(cases))
             rng = random.Random(20260926 + permutation)

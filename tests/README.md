@@ -18,7 +18,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
 | Stable oracles | `--suite oracles` | 21 independent exhaustive/integer/BFS/seed/proof oracle programs |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
-| Fixed counterexamples | `--suite fixtures --keep-going` | All 231 curated fixtures, three deterministic order permutations by default |
+| Fixed counterexamples | `--suite fixtures --keep-going` | All 234 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
 | Count models | `--suite models --keep-going` | 274 exact integer models, independent bounds/constraint witness verification |
 | Planner/runtime benchmark | `--suite benchmarks --timeout 600` | Original `GraphBenchmark`: chain, shared diamond, coproducts, growth/cycles and runtime batch dispatch |
@@ -100,6 +100,36 @@ python tests/benchmarks/compare_planning.py --java-home <jdk-directory> --baseli
 These cover a reopened inventory boundary, demand shared by two downstream
 recipes, and a seeded growth recipe. Both work accounts are reported; results
 from this targeted family are not a claim of the same speedup on all recipes.
+
+The root-portfolio regressions include first-visit fairness, restored reduced
+views, small-divisor scaled searches, and retained LP/matching work. Run a larger
+weighted-choice campaign with quantity and recipe-order variation:
+
+```text
+python tests/benchmarks/generate_choice_cases.py --seeds 8 --amounts 1,2,16,1000 --output build/choice-quantities
+python tests/run.py --java-home <jdk17> --suite fixtures --fixture-dir build/choice-quantities --permutations 3 --work 20000000 --milliseconds 0 --keep-going --output build/choice-20m
+python tests/run.py --java-home <jdk17> --suite fixtures --fixture-dir build/choice-quantities --permutations 3 --work 40000000 --milliseconds 0 --keep-going --output build/choice-40m
+```
+
+Each generated case includes a planted primitive witness, independently replayed
+by the Python generator before writing. The fixture runner separately validates
+the returned plan's complete execution prefix and fresh production. Three key
+counterexamples are retained in `regression/fixtures/portfolio`; generated bulk
+data stays under `build`. `RootPortfolioTest` also covers four-worker requests
+with and without the production budget multiplier. `CountAggregationTest` checks
+600 small models by exhaustive enumeration, replays the assumptions used by a
+contradiction, and checks changed-stock/sibling reuse, beyond-long arithmetic,
+scaled-search cancellation and reservation release. Restricted scaled failures
+must not become infeasibility proofs for the original integer domain.
+
+The 2026-10-08 campaign used seeds 100 through 107, all five generator families,
+three order permutations, and a 256 MiB request reservation limit. It returned
+475 independently verified plans and five unresolved search limits at 20M work;
+the same 480 requests all returned verified plans at 40M. The 20M command can
+therefore exit with an inconclusive status. All five are known SAT cases, not
+infeasibility results. This quantity campaign is separate from the 234 fixed
+fixtures, which all passed at 20M across three permutations. Neither result
+establishes performance or completeness on arbitrary recipe catalogs.
 
 At migration validation, all 2,944 selected finite/cover oracle inputs passed.
 The count corpus produced 187 independently verified conclusions and 87 unresolved

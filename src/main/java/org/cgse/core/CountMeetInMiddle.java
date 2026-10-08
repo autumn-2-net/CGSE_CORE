@@ -618,19 +618,20 @@ final class CountMeetInMiddle implements AutoCloseable {
                     charge();
                     values[d] = values[d].add(coefficients[start + depth][option][d]);
                     changed++;
-                    if (goalHigh[d] != null && values[d].add(low[depth + 1][d]).compareTo(goalHigh[d]) > 0 ||
-                            goalLow[d] != null && values[d].add(high[depth + 1][d]).compareTo(goalLow[d]) < 0) {
-                        viable = false;
-                        break;
-                    }
                     BigInteger suffix = reachable[depth + 1][d];
                     if (suffix != null) {
-                        charge();
+                        // For an equality, the exact suffix set already checks
+                        // both range endpoints as well as the holes. Avoid a
+                        // separate interval check and its BigInteger additions.
                         BigInteger needed = goalHigh[d].subtract(values[d]).subtract(low[depth + 1][d]);
-                        if (needed.signum() < 0 || needed.compareTo(BigInteger.valueOf(suffix.bitLength())) >= 0 || !suffix.testBit(needed.intValue())) {
+                        if (needed.signum() < 0 || needed.bitLength() > 31 || !suffix.testBit(needed.intValue())) {
                             viable = false;
                             break;
                         }
+                    } else if (goalHigh[d] != null && values[d].add(low[depth + 1][d]).compareTo(goalHigh[d]) > 0 ||
+                            goalLow[d] != null && values[d].add(high[depth + 1][d]).compareTo(goalLow[d]) < 0) {
+                        viable = false;
+                        break;
                     }
                 }
                 if (!viable) undo(changed);
@@ -715,6 +716,15 @@ final class CountMeetInMiddle implements AutoCloseable {
 
     BigInteger[] counts() {
         return complete && counts != null ? counts.clone() : null;
+    }
+
+    /** Scheduling estimate for an admitted equality table, never a proof bound. */
+    long continuationWork() {
+        if (complete || costProbe || !equalities || phase < 1 || phase > 2) return 0;
+        // Signature generation and complement lookup both scale with the
+        // projected table dimensions. Keep one small turn for prefix overhead.
+        long estimate = 4L * ((long) leftStates + rightStates) * goalHigh.length;
+        return Math.max(0, estimate - work) + 262144;
     }
 
     boolean infeasible() {

@@ -52,6 +52,9 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     CountConditioning conditioning;
     CountRecovery<K> recovery;
     CountScale scaling;
+    CountScale parkedScaling;
+    boolean scalingResuming, preferScaleResume = true;
+    boolean splitWitness;
     CountDiophantine diophantine;
     CountStructureSearch structural;
     CountStructureSearch parkedStructural;
@@ -434,7 +437,10 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 lpSearch.close();
                 lpSearch = null;
             }
-            int continuation = lpResuming ? 4 : 2;
+            // The initial LP turn precedes registration of reduced views.
+            // Return through the portfolio entrance before ordinary strategies;
+            // a retained LP search must not hide those equivalent coordinates.
+            int continuation = lpResuming ? 4 : 5;
             if (counts != null) {
                 viewCandidateStage = continuation;
                 beginScheduling();
@@ -499,8 +505,10 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             } else if (impossible) {
                 learnedChoices.add(new CountConflict(current));
                 state = State.DEAD;
-            } else if (parkedStructural != null && structureEarly) state = State.UNRESOLVED;
-            else if (structureEarly) {
+            } else if (structureEarly) {
+                // Retaining the early structural frontier must not skip the
+                // remaining root strategies. Resume it only after those have
+                // had their first turn, including the reduced-coordinate view.
                 structureEarly = false;
                 structureResuming = false;
                 beginCompiledPortfolio();
@@ -651,10 +659,14 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         if (scaling != null) {
             if (!scaling.step()) return;
             counts = reduction.expand(scaling.counts());
-            scaling.close();
+            if (scaling.paused()) parkedScaling = scaling;
+            else scaling.close();
             scaling = null;
-            if (counts != null) beginScheduling();
-            else groups = new CountGroups(reduction.rows(), reduction.lower(), reduction.upper(), budget);
+            int continuation = scalingResuming ? 4 : 7;
+            if (counts != null) {
+                viewCandidateStage = continuation;
+                beginScheduling();
+            } else afterViewSearch(continuation);
             return;
         }
         if (groups != null) {
@@ -1231,7 +1243,8 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     }
 
     private void beginGroups() {
-        scaling = new CountScale(reduction.rows(), reduction.lower(), reduction.upper(), budget);
+        scaling = new CountScale(reduction.rows(), reduction.lower(), reduction.upper(), budget, true, true);
+        scalingResuming = false;
     }
 
     private void beginBoolean() {
@@ -1543,6 +1556,10 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     }
 
     boolean resume() {
+        // These children already cover the parent's whole integer domain.
+        // Only finish the parked positive witness; never branch the parent a
+        // second time or treat this optional task's cutoff as an open domain.
+        if (splitWitness) return limit == null && parkedScaling != null && resumeScaling();
         if (proofTask) {
             if (limit != null || auxiliaryWork >= auxiliaryUntil || viewSearch == null || !viewSearch.retained()) return false;
             clearCandidate();
@@ -1560,6 +1577,10 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             state = State.OPEN;
             return true;
         }
+        if (limit == null && parkedScaling != null && (preferScaleResume || parkedStructural == null &&
+                (lpSearch == null || !lpSearch.retained()) && (viewSearch == null || !viewSearch.retained()))) {
+            return resumeScaling();
+        }
         if (limit == null && parkedStructural != null &&
                 (preferStructureResume || (lpSearch == null || !lpSearch.retained()) && (viewSearch == null || !viewSearch.retained()))) {
             clearCandidate();
@@ -1571,6 +1592,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             structural.resume(262144);
             structureResuming = true;
             preferStructureResume = false;
+            if ((lpSearch == null || !lpSearch.retained()) && (viewSearch == null || !viewSearch.retained())) preferScaleResume = true;
             state = State.OPEN;
             return true;
         }
@@ -1584,6 +1606,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             lpActive = lpResuming = true;
             preferLpResume = false;
             preferStructureResume = true;
+            if (viewSearch == null || !viewSearch.retained()) preferScaleResume = true;
             state = State.OPEN;
             return true;
         }
@@ -1599,6 +1622,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             viewStage = 4;
             preferLpResume = true;
             preferStructureResume = true;
+            preferScaleResume = true;
             state = State.OPEN;
             return true;
         }
@@ -1606,6 +1630,26 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         releaseWorkspace();
         initialized = true;
         retried = rescue = true;
+        state = State.OPEN;
+        return true;
+    }
+
+    boolean retainSplitWitness() {
+        if (state != State.SPLIT || proofTask || auxiliaryMode != 0 || limit != null || parkedScaling == null) return false;
+        splitWitness = true;
+        return resumeScaling();
+    }
+
+    private boolean resumeScaling() {
+        clearCandidate();
+        jumpCandidate = neighborhoodCandidate = domainCandidate = separatorCandidate = structuralCandidate = false;
+        counts = null;
+        viewCandidateStage = 0;
+        scaling = parkedScaling;
+        parkedScaling = null;
+        scaling.resume(262144);
+        scalingResuming = true;
+        preferScaleResume = false;
         state = State.OPEN;
         return true;
     }
@@ -1687,6 +1731,9 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         if (conditioning != null) conditioning.close();
         if (recovery != null) recovery.close();
         if (scaling != null) scaling.close();
+        scaling = null;
+        if (parkedScaling != null) parkedScaling.close();
+        parkedScaling = null;
         if (packing != null) packing.close();
         if (jumping != null) jumping.close();
         jumping = null;
@@ -1866,6 +1913,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         else if (continuation == 3) diagram = new CountDecisionDiagram(reduction.rows(), reduction.lower(), reduction.upper(), budget, 65536);
         else if (continuation == 4 || continuation == 6) state = State.UNRESOLVED;
         else if (continuation == 5) beginCompiledPortfolio();
+        else if (continuation == 7) groups = new CountGroups(reduction.rows(), reduction.lower(), reduction.upper(), budget);
         // Stage 1 resumes compilation, preserving the untouched original model.
     }
 

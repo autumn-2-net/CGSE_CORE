@@ -395,12 +395,21 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                     retain(branch);
                     branch.close();
                 }
+                case SPLIT -> {
+                    // Splitting the full domain does not invalidate an owned
+                    // scaled witness table. Children keep complete coverage;
+                    // the parent now contributes positive candidates only.
+                    if (branch.retainSplitWitness()) {
+                        suspensions++;
+                        deferred.addLast(branch);
+                    } else branch.close();
+                }
                 case UNRESOLVED -> {
                     if (branch.resume()) {
                         suspensions++;
                         deferred.addLast(branch);
                     } else {
-                        if (branch.auxiliaryMode == 0) unresolved = true;
+                        if (branch.auxiliaryMode == 0 && !branch.splitWitness) unresolved = true;
                         branch.close();
                     }
                 }
