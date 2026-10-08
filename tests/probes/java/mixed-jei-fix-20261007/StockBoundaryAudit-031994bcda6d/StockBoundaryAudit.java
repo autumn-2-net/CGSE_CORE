@@ -1,0 +1,6 @@
+package org.cgse.core;
+import java.util.*;import java.lang.reflect.*;
+public class StockBoundaryAudit {
+ static GraphRecipe<String> r(String id,String in,String out){return new GraphRecipe<>(id,id,List.of(new GraphRecipe.Slot<>(in,1L)),Map.of(out,1L));}
+ public static void main(String[]args)throws Exception{var recipes=new ArrayList<GraphRecipe<String>>();var stock=new LinkedHashMap<String,Long>();for(int i=0;i<80;i++){recipes.add(r("r"+i,"x"+(i+1),"x"+i));stock.put("x"+(i+1),1L);}stock.put("x80",100000L);var b=new PlanningBudget(0,Long.MAX_VALUE,16777216,()->false,System::nanoTime);var view=new GraphStockViewWork<>(new GraphCompiler<>(recipes),"x0",1000,stock,Set.of(),Map.of(),Set.of(),true,true,new CatalystPolicy(4096,64),b,System.nanoTime(),0,()->null);int steps=0;try{while(!view.step()){if(++steps>10000000)throw new AssertionError("nontermination");}var rounds=GraphStockViewWork.class.getDeclaredField("rounds");rounds.setAccessible(true);if(rounds.getInt(view)!=64)throw new AssertionError("round cap="+rounds.getInt(view));if(view.result()!=null)throw new AssertionError("premature witness");}finally{view.close();view.close();}if(b.reservedBytes()!=0)throw new AssertionError("lease="+b.reservedBytes());System.out.println("64-round boundary passed; work="+b.nodes()+" steps="+steps);}
+}

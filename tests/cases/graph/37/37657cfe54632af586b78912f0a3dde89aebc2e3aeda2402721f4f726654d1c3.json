@@ -1,0 +1,191 @@
+{
+  "id": "37657cfe54632af586b78912f0a3dde89aebc2e3aeda2402721f4f726654d1c3",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "RAW0": 131503,
+      "RAW1": 111345,
+      "RAW2": 161396
+    },
+    "recipes": [
+      {
+        "id": "b.r2_1",
+        "inputs": {
+          "RAW2": 1
+        },
+        "outputs": {
+          "b.D2": 1,
+          "b.X1_0": 60207
+        }
+      },
+      {
+        "id": "a.finish",
+        "inputs": {
+          "a.X0_0": 4415859288,
+          "a.D1": 90360,
+          "a.D2": 80683,
+          "a.D0": 70723,
+          "a.X1_0": 11289552508
+        },
+        "outputs": {
+          "a.GOAL": 1
+        }
+      },
+      {
+        "id": "a.r1_1",
+        "inputs": {
+          "RAW1": 1
+        },
+        "outputs": {
+          "a.D1": 1,
+          "a.X1_0": 15650
+        }
+      },
+      {
+        "id": "b.r1_1",
+        "inputs": {
+          "RAW1": 1
+        },
+        "outputs": {
+          "b.D1": 1,
+          "b.X1_0": 21882
+        }
+      },
+      {
+        "id": "joint_finish",
+        "inputs": {
+          "a.GOAL": 1,
+          "b.GOAL": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "b.r0_1",
+        "inputs": {
+          "RAW0": 1
+        },
+        "outputs": {
+          "b.X1_0": 15778,
+          "b.D0": 1
+        }
+      },
+      {
+        "id": "b.r2_0",
+        "inputs": {
+          "RAW2": 1
+        },
+        "outputs": {
+          "b.X0_0": 60207,
+          "b.D2": 1
+        }
+      },
+      {
+        "id": "a.r2_1",
+        "inputs": {
+          "RAW2": 1
+        },
+        "outputs": {
+          "a.X1_0": 80536,
+          "a.D2": 1
+        }
+      },
+      {
+        "id": "a.r1_0",
+        "inputs": {
+          "RAW1": 1
+        },
+        "outputs": {
+          "a.D1": 1,
+          "a.X0_0": 15650
+        }
+      },
+      {
+        "id": "a.r0_1",
+        "inputs": {
+          "RAW0": 1
+        },
+        "outputs": {
+          "a.D0": 1,
+          "a.X1_0": 110196
+        }
+      },
+      {
+        "id": "b.r0_0",
+        "inputs": {
+          "RAW0": 1
+        },
+        "outputs": {
+          "b.X0_0": 15778,
+          "b.D0": 1
+        }
+      },
+      {
+        "id": "a.r0_0",
+        "inputs": {
+          "RAW0": 1
+        },
+        "outputs": {
+          "a.D0": 1,
+          "a.X0_0": 110196
+        }
+      },
+      {
+        "id": "b.finish",
+        "inputs": {
+          "b.X1_0": 3617525345,
+          "b.D1": 20985,
+          "b.D2": 80713,
+          "b.D0": 60780,
+          "b.X0_0": 2660142856
+        },
+        "outputs": {
+          "b.GOAL": 1
+        }
+      },
+      {
+        "id": "a.r2_0",
+        "inputs": {
+          "RAW2": 1
+        },
+        "outputs": {
+          "a.D2": 1,
+          "a.X0_0": 80536
+        }
+      },
+      {
+        "id": "b.r1_0",
+        "inputs": {
+          "RAW1": 1
+        },
+        "outputs": {
+          "b.D1": 1,
+          "b.X0_0": 21882
+        }
+      }
+    ]
+  },
+  "names": [
+    "fused_seed_0073"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/fused_seed_0073.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/fused_seed_0073.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

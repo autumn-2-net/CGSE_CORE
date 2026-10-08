@@ -1,0 +1,159 @@
+{
+  "id": "74f06e90537f7069d3f7dd5684315279ba24426d29789b2a766d48ceea63e70a",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "F": 62,
+      "Z0": 1,
+      "Z1": 1,
+      "Z2": 1,
+      "Z3": 1,
+      "Z4": 1,
+      "Z5": 1
+    },
+    "recipes": [
+      {
+        "id": "inc0",
+        "inputs": {
+          "F": 1,
+          "Z0": 1
+        },
+        "outputs": {
+          "O0": 1
+        }
+      },
+      {
+        "id": "inc1",
+        "inputs": {
+          "F": 1,
+          "O0": 1,
+          "Z1": 1
+        },
+        "outputs": {
+          "O1": 1,
+          "Z0": 1
+        }
+      },
+      {
+        "id": "inc2",
+        "inputs": {
+          "F": 1,
+          "O0": 1,
+          "O1": 1,
+          "Z2": 1
+        },
+        "outputs": {
+          "O2": 1,
+          "Z0": 1,
+          "Z1": 1
+        }
+      },
+      {
+        "id": "inc3",
+        "inputs": {
+          "F": 1,
+          "O0": 1,
+          "O1": 1,
+          "O2": 1,
+          "Z3": 1
+        },
+        "outputs": {
+          "O3": 1,
+          "Z0": 1,
+          "Z1": 1,
+          "Z2": 1
+        }
+      },
+      {
+        "id": "inc4",
+        "inputs": {
+          "F": 1,
+          "O0": 1,
+          "O1": 1,
+          "O2": 1,
+          "O3": 1,
+          "Z4": 1
+        },
+        "outputs": {
+          "O4": 1,
+          "Z0": 1,
+          "Z1": 1,
+          "Z2": 1,
+          "Z3": 1
+        }
+      },
+      {
+        "id": "inc5",
+        "inputs": {
+          "F": 1,
+          "O0": 1,
+          "O1": 1,
+          "O2": 1,
+          "O3": 1,
+          "O4": 1,
+          "Z5": 1
+        },
+        "outputs": {
+          "O5": 1,
+          "Z0": 1,
+          "Z1": 1,
+          "Z2": 1,
+          "Z3": 1,
+          "Z4": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "O0": 1,
+          "O1": 1,
+          "O2": 1,
+          "O3": 1,
+          "O4": 1,
+          "O5": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "counter_bits6_short1"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": "tools/graph-regression/fixtures/bounded/counter_bits6_short1.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/color-review-20260926/recorded/regression/cases/counter_bits6_short1.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/fused-20260926/CGSE_01c7721/recorded/regression/cases/counter_bits6_short1.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_01c7721_fused_counterexamples_20260926.zip!/CGSE_01c7721/recorded/regression/cases/counter_bits6_short1.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/recorded/regression/cases/counter_bits6_short1.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_batch_145_cases_f4cbf89_20260926.zip!/CGSE_batch_f4cbf89/recorded/screen/cases/counter_bits6_short1.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

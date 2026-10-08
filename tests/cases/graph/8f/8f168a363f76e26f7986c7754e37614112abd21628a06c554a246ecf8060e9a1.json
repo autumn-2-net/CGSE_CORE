@@ -1,0 +1,118 @@
+{
+  "id": "8f168a363f76e26f7986c7754e37614112abd21628a06c554a246ecf8060e9a1",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 4,
+      "U1": 9,
+      "U2": 7
+    },
+    "recipes": [
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 4,
+          "X0_0": 561712,
+          "X1_0": 1691818,
+          "D1": 9,
+          "D2": 7
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 52856
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 52856
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 145158
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 114000
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 145158
+        }
+      },
+      {
+        "id": "r0_0-alias",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 52856
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 114000
+        }
+      }
+    ]
+  },
+  "names": [
+    "lattice_wide_0050"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/lattice_wide_0050.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/lattice_wide_0050.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

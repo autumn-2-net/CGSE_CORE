@@ -1,0 +1,114 @@
+{
+  "id": "a00703811446540a2f15ae7d96f903cc41c64a5532e1215281a499b9e0cdd279",
+  "kind": "graph",
+  "model": {
+    "target": "p3",
+    "amount": 2,
+    "stock": {
+      "p1": 1,
+      "p2": 2
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 1
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1,
+          "p0": 1
+        }
+      },
+      {
+        "id": "r1",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r2",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      },
+      {
+        "id": "r3",
+        "slots": [
+          {
+            "key": "p3",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p0": 1,
+          "p3": 1
+        }
+      },
+      {
+        "id": "r4",
+        "slots": [
+          {
+            "key": "p3",
+            "amount": 2
+          },
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p0": 1,
+          "p3": 1
+        }
+      },
+      {
+        "id": "r5",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      }
+    ],
+    "external": []
+  },
+  "names": [
+    "finite-775"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/oracle-front-20261007/finite-cases.json",
+      "pointer": "/775"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

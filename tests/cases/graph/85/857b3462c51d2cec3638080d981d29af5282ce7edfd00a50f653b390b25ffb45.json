@@ -1,0 +1,256 @@
+{
+  "id": "857b3462c51d2cec3638080d981d29af5282ce7edfd00a50f653b390b25ffb45",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 5,
+    "stock": {
+      "R0": 1,
+      "R1": 1,
+      "R2": 1,
+      "R3": 1,
+      "R4": 1,
+      "C0": 1,
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": 1,
+      "S0": 1,
+      "S1": 1,
+      "S2": 1,
+      "S3": 1,
+      "S4": 1
+    },
+    "recipes": [
+      {
+        "id": "cell0",
+        "inputs": {
+          "R0": 1,
+          "C3": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell1",
+        "inputs": {
+          "R4": 1,
+          "C2": 1,
+          "S1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell2",
+        "inputs": {
+          "R1": 1,
+          "C3": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell3",
+        "inputs": {
+          "R3": 1,
+          "C2": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell4",
+        "inputs": {
+          "R2": 1,
+          "C4": 1,
+          "S1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell5",
+        "inputs": {
+          "R4": 1,
+          "C1": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell6",
+        "inputs": {
+          "R2": 1,
+          "C1": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell7",
+        "inputs": {
+          "R1": 1,
+          "C1": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell8",
+        "inputs": {
+          "R0": 1,
+          "C2": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell9",
+        "inputs": {
+          "R2": 1,
+          "C2": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell10",
+        "inputs": {
+          "R0": 1,
+          "C0": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell11",
+        "inputs": {
+          "R0": 1,
+          "C4": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell12",
+        "inputs": {
+          "R1": 1,
+          "C2": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell13",
+        "inputs": {
+          "R4": 1,
+          "C4": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell14",
+        "inputs": {
+          "R4": 1,
+          "C3": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell15",
+        "inputs": {
+          "R2": 1,
+          "C3": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell16",
+        "inputs": {
+          "R3": 1,
+          "C3": 1,
+          "S1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell17",
+        "inputs": {
+          "R3": 1,
+          "C1": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell18",
+        "inputs": {
+          "R3": 1,
+          "C0": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "latin_01107"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/cases/latin_01107.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/models/latin_01107.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,201 @@
+{
+  "id": "0c1a510ae4e2ac25ba2c349ed041d52406551ad5f36b5fdae6b90727daa68bce",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "RAW0": 39,
+      "RAW1": 24,
+      "RAW2": 36
+    },
+    "recipes": [
+      {
+        "id": "b.r1_1",
+        "inputs": {
+          "RAW1": 1
+        },
+        "outputs": {
+          "b.D1": 1,
+          "b.X1_0": 99660
+        }
+      },
+      {
+        "id": "a.r2_0",
+        "inputs": {
+          "RAW2": 1
+        },
+        "outputs": {
+          "a.D2": 1,
+          "a.X0_0": 94712
+        }
+      },
+      {
+        "id": "b.r1_0",
+        "inputs": {
+          "RAW1": 1
+        },
+        "outputs": {
+          "b.D1": 1,
+          "b.X0_0": 99660
+        }
+      },
+      {
+        "id": "joint_finish",
+        "inputs": {
+          "a.GOAL": 1,
+          "b.GOAL": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "b.r0_1",
+        "inputs": {
+          "RAW0": 1
+        },
+        "outputs": {
+          "b.D0": 1,
+          "b.X1_0": 100746
+        }
+      },
+      {
+        "id": "b.finish",
+        "inputs": {
+          "b.D0": 24,
+          "b.X0_0": 1404834,
+          "b.X1_0": 3108648,
+          "b.D1": 18,
+          "b.D2": 9
+        },
+        "outputs": {
+          "b.GOAL": 1
+        }
+      },
+      {
+        "id": "a.r0_1",
+        "inputs": {
+          "RAW0": 1
+        },
+        "outputs": {
+          "a.D0": 1,
+          "a.X1_0": 43085
+        }
+      },
+      {
+        "id": "a.r1_1",
+        "inputs": {
+          "RAW1": 1
+        },
+        "outputs": {
+          "a.D1": 1,
+          "a.X1_0": 78494
+        }
+      },
+      {
+        "id": "b.r2_0",
+        "inputs": {
+          "RAW2": 1
+        },
+        "outputs": {
+          "b.D2": 1,
+          "b.X0_0": 33522
+        }
+      },
+      {
+        "id": "b.r2_1",
+        "inputs": {
+          "RAW2": 1
+        },
+        "outputs": {
+          "b.D2": 1,
+          "b.X1_0": 33522
+        }
+      },
+      {
+        "id": "a.r0_0-alias",
+        "inputs": {
+          "RAW0": 1
+        },
+        "outputs": {
+          "a.D0": 1,
+          "a.X0_0": 43085
+        }
+      },
+      {
+        "id": "b.r0_0",
+        "inputs": {
+          "RAW0": 1
+        },
+        "outputs": {
+          "b.D0": 1,
+          "b.X0_0": 100746
+        }
+      },
+      {
+        "id": "a.r2_1",
+        "inputs": {
+          "RAW2": 1
+        },
+        "outputs": {
+          "a.D2": 1,
+          "a.X1_0": 94712
+        }
+      },
+      {
+        "id": "a.r0_0",
+        "inputs": {
+          "RAW0": 1
+        },
+        "outputs": {
+          "a.D0": 1,
+          "a.X0_0": 43085
+        }
+      },
+      {
+        "id": "a.r1_0",
+        "inputs": {
+          "RAW1": 1
+        },
+        "outputs": {
+          "a.D1": 1,
+          "a.X0_0": 78494
+        }
+      },
+      {
+        "id": "a.finish",
+        "inputs": {
+          "a.D0": 15,
+          "a.X0_0": 1623726,
+          "a.X1_0": 2050737,
+          "a.D1": 6,
+          "a.D2": 27
+        },
+        "outputs": {
+          "a.GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "fused_seed_0246"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/fused_seed_0246.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/fused_seed_0246.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

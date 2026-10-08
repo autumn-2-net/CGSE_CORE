@@ -1,0 +1,179 @@
+{
+  "id": "5f0517ac2ae32461a92d05b7d57d8297b598a622aeaa95b633088353f62f9c65",
+  "kind": "graph",
+  "model": {
+    "target": "p3",
+    "amount": 3,
+    "stock": {
+      "p1": 2
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "slots": [
+          {
+            "key": "p3",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r1",
+        "slots": [
+          {
+            "key": "p3",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p3": 1,
+          "p1": 1
+        }
+      },
+      {
+        "id": "r2",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 2
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1,
+          "p1": 1,
+          "p3": 1
+        }
+      },
+      {
+        "id": "r3",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 2
+          },
+          {
+            "key": "p3",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 2
+        }
+      },
+      {
+        "id": "r4",
+        "slots": [
+          {
+            "key": "p3",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p3": 1,
+          "p0": 1
+        }
+      },
+      {
+        "id": "r5",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 3
+          }
+        ],
+        "outputs": {
+          "p0": 1,
+          "p1": 2
+        }
+      },
+      {
+        "id": "r6",
+        "slots": [
+          {
+            "key": "p3",
+            "amount": 1
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p0": 1
+        }
+      },
+      {
+        "id": "r7",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 3
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      },
+      {
+        "id": "r8",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 2
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p3": 2
+        }
+      },
+      {
+        "id": "r9",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p3": 1
+        }
+      }
+    ],
+    "external": []
+  },
+  "names": [
+    "fresh-finite-695"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/support-completion-20261007/fresh-finite-cases.json",
+      "pointer": "/695"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

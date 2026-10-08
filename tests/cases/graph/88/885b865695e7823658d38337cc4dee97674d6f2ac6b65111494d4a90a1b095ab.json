@@ -1,0 +1,685 @@
+{
+  "id": "885b865695e7823658d38337cc4dee97674d6f2ac6b65111494d4a90a1b095ab",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "b0.U0": 2,
+      "b0.U1": 2,
+      "b0.U2": 2,
+      "b0.U3": 2,
+      "b0.U4": 2,
+      "b0.U5": 2,
+      "b0.U6": 2,
+      "b0.U7": 2,
+      "b1.U0": 1,
+      "b1.U1": 1,
+      "b1.U10": 1,
+      "b1.U11": 1,
+      "b1.U12": 1,
+      "b1.U13": 1,
+      "b1.U2": 1,
+      "b1.U3": 1,
+      "b1.U4": 1,
+      "b1.U5": 1,
+      "b1.U6": 1,
+      "b1.U7": 1,
+      "b1.U8": 1,
+      "b1.U9": 1
+    },
+    "recipes": [
+      {
+        "id": "b1.e1_1_6",
+        "inputs": {
+          "b1.U13": 1,
+          "b1.U8": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.finish",
+        "inputs": {
+          "b0.D0": 2,
+          "b0.D4": 2,
+          "b0.D3": 2,
+          "b0.D1": 2,
+          "b0.X1": 2435,
+          "b0.X0": 3926,
+          "b0.D6": 2,
+          "b0.D5": 2,
+          "b0.D7": 2,
+          "b0.Y0": 4944,
+          "b0.D2": 2,
+          "b0.Y1": 6435
+        },
+        "outputs": {
+          "b0.GOAL": 1
+        }
+      },
+      {
+        "id": "b1.e1_2_6",
+        "inputs": {
+          "b1.U9": 1,
+          "b1.U13": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_0_4",
+        "inputs": {
+          "b1.U11": 1,
+          "b1.U7": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_4_6",
+        "inputs": {
+          "b1.U13": 1,
+          "b1.U11": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_2_3",
+        "inputs": {
+          "b1.U9": 1,
+          "b1.U10": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_4_5",
+        "inputs": {
+          "b1.U12": 1,
+          "b1.U11": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_3_4",
+        "inputs": {
+          "b1.U3": 1,
+          "b1.U4": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.a2",
+        "inputs": {
+          "b0.U2": 1
+        },
+        "outputs": {
+          "b0.X0": 650,
+          "b0.D2": 1,
+          "b0.X1": 851
+        }
+      },
+      {
+        "id": "b1.e1_0_5",
+        "inputs": {
+          "b1.U7": 1,
+          "b1.U12": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_3_6",
+        "inputs": {
+          "b1.U13": 1,
+          "b1.U10": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_2_3",
+        "inputs": {
+          "b1.U2": 1,
+          "b1.U3": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.a6",
+        "inputs": {
+          "b0.U6": 1
+        },
+        "outputs": {
+          "b0.X0": 280,
+          "b0.D6": 1,
+          "b0.X1": 843
+        }
+      },
+      {
+        "id": "b1.e1_0_1",
+        "inputs": {
+          "b1.U8": 1,
+          "b1.U7": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_4_5",
+        "inputs": {
+          "b1.U4": 1,
+          "b1.U5": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_0_6",
+        "inputs": {
+          "b1.U7": 1,
+          "b1.U13": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_1_3",
+        "inputs": {
+          "b1.U10": 1,
+          "b1.U8": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_0_4",
+        "inputs": {
+          "b1.U4": 1,
+          "b1.U0": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_0_5",
+        "inputs": {
+          "b1.U5": 1,
+          "b1.U0": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_1_4",
+        "inputs": {
+          "b1.U1": 1,
+          "b1.U4": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_1_5",
+        "inputs": {
+          "b1.U12": 1,
+          "b1.U8": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.b2",
+        "inputs": {
+          "b0.U2": 1
+        },
+        "outputs": {
+          "b0.Y0": 650,
+          "b0.D2": 1,
+          "b0.Y1": 851
+        }
+      },
+      {
+        "id": "b1.e0_1_5",
+        "inputs": {
+          "b1.U1": 1,
+          "b1.U5": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_0_6",
+        "inputs": {
+          "b1.U6": 1,
+          "b1.U0": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_2_4",
+        "inputs": {
+          "b1.U4": 1,
+          "b1.U2": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.b7",
+        "inputs": {
+          "b0.U7": 1
+        },
+        "outputs": {
+          "b0.Y1": 52,
+          "b0.Y0": 884,
+          "b0.D7": 1
+        }
+      },
+      {
+        "id": "b1.e1_2_4",
+        "inputs": {
+          "b1.U9": 1,
+          "b1.U11": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_0_2",
+        "inputs": {
+          "b1.U2": 1,
+          "b1.U0": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_3_5",
+        "inputs": {
+          "b1.U5": 1,
+          "b1.U3": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_0_3",
+        "inputs": {
+          "b1.U10": 1,
+          "b1.U7": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.a7",
+        "inputs": {
+          "b0.U7": 1
+        },
+        "outputs": {
+          "b0.X1": 52,
+          "b0.X0": 884,
+          "b0.D7": 1
+        }
+      },
+      {
+        "id": "b0.a3",
+        "inputs": {
+          "b0.U3": 1
+        },
+        "outputs": {
+          "b0.X0": 201,
+          "b0.D3": 1,
+          "b0.X1": 713
+        }
+      },
+      {
+        "id": "b0.b6",
+        "inputs": {
+          "b0.U6": 1
+        },
+        "outputs": {
+          "b0.Y0": 280,
+          "b0.Y1": 843,
+          "b0.D6": 1
+        }
+      },
+      {
+        "id": "b1.e1_0_2",
+        "inputs": {
+          "b1.U9": 1,
+          "b1.U7": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.b5",
+        "inputs": {
+          "b0.U5": 1
+        },
+        "outputs": {
+          "b0.D5": 1,
+          "b0.Y0": 962,
+          "b0.Y1": 739
+        }
+      },
+      {
+        "id": "b1.e0_1_2",
+        "inputs": {
+          "b1.U1": 1,
+          "b1.U2": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.a5",
+        "inputs": {
+          "b0.U5": 1
+        },
+        "outputs": {
+          "b0.X1": 739,
+          "b0.X0": 962,
+          "b0.D5": 1
+        }
+      },
+      {
+        "id": "b1.e1_1_2",
+        "inputs": {
+          "b1.U9": 1,
+          "b1.U8": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_0_3",
+        "inputs": {
+          "b1.U3": 1,
+          "b1.U0": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_0_1",
+        "inputs": {
+          "b1.U0": 1,
+          "b1.U1": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_1_3",
+        "inputs": {
+          "b1.U3": 1,
+          "b1.U1": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_5_6",
+        "inputs": {
+          "b1.U6": 1,
+          "b1.U5": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.b4",
+        "inputs": {
+          "b0.U4": 1
+        },
+        "outputs": {
+          "b0.D4": 1,
+          "b0.Y1": 496,
+          "b0.Y0": 912
+        }
+      },
+      {
+        "id": "b1.e0_1_6",
+        "inputs": {
+          "b1.U6": 1,
+          "b1.U1": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.b1",
+        "inputs": {
+          "b0.U1": 1
+        },
+        "outputs": {
+          "b0.Y1": 255,
+          "b0.Y0": 381,
+          "b0.D1": 1
+        }
+      },
+      {
+        "id": "b1.e1_2_5",
+        "inputs": {
+          "b1.U12": 1,
+          "b1.U9": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e1_5_6",
+        "inputs": {
+          "b1.U13": 1,
+          "b1.U12": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_4_6",
+        "inputs": {
+          "b1.U6": 1,
+          "b1.U4": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.b0",
+        "inputs": {
+          "b0.U0": 1
+        },
+        "outputs": {
+          "b0.Y0": 165,
+          "b0.D0": 1,
+          "b0.Y1": 486
+        }
+      },
+      {
+        "id": "b0.a0",
+        "inputs": {
+          "b0.U0": 1
+        },
+        "outputs": {
+          "b0.D0": 1,
+          "b0.X0": 165,
+          "b0.X1": 486
+        }
+      },
+      {
+        "id": "b1.e1_3_4",
+        "inputs": {
+          "b1.U11": 1,
+          "b1.U10": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.b3",
+        "inputs": {
+          "b0.U3": 1
+        },
+        "outputs": {
+          "b0.Y1": 713,
+          "b0.D3": 1,
+          "b0.Y0": 201
+        }
+      },
+      {
+        "id": "b1.e0_2_5",
+        "inputs": {
+          "b1.U5": 1,
+          "b1.U2": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.a1",
+        "inputs": {
+          "b0.U1": 1
+        },
+        "outputs": {
+          "b0.X0": 381,
+          "b0.X1": 255,
+          "b0.D1": 1
+        }
+      },
+      {
+        "id": "b1.e1_3_5",
+        "inputs": {
+          "b1.U10": 1,
+          "b1.U12": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "b1.GOAL": 1,
+          "b0.GOAL": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "b1.finish",
+        "inputs": {
+          "b1.PAIR": 7
+        },
+        "outputs": {
+          "b1.GOAL": 1
+        }
+      },
+      {
+        "id": "b1.e1_1_4",
+        "inputs": {
+          "b1.U11": 1,
+          "b1.U8": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_3_6",
+        "inputs": {
+          "b1.U6": 1,
+          "b1.U3": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b1.e0_2_6",
+        "inputs": {
+          "b1.U6": 1,
+          "b1.U2": 1
+        },
+        "outputs": {
+          "b1.PAIR": 1
+        }
+      },
+      {
+        "id": "b0.a4",
+        "inputs": {
+          "b0.U4": 1
+        },
+        "outputs": {
+          "b0.D4": 1,
+          "b0.X1": 496,
+          "b0.X0": 912
+        }
+      }
+    ]
+  },
+  "names": [
+    "independent_constraint0__perm0"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/fused-20260926/permuted-0/independent_constraint0.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

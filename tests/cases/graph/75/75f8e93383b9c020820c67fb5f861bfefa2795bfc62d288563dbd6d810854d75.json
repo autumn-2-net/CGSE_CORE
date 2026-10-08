@@ -1,0 +1,44 @@
+{
+  "id": "75f8e93383b9c020820c67fb5f861bfefa2795bfc62d288563dbd6d810854d75",
+  "kind": "graph",
+  "model": {
+    "target": "A",
+    "amount": 1000000000,
+    "stock": {
+      "A": 1,
+      "F": 999999999
+    },
+    "recipes": [
+      {
+        "id": "copy",
+        "inputs": {
+          "A": 1,
+          "F": 1
+        },
+        "outputs": {
+          "A": 2
+        }
+      }
+    ]
+  },
+  "names": [
+    "selfcopy_n1000000000"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/color-review-20260926/common-input/selfcopy_n1000000000.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/common-input/selfcopy_n1000000000.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,3 @@
+package org.cgse.core;
+import java.util.*;import java.math.*;
+public class JumpZeroTermProbe{public static void main(String[]args){var b=new PlanningBudget(0,1000000,32L<<20,()->false,System::nanoTime);var t=new LinkedHashMap<Integer,BigInteger>();t.put(0,BigInteger.ZERO);t.put(1,BigInteger.ONE);try(var j=new CountJump(List.of(new ExactLinearProgram.Constraint(t,BigInteger.ONE.negate())),new BigInteger[]{BigInteger.ZERO,BigInteger.ZERO},new BigInteger[]{BigInteger.TEN,BigInteger.TEN},b,4096).retained()){while(!j.step()){}if(j.counts()!=null)throw new AssertionError();}if(b.reservedBytes()!=0)throw new AssertionError();System.out.println("PASS zero-term perturb");}}

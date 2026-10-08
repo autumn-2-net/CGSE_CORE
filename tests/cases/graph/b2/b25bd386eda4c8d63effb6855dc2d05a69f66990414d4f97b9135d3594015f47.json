@@ -1,0 +1,120 @@
+{
+  "id": "b25bd386eda4c8d63effb6855dc2d05a69f66990414d4f97b9135d3594015f47",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 301,
+      "U1": 605,
+      "U2": 801,
+      "F": 1708
+    },
+    "recipes": [
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1,
+          "F": 1
+        },
+        "outputs": {
+          "X1_0": 5977,
+          "D1": 1
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1,
+          "F": 1
+        },
+        "outputs": {
+          "X1_0": 11845,
+          "D2": 1
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1,
+          "F": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 11845
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1,
+          "F": 1
+        },
+        "outputs": {
+          "X0_0": 5977,
+          "D1": 1
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "F": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "X0_0": 12081,
+          "D0": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "X0_0": 6225897,
+          "F": 1,
+          "D1": 605,
+          "D0": 301,
+          "D2": 801,
+          "X1_0": 10514414
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 12081
+        }
+      }
+    ]
+  },
+  "names": [
+    "reduced_optional_lossy_0177_normalize_units"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded-inputs.json",
+      "pointer": "/224"
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/reduction-models/reduced_optional_lossy_0177_normalize_units.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/reductions/reduced_optional_lossy_0177_normalize_units.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

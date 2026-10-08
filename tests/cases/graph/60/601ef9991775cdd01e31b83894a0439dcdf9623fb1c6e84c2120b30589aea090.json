@@ -1,0 +1,112 @@
+{
+  "id": "601ef9991775cdd01e31b83894a0439dcdf9623fb1c6e84c2120b30589aea090",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 60574,
+      "U1": 40416,
+      "U2": 60237
+    },
+    "recipes": [
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 60574,
+          "X0_0": 4406035657,
+          "X1_0": 2394327819,
+          "D1": 40416,
+          "D2": 60237
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 10684
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 53532
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 72461
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 10684
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 53532
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 72461
+        }
+      }
+    ]
+  },
+  "names": [
+    "lattice_wide_0228"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded-inputs.json",
+      "pointer": "/13"
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/lattice_wide_0228.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/lattice_wide_0228.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,186 @@
+{
+  "id": "92565840b213346a9c61678e865489d58ce8f57657e7cba960f4ea4508479de2",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 3,
+      "U1": 7,
+      "U2": 7,
+      "U3": 7
+    },
+    "recipes": [
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 39745,
+          "X0_1": 6011
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 9294,
+          "X0_1": 88400
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 97715,
+          "X0_1": 50303
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 9294,
+          "X1_1": 88400
+        }
+      },
+      {
+        "id": "r0_2",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X2_0": 39745,
+          "X2_1": 6011
+        }
+      },
+      {
+        "id": "r3_2",
+        "inputs": {
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X2_0": 30141,
+          "X2_1": 44754
+        }
+      },
+      {
+        "id": "r3_1",
+        "inputs": {
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X1_0": 30141,
+          "X1_1": 44754
+        }
+      },
+      {
+        "id": "r1_2",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X2_0": 9294,
+          "X2_1": 88400
+        }
+      },
+      {
+        "id": "r3_0",
+        "inputs": {
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X0_0": 30141,
+          "X0_1": 44754
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 3,
+          "X0_0": 58023,
+          "X0_1": 309954,
+          "X1_0": 311733,
+          "X1_1": 327709,
+          "X2_0": 709529,
+          "X2_1": 664569,
+          "D1": 7,
+          "D2": 7,
+          "D3": 7
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 97715,
+          "X1_1": 50303
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 39745,
+          "X1_1": 6011
+        }
+      },
+      {
+        "id": "r2_2",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X2_0": 97715,
+          "X2_1": 50303
+        }
+      }
+    ]
+  },
+  "names": [
+    "joint_accounts_0235"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/joint_accounts_0235.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/joint_accounts_0235.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,108 @@
+{
+  "id": "019cc7cd34ed1f44756efd5ada98800a91062b4650c980105e6ac709a1f4e657",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 9,
+      "U1": 12,
+      "U2": 21
+    },
+    "recipes": [
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "X0_0": 61930,
+          "D1": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D2": 21,
+          "X1_0": 217772,
+          "X0_0": 1492099,
+          "D1": 12,
+          "D0": 9
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "X1_0": 61930,
+          "D1": 1
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "X1_0": 40501,
+          "D2": 1
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "X0_0": 12910,
+          "D0": 1
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 40501
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "X1_0": 12910,
+          "D0": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "lattice_wide_0201"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/lattice_wide_0201.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/lattice_wide_0201.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

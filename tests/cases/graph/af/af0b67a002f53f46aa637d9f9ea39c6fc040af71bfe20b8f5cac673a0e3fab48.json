@@ -1,0 +1,127 @@
+{
+  "id": "af0b67a002f53f46aa637d9f9ea39c6fc040af71bfe20b8f5cac673a0e3fab48",
+  "kind": "graph",
+  "model": {
+    "target": "p2",
+    "amount": 3,
+    "stock": {
+      "p0": 1
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p0",
+            "amount": 2
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      },
+      {
+        "id": "r1",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r2",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p0": 1,
+          "p2": 1
+        }
+      },
+      {
+        "id": "r3",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p0": 2
+        }
+      },
+      {
+        "id": "r4",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r5",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r6",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      }
+    ],
+    "external": []
+  },
+  "names": [
+    "finite-596"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/oracle-front-20261007/finite-cases.json",
+      "pointer": "/596"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

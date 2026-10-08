@@ -1,0 +1,173 @@
+{
+  "id": "047e283f9e135364a86f3bdec713bc6e9284094f60e498f0fc3dc1818f08a876",
+  "kind": "graph",
+  "model": {
+    "target": "p2",
+    "amount": 2,
+    "stock": {
+      "p0": 1,
+      "p1": 1
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 1
+          },
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 2
+        }
+      },
+      {
+        "id": "r1",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p2": 1,
+          "p1": 1
+        }
+      },
+      {
+        "id": "r2",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p0": 1
+        }
+      },
+      {
+        "id": "r3",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 2
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1,
+          "p0": 1
+        }
+      },
+      {
+        "id": "r4",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 1
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      },
+      {
+        "id": "r5",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 1
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p0": 1
+        }
+      },
+      {
+        "id": "r6",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 1
+          },
+          {
+            "key": "p1",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p0": 2
+        }
+      },
+      {
+        "id": "r7",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 2
+          },
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      },
+      {
+        "id": "r8",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      }
+    ],
+    "external": []
+  },
+  "names": [
+    "finite-574"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/oracle-front-20261007/finite-cases.json",
+      "pointer": "/574"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,4 +1,4 @@
-package org.gtlcore.gtlcore.integration.ae2.graph.core;
+package org.cgse.core;
 
 /** Captured before background planning; this value never reads a CPU or the world. */
 public record CatalystPolicy(int parallelism, int maxExtraCopies) {

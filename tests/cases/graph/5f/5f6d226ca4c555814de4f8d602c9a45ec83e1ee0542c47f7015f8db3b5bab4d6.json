@@ -1,0 +1,170 @@
+{
+  "id": "5f6d226ca4c555814de4f8d602c9a45ec83e1ee0542c47f7015f8db3b5bab4d6",
+  "kind": "graph",
+  "model": {
+    "target": "p3",
+    "amount": 1,
+    "stock": {
+      "p2": 1
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 2
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1,
+          "p0": 1
+        }
+      },
+      {
+        "id": "r1",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r2",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 1
+          },
+          {
+            "key": "p3",
+            "amount": 1
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p3": 3
+        }
+      },
+      {
+        "id": "r3",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 2
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p0": 2,
+          "p2": 1
+        }
+      },
+      {
+        "id": "r4",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 2
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r5",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p3": 1,
+          "p1": 1
+        }
+      },
+      {
+        "id": "r6",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r7",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p3",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 2,
+          "p3": 1
+        }
+      }
+    ],
+    "external": []
+  },
+  "names": [
+    "finite-645"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/oracle-front-20261007/finite-cases.json",
+      "pointer": "/645"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

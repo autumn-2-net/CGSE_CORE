@@ -1,0 +1,156 @@
+{
+  "id": "2bf08c87c60f02954d9c85d3a563197e7ace2c8392bc92c2eb31a5c4082e5a80",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 80908,
+      "U1": 50143,
+      "U2": 80098,
+      "F": 211150
+    },
+    "recipes": [
+      {
+        "id": "r0_1",
+        "inputs": {
+          "F": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 108706
+        }
+      },
+      {
+        "id": "loss_A",
+        "inputs": {
+          "F": 1,
+          "D0": 2
+        },
+        "outputs": {
+          "JUNK": 1
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "F": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 82786
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1,
+          "F": 1
+        },
+        "outputs": {
+          "X0_0": 12334,
+          "D2": 1
+        }
+      },
+      {
+        "id": "drain",
+        "inputs": {
+          "F": 1,
+          "U1": 2
+        },
+        "outputs": {
+          "D1": 1
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1,
+          "F": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 12334
+        }
+      },
+      {
+        "id": "loss_B",
+        "inputs": {
+          "JUNK": 1,
+          "F": 1
+        },
+        "outputs": {
+          "U0": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "F": 1,
+          "D2": 80098,
+          "X0_0": 8060078962,
+          "D1": 50143,
+          "D0": 80908,
+          "X1_0": 5874173216
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "X0_0": 108706,
+          "D0": 1
+        }
+      },
+      {
+        "id": "cross",
+        "inputs": {
+          "F": 1,
+          "X0_0": 100003
+        },
+        "outputs": {
+          "D1": 1
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1,
+          "F": 1
+        },
+        "outputs": {
+          "X1_0": 82786,
+          "D1": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "optional_lossy_0193"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/optional_lossy_0193.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/optional_lossy_0193.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

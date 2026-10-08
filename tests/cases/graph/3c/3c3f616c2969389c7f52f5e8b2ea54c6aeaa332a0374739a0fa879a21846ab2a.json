@@ -1,0 +1,162 @@
+{
+  "id": "3c3f616c2969389c7f52f5e8b2ea54c6aeaa332a0374739a0fa879a21846ab2a",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 4,
+      "U1": 9,
+      "U2": 9
+    },
+    "recipes": [
+      {
+        "id": "r2_1.s0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "r2_1.p0": 1
+        }
+      },
+      {
+        "id": "r1_1.s0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "r1_1.p0": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D1": 9,
+          "X0_0": 703648,
+          "D2": 9,
+          "D0": 4,
+          "X1_0": 411139
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r2_0.s0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "r2_0.p0": 1
+        }
+      },
+      {
+        "id": "r0_1.s1",
+        "inputs": {
+          "r0_1.p0": 1
+        },
+        "outputs": {
+          "X1_0": 42458,
+          "D0": 1
+        }
+      },
+      {
+        "id": "r2_0.s1",
+        "inputs": {
+          "r2_0.p0": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 90240
+        }
+      },
+      {
+        "id": "r1_0.s1",
+        "inputs": {
+          "r1_0.p0": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 14755
+        }
+      },
+      {
+        "id": "r0_0.s0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "r0_0.p0": 1
+        }
+      },
+      {
+        "id": "r1_0.s0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "r1_0.p0": 1
+        }
+      },
+      {
+        "id": "r2_1.s1",
+        "inputs": {
+          "r2_1.p0": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 90240
+        }
+      },
+      {
+        "id": "r0_0.s1",
+        "inputs": {
+          "r0_0.p0": 1
+        },
+        "outputs": {
+          "X0_0": 42458,
+          "D0": 1
+        }
+      },
+      {
+        "id": "r1_1.s1",
+        "inputs": {
+          "r1_1.p0": 1
+        },
+        "outputs": {
+          "X1_0": 14755,
+          "D1": 1
+        }
+      },
+      {
+        "id": "r0_1.s0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "r0_1.p0": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "split_pipeline_0105"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/split_pipeline_0105.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/split_pipeline_0105.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

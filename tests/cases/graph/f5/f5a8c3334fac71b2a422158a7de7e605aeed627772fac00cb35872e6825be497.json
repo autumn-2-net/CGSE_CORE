@@ -1,0 +1,116 @@
+{
+  "id": "f5a8c3334fac71b2a422158a7de7e605aeed627772fac00cb35872e6825be497",
+  "kind": "graph",
+  "model": {
+    "target": "p3",
+    "amount": 2,
+    "stock": {
+      "p2": 1
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r1",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      },
+      {
+        "id": "r2",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r3",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1,
+          "p3": 1
+        }
+      },
+      {
+        "id": "r4",
+        "slots": [
+          {
+            "key": "p3",
+            "amount": 1
+          },
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p3": 1
+        }
+      },
+      {
+        "id": "r5",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 2
+          },
+          {
+            "key": "p0",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p0": 1,
+          "p3": 1
+        }
+      }
+    ],
+    "external": []
+  },
+  "names": [
+    "fresh-finite-907"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/support-completion-20261007/fresh-finite-cases.json",
+      "pointer": "/907"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

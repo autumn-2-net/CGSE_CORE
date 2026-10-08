@@ -1,0 +1,205 @@
+{
+  "id": "bc31718e96701c59bfb9a90febca2c0bd9682c8874501bdf8ca9ae8859f01698",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 21,
+      "U1": 27,
+      "U2": 27,
+      "U3": 15,
+      "U4": 18
+    },
+    "recipes": [
+      {
+        "id": "r4_0",
+        "inputs": {
+          "U4": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X0_0": 38174,
+          "X0_1": 31242
+        }
+      },
+      {
+        "id": "r0_2",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X2_0": 15369,
+          "X2_1": 26951
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 15369,
+          "X1_1": 26951
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 15369,
+          "X0_1": 26951
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 21,
+          "X0_0": 1320870,
+          "X0_1": 1089966,
+          "X1_0": 1462591,
+          "X1_1": 1899047,
+          "X2_0": 450557,
+          "X2_1": 641833,
+          "D1": 27,
+          "D2": 27,
+          "D3": 15,
+          "D4": 18
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 48704,
+          "X1_1": 6598
+        }
+      },
+      {
+        "id": "r3_1",
+        "inputs": {
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X1_0": 11978,
+          "X1_1": 27052
+        }
+      },
+      {
+        "id": "r4_1",
+        "inputs": {
+          "U4": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X1_0": 38174,
+          "X1_1": 31242
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 27017,
+          "X0_1": 71059
+        }
+      },
+      {
+        "id": "r4_2",
+        "inputs": {
+          "U4": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X2_0": 38174,
+          "X2_1": 31242
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 48704,
+          "X0_1": 6598
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 27017,
+          "X1_1": 71059
+        }
+      },
+      {
+        "id": "r3_2",
+        "inputs": {
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X2_0": 11978,
+          "X2_1": 27052
+        }
+      }
+    ]
+  },
+  "names": [
+    "reduced_joint_accounts_0006_drop_unused",
+    "reduced_joint_accounts_0006_normalize_units"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded-inputs.json",
+      "pointer": "/201"
+    },
+    {
+      "source": ".local/web-review-20260927/seeded-inputs.json",
+      "pointer": "/202"
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/reduction-models/reduced_joint_accounts_0006_drop_unused.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/reduction-models/reduced_joint_accounts_0006_normalize_units.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/reductions/reduced_joint_accounts_0006_drop_unused.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/reductions/reduced_joint_accounts_0006_normalize_units.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

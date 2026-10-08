@@ -1,4 +1,4 @@
-package org.gtlcore.gtlcore.integration.ae2.graph.core;
+package org.cgse.core;
 
 import java.math.BigInteger;
 import java.util.*;

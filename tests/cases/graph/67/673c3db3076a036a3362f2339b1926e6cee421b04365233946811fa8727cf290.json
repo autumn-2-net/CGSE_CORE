@@ -1,0 +1,62 @@
+{
+  "id": "673c3db3076a036a3362f2339b1926e6cee421b04365233946811fa8727cf290",
+  "kind": "graph",
+  "model": {
+    "target": "target",
+    "amount": 7,
+    "stock": {
+      "raw": 14
+    },
+    "recipes": [
+      {
+        "id": "make_x",
+        "inputs": {
+          "raw": 1
+        },
+        "outputs": {
+          "x": 1
+        }
+      },
+      {
+        "id": "root",
+        "inputs": {
+          "x": 1,
+          "y": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "make_y",
+        "inputs": {
+          "x": 1
+        },
+        "outputs": {
+          "y": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "shared sibling shuffle 0",
+    "shared sibling shuffle 5"
+  ],
+  "expected": "UNKNOWN",
+  "origins": [
+    {
+      "source": ".local/cgse-feedback-fixes-20261003/fallback/runtime/fixtures.json",
+      "pointer": "/23"
+    },
+    {
+      "source": ".local/cgse-feedback-fixes-20261003/fallback/runtime/fixtures.json",
+      "pointer": "/28"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,566 @@
+{
+  "id": "8acd15f61a4beec1e9e6e17378754c05cf74e009964af6252b2f083aa85cea56",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 2,
+      "U1": 3,
+      "U2": 3,
+      "U3": 3,
+      "U4": 3,
+      "U5": 3,
+      "CAT": 1
+    },
+    "recipes": [
+      {
+        "id": "r0_0.stage0",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r0_0.P0": 1
+        }
+      },
+      {
+        "id": "r0_0.stage1",
+        "inputs": {
+          "r0_0.P0": 1
+        },
+        "outputs": {
+          "r0_0.P1": 1
+        }
+      },
+      {
+        "id": "r0_0.stage2",
+        "inputs": {
+          "r0_0.P1": 1
+        },
+        "outputs": {
+          "r0_0.P2": 1
+        }
+      },
+      {
+        "id": "r0_0.stage3",
+        "inputs": {
+          "r0_0.P2": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 510,
+          "X0_1": 104,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r0_1.stage0",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r0_1.P0": 1
+        }
+      },
+      {
+        "id": "r0_1.stage1",
+        "inputs": {
+          "r0_1.P0": 1
+        },
+        "outputs": {
+          "r0_1.P1": 1
+        }
+      },
+      {
+        "id": "r0_1.stage2",
+        "inputs": {
+          "r0_1.P1": 1
+        },
+        "outputs": {
+          "r0_1.P2": 1
+        }
+      },
+      {
+        "id": "r0_1.stage3",
+        "inputs": {
+          "r0_1.P2": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 510,
+          "X1_1": 104,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r1_0.stage0",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r1_0.P0": 1
+        }
+      },
+      {
+        "id": "r1_0.stage1",
+        "inputs": {
+          "r1_0.P0": 1
+        },
+        "outputs": {
+          "r1_0.P1": 1
+        }
+      },
+      {
+        "id": "r1_0.stage2",
+        "inputs": {
+          "r1_0.P1": 1
+        },
+        "outputs": {
+          "r1_0.P2": 1
+        }
+      },
+      {
+        "id": "r1_0.stage3",
+        "inputs": {
+          "r1_0.P2": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 494,
+          "X0_1": 977,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r1_1.stage0",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r1_1.P0": 1
+        }
+      },
+      {
+        "id": "r1_1.stage1",
+        "inputs": {
+          "r1_1.P0": 1
+        },
+        "outputs": {
+          "r1_1.P1": 1
+        }
+      },
+      {
+        "id": "r1_1.stage2",
+        "inputs": {
+          "r1_1.P1": 1
+        },
+        "outputs": {
+          "r1_1.P2": 1
+        }
+      },
+      {
+        "id": "r1_1.stage3",
+        "inputs": {
+          "r1_1.P2": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 494,
+          "X1_1": 977,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_0.stage0",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r2_0.P0": 1
+        }
+      },
+      {
+        "id": "r2_0.stage1",
+        "inputs": {
+          "r2_0.P0": 1
+        },
+        "outputs": {
+          "r2_0.P1": 1
+        }
+      },
+      {
+        "id": "r2_0.stage2",
+        "inputs": {
+          "r2_0.P1": 1
+        },
+        "outputs": {
+          "r2_0.P2": 1
+        }
+      },
+      {
+        "id": "r2_0.stage3",
+        "inputs": {
+          "r2_0.P2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 811,
+          "X0_1": 956,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_1.stage0",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r2_1.P0": 1
+        }
+      },
+      {
+        "id": "r2_1.stage1",
+        "inputs": {
+          "r2_1.P0": 1
+        },
+        "outputs": {
+          "r2_1.P1": 1
+        }
+      },
+      {
+        "id": "r2_1.stage2",
+        "inputs": {
+          "r2_1.P1": 1
+        },
+        "outputs": {
+          "r2_1.P2": 1
+        }
+      },
+      {
+        "id": "r2_1.stage3",
+        "inputs": {
+          "r2_1.P2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 811,
+          "X1_1": 956,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r3_0.stage0",
+        "inputs": {
+          "U3": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r3_0.P0": 1
+        }
+      },
+      {
+        "id": "r3_0.stage1",
+        "inputs": {
+          "r3_0.P0": 1
+        },
+        "outputs": {
+          "r3_0.P1": 1
+        }
+      },
+      {
+        "id": "r3_0.stage2",
+        "inputs": {
+          "r3_0.P1": 1
+        },
+        "outputs": {
+          "r3_0.P2": 1
+        }
+      },
+      {
+        "id": "r3_0.stage3",
+        "inputs": {
+          "r3_0.P2": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X0_0": 967,
+          "X0_1": 732,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r3_1.stage0",
+        "inputs": {
+          "U3": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r3_1.P0": 1
+        }
+      },
+      {
+        "id": "r3_1.stage1",
+        "inputs": {
+          "r3_1.P0": 1
+        },
+        "outputs": {
+          "r3_1.P1": 1
+        }
+      },
+      {
+        "id": "r3_1.stage2",
+        "inputs": {
+          "r3_1.P1": 1
+        },
+        "outputs": {
+          "r3_1.P2": 1
+        }
+      },
+      {
+        "id": "r3_1.stage3",
+        "inputs": {
+          "r3_1.P2": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X1_0": 967,
+          "X1_1": 732,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r4_0.stage0",
+        "inputs": {
+          "U4": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r4_0.P0": 1
+        }
+      },
+      {
+        "id": "r4_0.stage1",
+        "inputs": {
+          "r4_0.P0": 1
+        },
+        "outputs": {
+          "r4_0.P1": 1
+        }
+      },
+      {
+        "id": "r4_0.stage2",
+        "inputs": {
+          "r4_0.P1": 1
+        },
+        "outputs": {
+          "r4_0.P2": 1
+        }
+      },
+      {
+        "id": "r4_0.stage3",
+        "inputs": {
+          "r4_0.P2": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X0_0": 540,
+          "X0_1": 724,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r4_1.stage0",
+        "inputs": {
+          "U4": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r4_1.P0": 1
+        }
+      },
+      {
+        "id": "r4_1.stage1",
+        "inputs": {
+          "r4_1.P0": 1
+        },
+        "outputs": {
+          "r4_1.P1": 1
+        }
+      },
+      {
+        "id": "r4_1.stage2",
+        "inputs": {
+          "r4_1.P1": 1
+        },
+        "outputs": {
+          "r4_1.P2": 1
+        }
+      },
+      {
+        "id": "r4_1.stage3",
+        "inputs": {
+          "r4_1.P2": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X1_0": 540,
+          "X1_1": 724,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r5_0.stage0",
+        "inputs": {
+          "U5": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r5_0.P0": 1
+        }
+      },
+      {
+        "id": "r5_0.stage1",
+        "inputs": {
+          "r5_0.P0": 1
+        },
+        "outputs": {
+          "r5_0.P1": 1
+        }
+      },
+      {
+        "id": "r5_0.stage2",
+        "inputs": {
+          "r5_0.P1": 1
+        },
+        "outputs": {
+          "r5_0.P2": 1
+        }
+      },
+      {
+        "id": "r5_0.stage3",
+        "inputs": {
+          "r5_0.P2": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X0_0": 305,
+          "X0_1": 10,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r5_1.stage0",
+        "inputs": {
+          "U5": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r5_1.P0": 1
+        }
+      },
+      {
+        "id": "r5_1.stage1",
+        "inputs": {
+          "r5_1.P0": 1
+        },
+        "outputs": {
+          "r5_1.P1": 1
+        }
+      },
+      {
+        "id": "r5_1.stage2",
+        "inputs": {
+          "r5_1.P1": 1
+        },
+        "outputs": {
+          "r5_1.P2": 1
+        }
+      },
+      {
+        "id": "r5_1.stage3",
+        "inputs": {
+          "r5_1.P2": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X1_0": 305,
+          "X1_1": 10,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "deliver.stage0",
+        "inputs": {
+          "D0": 3,
+          "X1_0": 5141,
+          "X1_1": 4688,
+          "D1": 3,
+          "X0_0": 5740,
+          "X0_1": 5821,
+          "D2": 3,
+          "D3": 3,
+          "D4": 3,
+          "D5": 3,
+          "CAT": 1
+        },
+        "outputs": {
+          "deliver.P0": 1
+        }
+      },
+      {
+        "id": "deliver.stage1",
+        "inputs": {
+          "deliver.P0": 1
+        },
+        "outputs": {
+          "deliver.P1": 1
+        }
+      },
+      {
+        "id": "deliver.stage2",
+        "inputs": {
+          "deliver.P1": 1
+        },
+        "outputs": {
+          "deliver.P2": 1
+        }
+      },
+      {
+        "id": "deliver.stage3",
+        "inputs": {
+          "deliver.P2": 1
+        },
+        "outputs": {
+          "GOAL": 1,
+          "CAT": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "choice_n6_c2_cap3_s401_deep4_short1"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/new-counterexamples-20260926/fixtures/choice_n6_c2_cap3_s401_deep4_short1.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_a666711_new_counterexamples_20260926.zip!/fixtures/choice_n6_c2_cap3_s401_deep4_short1.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

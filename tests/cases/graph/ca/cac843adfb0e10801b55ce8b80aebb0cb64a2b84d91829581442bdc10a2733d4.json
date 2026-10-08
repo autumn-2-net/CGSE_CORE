@@ -1,0 +1,145 @@
+{
+  "id": "cac843adfb0e10801b55ce8b80aebb0cb64a2b84d91829581442bdc10a2733d4",
+  "kind": "graph",
+  "model": {
+    "target": "p2",
+    "amount": 3,
+    "stock": {
+      "p0": 2,
+      "p1": 2
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r1",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 2
+          },
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p0": 3
+        }
+      },
+      {
+        "id": "r2",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 3
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      },
+      {
+        "id": "r3",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p0": 1,
+          "p2": 2
+        }
+      },
+      {
+        "id": "r4",
+        "slots": [
+          {
+            "key": "p2",
+            "amount": 1
+          },
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r5",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 2
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          },
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r6",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1,
+          "p2": 1
+        }
+      }
+    ],
+    "external": []
+  },
+  "names": [
+    "fresh-finite-320"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/support-completion-20261007/fresh-finite-cases.json",
+      "pointer": "/320"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

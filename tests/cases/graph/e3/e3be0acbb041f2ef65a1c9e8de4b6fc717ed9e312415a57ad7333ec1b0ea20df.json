@@ -1,0 +1,225 @@
+{
+  "id": "e3be0acbb041f2ef65a1c9e8de4b6fc717ed9e312415a57ad7333ec1b0ea20df",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 207,
+      "U1": 408,
+      "U2": 501
+    },
+    "recipes": [
+      {
+        "id": "r0_0.s0-alias",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "r0_0.p0": 1
+        }
+      },
+      {
+        "id": "r1_0.s2",
+        "inputs": {
+          "r1_0.p1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 87351
+        }
+      },
+      {
+        "id": "r2_0.s0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "r2_0.p0": 1
+        }
+      },
+      {
+        "id": "r2_0.s2",
+        "inputs": {
+          "r2_0.p1": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 73862
+        }
+      },
+      {
+        "id": "r0_1.s1",
+        "inputs": {
+          "r0_1.p0": 1
+        },
+        "outputs": {
+          "r0_1.p1": 1
+        }
+      },
+      {
+        "id": "r0_0.s1",
+        "inputs": {
+          "r0_0.p0": 1
+        },
+        "outputs": {
+          "r0_0.p1": 1
+        }
+      },
+      {
+        "id": "r2_1.s2",
+        "inputs": {
+          "r2_1.p1": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 73862
+        }
+      },
+      {
+        "id": "r1_1.s2",
+        "inputs": {
+          "r1_1.p1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 87351
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 207,
+          "X0_0": 23726608,
+          "X1_0": 52727711,
+          "D1": 408,
+          "D2": 501
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r2_1.s1",
+        "inputs": {
+          "r2_1.p0": 1
+        },
+        "outputs": {
+          "r2_1.p1": 1
+        }
+      },
+      {
+        "id": "r1_0.s1",
+        "inputs": {
+          "r1_0.p0": 1
+        },
+        "outputs": {
+          "r1_0.p1": 1
+        }
+      },
+      {
+        "id": "r1_1.s0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "r1_1.p0": 1
+        }
+      },
+      {
+        "id": "r1_1.s1",
+        "inputs": {
+          "r1_1.p0": 1
+        },
+        "outputs": {
+          "r1_1.p1": 1
+        }
+      },
+      {
+        "id": "r0_0.s2",
+        "inputs": {
+          "r0_0.p1": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 18407
+        }
+      },
+      {
+        "id": "r2_0.s1",
+        "inputs": {
+          "r2_0.p0": 1
+        },
+        "outputs": {
+          "r2_0.p1": 1
+        }
+      },
+      {
+        "id": "r0_1.s0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "r0_1.p0": 1
+        }
+      },
+      {
+        "id": "r1_0.s0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "r1_0.p0": 1
+        }
+      },
+      {
+        "id": "r0_1.s2",
+        "inputs": {
+          "r0_1.p1": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 18407
+        }
+      },
+      {
+        "id": "r2_1.s0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "r2_1.p0": 1
+        }
+      },
+      {
+        "id": "r0_0.s0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "r0_0.p0": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "split_pipeline_0142"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/split_pipeline_0142.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/split_pipeline_0142.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

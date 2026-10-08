@@ -1,0 +1,62 @@
+{
+  "id": "9217ecd23a55298517ad5b0aa3c914003dcc2ba197dc5df5d2cd2cf668418298",
+  "kind": "graph",
+  "model": {
+    "target": "B",
+    "amount": 32,
+    "stock": {
+      "A": 1,
+      "F": 31
+    },
+    "recipes": [
+      {
+        "id": "r1",
+        "inputs": {
+          "A": 1,
+          "F": 1
+        },
+        "outputs": {
+          "B": 2
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "B": 1
+        },
+        "outputs": {
+          "C": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "C": 1
+        },
+        "outputs": {
+          "A": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "three_step_n32"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/color-review-20260926/common-input/three_step_n32.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/common-input/three_step_n32.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,108 @@
+{
+  "id": "2809a39277c1b7ed995e855b1633c63337d68d92ae53e81d8f01ebdf5c084541",
+  "kind": "graph",
+  "model": {
+    "target": "p2",
+    "amount": 1,
+    "stock": {
+      "p0": 1
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      },
+      {
+        "id": "r1",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 2
+          },
+          {
+            "key": "p2",
+            "amount": 2
+          }
+        ],
+        "outputs": {
+          "p0": 1,
+          "p2": 1,
+          "p1": 2
+        }
+      },
+      {
+        "id": "r2",
+        "slots": [
+          {
+            "key": "p0",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p2": 1
+        }
+      },
+      {
+        "id": "r3",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p0": 1
+        }
+      },
+      {
+        "id": "r4",
+        "slots": [
+          {
+            "key": "p1",
+            "amount": 1
+          },
+          {
+            "key": "p0",
+            "amount": 2
+          },
+          {
+            "key": "p2",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "p1": 1
+        }
+      }
+    ],
+    "external": []
+  },
+  "names": [
+    "fresh-finite-348"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/support-completion-20261007/fresh-finite-cases.json",
+      "pointer": "/348"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

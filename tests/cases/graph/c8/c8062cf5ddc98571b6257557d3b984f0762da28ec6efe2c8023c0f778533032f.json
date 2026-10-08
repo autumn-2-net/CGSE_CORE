@@ -1,0 +1,138 @@
+{
+  "id": "c8062cf5ddc98571b6257557d3b984f0762da28ec6efe2c8023c0f778533032f",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 701761,
+      "U1": 706719,
+      "U2": 607614,
+      "CAT": 1
+    },
+    "recipes": [
+      {
+        "id": "r1_0",
+        "inputs": {
+          "CAT": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "X0_0": 168278,
+          "D1": 1,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "CAT": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "CAT": 1,
+          "X0_0": 162500
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "X0_0": 47912,
+          "D0": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 701761,
+          "X1_0": 158831977634,
+          "X0_0": 92453330280,
+          "D1": 706719,
+          "D2": 607614
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "CAT": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "CAT": 1,
+          "X1_0": 168278
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "CAT": 1,
+          "X1_0": 47912
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "CAT": 1,
+          "X1_0": 162500
+        }
+      }
+    ]
+  },
+  "names": [
+    "reduced_shared_catalyst_0109_drop_unused",
+    "shared_catalyst_0109"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded-inputs.json",
+      "pointer": "/54"
+    },
+    {
+      "source": ".local/web-review-20260927/seeded-inputs.json",
+      "pointer": "/225"
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/shared_catalyst_0109.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/shared_catalyst_0109.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/reduction-models/reduced_shared_catalyst_0109_drop_unused.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/reductions/reduced_shared_catalyst_0109_drop_unused.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

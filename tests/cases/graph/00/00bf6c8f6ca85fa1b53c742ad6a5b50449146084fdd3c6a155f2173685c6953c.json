@@ -1,0 +1,337 @@
+{
+  "id": "00bf6c8f6ca85fa1b53c742ad6a5b50449146084fdd3c6a155f2173685c6953c",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 507837,
+      "U1": 306115,
+      "U2": 404691,
+      "CAT": 1
+    },
+    "recipes": [
+      {
+        "id": "r1_1.s2",
+        "inputs": {
+          "r1_1.p1": 1
+        },
+        "outputs": {
+          "r1_1.p2": 1
+        }
+      },
+      {
+        "id": "r0_1.s1",
+        "inputs": {
+          "r0_1.p0": 1
+        },
+        "outputs": {
+          "r0_1.p1": 1
+        }
+      },
+      {
+        "id": "r1_0.s4",
+        "inputs": {
+          "r1_0.p3": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 102252,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r1_1.s4",
+        "inputs": {
+          "r1_1.p3": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 102252,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r0_0.s2",
+        "inputs": {
+          "r0_0.p1": 1
+        },
+        "outputs": {
+          "r0_0.p2": 1
+        }
+      },
+      {
+        "id": "r1_0.s3",
+        "inputs": {
+          "r1_0.p2": 1
+        },
+        "outputs": {
+          "r1_0.p3": 1
+        }
+      },
+      {
+        "id": "r2_1.s2",
+        "inputs": {
+          "r2_1.p1": 1
+        },
+        "outputs": {
+          "r2_1.p2": 1
+        }
+      },
+      {
+        "id": "r1_1.s3",
+        "inputs": {
+          "r1_1.p2": 1
+        },
+        "outputs": {
+          "r1_1.p3": 1
+        }
+      },
+      {
+        "id": "r1_1.s1",
+        "inputs": {
+          "r1_1.p0": 1
+        },
+        "outputs": {
+          "r1_1.p1": 1
+        }
+      },
+      {
+        "id": "r1_0.s0",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r1_0.p0": 1
+        }
+      },
+      {
+        "id": "r0_0.s0",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r0_0.p0": 1
+        }
+      },
+      {
+        "id": "r0_1.s3",
+        "inputs": {
+          "r0_1.p2": 1
+        },
+        "outputs": {
+          "r0_1.p3": 1
+        }
+      },
+      {
+        "id": "r2_0.s1",
+        "inputs": {
+          "r2_0.p0": 1
+        },
+        "outputs": {
+          "r2_0.p1": 1
+        }
+      },
+      {
+        "id": "r2_0.s3",
+        "inputs": {
+          "r2_0.p2": 1
+        },
+        "outputs": {
+          "r2_0.p3": 1
+        }
+      },
+      {
+        "id": "r2_0.s0",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r2_0.p0": 1
+        }
+      },
+      {
+        "id": "r0_0.s4",
+        "inputs": {
+          "r0_0.p3": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 25152,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_1.s0",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r2_1.p0": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 507837,
+          "X0_0": 49470593350,
+          "X1_0": 6210741116,
+          "D1": 306115,
+          "D2": 404691
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r0_0.s1",
+        "inputs": {
+          "r0_0.p0": 1
+        },
+        "outputs": {
+          "r0_0.p1": 1
+        }
+      },
+      {
+        "id": "r2_1.s4",
+        "inputs": {
+          "r2_1.p3": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 28682,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_1.s1",
+        "inputs": {
+          "r2_1.p0": 1
+        },
+        "outputs": {
+          "r2_1.p1": 1
+        }
+      },
+      {
+        "id": "r1_0.s2",
+        "inputs": {
+          "r1_0.p1": 1
+        },
+        "outputs": {
+          "r1_0.p2": 1
+        }
+      },
+      {
+        "id": "r2_1.s3",
+        "inputs": {
+          "r2_1.p2": 1
+        },
+        "outputs": {
+          "r2_1.p3": 1
+        }
+      },
+      {
+        "id": "r0_1.s4",
+        "inputs": {
+          "r0_1.p3": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 25152,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r0_1.s0",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r0_1.p0": 1
+        }
+      },
+      {
+        "id": "r2_0.s4",
+        "inputs": {
+          "r2_0.p3": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 28682,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_0.s2",
+        "inputs": {
+          "r2_0.p1": 1
+        },
+        "outputs": {
+          "r2_0.p2": 1
+        }
+      },
+      {
+        "id": "r1_0.s1",
+        "inputs": {
+          "r1_0.p0": 1
+        },
+        "outputs": {
+          "r1_0.p1": 1
+        }
+      },
+      {
+        "id": "r0_0.s3",
+        "inputs": {
+          "r0_0.p2": 1
+        },
+        "outputs": {
+          "r0_0.p3": 1
+        }
+      },
+      {
+        "id": "r1_1.s0",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r1_1.p0": 1
+        }
+      },
+      {
+        "id": "r0_1.s2",
+        "inputs": {
+          "r0_1.p1": 1
+        },
+        "outputs": {
+          "r0_1.p2": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "multi_step_return_0219"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/multi_step_return_0219.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/multi_step_return_0219.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

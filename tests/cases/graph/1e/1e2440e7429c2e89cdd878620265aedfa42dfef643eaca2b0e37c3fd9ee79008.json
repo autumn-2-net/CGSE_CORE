@@ -1,0 +1,59 @@
+{
+  "id": "1e2440e7429c2e89cdd878620265aedfa42dfef643eaca2b0e37c3fd9ee79008",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "CAT": 1,
+      "RAW": 3
+    },
+    "recipes": [
+      {
+        "id": "0",
+        "inputs": {
+          "CAT": 1,
+          "RAW": 1
+        },
+        "outputs": {
+          "P": 1
+        }
+      },
+      {
+        "id": "1",
+        "inputs": {
+          "P": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1
+        }
+      },
+      {
+        "id": "2",
+        "inputs": {
+          "A": 3
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "control_multi_step_return"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/controls/control_multi_step_return.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

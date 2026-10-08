@@ -1,0 +1,74 @@
+{
+  "id": "e1b20346827ff448fb9a678f4c51b84c198dc3faa5687ff318a0ac7bdf9ef152",
+  "kind": "count-model",
+  "model": {
+    "lower": [
+      "0",
+      "0",
+      "0"
+    ],
+    "upper": [
+      "50",
+      "50",
+      "50"
+    ],
+    "rows": [
+      {
+        "terms": {
+          "0": "2",
+          "1": "7",
+          "2": "3"
+        },
+        "upper": "50"
+      },
+      {
+        "terms": {
+          "0": "3",
+          "1": "-5",
+          "2": "7"
+        },
+        "upper": "45"
+      },
+      {
+        "terms": {
+          "0": "5",
+          "1": "2",
+          "2": "-6"
+        },
+        "upper": "37"
+      }
+    ]
+  },
+  "names": [
+    "ortools/cp_sat_example"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/solver-adaptive-20261003/baseline-public/cases.json",
+      "pointer": "/16"
+    },
+    {
+      "source": ".local/solver-benchmarks-20261003/cases-extended.json",
+      "pointer": "/16"
+    },
+    {
+      "source": ".local/solver-benchmarks-20261003/cases-initial22.json",
+      "pointer": "/16"
+    },
+    {
+      "source": ".local/solver-benchmarks-20261003/cases.json",
+      "pointer": "/16"
+    },
+    {
+      "source": ".local/solver-next-20261004/expanded/public-priority.json",
+      "pointer": "/18"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

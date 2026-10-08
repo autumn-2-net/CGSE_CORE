@@ -1,4 +1,4 @@
-package org.gtlcore.gtlcore.client.ae2.graph;
+package org.cgse.view;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -16,13 +16,13 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
 /** Renders bounded strips into one ordinary PNG, without allocating the entire image. */
-final class StripPngWriter {
+public final class StripPngWriter {
 
     // At most 32 MiB for pixels, plus one RGB scanline and the compression buffers.
     private static final int MAX_STRIP_PIXELS = 8 * 1024 * 1024;
 
     @FunctionalInterface
-    interface Renderer {
+    public interface Renderer {
 
         /** Graphics uses full-image pixel coordinates; only these rows are writable. */
         void render(Graphics2D graphics, int top, int rows);
@@ -30,7 +30,7 @@ final class StripPngWriter {
 
     private StripPngWriter() {}
 
-    static void write(Path file, int width, int height, Renderer renderer) throws IOException {
+    public static void write(Path file, int width, int height, Renderer renderer) throws IOException {
         if (width <= 0 || height <= 0 || width > MAX_STRIP_PIXELS)
             throw new IOException("PNG dimensions exceed the scanline memory limit: " + width + " x " + height);
         Path temporary = Files.createTempFile(file.toAbsolutePath().getParent(), ".crafting-graph-", ".png.tmp");

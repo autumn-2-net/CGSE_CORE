@@ -1,0 +1,258 @@
+{
+  "id": "093799f729059804814854d18293ee09f099b5821ce427681d5b5ba620e1db1d",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "H0": 1,
+      "H1": 1,
+      "H2": 1,
+      "H3": 1,
+      "U0": 1,
+      "U1": 1,
+      "U2": 1,
+      "U3": 1,
+      "U4": 1
+    },
+    "recipes": [
+      {
+        "id": "p0h0",
+        "inputs": {
+          "H0": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1
+        }
+      },
+      {
+        "id": "p0h1",
+        "inputs": {
+          "H1": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1
+        }
+      },
+      {
+        "id": "p0h2",
+        "inputs": {
+          "H2": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1
+        }
+      },
+      {
+        "id": "p0h3",
+        "inputs": {
+          "H3": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1
+        }
+      },
+      {
+        "id": "p1h0",
+        "inputs": {
+          "H0": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1
+        }
+      },
+      {
+        "id": "p1h1",
+        "inputs": {
+          "H1": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1
+        }
+      },
+      {
+        "id": "p1h2",
+        "inputs": {
+          "H2": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1
+        }
+      },
+      {
+        "id": "p1h3",
+        "inputs": {
+          "H3": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1
+        }
+      },
+      {
+        "id": "p2h0",
+        "inputs": {
+          "H0": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1
+        }
+      },
+      {
+        "id": "p2h1",
+        "inputs": {
+          "H1": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1
+        }
+      },
+      {
+        "id": "p2h2",
+        "inputs": {
+          "H2": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1
+        }
+      },
+      {
+        "id": "p2h3",
+        "inputs": {
+          "H3": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1
+        }
+      },
+      {
+        "id": "p3h0",
+        "inputs": {
+          "H0": 1,
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1
+        }
+      },
+      {
+        "id": "p3h1",
+        "inputs": {
+          "H1": 1,
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1
+        }
+      },
+      {
+        "id": "p3h2",
+        "inputs": {
+          "H2": 1,
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1
+        }
+      },
+      {
+        "id": "p3h3",
+        "inputs": {
+          "H3": 1,
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1
+        }
+      },
+      {
+        "id": "p4h0",
+        "inputs": {
+          "H0": 1,
+          "U4": 1
+        },
+        "outputs": {
+          "D4": 1
+        }
+      },
+      {
+        "id": "p4h1",
+        "inputs": {
+          "H1": 1,
+          "U4": 1
+        },
+        "outputs": {
+          "D4": 1
+        }
+      },
+      {
+        "id": "p4h2",
+        "inputs": {
+          "H2": 1,
+          "U4": 1
+        },
+        "outputs": {
+          "D4": 1
+        }
+      },
+      {
+        "id": "p4h3",
+        "inputs": {
+          "H3": 1,
+          "U4": 1
+        },
+        "outputs": {
+          "D4": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 1,
+          "D1": 1,
+          "D2": 1,
+          "D3": 1,
+          "D4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "pigeon_5_4"
+  ],
+  "expected": "UNKNOWN",
+  "origins": [
+    {
+      "source": ".local/cgse-counterexamples-20260926/cases/pigeon_5_4.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/cgse-counterexamples-20260926/screen-after/pigeon_5_4.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_counterexamples_20260926.zip!/cases/pigeon_5_4.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

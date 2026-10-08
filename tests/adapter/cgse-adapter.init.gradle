@@ -1,0 +1,41 @@
+// Run against the GTL adapter checkout; the existing upstream test source set is untouched.
+// gradlew -I ../CGSE_CORE/tests/adapter/cgse-adapter.init.gradle cgseAdapterTest
+// An independent checkout location can be selected with -PcgseRoot=/path/to/CGSE_CORE.
+gradle.projectsEvaluated {
+    rootProject {
+        def cgseRoot = hasProperty('cgseRoot') ? file(property('cgseRoot')) : new File(rootDir, '../CGSE_CORE').canonicalFile
+        def testRoot = new File(cgseRoot, 'tests/adapter/java')
+        if (!testRoot.isDirectory()) {
+            throw new GradleException("Missing CGSE adapter tests: ${testRoot}. Supply -PcgseRoot=<checkout>.")
+        }
+        def adapterTests = sourceSets.create('cgseAdapter') {
+            java.setSrcDirs([testRoot, new File(cgseRoot, 'tests/shared/java')])
+            resources.setSrcDirs([])
+            compileClasspath = sourceSets.main.output + sourceSets.main.compileClasspath
+            runtimeClasspath = output + compileClasspath
+        }
+        configurations[adapterTests.implementationConfigurationName].extendsFrom(configurations.implementation)
+        configurations[adapterTests.compileOnlyConfigurationName].extendsFrom(configurations.compileOnly)
+        tasks.named(adapterTests.compileJavaTaskName, JavaCompile) {
+            dependsOn tasks.named('classes')
+            options.encoding = 'UTF-8'
+            options.release = 17
+        }
+        tasks.register('cgseAdapterTest', JavaExec) {
+            group = 'verification'
+            description = 'Run migrated CGSE integration tests with actual AE/Minecraft APIs.'
+            dependsOn tasks.named(adapterTests.classesTaskName)
+            classpath = adapterTests.runtimeClasspath
+            mainClass = 'org.gtlcore.gtlcore.integration.ae2.graph.GraphAeIntegrationTest'
+            def output = layout.buildDirectory.dir('cgse-adapter-validation').get().asFile
+            workingDir = output
+            jvmArgs '-ea', '-Dfile.encoding=UTF-8', '-Djava.awt.headless=true',
+                    '-Djava.io.tmpdir=' + new File(output, 'tmp').absolutePath,
+                    '-Duser.home=' + new File(output, 'home').absolutePath
+            doFirst {
+                new File(output, 'tmp').mkdirs()
+                new File(output, 'home').mkdirs()
+            }
+        }
+    }
+}

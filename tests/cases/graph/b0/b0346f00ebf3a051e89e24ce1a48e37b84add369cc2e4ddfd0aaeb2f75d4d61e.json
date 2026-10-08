@@ -1,0 +1,199 @@
+{
+  "id": "b0346f00ebf3a051e89e24ce1a48e37b84add369cc2e4ddfd0aaeb2f75d4d61e",
+  "kind": "graph",
+  "model": {
+    "target": "P4",
+    "amount": 3,
+    "stock": {
+      "F": 10,
+      "P0": 2,
+      "P1": 2,
+      "P2": 2,
+      "P3": 5
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P2": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P0": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P3": 2,
+          "P4": 1
+        },
+        "outputs": {
+          "P1": 1
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P3": 3
+        },
+        "outputs": {
+          "P3": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P3": 1,
+          "P4": 2
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "F": 1,
+          "P2": 2
+        },
+        "outputs": {
+          "P3": 1,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 2,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P0": 2
+        }
+      },
+      {
+        "id": "r7",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P2": 2,
+          "P3": 1
+        },
+        "outputs": {
+          "P0": 2,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P3": 2
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 1,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r9",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r10",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 1,
+          "P4": 2
+        }
+      },
+      {
+        "id": "r11",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P1": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "r12",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 2
+        }
+      },
+      {
+        "id": "r13",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P2": 1,
+          "P3": 2
+        },
+        "outputs": {
+          "P4": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "mass_35360"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/large_scale/random/fixtures/mass_35360.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

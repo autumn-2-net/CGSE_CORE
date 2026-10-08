@@ -1,0 +1,202 @@
+{
+  "id": "5d21e2f0d1d96f19b0748e6639257914c3929fb87b86af15a538b923f4f86626",
+  "kind": "graph",
+  "model": {
+    "target": "P5",
+    "amount": 6,
+    "stock": {
+      "F": 6,
+      "P0": 2,
+      "P2": 2,
+      "P4": 2
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P5": 2
+        },
+        "outputs": {
+          "P2": 1,
+          "P5": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P3": 1,
+          "P4": 2
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P5": 2
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P4": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P2": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P4": 1,
+          "P5": 1
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P4": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P4": 1,
+          "P5": 1
+        }
+      },
+      {
+        "id": "r7",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P4": 1
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r9",
+        "inputs": {
+          "F": 1,
+          "P0": 3
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r10",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P2": 2
+        }
+      },
+      {
+        "id": "r11",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P4": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "r12",
+        "inputs": {
+          "F": 1,
+          "P4": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P2": 1,
+          "P4": 2
+        }
+      },
+      {
+        "id": "r13",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P4": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 1,
+          "P2": 1,
+          "P5": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "mass_36560"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/large_scale/random/fixtures/mass_36560.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

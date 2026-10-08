@@ -1,0 +1,47 @@
+{
+  "id": "4750e35e2a4396dd9e7a5fc4cb76eed5111117d09dd9f29a31cab651f700de7d",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "GOOD": 1
+    },
+    "recipes": [
+      {
+        "id": "0",
+        "inputs": {
+          "BAD": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "1",
+        "inputs": {
+          "GOOD": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "control_choice_second"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/controls/control_choice_second.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

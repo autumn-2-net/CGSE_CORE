@@ -1,0 +1,2042 @@
+{
+  "id": "33c26793c717b107f583614411af18d2d491c6eba87e5a52edf0a1d22a51287f",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 22635,
+    "stock": {
+      "CAP0": 12013,
+      "CAP1": 11822,
+      "CAP2": 12357,
+      "CAP3": 12501,
+      "CAP4": 11832,
+      "CAP5": 12166,
+      "CAP6": 12680,
+      "CAP7": 11692,
+      "CAP8": 12793,
+      "CAP9": 11481,
+      "ONCE0": 1,
+      "ONCE1": 1,
+      "ONCE2": 1,
+      "ONCE3": 1,
+      "ONCE4": 1,
+      "ONCE5": 1,
+      "ONCE6": 1,
+      "ONCE7": 1,
+      "ONCE8": 1,
+      "ONCE9": 1,
+      "ONCE10": 1,
+      "ONCE11": 1,
+      "ONCE12": 1,
+      "ONCE13": 1,
+      "ONCE14": 1,
+      "ONCE15": 1,
+      "ONCE16": 1,
+      "ONCE17": 1,
+      "ONCE18": 1,
+      "ONCE19": 1,
+      "ONCE20": 1,
+      "ONCE21": 1,
+      "ONCE22": 1,
+      "ONCE23": 1,
+      "ONCE24": 1,
+      "ONCE25": 1,
+      "ONCE26": 1,
+      "ONCE27": 1,
+      "ONCE28": 1,
+      "ONCE29": 1,
+      "ONCE30": 1,
+      "ONCE31": 1,
+      "ONCE32": 1,
+      "ONCE33": 1,
+      "ONCE34": 1,
+      "ONCE35": 1,
+      "ONCE36": 1,
+      "ONCE37": 1,
+      "ONCE38": 1,
+      "ONCE39": 1,
+      "ONCE40": 1,
+      "ONCE41": 1,
+      "ONCE42": 1,
+      "ONCE43": 1,
+      "ONCE44": 1,
+      "ONCE45": 1,
+      "ONCE46": 1,
+      "ONCE47": 1,
+      "ONCE48": 1,
+      "ONCE49": 1,
+      "ONCE50": 1,
+      "ONCE51": 1,
+      "ONCE52": 1,
+      "ONCE53": 1,
+      "ONCE54": 1,
+      "ONCE55": 1,
+      "ONCE56": 1,
+      "ONCE57": 1,
+      "ONCE58": 1,
+      "ONCE59": 1,
+      "ONCE60": 1,
+      "ONCE61": 1,
+      "ONCE62": 1,
+      "ONCE63": 1,
+      "ONCE64": 1,
+      "ONCE65": 1,
+      "ONCE66": 1,
+      "ONCE67": 1,
+      "ONCE68": 1,
+      "ONCE69": 1,
+      "ONCE70": 1,
+      "ONCE71": 1,
+      "ONCE72": 1,
+      "ONCE73": 1,
+      "ONCE74": 1,
+      "ONCE75": 1,
+      "ONCE76": 1,
+      "ONCE77": 1,
+      "ONCE78": 1,
+      "ONCE79": 1,
+      "ONCE80": 1,
+      "ONCE81": 1,
+      "ONCE82": 1,
+      "ONCE83": 1,
+      "ONCE84": 1,
+      "ONCE85": 1,
+      "ONCE86": 1,
+      "ONCE87": 1,
+      "ONCE88": 1,
+      "ONCE89": 1,
+      "ONCE90": 1,
+      "ONCE91": 1,
+      "ONCE92": 1,
+      "ONCE93": 1,
+      "ONCE94": 1,
+      "ONCE95": 1,
+      "ONCE96": 1,
+      "ONCE97": 1,
+      "ONCE98": 1,
+      "ONCE99": 1
+    },
+    "recipes": [
+      {
+        "id": "pick0",
+        "inputs": {
+          "CAP0": 823,
+          "CAP1": 794,
+          "CAP2": 1000,
+          "CAP3": 861,
+          "CAP4": 398,
+          "CAP5": 677,
+          "CAP6": 420,
+          "CAP7": 387,
+          "CAP8": 744,
+          "CAP9": 890,
+          "ONCE0": 1
+        },
+        "outputs": {
+          "GOAL": 778
+        }
+      },
+      {
+        "id": "pick1",
+        "inputs": {
+          "CAP0": 297,
+          "CAP1": 167,
+          "CAP2": 343,
+          "CAP3": 950,
+          "CAP4": 118,
+          "CAP5": 581,
+          "CAP6": 939,
+          "CAP7": 21,
+          "CAP8": 27,
+          "CAP9": 786,
+          "ONCE1": 1
+        },
+        "outputs": {
+          "GOAL": 748
+        }
+      },
+      {
+        "id": "pick2",
+        "inputs": {
+          "CAP0": 543,
+          "CAP1": 88,
+          "CAP2": 896,
+          "CAP3": 605,
+          "CAP4": 923,
+          "CAP5": 34,
+          "CAP6": 545,
+          "CAP7": 399,
+          "CAP8": 118,
+          "CAP9": 512,
+          "ONCE2": 1
+        },
+        "outputs": {
+          "GOAL": 567
+        }
+      },
+      {
+        "id": "pick3",
+        "inputs": {
+          "CAP0": 954,
+          "CAP1": 929,
+          "CAP2": 319,
+          "CAP3": 262,
+          "CAP4": 898,
+          "CAP5": 600,
+          "CAP6": 600,
+          "CAP7": 995,
+          "CAP8": 692,
+          "CAP9": 776,
+          "ONCE3": 1
+        },
+        "outputs": {
+          "GOAL": 769
+        }
+      },
+      {
+        "id": "pick4",
+        "inputs": {
+          "CAP0": 358,
+          "CAP1": 206,
+          "CAP2": 451,
+          "CAP3": 408,
+          "CAP4": 253,
+          "CAP5": 33,
+          "CAP6": 315,
+          "CAP7": 728,
+          "CAP8": 434,
+          "CAP9": 430,
+          "ONCE4": 1
+        },
+        "outputs": {
+          "GOAL": 412
+        }
+      },
+      {
+        "id": "pick5",
+        "inputs": {
+          "CAP0": 187,
+          "CAP1": 777,
+          "CAP2": 952,
+          "CAP3": 125,
+          "CAP4": 733,
+          "CAP5": 214,
+          "CAP6": 957,
+          "CAP7": 917,
+          "CAP8": 99,
+          "CAP9": 396,
+          "ONCE5": 1
+        },
+        "outputs": {
+          "GOAL": 605
+        }
+      },
+      {
+        "id": "pick6",
+        "inputs": {
+          "CAP0": 465,
+          "CAP1": 327,
+          "CAP2": 851,
+          "CAP3": 256,
+          "CAP4": 834,
+          "CAP5": 823,
+          "CAP6": 189,
+          "CAP7": 386,
+          "CAP8": 950,
+          "CAP9": 57,
+          "ONCE6": 1
+        },
+        "outputs": {
+          "GOAL": 530
+        }
+      },
+      {
+        "id": "pick7",
+        "inputs": {
+          "CAP0": 477,
+          "CAP1": 392,
+          "CAP2": 44,
+          "CAP3": 522,
+          "CAP4": 694,
+          "CAP5": 669,
+          "CAP6": 454,
+          "CAP7": 746,
+          "CAP8": 797,
+          "CAP9": 505,
+          "ONCE7": 1
+        },
+        "outputs": {
+          "GOAL": 963
+        }
+      },
+      {
+        "id": "pick8",
+        "inputs": {
+          "CAP0": 124,
+          "CAP1": 171,
+          "CAP2": 623,
+          "CAP3": 132,
+          "CAP4": 105,
+          "CAP5": 785,
+          "CAP6": 408,
+          "CAP7": 350,
+          "CAP8": 726,
+          "CAP9": 493,
+          "ONCE8": 1
+        },
+        "outputs": {
+          "GOAL": 437
+        }
+      },
+      {
+        "id": "pick9",
+        "inputs": {
+          "CAP0": 709,
+          "CAP1": 881,
+          "CAP2": 786,
+          "CAP3": 955,
+          "CAP4": 103,
+          "CAP5": 912,
+          "CAP6": 203,
+          "CAP7": 71,
+          "CAP8": 688,
+          "CAP9": 863,
+          "ONCE9": 1
+        },
+        "outputs": {
+          "GOAL": 821
+        }
+      },
+      {
+        "id": "pick10",
+        "inputs": {
+          "CAP0": 797,
+          "CAP1": 883,
+          "CAP2": 785,
+          "CAP3": 914,
+          "CAP4": 127,
+          "CAP5": 535,
+          "CAP6": 325,
+          "CAP7": 919,
+          "CAP8": 755,
+          "CAP9": 456,
+          "ONCE10": 1
+        },
+        "outputs": {
+          "GOAL": 772
+        }
+      },
+      {
+        "id": "pick11",
+        "inputs": {
+          "CAP0": 685,
+          "CAP1": 492,
+          "CAP2": 123,
+          "CAP3": 395,
+          "CAP4": 960,
+          "CAP5": 231,
+          "CAP6": 861,
+          "CAP7": 646,
+          "CAP8": 769,
+          "CAP9": 44,
+          "ONCE11": 1
+        },
+        "outputs": {
+          "GOAL": 937
+        }
+      },
+      {
+        "id": "pick12",
+        "inputs": {
+          "CAP0": 37,
+          "CAP1": 162,
+          "CAP2": 411,
+          "CAP3": 203,
+          "CAP4": 780,
+          "CAP5": 145,
+          "CAP6": 782,
+          "CAP7": 197,
+          "CAP8": 136,
+          "CAP9": 542,
+          "ONCE12": 1
+        },
+        "outputs": {
+          "GOAL": 638
+        }
+      },
+      {
+        "id": "pick13",
+        "inputs": {
+          "CAP0": 362,
+          "CAP1": 774,
+          "CAP2": 30,
+          "CAP3": 724,
+          "CAP4": 568,
+          "CAP5": 491,
+          "CAP6": 156,
+          "CAP7": 532,
+          "CAP8": 363,
+          "CAP9": 576,
+          "ONCE13": 1
+        },
+        "outputs": {
+          "GOAL": 726
+        }
+      },
+      {
+        "id": "pick14",
+        "inputs": {
+          "CAP0": 60,
+          "CAP1": 198,
+          "CAP2": 704,
+          "CAP3": 122,
+          "CAP4": 751,
+          "CAP5": 384,
+          "CAP6": 419,
+          "CAP7": 235,
+          "CAP8": 5,
+          "CAP9": 790,
+          "ONCE14": 1
+        },
+        "outputs": {
+          "GOAL": 369
+        }
+      },
+      {
+        "id": "pick15",
+        "inputs": {
+          "CAP0": 126,
+          "CAP1": 52,
+          "CAP2": 568,
+          "CAP3": 689,
+          "CAP4": 804,
+          "CAP5": 692,
+          "CAP6": 994,
+          "CAP7": 459,
+          "CAP8": 68,
+          "CAP9": 112,
+          "ONCE15": 1
+        },
+        "outputs": {
+          "GOAL": 887
+        }
+      },
+      {
+        "id": "pick16",
+        "inputs": {
+          "CAP0": 834,
+          "CAP1": 721,
+          "CAP2": 656,
+          "CAP3": 822,
+          "CAP4": 290,
+          "CAP5": 946,
+          "CAP6": 26,
+          "CAP7": 166,
+          "CAP8": 271,
+          "CAP9": 206,
+          "ONCE16": 1
+        },
+        "outputs": {
+          "GOAL": 908
+        }
+      },
+      {
+        "id": "pick17",
+        "inputs": {
+          "CAP0": 313,
+          "CAP1": 144,
+          "CAP2": 447,
+          "CAP3": 308,
+          "CAP4": 334,
+          "CAP5": 443,
+          "CAP6": 314,
+          "CAP7": 279,
+          "CAP8": 305,
+          "CAP9": 748,
+          "ONCE17": 1
+        },
+        "outputs": {
+          "GOAL": 433
+        }
+      },
+      {
+        "id": "pick18",
+        "inputs": {
+          "CAP0": 912,
+          "CAP1": 518,
+          "CAP2": 967,
+          "CAP3": 564,
+          "CAP4": 276,
+          "CAP5": 635,
+          "CAP6": 641,
+          "CAP7": 610,
+          "CAP8": 858,
+          "CAP9": 542,
+          "ONCE18": 1
+        },
+        "outputs": {
+          "GOAL": 989
+        }
+      },
+      {
+        "id": "pick19",
+        "inputs": {
+          "CAP0": 22,
+          "CAP1": 516,
+          "CAP2": 433,
+          "CAP3": 863,
+          "CAP4": 952,
+          "CAP5": 257,
+          "CAP6": 840,
+          "CAP7": 190,
+          "CAP8": 67,
+          "CAP9": 829,
+          "ONCE19": 1
+        },
+        "outputs": {
+          "GOAL": 728
+        }
+      },
+      {
+        "id": "pick20",
+        "inputs": {
+          "CAP0": 768,
+          "CAP1": 408,
+          "CAP2": 733,
+          "CAP3": 116,
+          "CAP4": 897,
+          "CAP5": 854,
+          "CAP6": 140,
+          "CAP7": 12,
+          "CAP8": 20,
+          "CAP9": 297,
+          "ONCE20": 1
+        },
+        "outputs": {
+          "GOAL": 863
+        }
+      },
+      {
+        "id": "pick21",
+        "inputs": {
+          "CAP0": 343,
+          "CAP1": 190,
+          "CAP2": 379,
+          "CAP3": 676,
+          "CAP4": 724,
+          "CAP5": 736,
+          "CAP6": 683,
+          "CAP7": 969,
+          "CAP8": 29,
+          "CAP9": 122,
+          "ONCE21": 1
+        },
+        "outputs": {
+          "GOAL": 906
+        }
+      },
+      {
+        "id": "pick22",
+        "inputs": {
+          "CAP0": 547,
+          "CAP1": 86,
+          "CAP2": 582,
+          "CAP3": 744,
+          "CAP4": 397,
+          "CAP5": 773,
+          "CAP6": 601,
+          "CAP7": 635,
+          "CAP8": 981,
+          "CAP9": 146,
+          "ONCE22": 1
+        },
+        "outputs": {
+          "GOAL": 587
+        }
+      },
+      {
+        "id": "pick23",
+        "inputs": {
+          "CAP0": 288,
+          "CAP1": 360,
+          "CAP2": 376,
+          "CAP3": 248,
+          "CAP4": 60,
+          "CAP5": 695,
+          "CAP6": 569,
+          "CAP7": 159,
+          "CAP8": 830,
+          "CAP9": 398,
+          "ONCE23": 1
+        },
+        "outputs": {
+          "GOAL": 544
+        }
+      },
+      {
+        "id": "pick24",
+        "inputs": {
+          "CAP0": 162,
+          "CAP1": 409,
+          "CAP2": 583,
+          "CAP3": 228,
+          "CAP4": 241,
+          "CAP5": 693,
+          "CAP6": 39,
+          "CAP7": 186,
+          "CAP8": 954,
+          "CAP9": 306,
+          "ONCE24": 1
+        },
+        "outputs": {
+          "GOAL": 666
+        }
+      },
+      {
+        "id": "pick25",
+        "inputs": {
+          "CAP0": 426,
+          "CAP1": 502,
+          "CAP2": 173,
+          "CAP3": 191,
+          "CAP4": 983,
+          "CAP5": 351,
+          "CAP6": 856,
+          "CAP7": 11,
+          "CAP8": 706,
+          "CAP9": 701,
+          "ONCE25": 1
+        },
+        "outputs": {
+          "GOAL": 878
+        }
+      },
+      {
+        "id": "pick26",
+        "inputs": {
+          "CAP0": 167,
+          "CAP1": 757,
+          "CAP2": 28,
+          "CAP3": 651,
+          "CAP4": 768,
+          "CAP5": 721,
+          "CAP6": 119,
+          "CAP7": 866,
+          "CAP8": 291,
+          "CAP9": 397,
+          "ONCE26": 1
+        },
+        "outputs": {
+          "GOAL": 814
+        }
+      },
+      {
+        "id": "pick27",
+        "inputs": {
+          "CAP0": 693,
+          "CAP1": 214,
+          "CAP2": 245,
+          "CAP3": 539,
+          "CAP4": 473,
+          "CAP5": 573,
+          "CAP6": 356,
+          "CAP7": 645,
+          "CAP8": 683,
+          "CAP9": 207,
+          "ONCE27": 1
+        },
+        "outputs": {
+          "GOAL": 697
+        }
+      },
+      {
+        "id": "pick28",
+        "inputs": {
+          "CAP0": 124,
+          "CAP1": 875,
+          "CAP2": 370,
+          "CAP3": 739,
+          "CAP4": 991,
+          "CAP5": 774,
+          "CAP6": 951,
+          "CAP7": 294,
+          "CAP8": 842,
+          "CAP9": 347,
+          "ONCE28": 1
+        },
+        "outputs": {
+          "GOAL": 867
+        }
+      },
+      {
+        "id": "pick29",
+        "inputs": {
+          "CAP0": 262,
+          "CAP1": 569,
+          "CAP2": 436,
+          "CAP3": 560,
+          "CAP4": 691,
+          "CAP5": 806,
+          "CAP6": 728,
+          "CAP7": 576,
+          "CAP8": 699,
+          "CAP9": 763,
+          "ONCE29": 1
+        },
+        "outputs": {
+          "GOAL": 803
+        }
+      },
+      {
+        "id": "pick30",
+        "inputs": {
+          "CAP0": 994,
+          "CAP1": 865,
+          "CAP2": 452,
+          "CAP3": 488,
+          "CAP4": 290,
+          "CAP5": 647,
+          "CAP6": 663,
+          "CAP7": 319,
+          "CAP8": 993,
+          "CAP9": 989,
+          "ONCE30": 1
+        },
+        "outputs": {
+          "GOAL": 842
+        }
+      },
+      {
+        "id": "pick31",
+        "inputs": {
+          "CAP0": 761,
+          "CAP1": 270,
+          "CAP2": 501,
+          "CAP3": 677,
+          "CAP4": 315,
+          "CAP5": 985,
+          "CAP6": 733,
+          "CAP7": 278,
+          "CAP8": 421,
+          "CAP9": 494,
+          "ONCE31": 1
+        },
+        "outputs": {
+          "GOAL": 936
+        }
+      },
+      {
+        "id": "pick32",
+        "inputs": {
+          "CAP0": 95,
+          "CAP1": 61,
+          "CAP2": 515,
+          "CAP3": 811,
+          "CAP4": 97,
+          "CAP5": 173,
+          "CAP6": 413,
+          "CAP7": 720,
+          "CAP8": 588,
+          "CAP9": 267,
+          "ONCE32": 1
+        },
+        "outputs": {
+          "GOAL": 834
+        }
+      },
+      {
+        "id": "pick33",
+        "inputs": {
+          "CAP0": 856,
+          "CAP1": 523,
+          "CAP2": 57,
+          "CAP3": 279,
+          "CAP4": 979,
+          "CAP5": 914,
+          "CAP6": 266,
+          "CAP7": 550,
+          "CAP8": 804,
+          "CAP9": 543,
+          "ONCE33": 1
+        },
+        "outputs": {
+          "GOAL": 1032
+        }
+      },
+      {
+        "id": "pick34",
+        "inputs": {
+          "CAP0": 253,
+          "CAP1": 273,
+          "CAP2": 295,
+          "CAP3": 581,
+          "CAP4": 516,
+          "CAP5": 179,
+          "CAP6": 501,
+          "CAP7": 818,
+          "CAP8": 616,
+          "CAP9": 191,
+          "ONCE34": 1
+        },
+        "outputs": {
+          "GOAL": 779
+        }
+      },
+      {
+        "id": "pick35",
+        "inputs": {
+          "CAP0": 939,
+          "CAP1": 802,
+          "CAP2": 476,
+          "CAP3": 114,
+          "CAP4": 734,
+          "CAP5": 219,
+          "CAP6": 735,
+          "CAP7": 569,
+          "CAP8": 873,
+          "CAP9": 91,
+          "ONCE35": 1
+        },
+        "outputs": {
+          "GOAL": 840
+        }
+      },
+      {
+        "id": "pick36",
+        "inputs": {
+          "CAP0": 411,
+          "CAP1": 266,
+          "CAP2": 465,
+          "CAP3": 578,
+          "CAP4": 241,
+          "CAP5": 398,
+          "CAP6": 524,
+          "CAP7": 854,
+          "CAP8": 821,
+          "CAP9": 883,
+          "ONCE36": 1
+        },
+        "outputs": {
+          "GOAL": 960
+        }
+      },
+      {
+        "id": "pick37",
+        "inputs": {
+          "CAP0": 844,
+          "CAP1": 11,
+          "CAP2": 395,
+          "CAP3": 551,
+          "CAP4": 171,
+          "CAP5": 633,
+          "CAP6": 820,
+          "CAP7": 856,
+          "CAP8": 117,
+          "CAP9": 62,
+          "ONCE37": 1
+        },
+        "outputs": {
+          "GOAL": 845
+        }
+      },
+      {
+        "id": "pick38",
+        "inputs": {
+          "CAP0": 464,
+          "CAP1": 812,
+          "CAP2": 672,
+          "CAP3": 749,
+          "CAP4": 870,
+          "CAP5": 910,
+          "CAP6": 977,
+          "CAP7": 611,
+          "CAP8": 628,
+          "CAP9": 191,
+          "ONCE38": 1
+        },
+        "outputs": {
+          "GOAL": 705
+        }
+      },
+      {
+        "id": "pick39",
+        "inputs": {
+          "CAP0": 203,
+          "CAP1": 325,
+          "CAP2": 571,
+          "CAP3": 884,
+          "CAP4": 281,
+          "CAP5": 431,
+          "CAP6": 674,
+          "CAP7": 689,
+          "CAP8": 733,
+          "CAP9": 759,
+          "ONCE39": 1
+        },
+        "outputs": {
+          "GOAL": 783
+        }
+      },
+      {
+        "id": "pick40",
+        "inputs": {
+          "CAP0": 839,
+          "CAP1": 873,
+          "CAP2": 239,
+          "CAP3": 390,
+          "CAP4": 723,
+          "CAP5": 69,
+          "CAP6": 945,
+          "CAP7": 715,
+          "CAP8": 203,
+          "CAP9": 903,
+          "ONCE40": 1
+        },
+        "outputs": {
+          "GOAL": 618
+        }
+      },
+      {
+        "id": "pick41",
+        "inputs": {
+          "CAP0": 814,
+          "CAP1": 414,
+          "CAP2": 482,
+          "CAP3": 569,
+          "CAP4": 549,
+          "CAP5": 479,
+          "CAP6": 743,
+          "CAP7": 893,
+          "CAP8": 873,
+          "CAP9": 131,
+          "ONCE41": 1
+        },
+        "outputs": {
+          "GOAL": 993
+        }
+      },
+      {
+        "id": "pick42",
+        "inputs": {
+          "CAP0": 695,
+          "CAP1": 597,
+          "CAP2": 706,
+          "CAP3": 840,
+          "CAP4": 112,
+          "CAP5": 220,
+          "CAP6": 94,
+          "CAP7": 692,
+          "CAP8": 439,
+          "CAP9": 198,
+          "ONCE42": 1
+        },
+        "outputs": {
+          "GOAL": 793
+        }
+      },
+      {
+        "id": "pick43",
+        "inputs": {
+          "CAP0": 808,
+          "CAP1": 421,
+          "CAP2": 306,
+          "CAP3": 767,
+          "CAP4": 869,
+          "CAP5": 40,
+          "CAP6": 581,
+          "CAP7": 545,
+          "CAP8": 414,
+          "CAP9": 926,
+          "ONCE43": 1
+        },
+        "outputs": {
+          "GOAL": 1022
+        }
+      },
+      {
+        "id": "pick44",
+        "inputs": {
+          "CAP0": 490,
+          "CAP1": 561,
+          "CAP2": 386,
+          "CAP3": 849,
+          "CAP4": 316,
+          "CAP5": 116,
+          "CAP6": 300,
+          "CAP7": 475,
+          "CAP8": 842,
+          "CAP9": 292,
+          "ONCE44": 1
+        },
+        "outputs": {
+          "GOAL": 891
+        }
+      },
+      {
+        "id": "pick45",
+        "inputs": {
+          "CAP0": 954,
+          "CAP1": 52,
+          "CAP2": 277,
+          "CAP3": 438,
+          "CAP4": 429,
+          "CAP5": 377,
+          "CAP6": 14,
+          "CAP7": 61,
+          "CAP8": 554,
+          "CAP9": 523,
+          "ONCE45": 1
+        },
+        "outputs": {
+          "GOAL": 592
+        }
+      },
+      {
+        "id": "pick46",
+        "inputs": {
+          "CAP0": 731,
+          "CAP1": 707,
+          "CAP2": 306,
+          "CAP3": 405,
+          "CAP4": 413,
+          "CAP5": 914,
+          "CAP6": 471,
+          "CAP7": 845,
+          "CAP8": 816,
+          "CAP9": 714,
+          "ONCE46": 1
+        },
+        "outputs": {
+          "GOAL": 730
+        }
+      },
+      {
+        "id": "pick47",
+        "inputs": {
+          "CAP0": 217,
+          "CAP1": 232,
+          "CAP2": 268,
+          "CAP3": 378,
+          "CAP4": 108,
+          "CAP5": 621,
+          "CAP6": 234,
+          "CAP7": 768,
+          "CAP8": 888,
+          "CAP9": 667,
+          "ONCE47": 1
+        },
+        "outputs": {
+          "GOAL": 532
+        }
+      },
+      {
+        "id": "pick48",
+        "inputs": {
+          "CAP0": 943,
+          "CAP1": 606,
+          "CAP2": 163,
+          "CAP3": 993,
+          "CAP4": 8,
+          "CAP5": 73,
+          "CAP6": 8,
+          "CAP7": 430,
+          "CAP8": 555,
+          "CAP9": 461,
+          "ONCE48": 1
+        },
+        "outputs": {
+          "GOAL": 698
+        }
+      },
+      {
+        "id": "pick49",
+        "inputs": {
+          "CAP0": 21,
+          "CAP1": 935,
+          "CAP2": 972,
+          "CAP3": 743,
+          "CAP4": 149,
+          "CAP5": 562,
+          "CAP6": 82,
+          "CAP7": 65,
+          "CAP8": 58,
+          "CAP9": 577,
+          "ONCE49": 1
+        },
+        "outputs": {
+          "GOAL": 575
+        }
+      },
+      {
+        "id": "pick50",
+        "inputs": {
+          "CAP0": 569,
+          "CAP1": 363,
+          "CAP2": 651,
+          "CAP3": 299,
+          "CAP4": 486,
+          "CAP5": 165,
+          "CAP6": 185,
+          "CAP7": 834,
+          "CAP8": 202,
+          "CAP9": 733,
+          "ONCE50": 1
+        },
+        "outputs": {
+          "GOAL": 512
+        }
+      },
+      {
+        "id": "pick51",
+        "inputs": {
+          "CAP0": 255,
+          "CAP1": 352,
+          "CAP2": 181,
+          "CAP3": 134,
+          "CAP4": 634,
+          "CAP5": 173,
+          "CAP6": 660,
+          "CAP7": 564,
+          "CAP8": 172,
+          "CAP9": 128,
+          "ONCE51": 1
+        },
+        "outputs": {
+          "GOAL": 741
+        }
+      },
+      {
+        "id": "pick52",
+        "inputs": {
+          "CAP0": 498,
+          "CAP1": 735,
+          "CAP2": 436,
+          "CAP3": 20,
+          "CAP4": 994,
+          "CAP5": 37,
+          "CAP6": 205,
+          "CAP7": 191,
+          "CAP8": 793,
+          "CAP9": 262,
+          "ONCE52": 1
+        },
+        "outputs": {
+          "GOAL": 647
+        }
+      },
+      {
+        "id": "pick53",
+        "inputs": {
+          "CAP0": 816,
+          "CAP1": 679,
+          "CAP2": 357,
+          "CAP3": 541,
+          "CAP4": 480,
+          "CAP5": 945,
+          "CAP6": 192,
+          "CAP7": 616,
+          "CAP8": 650,
+          "CAP9": 151,
+          "ONCE53": 1
+        },
+        "outputs": {
+          "GOAL": 1042
+        }
+      },
+      {
+        "id": "pick54",
+        "inputs": {
+          "CAP0": 522,
+          "CAP1": 908,
+          "CAP2": 269,
+          "CAP3": 185,
+          "CAP4": 391,
+          "CAP5": 195,
+          "CAP6": 902,
+          "CAP7": 6,
+          "CAP8": 150,
+          "CAP9": 309,
+          "ONCE54": 1
+        },
+        "outputs": {
+          "GOAL": 422
+        }
+      },
+      {
+        "id": "pick55",
+        "inputs": {
+          "CAP0": 332,
+          "CAP1": 559,
+          "CAP2": 508,
+          "CAP3": 107,
+          "CAP4": 557,
+          "CAP5": 826,
+          "CAP6": 609,
+          "CAP7": 493,
+          "CAP8": 696,
+          "CAP9": 658,
+          "ONCE55": 1
+        },
+        "outputs": {
+          "GOAL": 846
+        }
+      },
+      {
+        "id": "pick56",
+        "inputs": {
+          "CAP0": 862,
+          "CAP1": 748,
+          "CAP2": 242,
+          "CAP3": 934,
+          "CAP4": 712,
+          "CAP5": 237,
+          "CAP6": 296,
+          "CAP7": 308,
+          "CAP8": 148,
+          "CAP9": 653,
+          "ONCE56": 1
+        },
+        "outputs": {
+          "GOAL": 962
+        }
+      },
+      {
+        "id": "pick57",
+        "inputs": {
+          "CAP0": 335,
+          "CAP1": 448,
+          "CAP2": 816,
+          "CAP3": 416,
+          "CAP4": 440,
+          "CAP5": 631,
+          "CAP6": 325,
+          "CAP7": 33,
+          "CAP8": 763,
+          "CAP9": 129,
+          "ONCE57": 1
+        },
+        "outputs": {
+          "GOAL": 754
+        }
+      },
+      {
+        "id": "pick58",
+        "inputs": {
+          "CAP0": 800,
+          "CAP1": 366,
+          "CAP2": 422,
+          "CAP3": 644,
+          "CAP4": 179,
+          "CAP5": 779,
+          "CAP6": 599,
+          "CAP7": 183,
+          "CAP8": 177,
+          "CAP9": 214,
+          "ONCE58": 1
+        },
+        "outputs": {
+          "GOAL": 766
+        }
+      },
+      {
+        "id": "pick59",
+        "inputs": {
+          "CAP0": 151,
+          "CAP1": 441,
+          "CAP2": 353,
+          "CAP3": 479,
+          "CAP4": 59,
+          "CAP5": 655,
+          "CAP6": 711,
+          "CAP7": 776,
+          "CAP8": 34,
+          "CAP9": 590,
+          "ONCE59": 1
+        },
+        "outputs": {
+          "GOAL": 867
+        }
+      },
+      {
+        "id": "pick60",
+        "inputs": {
+          "CAP0": 177,
+          "CAP1": 912,
+          "CAP2": 766,
+          "CAP3": 178,
+          "CAP4": 206,
+          "CAP5": 422,
+          "CAP6": 767,
+          "CAP7": 932,
+          "CAP8": 745,
+          "CAP9": 244,
+          "ONCE60": 1
+        },
+        "outputs": {
+          "GOAL": 733
+        }
+      },
+      {
+        "id": "pick61",
+        "inputs": {
+          "CAP0": 286,
+          "CAP1": 254,
+          "CAP2": 417,
+          "CAP3": 607,
+          "CAP4": 245,
+          "CAP5": 97,
+          "CAP6": 447,
+          "CAP7": 356,
+          "CAP8": 606,
+          "CAP9": 289,
+          "ONCE61": 1
+        },
+        "outputs": {
+          "GOAL": 856
+        }
+      },
+      {
+        "id": "pick62",
+        "inputs": {
+          "CAP0": 971,
+          "CAP1": 866,
+          "CAP2": 764,
+          "CAP3": 402,
+          "CAP4": 337,
+          "CAP5": 411,
+          "CAP6": 310,
+          "CAP7": 879,
+          "CAP8": 875,
+          "CAP9": 338,
+          "ONCE62": 1
+        },
+        "outputs": {
+          "GOAL": 957
+        }
+      },
+      {
+        "id": "pick63",
+        "inputs": {
+          "CAP0": 42,
+          "CAP1": 811,
+          "CAP2": 549,
+          "CAP3": 278,
+          "CAP4": 79,
+          "CAP5": 569,
+          "CAP6": 784,
+          "CAP7": 384,
+          "CAP8": 75,
+          "CAP9": 671,
+          "ONCE63": 1
+        },
+        "outputs": {
+          "GOAL": 795
+        }
+      },
+      {
+        "id": "pick64",
+        "inputs": {
+          "CAP0": 262,
+          "CAP1": 506,
+          "CAP2": 731,
+          "CAP3": 98,
+          "CAP4": 40,
+          "CAP5": 466,
+          "CAP6": 607,
+          "CAP7": 458,
+          "CAP8": 311,
+          "CAP9": 407,
+          "ONCE64": 1
+        },
+        "outputs": {
+          "GOAL": 491
+        }
+      },
+      {
+        "id": "pick65",
+        "inputs": {
+          "CAP0": 454,
+          "CAP1": 469,
+          "CAP2": 112,
+          "CAP3": 836,
+          "CAP4": 395,
+          "CAP5": 314,
+          "CAP6": 538,
+          "CAP7": 287,
+          "CAP8": 964,
+          "CAP9": 58,
+          "ONCE65": 1
+        },
+        "outputs": {
+          "GOAL": 697
+        }
+      },
+      {
+        "id": "pick66",
+        "inputs": {
+          "CAP0": 150,
+          "CAP1": 775,
+          "CAP2": 391,
+          "CAP3": 632,
+          "CAP4": 444,
+          "CAP5": 893,
+          "CAP6": 855,
+          "CAP7": 29,
+          "CAP8": 524,
+          "CAP9": 603,
+          "ONCE66": 1
+        },
+        "outputs": {
+          "GOAL": 976
+        }
+      },
+      {
+        "id": "pick67",
+        "inputs": {
+          "CAP0": 514,
+          "CAP1": 583,
+          "CAP2": 228,
+          "CAP3": 465,
+          "CAP4": 99,
+          "CAP5": 183,
+          "CAP6": 605,
+          "CAP7": 309,
+          "CAP8": 827,
+          "CAP9": 626,
+          "ONCE67": 1
+        },
+        "outputs": {
+          "GOAL": 471
+        }
+      },
+      {
+        "id": "pick68",
+        "inputs": {
+          "CAP0": 169,
+          "CAP1": 658,
+          "CAP2": 967,
+          "CAP3": 79,
+          "CAP4": 540,
+          "CAP5": 317,
+          "CAP6": 49,
+          "CAP7": 820,
+          "CAP8": 626,
+          "CAP9": 973,
+          "ONCE68": 1
+        },
+        "outputs": {
+          "GOAL": 599
+        }
+      },
+      {
+        "id": "pick69",
+        "inputs": {
+          "CAP0": 186,
+          "CAP1": 330,
+          "CAP2": 834,
+          "CAP3": 701,
+          "CAP4": 691,
+          "CAP5": 469,
+          "CAP6": 428,
+          "CAP7": 458,
+          "CAP8": 292,
+          "CAP9": 61,
+          "ONCE69": 1
+        },
+        "outputs": {
+          "GOAL": 763
+        }
+      },
+      {
+        "id": "pick70",
+        "inputs": {
+          "CAP0": 45,
+          "CAP1": 938,
+          "CAP2": 297,
+          "CAP3": 889,
+          "CAP4": 939,
+          "CAP5": 113,
+          "CAP6": 332,
+          "CAP7": 415,
+          "CAP8": 935,
+          "CAP9": 350,
+          "ONCE70": 1
+        },
+        "outputs": {
+          "GOAL": 863
+        }
+      },
+      {
+        "id": "pick71",
+        "inputs": {
+          "CAP0": 140,
+          "CAP1": 780,
+          "CAP2": 371,
+          "CAP3": 230,
+          "CAP4": 573,
+          "CAP5": 488,
+          "CAP6": 348,
+          "CAP7": 340,
+          "CAP8": 840,
+          "CAP9": 960,
+          "ONCE71": 1
+        },
+        "outputs": {
+          "GOAL": 912
+        }
+      },
+      {
+        "id": "pick72",
+        "inputs": {
+          "CAP0": 400,
+          "CAP1": 174,
+          "CAP2": 154,
+          "CAP3": 430,
+          "CAP4": 893,
+          "CAP5": 614,
+          "CAP6": 929,
+          "CAP7": 185,
+          "CAP8": 38,
+          "CAP9": 849,
+          "ONCE72": 1
+        },
+        "outputs": {
+          "GOAL": 942
+        }
+      },
+      {
+        "id": "pick73",
+        "inputs": {
+          "CAP0": 957,
+          "CAP1": 841,
+          "CAP2": 350,
+          "CAP3": 338,
+          "CAP4": 325,
+          "CAP5": 221,
+          "CAP6": 202,
+          "CAP7": 401,
+          "CAP8": 800,
+          "CAP9": 189,
+          "ONCE73": 1
+        },
+        "outputs": {
+          "GOAL": 650
+        }
+      },
+      {
+        "id": "pick74",
+        "inputs": {
+          "CAP0": 99,
+          "CAP1": 378,
+          "CAP2": 738,
+          "CAP3": 568,
+          "CAP4": 85,
+          "CAP5": 321,
+          "CAP6": 67,
+          "CAP7": 598,
+          "CAP8": 564,
+          "CAP9": 192,
+          "ONCE74": 1
+        },
+        "outputs": {
+          "GOAL": 710
+        }
+      },
+      {
+        "id": "pick75",
+        "inputs": {
+          "CAP0": 167,
+          "CAP1": 104,
+          "CAP2": 713,
+          "CAP3": 371,
+          "CAP4": 650,
+          "CAP5": 688,
+          "CAP6": 33,
+          "CAP7": 737,
+          "CAP8": 982,
+          "CAP9": 49,
+          "ONCE75": 1
+        },
+        "outputs": {
+          "GOAL": 638
+        }
+      },
+      {
+        "id": "pick76",
+        "inputs": {
+          "CAP0": 454,
+          "CAP1": 106,
+          "CAP2": 416,
+          "CAP3": 161,
+          "CAP4": 553,
+          "CAP5": 718,
+          "CAP6": 644,
+          "CAP7": 246,
+          "CAP8": 587,
+          "CAP9": 597,
+          "ONCE76": 1
+        },
+        "outputs": {
+          "GOAL": 493
+        }
+      },
+      {
+        "id": "pick77",
+        "inputs": {
+          "CAP0": 391,
+          "CAP1": 621,
+          "CAP2": 647,
+          "CAP3": 138,
+          "CAP4": 722,
+          "CAP5": 414,
+          "CAP6": 447,
+          "CAP7": 716,
+          "CAP8": 326,
+          "CAP9": 947,
+          "ONCE77": 1
+        },
+        "outputs": {
+          "GOAL": 540
+        }
+      },
+      {
+        "id": "pick78",
+        "inputs": {
+          "CAP0": 805,
+          "CAP1": 247,
+          "CAP2": 317,
+          "CAP3": 540,
+          "CAP4": 874,
+          "CAP5": 726,
+          "CAP6": 696,
+          "CAP7": 767,
+          "CAP8": 614,
+          "CAP9": 645,
+          "ONCE78": 1
+        },
+        "outputs": {
+          "GOAL": 818
+        }
+      },
+      {
+        "id": "pick79",
+        "inputs": {
+          "CAP0": 942,
+          "CAP1": 429,
+          "CAP2": 664,
+          "CAP3": 833,
+          "CAP4": 106,
+          "CAP5": 555,
+          "CAP6": 750,
+          "CAP7": 991,
+          "CAP8": 477,
+          "CAP9": 208,
+          "ONCE79": 1
+        },
+        "outputs": {
+          "GOAL": 872
+        }
+      },
+      {
+        "id": "pick80",
+        "inputs": {
+          "CAP0": 927,
+          "CAP1": 82,
+          "CAP2": 94,
+          "CAP3": 569,
+          "CAP4": 725,
+          "CAP5": 170,
+          "CAP6": 732,
+          "CAP7": 503,
+          "CAP8": 99,
+          "CAP9": 99,
+          "ONCE80": 1
+        },
+        "outputs": {
+          "GOAL": 803
+        }
+      },
+      {
+        "id": "pick81",
+        "inputs": {
+          "CAP0": 420,
+          "CAP1": 410,
+          "CAP2": 884,
+          "CAP3": 459,
+          "CAP4": 324,
+          "CAP5": 200,
+          "CAP6": 337,
+          "CAP7": 816,
+          "CAP8": 607,
+          "CAP9": 128,
+          "ONCE81": 1
+        },
+        "outputs": {
+          "GOAL": 833
+        }
+      },
+      {
+        "id": "pick82",
+        "inputs": {
+          "CAP0": 400,
+          "CAP1": 297,
+          "CAP2": 972,
+          "CAP3": 825,
+          "CAP4": 978,
+          "CAP5": 749,
+          "CAP6": 601,
+          "CAP7": 622,
+          "CAP8": 713,
+          "CAP9": 773,
+          "ONCE82": 1
+        },
+        "outputs": {
+          "GOAL": 906
+        }
+      },
+      {
+        "id": "pick83",
+        "inputs": {
+          "CAP0": 81,
+          "CAP1": 748,
+          "CAP2": 608,
+          "CAP3": 50,
+          "CAP4": 145,
+          "CAP5": 590,
+          "CAP6": 242,
+          "CAP7": 635,
+          "CAP8": 102,
+          "CAP9": 458,
+          "ONCE83": 1
+        },
+        "outputs": {
+          "GOAL": 774
+        }
+      },
+      {
+        "id": "pick84",
+        "inputs": {
+          "CAP0": 315,
+          "CAP1": 127,
+          "CAP2": 743,
+          "CAP3": 172,
+          "CAP4": 541,
+          "CAP5": 321,
+          "CAP6": 805,
+          "CAP7": 214,
+          "CAP8": 572,
+          "CAP9": 612,
+          "ONCE84": 1
+        },
+        "outputs": {
+          "GOAL": 468
+        }
+      },
+      {
+        "id": "pick85",
+        "inputs": {
+          "CAP0": 890,
+          "CAP1": 162,
+          "CAP2": 592,
+          "CAP3": 486,
+          "CAP4": 58,
+          "CAP5": 742,
+          "CAP6": 641,
+          "CAP7": 355,
+          "CAP8": 218,
+          "CAP9": 334,
+          "ONCE85": 1
+        },
+        "outputs": {
+          "GOAL": 592
+        }
+      },
+      {
+        "id": "pick86",
+        "inputs": {
+          "CAP0": 35,
+          "CAP1": 607,
+          "CAP2": 581,
+          "CAP3": 134,
+          "CAP4": 390,
+          "CAP5": 506,
+          "CAP6": 646,
+          "CAP7": 929,
+          "CAP8": 553,
+          "CAP9": 421,
+          "ONCE86": 1
+        },
+        "outputs": {
+          "GOAL": 617
+        }
+      },
+      {
+        "id": "pick87",
+        "inputs": {
+          "CAP0": 736,
+          "CAP1": 901,
+          "CAP2": 479,
+          "CAP3": 171,
+          "CAP4": 641,
+          "CAP5": 48,
+          "CAP6": 442,
+          "CAP7": 276,
+          "CAP8": 507,
+          "CAP9": 454,
+          "ONCE87": 1
+        },
+        "outputs": {
+          "GOAL": 895
+        }
+      },
+      {
+        "id": "pick88",
+        "inputs": {
+          "CAP0": 914,
+          "CAP1": 922,
+          "CAP2": 739,
+          "CAP3": 298,
+          "CAP4": 293,
+          "CAP5": 845,
+          "CAP6": 397,
+          "CAP7": 93,
+          "CAP8": 222,
+          "CAP9": 292,
+          "ONCE88": 1
+        },
+        "outputs": {
+          "GOAL": 747
+        }
+      },
+      {
+        "id": "pick89",
+        "inputs": {
+          "CAP0": 822,
+          "CAP1": 449,
+          "CAP2": 698,
+          "CAP3": 895,
+          "CAP4": 29,
+          "CAP5": 955,
+          "CAP6": 389,
+          "CAP7": 50,
+          "CAP8": 14,
+          "CAP9": 997,
+          "ONCE89": 1
+        },
+        "outputs": {
+          "GOAL": 547
+        }
+      },
+      {
+        "id": "pick90",
+        "inputs": {
+          "CAP0": 469,
+          "CAP1": 198,
+          "CAP2": 233,
+          "CAP3": 898,
+          "CAP4": 416,
+          "CAP5": 232,
+          "CAP6": 397,
+          "CAP7": 189,
+          "CAP8": 723,
+          "CAP9": 935,
+          "ONCE90": 1
+        },
+        "outputs": {
+          "GOAL": 670
+        }
+      },
+      {
+        "id": "pick91",
+        "inputs": {
+          "CAP0": 1000,
+          "CAP1": 561,
+          "CAP2": 594,
+          "CAP3": 32,
+          "CAP4": 616,
+          "CAP5": 563,
+          "CAP6": 691,
+          "CAP7": 395,
+          "CAP8": 433,
+          "CAP9": 132,
+          "ONCE91": 1
+        },
+        "outputs": {
+          "GOAL": 841
+        }
+      },
+      {
+        "id": "pick92",
+        "inputs": {
+          "CAP0": 27,
+          "CAP1": 28,
+          "CAP2": 60,
+          "CAP3": 383,
+          "CAP4": 510,
+          "CAP5": 25,
+          "CAP6": 861,
+          "CAP7": 363,
+          "CAP8": 27,
+          "CAP9": 28,
+          "ONCE92": 1
+        },
+        "outputs": {
+          "GOAL": 394
+        }
+      },
+      {
+        "id": "pick93",
+        "inputs": {
+          "CAP0": 294,
+          "CAP1": 82,
+          "CAP2": 677,
+          "CAP3": 845,
+          "CAP4": 308,
+          "CAP5": 463,
+          "CAP6": 104,
+          "CAP7": 347,
+          "CAP8": 953,
+          "CAP9": 671,
+          "ONCE93": 1
+        },
+        "outputs": {
+          "GOAL": 586
+        }
+      },
+      {
+        "id": "pick94",
+        "inputs": {
+          "CAP0": 380,
+          "CAP1": 350,
+          "CAP2": 433,
+          "CAP3": 532,
+          "CAP4": 571,
+          "CAP5": 254,
+          "CAP6": 943,
+          "CAP7": 267,
+          "CAP8": 268,
+          "CAP9": 217,
+          "ONCE94": 1
+        },
+        "outputs": {
+          "GOAL": 495
+        }
+      },
+      {
+        "id": "pick95",
+        "inputs": {
+          "CAP0": 441,
+          "CAP1": 429,
+          "CAP2": 866,
+          "CAP3": 746,
+          "CAP4": 333,
+          "CAP5": 202,
+          "CAP6": 107,
+          "CAP7": 66,
+          "CAP8": 990,
+          "CAP9": 245,
+          "ONCE95": 1
+        },
+        "outputs": {
+          "GOAL": 545
+        }
+      },
+      {
+        "id": "pick96",
+        "inputs": {
+          "CAP0": 397,
+          "CAP1": 817,
+          "CAP2": 248,
+          "CAP3": 761,
+          "CAP4": 929,
+          "CAP5": 454,
+          "CAP6": 850,
+          "CAP7": 392,
+          "CAP8": 18,
+          "CAP9": 877,
+          "ONCE96": 1
+        },
+        "outputs": {
+          "GOAL": 711
+        }
+      },
+      {
+        "id": "pick97",
+        "inputs": {
+          "CAP0": 308,
+          "CAP1": 77,
+          "CAP2": 621,
+          "CAP3": 421,
+          "CAP4": 111,
+          "CAP5": 188,
+          "CAP6": 244,
+          "CAP7": 57,
+          "CAP8": 780,
+          "CAP9": 75,
+          "ONCE97": 1
+        },
+        "outputs": {
+          "GOAL": 411
+        }
+      },
+      {
+        "id": "pick98",
+        "inputs": {
+          "CAP0": 354,
+          "CAP1": 267,
+          "CAP2": 783,
+          "CAP3": 967,
+          "CAP4": 130,
+          "CAP5": 961,
+          "CAP6": 661,
+          "CAP7": 199,
+          "CAP8": 35,
+          "CAP9": 877,
+          "ONCE98": 1
+        },
+        "outputs": {
+          "GOAL": 562
+        }
+      },
+      {
+        "id": "pick99",
+        "inputs": {
+          "CAP0": 893,
+          "CAP1": 224,
+          "CAP2": 63,
+          "CAP3": 369,
+          "CAP4": 257,
+          "CAP5": 530,
+          "CAP6": 898,
+          "CAP7": 350,
+          "CAP8": 402,
+          "CAP9": 118,
+          "ONCE99": 1
+        },
+        "outputs": {
+          "GOAL": 589
+        }
+      }
+    ]
+  },
+  "names": [
+    "mknapcb4_07_bks"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/ORLibrary/cases/mknapcb4_07_bks.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/ORLibrary/models/mknapcb4_07_bks.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

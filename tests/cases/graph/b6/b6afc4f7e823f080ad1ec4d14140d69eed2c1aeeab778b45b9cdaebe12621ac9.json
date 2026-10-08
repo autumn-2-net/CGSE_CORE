@@ -1,0 +1,69 @@
+{
+  "id": "b6afc4f7e823f080ad1ec4d14140d69eed2c1aeeab778b45b9cdaebe12621ac9",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "K0": 1,
+      "F": 1
+    },
+    "recipes": [
+      {
+        "id": "c0",
+        "inputs": {
+          "K0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "K1": 1
+        }
+      },
+      {
+        "id": "c1",
+        "inputs": {
+          "K1": 1
+        },
+        "outputs": {
+          "K2": 1
+        }
+      },
+      {
+        "id": "c2",
+        "inputs": {
+          "K2": 1
+        },
+        "outputs": {
+          "K0": 1,
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "optional_loss",
+        "inputs": {
+          "K0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "feedback_3_1"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/algorithm-review-20260928/future-inputs.json",
+      "pointer": "/48"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

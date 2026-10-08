@@ -1,0 +1,216 @@
+{
+  "id": "e9323fdbe2546b95d7c800df1764c517c3c23a5d7c730bd3c0eb5cebd477ebcc",
+  "kind": "graph",
+  "model": {
+    "target": "target",
+    "amount": 11,
+    "stock": {},
+    "recipes": [
+      {
+        "id": "source_7",
+        "inputs": {
+          "raw_7": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_10",
+        "inputs": {
+          "raw_10": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_14",
+        "inputs": {
+          "raw_14": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_17",
+        "inputs": {
+          "raw_17": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_16",
+        "inputs": {
+          "raw_16": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_1",
+        "inputs": {
+          "raw_1": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_6",
+        "inputs": {
+          "raw_6": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_13",
+        "inputs": {
+          "raw_13": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_19",
+        "inputs": {
+          "raw_19": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_2",
+        "inputs": {
+          "raw_2": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_4",
+        "inputs": {
+          "raw_4": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_5",
+        "inputs": {
+          "raw_5": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_15",
+        "inputs": {
+          "raw_15": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_12",
+        "inputs": {
+          "raw_12": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_8",
+        "inputs": {
+          "raw_8": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_9",
+        "inputs": {
+          "raw_9": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_0",
+        "inputs": {
+          "raw_0": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_3",
+        "inputs": {
+          "raw_3": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_20",
+        "inputs": {
+          "raw_20": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_11",
+        "inputs": {
+          "raw_11": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "source_18",
+        "inputs": {
+          "raw_18": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "equal priority shuffle 4"
+  ],
+  "expected": "UNKNOWN",
+  "origins": [
+    {
+      "source": ".local/cgse-feedback-fixes-20261003/fallback/runtime/fixtures.json",
+      "pointer": "/19"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

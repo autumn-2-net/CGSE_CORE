@@ -1,0 +1,104 @@
+{
+  "id": "8e20ce61937556db157ab8a85f4bcdd22f520ecacaa6329c5b4ae96e34d4a6ae",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 80097,
+      "U1": 60311,
+      "U2": 90202
+    },
+    "recipes": [
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "X0_0": 164026,
+          "D2": 1
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "X0_0": 5860,
+          "D0": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D2": 90202,
+          "X1_0": 13815238172,
+          "X0_0": 8535295786,
+          "D1": 60311,
+          "D0": 80096
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 117486
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "X1_0": 117486,
+          "D1": 1
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 164026
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "X1_0": 5860,
+          "D0": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "reduced_lattice_wide_0058_drop_unused@metamorphic2"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/metamorphic-inputs.json",
+      "pointer": "/10"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

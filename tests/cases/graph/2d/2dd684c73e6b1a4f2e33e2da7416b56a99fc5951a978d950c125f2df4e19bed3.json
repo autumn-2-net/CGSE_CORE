@@ -1,0 +1,258 @@
+{
+  "id": "2dd684c73e6b1a4f2e33e2da7416b56a99fc5951a978d950c125f2df4e19bed3",
+  "kind": "graph",
+  "model": {
+    "target": "P6",
+    "amount": 7,
+    "stock": {
+      "F": 9,
+      "P0": 1,
+      "P1": 2,
+      "P2": 2,
+      "P4": 1,
+      "P5": 2
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 1,
+          "P4": 2
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P3": 1,
+          "P6": 1
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P2": 1,
+          "P3": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P3": 1,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P4": 2
+        },
+        "outputs": {
+          "P0": 1,
+          "P2": 1,
+          "P5": 1,
+          "P6": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 1,
+          "P4": 2
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P6": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P5": 1,
+          "P6": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "r7",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P6": 1
+        },
+        "outputs": {
+          "P5": 1
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P2": 2,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r9",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P6": 1
+        }
+      },
+      {
+        "id": "r10",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P3": 1,
+          "P4": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r11",
+        "inputs": {
+          "F": 1,
+          "P1": 1
+        },
+        "outputs": {
+          "P3": 1
+        }
+      },
+      {
+        "id": "r12",
+        "inputs": {
+          "F": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P4": 2
+        }
+      },
+      {
+        "id": "r13",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P2": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P4": 1,
+          "P5": 1,
+          "P6": 1
+        }
+      },
+      {
+        "id": "r14",
+        "inputs": {
+          "F": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P4": 1,
+          "P5": 1
+        }
+      },
+      {
+        "id": "r15",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P5": 1
+        }
+      },
+      {
+        "id": "r16",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P3": 1,
+          "P4": 1,
+          "P6": 1
+        },
+        "outputs": {
+          "P2": 2,
+          "P5": 1
+        }
+      },
+      {
+        "id": "r17",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P1": 3
+        },
+        "outputs": {
+          "P3": 2
+        }
+      }
+    ]
+  },
+  "names": [
+    "wide_seed6780"
+  ],
+  "expected": "UNKNOWN",
+  "origins": [
+    {
+      "source": ".local/new-counterexamples-20260926/recorded/fuzz-new-limits/cases/wide_seed6780.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_a666711_new_counterexamples_20260926.zip!/recorded/fuzz-new-limits/cases/wide_seed6780.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,495 @@
+{
+  "id": "515549c243c48d38ab1e9178ad10aaba0e7513474bf31c33483417b8fdd6ba73",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "CAT": 3,
+      "A": 2,
+      "B": 2,
+      "F": 25,
+      "U0": 1,
+      "U1": 1,
+      "U2": 1,
+      "U3": 1,
+      "U4": 1,
+      "U5": 1
+    },
+    "recipes": [
+      {
+        "id": "split5",
+        "inputs": {
+          "F": 1,
+          "CAT": 1,
+          "U5": 1
+        },
+        "outputs": {
+          "L5": 1,
+          "R5": 1
+        }
+      },
+      {
+        "id": "split0",
+        "inputs": {
+          "F": 1,
+          "CAT": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "L0": 1,
+          "R0": 1
+        }
+      },
+      {
+        "id": "joinAlt2",
+        "inputs": {
+          "F": 1,
+          "DLB2": 1,
+          "DR2": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "B": 2,
+          "D2": 1
+        }
+      },
+      {
+        "id": "joinAlt1",
+        "inputs": {
+          "F": 1,
+          "DLB1": 1,
+          "DR1": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "B": 2,
+          "D1": 1
+        }
+      },
+      {
+        "id": "left4",
+        "inputs": {
+          "F": 1,
+          "L4": 1,
+          "A": 1
+        },
+        "outputs": {
+          "DL4": 1
+        }
+      },
+      {
+        "id": "leftAlt2",
+        "inputs": {
+          "F": 1,
+          "L2": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DLB2": 1
+        }
+      },
+      {
+        "id": "leftAlt3",
+        "inputs": {
+          "F": 1,
+          "L3": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DLB3": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "F": 1,
+          "D0": 1,
+          "D1": 1,
+          "D2": 1,
+          "D3": 1,
+          "D4": 1,
+          "D5": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "join5",
+        "inputs": {
+          "F": 1,
+          "DL5": 1,
+          "DR5": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1,
+          "B": 1,
+          "D5": 1
+        }
+      },
+      {
+        "id": "joinAlt4",
+        "inputs": {
+          "F": 1,
+          "DLB4": 1,
+          "DR4": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "B": 2,
+          "D4": 1
+        }
+      },
+      {
+        "id": "leftAlt4",
+        "inputs": {
+          "F": 1,
+          "L4": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DLB4": 1
+        }
+      },
+      {
+        "id": "swap2",
+        "inputs": {
+          "F": 1,
+          "L3": 1
+        },
+        "outputs": {
+          "L0": 1
+        }
+      },
+      {
+        "id": "right1",
+        "inputs": {
+          "F": 1,
+          "R1": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DR1": 1
+        }
+      },
+      {
+        "id": "join4",
+        "inputs": {
+          "F": 1,
+          "DL4": 1,
+          "DR4": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1,
+          "B": 1,
+          "D4": 1
+        }
+      },
+      {
+        "id": "join0",
+        "inputs": {
+          "F": 1,
+          "DL0": 1,
+          "DR0": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1,
+          "B": 1,
+          "D0": 1
+        }
+      },
+      {
+        "id": "leftAlt5",
+        "inputs": {
+          "F": 1,
+          "L5": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DLB5": 1
+        }
+      },
+      {
+        "id": "joinAlt3",
+        "inputs": {
+          "F": 1,
+          "DLB3": 1,
+          "DR3": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "B": 2,
+          "D3": 1
+        }
+      },
+      {
+        "id": "right3",
+        "inputs": {
+          "F": 1,
+          "R3": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DR3": 1
+        }
+      },
+      {
+        "id": "swap1",
+        "inputs": {
+          "F": 1,
+          "DR0": 1
+        },
+        "outputs": {
+          "DR5": 1
+        }
+      },
+      {
+        "id": "swap0",
+        "inputs": {
+          "F": 1,
+          "L3": 1
+        },
+        "outputs": {
+          "L2": 1
+        }
+      },
+      {
+        "id": "right2",
+        "inputs": {
+          "F": 1,
+          "R2": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DR2": 1
+        }
+      },
+      {
+        "id": "left2",
+        "inputs": {
+          "F": 1,
+          "L2": 1,
+          "A": 1
+        },
+        "outputs": {
+          "DL2": 1
+        }
+      },
+      {
+        "id": "split2",
+        "inputs": {
+          "F": 1,
+          "CAT": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "L2": 1,
+          "R2": 1
+        }
+      },
+      {
+        "id": "right0",
+        "inputs": {
+          "F": 1,
+          "R0": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DR0": 1
+        }
+      },
+      {
+        "id": "join1",
+        "inputs": {
+          "F": 1,
+          "DL1": 1,
+          "DR1": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1,
+          "B": 1,
+          "D1": 1
+        }
+      },
+      {
+        "id": "join2",
+        "inputs": {
+          "F": 1,
+          "DL2": 1,
+          "DR2": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1,
+          "B": 1,
+          "D2": 1
+        }
+      },
+      {
+        "id": "split1",
+        "inputs": {
+          "F": 1,
+          "CAT": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "L1": 1,
+          "R1": 1
+        }
+      },
+      {
+        "id": "left5",
+        "inputs": {
+          "F": 1,
+          "L5": 1,
+          "A": 1
+        },
+        "outputs": {
+          "DL5": 1
+        }
+      },
+      {
+        "id": "joinAlt5",
+        "inputs": {
+          "F": 1,
+          "DLB5": 1,
+          "DR5": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "B": 2,
+          "D5": 1
+        }
+      },
+      {
+        "id": "split3",
+        "inputs": {
+          "F": 1,
+          "CAT": 1,
+          "U3": 1
+        },
+        "outputs": {
+          "L3": 1,
+          "R3": 1
+        }
+      },
+      {
+        "id": "left3",
+        "inputs": {
+          "F": 1,
+          "L3": 1,
+          "A": 1
+        },
+        "outputs": {
+          "DL3": 1
+        }
+      },
+      {
+        "id": "join3",
+        "inputs": {
+          "F": 1,
+          "DL3": 1,
+          "DR3": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1,
+          "B": 1,
+          "D3": 1
+        }
+      },
+      {
+        "id": "left1",
+        "inputs": {
+          "F": 1,
+          "L1": 1,
+          "A": 1
+        },
+        "outputs": {
+          "DL1": 1
+        }
+      },
+      {
+        "id": "split4",
+        "inputs": {
+          "F": 1,
+          "CAT": 1,
+          "U4": 1
+        },
+        "outputs": {
+          "L4": 1,
+          "R4": 1
+        }
+      },
+      {
+        "id": "left0",
+        "inputs": {
+          "F": 1,
+          "L0": 1,
+          "A": 1
+        },
+        "outputs": {
+          "DL0": 1
+        }
+      },
+      {
+        "id": "right5",
+        "inputs": {
+          "F": 1,
+          "R5": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DR5": 1
+        }
+      },
+      {
+        "id": "leftAlt1",
+        "inputs": {
+          "F": 1,
+          "L1": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DLB1": 1
+        }
+      },
+      {
+        "id": "right4",
+        "inputs": {
+          "F": 1,
+          "R4": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DR4": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "forkjoin_01805"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/cases/forkjoin_01805.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/models/forkjoin_01805.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,117 @@
+{
+  "id": "a0d281dfe81499bf68c1dbc061730674f17c70843a18264beaaef70e44316070",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 50766,
+      "U1": 30668,
+      "U2": 30177,
+      "CAT": 1
+    },
+    "recipes": [
+      {
+        "id": "r2_0",
+        "inputs": {
+          "CAT": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "X0_0": 39845,
+          "CAT": 1,
+          "D2": 1
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "CAT": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "D1": 1,
+          "X0_0": 56594
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "CAT": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "X0_0": 30415,
+          "D0": 1,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "CAT": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "X1_0": 39845,
+          "D2": 1,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "X1_0": 56594,
+          "D1": 1
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "CAT": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "X1_0": 30415,
+          "D0": 1,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D1": 30668,
+          "D0": 50765,
+          "D2": 30177,
+          "X0_0": 1420895830,
+          "X1_0": 3061149002
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "reduced_shared_catalyst_0228_drop_unused@metamorphic2"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/metamorphic-inputs.json",
+      "pointer": "/38"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

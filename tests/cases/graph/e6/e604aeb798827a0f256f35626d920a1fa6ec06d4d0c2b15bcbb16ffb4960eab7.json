@@ -1,0 +1,121 @@
+{
+  "id": "e604aeb798827a0f256f35626d920a1fa6ec06d4d0c2b15bcbb16ffb4960eab7",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 305,
+      "U1": 707,
+      "U2": 301,
+      "CAT": 1
+    },
+    "recipes": [
+      {
+        "id": "r0_0",
+        "inputs": {
+          "CAT": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "CAT": 1,
+          "X0_0": 47204
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "X1_0": 195318,
+          "D1": 1
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "X1_0": 47204,
+          "D0": 1,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 156834,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "D2": 1,
+          "X0_0": 156834
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "X0_0": 75470336,
+          "D0": 305,
+          "D1": 707,
+          "X1_0": 124223744,
+          "D2": 301
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "CAT": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "X0_0": 195318,
+          "CAT": 1,
+          "D1": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "shared_catalyst_0037"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/shared_catalyst_0037.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/shared_catalyst_0037.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

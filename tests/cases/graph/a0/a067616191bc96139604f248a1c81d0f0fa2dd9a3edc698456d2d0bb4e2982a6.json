@@ -1,0 +1,45 @@
+{
+  "id": "a067616191bc96139604f248a1c81d0f0fa2dd9a3edc698456d2d0bb4e2982a6",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {},
+    "recipes": [
+      {
+        "id": "0",
+        "inputs": {
+          "BAD": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "1",
+        "inputs": {
+          "GOOD": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "control_missing_both"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/controls/control_missing_both.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

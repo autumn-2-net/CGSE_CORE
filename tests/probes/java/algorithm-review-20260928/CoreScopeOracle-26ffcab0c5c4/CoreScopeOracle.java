@@ -1,0 +1,14 @@
+package org.cgse.core;
+import java.math.*;import java.util.*;
+public class CoreScopeOracle {
+ static final BigInteger Z=BigInteger.ZERO,O=BigInteger.ONE;
+ public static void main(String[]args){var random=new Random(928194);int checked=0,learned=0;
+ for(int t=0;t<800;t++) {int n=2+random.nextInt(3);var low=new BigInteger[n];var high=new BigInteger[n];for(int i=0;i<n;i++){low[i]=t%5==0?O.shiftLeft(100):Z;high[i]=low[i].add(BigInteger.TWO);}var hard=new ArrayList<ExactLinearProgram.Constraint>();var soft=new ArrayList<CountSoftSearch.Soft>();var all=new ArrayList<ExactLinearProgram.Constraint>();for(int r=0;r<9;r++){var terms=new TreeMap<Integer,BigInteger>();var rhs=BigInteger.valueOf(random.nextInt(9)-4);for(int i=0;i<n;i++){var c=BigInteger.valueOf(random.nextInt(11)-5);if(c.signum()!=0){terms.put(i,c);rhs=rhs.add(c.multiply(low[i]));}}var row=new ExactLinearProgram.Constraint(terms,rhs);all.add(row);if(r<2)hard.add(row);else soft.add(new CountSoftSearch.Soft(row,O));}
+ var budget=new PlanningBudget(0,20000000,256L<<20,()->false,System::nanoTime);try(var p=new CountLcg(all,low,high,budget,50000,true)){while(!p.step()){}if(!p.infeasible())continue;if(CountProof.verify(p.certificate(),1000000)!=CountProof.Verdict.VERIFIED)throw new AssertionError("root proof");if(p.certificate().forbidden().size()>1)learned++;var ids=new BitSet();ids.set(0,soft.size());try(var m=new CountCoreMinimize(hard,low,high,soft,ids,p.certificate(),budget,10000+(t%3)*10000)){while(!m.step()){}var subset=new ArrayList<>(hard);for(int k=m.core().nextSetBit(0);k>=0;k=m.core().nextSetBit(k+1))subset.add(soft.get(k).condition());for(var values:MechanismsOracle.values(n,3)){var x=values.clone();for(int i=0;i<n;i++)x[i]=x[i].add(low[i]);if(OptimizationOracle.valid(subset,x))throw new AssertionError("bad reduced core "+t);}if(CountProof.verify(m.certificate(),1000000)!=CountProof.Verdict.VERIFIED)throw new AssertionError("scope proof "+t);checked++;}}
+ if(budget.reservedBytes()!=0)throw new AssertionError("scope memory");}
+ // No upper bound: domain axioms must neither invent nor lose an assumption.
+ var q=O.shiftLeft(120);var soft=List.of(new CountSoftSearch.Soft(new ExactLinearProgram.Constraint(Map.of(0,O.negate()),q.add(O).negate()),O),new CountSoftSearch.Soft(new ExactLinearProgram.Constraint(Map.of(0,O),q),O),new CountSoftSearch.Soft(new ExactLinearProgram.Constraint(Map.of(0,O.negate()),q.negate()),O));
+ var b=new PlanningBudget(0,20000000,256L<<20,()->false,System::nanoTime);try(var p=new CountCoreSoft(List.of(),new BigInteger[]{q},new BigInteger[]{null},soft,b,100000)){while(!p.step()){}if(!p.optimal()||!p.cost().equals(O))throw new AssertionError("unbounded core "+b.diagnostics());}if(b.reservedBytes()!=0)throw new AssertionError("unbounded memory");
+ System.out.println("PASS reduced-core scopes="+checked+" learned-proof cases="+learned+"; signed rows, 100-bit domains, independent enumeration, 120-bit open domain");
+ }
+}

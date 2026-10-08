@@ -1,0 +1,88 @@
+{
+  "id": "6acd05adbb4ba4c62401cfb6f188ce109b8c9a5d2d9d5da3d7b5096c3dde9050",
+  "kind": "graph",
+  "model": {
+    "target": "P4",
+    "amount": 2,
+    "stock": {
+      "P2": 1,
+      "P3": 3
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "inputs": {
+          "P3": 1
+        },
+        "outputs": {
+          "P3": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "P1": 1,
+          "P3": 2
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 2
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "P1": 2,
+          "P4": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P2": 1,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "P2": 1,
+          "P3": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P2": 1,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "P1": 1
+        },
+        "outputs": {
+          "P2": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "token_seed9"
+  ],
+  "expected": "UNKNOWN",
+  "origins": [
+    {
+      "source": ".local/cgse-counterexamples-20260926/cases/token_seed9.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_counterexamples_20260926.zip!/cases/token_seed9.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

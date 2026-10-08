@@ -1,0 +1,452 @@
+{
+  "id": "542af15b8daf549a7f073f94f312cd47717a0ed4cb0f35c63449ede50eef5e38",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 3,
+      "U1": 3,
+      "U2": 3,
+      "CAT0": 3,
+      "FUEL0": 8,
+      "FUEL1": 9,
+      "CAT1": 3,
+      "r2_0.P2": 1,
+      "r2_0.P3": 1,
+      "r2_1.P0": 1,
+      "r2_1.P1": 1
+    },
+    "recipes": [
+      {
+        "id": "r2_1.s2",
+        "inputs": {
+          "r2_1.P1": 1
+        },
+        "outputs": {
+          "r2_1.P2": 1
+        }
+      },
+      {
+        "id": "r1_0.s1",
+        "inputs": {
+          "r1_0.P0": 1
+        },
+        "outputs": {
+          "r1_0.P1": 1
+        }
+      },
+      {
+        "id": "r0_1.return_alias",
+        "inputs": {
+          "r0_1.P1": 1,
+          "FUEL0": 2
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 550,
+          "X1_1": 755,
+          "CAT0": 3
+        }
+      },
+      {
+        "id": "r1_1.burn_alias",
+        "inputs": {
+          "r1_1.P1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 934,
+          "X1_1": 622
+        }
+      },
+      {
+        "id": "r0_0.s0_alias",
+        "inputs": {
+          "U0": 1,
+          "CAT0": 3
+        },
+        "outputs": {
+          "r0_0.P0": 1
+        }
+      },
+      {
+        "id": "r1_0.s2",
+        "inputs": {
+          "r1_0.P1": 1
+        },
+        "outputs": {
+          "r1_0.P2": 1
+        }
+      },
+      {
+        "id": "r2_0.s0",
+        "inputs": {
+          "U2": 1,
+          "CAT1": 3
+        },
+        "outputs": {
+          "r2_0.P0": 1
+        }
+      },
+      {
+        "id": "r0_1.burn_alias",
+        "inputs": {
+          "r0_1.P1": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 550,
+          "X1_1": 755
+        }
+      },
+      {
+        "id": "r2_1.s0",
+        "inputs": {
+          "U2": 1,
+          "CAT0": 3
+        },
+        "outputs": {
+          "r2_1.P0": 1
+        }
+      },
+      {
+        "id": "r2_1.burn",
+        "inputs": {
+          "r2_1.P2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 348,
+          "X1_1": 631
+        }
+      },
+      {
+        "id": "r0_1.burn",
+        "inputs": {
+          "r0_1.P1": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 550,
+          "X1_1": 755
+        }
+      },
+      {
+        "id": "r0_0.return",
+        "inputs": {
+          "r0_0.P2": 1,
+          "FUEL0": 2
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 550,
+          "X0_1": 755,
+          "CAT0": 3
+        }
+      },
+      {
+        "id": "r2_0.s3",
+        "inputs": {
+          "r2_0.P2": 1
+        },
+        "outputs": {
+          "r2_0.P3": 1
+        }
+      },
+      {
+        "id": "r1_1.s1",
+        "inputs": {
+          "r1_1.P0": 1
+        },
+        "outputs": {
+          "r1_1.P1": 1
+        }
+      },
+      {
+        "id": "r2_1.return_alias",
+        "inputs": {
+          "r2_1.P2": 1,
+          "FUEL1": 3
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 348,
+          "X1_1": 631,
+          "CAT0": 3
+        }
+      },
+      {
+        "id": "r1_0.burn",
+        "inputs": {
+          "r1_0.P3": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 934,
+          "X0_1": 622
+        }
+      },
+      {
+        "id": "r2_0.s2",
+        "inputs": {
+          "r2_0.P1": 1
+        },
+        "outputs": {
+          "r2_0.P2": 1
+        }
+      },
+      {
+        "id": "r2_1.s1",
+        "inputs": {
+          "r2_1.P0": 1
+        },
+        "outputs": {
+          "r2_1.P1": 1
+        }
+      },
+      {
+        "id": "r0_0.s0",
+        "inputs": {
+          "U0": 1,
+          "CAT0": 3
+        },
+        "outputs": {
+          "r0_0.P0": 1
+        }
+      },
+      {
+        "id": "r2_0.return",
+        "inputs": {
+          "r2_0.P3": 1,
+          "FUEL0": 2
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 348,
+          "X0_1": 631,
+          "CAT1": 3
+        }
+      },
+      {
+        "id": "r1_0.return",
+        "inputs": {
+          "r1_0.P3": 1,
+          "FUEL1": 3
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 934,
+          "X0_1": 622,
+          "CAT0": 2
+        }
+      },
+      {
+        "id": "r2_0.s1",
+        "inputs": {
+          "r2_0.P0": 1
+        },
+        "outputs": {
+          "r2_0.P1": 1
+        }
+      },
+      {
+        "id": "r1_1.return",
+        "inputs": {
+          "r1_1.P1": 1,
+          "FUEL0": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 934,
+          "X1_1": 622,
+          "CAT0": 3
+        }
+      },
+      {
+        "id": "deliver",
+        "inputs": {
+          "D0": 3,
+          "X0_0": 2034,
+          "X0_1": 2132,
+          "X1_0": 3462,
+          "X1_1": 3892,
+          "D1": 3,
+          "D2": 3
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r2_0.burn",
+        "inputs": {
+          "r2_0.P3": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 348,
+          "X0_1": 631
+        }
+      },
+      {
+        "id": "r0_0.s2",
+        "inputs": {
+          "r0_0.P1": 1
+        },
+        "outputs": {
+          "r0_0.P2": 1
+        }
+      },
+      {
+        "id": "r1_1.burn",
+        "inputs": {
+          "r1_1.P1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 934,
+          "X1_1": 622
+        }
+      },
+      {
+        "id": "r1_1.s0",
+        "inputs": {
+          "U1": 1,
+          "CAT0": 3
+        },
+        "outputs": {
+          "r1_1.P0": 1
+        }
+      },
+      {
+        "id": "r2_1.s1_alias",
+        "inputs": {
+          "r2_1.P0": 1
+        },
+        "outputs": {
+          "r2_1.P1": 1
+        }
+      },
+      {
+        "id": "r0_1.s1",
+        "inputs": {
+          "r0_1.P0": 1
+        },
+        "outputs": {
+          "r0_1.P1": 1
+        }
+      },
+      {
+        "id": "r0_0.s1",
+        "inputs": {
+          "r0_0.P0": 1
+        },
+        "outputs": {
+          "r0_0.P1": 1
+        }
+      },
+      {
+        "id": "r1_0.s1_alias",
+        "inputs": {
+          "r1_0.P0": 1
+        },
+        "outputs": {
+          "r1_0.P1": 1
+        }
+      },
+      {
+        "id": "r0_1.s0",
+        "inputs": {
+          "U0": 1,
+          "CAT0": 3
+        },
+        "outputs": {
+          "r0_1.P0": 1
+        }
+      },
+      {
+        "id": "r2_1.return",
+        "inputs": {
+          "r2_1.P2": 1,
+          "FUEL1": 3
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 348,
+          "X1_1": 631,
+          "CAT0": 3
+        }
+      },
+      {
+        "id": "r0_1.return",
+        "inputs": {
+          "r0_1.P1": 1,
+          "FUEL0": 2
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 550,
+          "X1_1": 755,
+          "CAT0": 3
+        }
+      },
+      {
+        "id": "r0_0.burn",
+        "inputs": {
+          "r0_0.P2": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 550,
+          "X0_1": 755
+        }
+      },
+      {
+        "id": "r1_0.s3",
+        "inputs": {
+          "r1_0.P2": 1
+        },
+        "outputs": {
+          "r1_0.P3": 1
+        }
+      },
+      {
+        "id": "r1_0.s0",
+        "inputs": {
+          "U1": 1,
+          "CAT0": 2
+        },
+        "outputs": {
+          "r1_0.P0": 1
+        }
+      },
+      {
+        "id": "r2_1.s0_alias",
+        "inputs": {
+          "U2": 1,
+          "CAT0": 3
+        },
+        "outputs": {
+          "r2_1.P0": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "compound_recovery_s76"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/recovery-review-20260927/compound-cases.json",
+      "pointer": "/76"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

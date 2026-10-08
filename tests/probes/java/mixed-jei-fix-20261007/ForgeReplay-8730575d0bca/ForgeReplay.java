@@ -1,0 +1,2 @@
+package org.cgse.core;
+import java.nio.file.*;import com.google.gson.*;public class ForgeReplay { public static void main(String[] args)throws Exception{Path path=Path.of(args[0]);var d=MixedSweep.read(path);var j=JsonParser.parseString(Files.readString(path)).getAsJsonObject();var r=MixedSweep.solve(d,new GraphCompiler<>(d.recipes(),d.producers()),j.getAsJsonObject("config"),j.getAsJsonObject("request"));Files.writeString(Path.of(args[1]),MixedSweep.JSON.toJson(r));System.out.println(r.get("result")+" work="+r.get("work"));}}

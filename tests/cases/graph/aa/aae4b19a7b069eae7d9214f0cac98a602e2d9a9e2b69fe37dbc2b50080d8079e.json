@@ -1,0 +1,157 @@
+{
+  "id": "aae4b19a7b069eae7d9214f0cac98a602e2d9a9e2b69fe37dbc2b50080d8079e",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 3800,
+    "stock": {
+      "CAP0": 80,
+      "CAP1": 96,
+      "CAP2": 20,
+      "CAP3": 36,
+      "CAP4": 44,
+      "CAP5": 48,
+      "CAP6": 10,
+      "CAP7": 18,
+      "CAP8": 22,
+      "CAP9": 24,
+      "ONCE0": 1,
+      "ONCE1": 1,
+      "ONCE2": 1,
+      "ONCE3": 1,
+      "ONCE4": 1,
+      "ONCE5": 1
+    },
+    "recipes": [
+      {
+        "id": "pick0",
+        "inputs": {
+          "CAP0": 8,
+          "CAP1": 8,
+          "CAP2": 3,
+          "CAP3": 5,
+          "CAP4": 5,
+          "CAP5": 5,
+          "CAP7": 3,
+          "CAP8": 3,
+          "CAP9": 3,
+          "ONCE0": 1
+        },
+        "outputs": {
+          "GOAL": 100
+        }
+      },
+      {
+        "id": "pick1",
+        "inputs": {
+          "CAP0": 12,
+          "CAP1": 12,
+          "CAP2": 6,
+          "CAP3": 10,
+          "CAP4": 13,
+          "CAP5": 13,
+          "CAP8": 2,
+          "CAP9": 2,
+          "ONCE1": 1
+        },
+        "outputs": {
+          "GOAL": 600
+        }
+      },
+      {
+        "id": "pick2",
+        "inputs": {
+          "CAP0": 13,
+          "CAP1": 13,
+          "CAP2": 4,
+          "CAP3": 8,
+          "CAP4": 8,
+          "CAP5": 8,
+          "CAP7": 4,
+          "CAP8": 4,
+          "CAP9": 4,
+          "ONCE2": 1
+        },
+        "outputs": {
+          "GOAL": 1200
+        }
+      },
+      {
+        "id": "pick3",
+        "inputs": {
+          "CAP0": 64,
+          "CAP1": 75,
+          "CAP2": 18,
+          "CAP3": 32,
+          "CAP4": 42,
+          "CAP5": 48,
+          "CAP9": 8,
+          "ONCE3": 1
+        },
+        "outputs": {
+          "GOAL": 2400
+        }
+      },
+      {
+        "id": "pick4",
+        "inputs": {
+          "CAP0": 22,
+          "CAP1": 22,
+          "CAP2": 6,
+          "CAP3": 6,
+          "CAP4": 6,
+          "CAP5": 6,
+          "CAP6": 8,
+          "CAP7": 8,
+          "CAP8": 8,
+          "CAP9": 8,
+          "ONCE4": 1
+        },
+        "outputs": {
+          "GOAL": 500
+        }
+      },
+      {
+        "id": "pick5",
+        "inputs": {
+          "CAP0": 41,
+          "CAP1": 41,
+          "CAP2": 4,
+          "CAP3": 12,
+          "CAP4": 20,
+          "CAP5": 20,
+          "CAP8": 4,
+          "CAP9": 4,
+          "ONCE5": 1
+        },
+        "outputs": {
+          "GOAL": 2000
+        }
+      }
+    ]
+  },
+  "names": [
+    "mknap1_00_bks"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/orlib-inputs.json",
+      "pointer": "/0"
+    },
+    {
+      "source": ".local/web-review-20260927/ORLibrary/cases/mknap1_00_bks.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/ORLibrary/models/mknap1_00_bks.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

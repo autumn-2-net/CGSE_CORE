@@ -1,0 +1,491 @@
+{
+  "id": "02ead7536123c5004ba1f011645bedf3fd788737f11b523f7efbaf157fa9aba2",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 1,
+      "U1": 1,
+      "U10": 1,
+      "U11": 1,
+      "U12": 1,
+      "U13": 1,
+      "U2": 1,
+      "U3": 1,
+      "U4": 1,
+      "U5": 1,
+      "U6": 1,
+      "U7": 1,
+      "U8": 1,
+      "U9": 1
+    },
+    "recipes": [
+      {
+        "id": "e0_0_1",
+        "inputs": {
+          "U0": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_0_2",
+        "inputs": {
+          "U0": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_0_3",
+        "inputs": {
+          "U0": 1,
+          "U3": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_0_4",
+        "inputs": {
+          "U0": 1,
+          "U4": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_0_5",
+        "inputs": {
+          "U0": 1,
+          "U5": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_0_6",
+        "inputs": {
+          "U0": 1,
+          "U6": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_1_2",
+        "inputs": {
+          "U1": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_1_3",
+        "inputs": {
+          "U1": 1,
+          "U3": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_1_4",
+        "inputs": {
+          "U1": 1,
+          "U4": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_1_5",
+        "inputs": {
+          "U1": 1,
+          "U5": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_1_6",
+        "inputs": {
+          "U1": 1,
+          "U6": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_2_3",
+        "inputs": {
+          "U2": 1,
+          "U3": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_2_4",
+        "inputs": {
+          "U2": 1,
+          "U4": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_2_5",
+        "inputs": {
+          "U2": 1,
+          "U5": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_2_6",
+        "inputs": {
+          "U2": 1,
+          "U6": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_3_4",
+        "inputs": {
+          "U3": 1,
+          "U4": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_3_5",
+        "inputs": {
+          "U3": 1,
+          "U5": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_3_6",
+        "inputs": {
+          "U3": 1,
+          "U6": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_4_5",
+        "inputs": {
+          "U4": 1,
+          "U5": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_4_6",
+        "inputs": {
+          "U4": 1,
+          "U6": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e0_5_6",
+        "inputs": {
+          "U5": 1,
+          "U6": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_0_1",
+        "inputs": {
+          "U7": 1,
+          "U8": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_0_2",
+        "inputs": {
+          "U7": 1,
+          "U9": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_0_3",
+        "inputs": {
+          "U10": 1,
+          "U7": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_0_4",
+        "inputs": {
+          "U11": 1,
+          "U7": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_0_5",
+        "inputs": {
+          "U12": 1,
+          "U7": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_0_6",
+        "inputs": {
+          "U13": 1,
+          "U7": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_1_2",
+        "inputs": {
+          "U8": 1,
+          "U9": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_1_3",
+        "inputs": {
+          "U10": 1,
+          "U8": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_1_4",
+        "inputs": {
+          "U11": 1,
+          "U8": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_1_5",
+        "inputs": {
+          "U12": 1,
+          "U8": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_1_6",
+        "inputs": {
+          "U13": 1,
+          "U8": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_2_3",
+        "inputs": {
+          "U10": 1,
+          "U9": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_2_4",
+        "inputs": {
+          "U11": 1,
+          "U9": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_2_5",
+        "inputs": {
+          "U12": 1,
+          "U9": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_2_6",
+        "inputs": {
+          "U13": 1,
+          "U9": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_3_4",
+        "inputs": {
+          "U10": 1,
+          "U11": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_3_5",
+        "inputs": {
+          "U10": 1,
+          "U12": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_3_6",
+        "inputs": {
+          "U10": 1,
+          "U13": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_4_5",
+        "inputs": {
+          "U11": 1,
+          "U12": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_4_6",
+        "inputs": {
+          "U11": 1,
+          "U13": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "e1_5_6",
+        "inputs": {
+          "U12": 1,
+          "U13": 1
+        },
+        "outputs": {
+          "PAIR": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "PAIR": 7
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "matching_odd7_bridgefalse"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": "tools/graph-regression/fixtures/bounded/matching_odd7_bridgefalse.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/color-review-20260926/recorded/regression/cases/matching_odd7_bridgefalse.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/fused-20260926/CGSE_01c7721/recorded/regression/cases/matching_odd7_bridgefalse.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_01c7721_fused_counterexamples_20260926.zip!/CGSE_01c7721/recorded/regression/cases/matching_odd7_bridgefalse.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/recorded/regression/cases/matching_odd7_bridgefalse.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_batch_145_cases_f4cbf89_20260926.zip!/CGSE_batch_f4cbf89/recorded/screen/cases/matching_odd7_bridgefalse.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,452 @@
+{
+  "id": "54c6f595bfedbdd3692fc3ead6833ca4f5c7545ef77d9b4fd4c1f7ab6ec328e7",
+  "kind": "graph",
+  "model": {
+    "target": "T",
+    "amount": 1,
+    "stock": {
+      "budget0": 36,
+      "budget1": 33,
+      "budget2": 24,
+      "permit0": 1,
+      "permit1": 1,
+      "permit2": 1,
+      "permit3": 1,
+      "permit4": 1,
+      "permit5": 1,
+      "permit6": 1,
+      "permit7": 1,
+      "permit8": 1,
+      "permit9": 1,
+      "permit10": 1,
+      "permit11": 1,
+      "permit12": 1
+    },
+    "recipes": [
+      {
+        "id": "pick0",
+        "slots": [
+          {
+            "key": "permit0",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 11
+          },
+          {
+            "key": "budget1",
+            "amount": 18
+          },
+          {
+            "key": "budget2",
+            "amount": 18
+          }
+        ],
+        "outputs": {
+          "goal0": 1,
+          "goal2": 1,
+          "goal5": 1,
+          "goal7": 1,
+          "goal8": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "pick1",
+        "slots": [
+          {
+            "key": "permit1",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 13
+          },
+          {
+            "key": "budget1",
+            "amount": 9
+          },
+          {
+            "key": "budget2",
+            "amount": 3
+          }
+        ],
+        "outputs": {
+          "goal0": 1,
+          "goal3": 1,
+          "goal4": 1,
+          "goal6": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "pick2",
+        "slots": [
+          {
+            "key": "permit2",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 10
+          },
+          {
+            "key": "budget1",
+            "amount": 6
+          },
+          {
+            "key": "budget2",
+            "amount": 13
+          }
+        ],
+        "outputs": {
+          "goal1": 1,
+          "goal4": 1,
+          "goal7": 1,
+          "goal8": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "pick3",
+        "slots": [
+          {
+            "key": "permit3",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 4
+          },
+          {
+            "key": "budget1",
+            "amount": 20
+          },
+          {
+            "key": "budget2",
+            "amount": 6
+          }
+        ],
+        "outputs": {
+          "goal0": 1,
+          "goal3": 1,
+          "goal4": 1,
+          "goal7": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "pick4",
+        "slots": [
+          {
+            "key": "permit4",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 15
+          },
+          {
+            "key": "budget1",
+            "amount": 12
+          },
+          {
+            "key": "budget2",
+            "amount": 12
+          }
+        ],
+        "outputs": {
+          "goal4": 1,
+          "goal6": 1
+        }
+      },
+      {
+        "id": "pick5",
+        "slots": [
+          {
+            "key": "permit5",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 1
+          },
+          {
+            "key": "budget1",
+            "amount": 3
+          },
+          {
+            "key": "budget2",
+            "amount": 17
+          }
+        ],
+        "outputs": {
+          "goal0": 1,
+          "goal7": 1,
+          "goal8": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "pick6",
+        "slots": [
+          {
+            "key": "permit6",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 12
+          },
+          {
+            "key": "budget1",
+            "amount": 4
+          },
+          {
+            "key": "budget2",
+            "amount": 7
+          }
+        ],
+        "outputs": {
+          "goal1": 1,
+          "goal2": 1,
+          "goal4": 1,
+          "goal6": 1,
+          "goal7": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "pick7",
+        "slots": [
+          {
+            "key": "permit7",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 17
+          },
+          {
+            "key": "budget1",
+            "amount": 4
+          },
+          {
+            "key": "budget2",
+            "amount": 17
+          }
+        ],
+        "outputs": {
+          "goal0": 1,
+          "goal6": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "pick8",
+        "slots": [
+          {
+            "key": "permit8",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 16
+          },
+          {
+            "key": "budget1",
+            "amount": 3
+          },
+          {
+            "key": "budget2",
+            "amount": 10
+          }
+        ],
+        "outputs": {
+          "goal0": 1,
+          "goal1": 1,
+          "goal4": 1,
+          "goal6": 1,
+          "goal8": 1
+        }
+      },
+      {
+        "id": "pick9",
+        "slots": [
+          {
+            "key": "permit9",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 12
+          },
+          {
+            "key": "budget1",
+            "amount": 14
+          },
+          {
+            "key": "budget2",
+            "amount": 18
+          }
+        ],
+        "outputs": {
+          "goal5": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "pick10",
+        "slots": [
+          {
+            "key": "permit10",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 10
+          },
+          {
+            "key": "budget1",
+            "amount": 19
+          },
+          {
+            "key": "budget2",
+            "amount": 14
+          }
+        ],
+        "outputs": {
+          "goal0": 1,
+          "goal1": 1,
+          "goal2": 1
+        }
+      },
+      {
+        "id": "pick11",
+        "slots": [
+          {
+            "key": "permit11",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 9
+          },
+          {
+            "key": "budget1",
+            "amount": 10
+          },
+          {
+            "key": "budget2",
+            "amount": 4
+          }
+        ],
+        "outputs": {
+          "goal0": 1,
+          "goal1": 1,
+          "goal2": 1,
+          "goal3": 1,
+          "goal5": 1,
+          "goal6": 1,
+          "goal7": 1,
+          "goal8": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "pick12",
+        "slots": [
+          {
+            "key": "permit12",
+            "amount": 1
+          },
+          {
+            "key": "budget0",
+            "amount": 13
+          },
+          {
+            "key": "budget1",
+            "amount": 13
+          },
+          {
+            "key": "budget2",
+            "amount": 4
+          }
+        ],
+        "outputs": {
+          "goal0": 1,
+          "goal2": 1,
+          "goal5": 1,
+          "goal8": 1,
+          "goal9": 1
+        }
+      },
+      {
+        "id": "finish",
+        "slots": [
+          {
+            "key": "goal0",
+            "amount": 1
+          },
+          {
+            "key": "goal1",
+            "amount": 1
+          },
+          {
+            "key": "goal2",
+            "amount": 1
+          },
+          {
+            "key": "goal3",
+            "amount": 1
+          },
+          {
+            "key": "goal4",
+            "amount": 1
+          },
+          {
+            "key": "goal5",
+            "amount": 1
+          },
+          {
+            "key": "goal6",
+            "amount": 1
+          },
+          {
+            "key": "goal7",
+            "amount": 1
+          },
+          {
+            "key": "goal8",
+            "amount": 1
+          },
+          {
+            "key": "goal9",
+            "amount": 1
+          }
+        ],
+        "outputs": {
+          "T": 1
+        }
+      }
+    ],
+    "external": []
+  },
+  "names": [
+    "fresh-cover-251"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/support-completion-20261007/fresh-cover-cases.json",
+      "pointer": "/251"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,9 @@
+{
+  "core_and_corpus": "Python 3 and JDK 17; no third-party runtime dependencies",
+  "historical_probe_optional_maven_coordinates": [
+    "com.google.code.gson:gson:2.10",
+    "com.google.ortools:ortools-java:9.15.6755"
+  ],
+  "native_oracle": "OR-Tools Java requires its platform native artifact and transitive dependencies; pass their classpath with --classpath.",
+  "adapter": "Run cgse-adapter.init.gradle inside the actual GTL/AE adapter checkout. Game dependencies stay outside the core test classpath."
+}

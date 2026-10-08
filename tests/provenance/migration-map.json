@@ -1,0 +1,203 @@
+{
+  "source_revision": "e788d3d3",
+  "original_graph_java_count": 20,
+  "originals": [
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/AsyncOutputRegressionTest.java",
+      "source_sha256": "4d922636e602a921f5719a2065e5e8f7bd84653d962564380204c2ecd78b5389",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/AsyncOutputRegressionTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/ByproductDiscoveryTest.java",
+      "source_sha256": "6dc1a17b901e2dd89d8d9a260963cf1dc0f6fa52128f34b23f52d8fd0c2f14a3",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/ByproductDiscoveryTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/CapturedPatternCatalogTest.java",
+      "source_sha256": "debd74fdc66cefa5de13d2604a8bbdd249f201659cca80529d633582b66a9158",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/CapturedPatternCatalogTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/CapturedPatternExpansionTest.java",
+      "source_sha256": "8824d569bb5bf4b3c34ae2785135eb23f83a812551be338fb355dd14ffd2c585",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/CapturedPatternExpansionTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/ExactProcessingCaptureTest.java",
+      "source_sha256": "2e8429bc73972aa9c17ea3c3390d54c98949d89a2f6af1a18bb324fc784d6b40",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/ExactProcessingCaptureTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphAeAdapterTest.java",
+      "source_sha256": "edd73fc37597ec362a7ee241763ec9d2788aae5a772e9702e78bc3e326d8da42",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphAeAdapterTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphAeIntegrationTest.java",
+      "source_sha256": "7c031d8633da019824b8dfdb9fb991f75ac7a25d8117b21b563eb71fb2ec49fe",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphAeIntegrationTest.java",
+        "tests/shared/java/org/cgse/fixtures/LongBoundaryFixture.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphBenchmark.java",
+      "source_sha256": "9131111346a0b6ac4217f25f501e15f41dad9b5a50a4b4667a2af81eccf36963",
+      "destinations": [
+        "tests/core/java/org/cgse/core/GraphBenchmark.java"
+      ],
+      "primary_kind": "core-acceptance"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphCoreTest.java",
+      "source_sha256": "5e9e8642077defcd0e4ab01148864aec319e622d74920eb72896a21d04541bfd",
+      "destinations": [
+        "tests/core/java/org/cgse/core/GraphCoreTest.java"
+      ],
+      "primary_kind": "core-acceptance"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphDependencyCodecTest.java",
+      "source_sha256": "2cae0b7e2cde0cdd5450bf28dd7fc78cdfb97cf8936bf0eee86f877769964212",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphDependencyCodecTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphFallbackIntegrationTest.java",
+      "source_sha256": "e68525008c69ba08083551b7a47a2bb54da1b72b42cdb6180de6442e9b126faf",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphFallbackIntegrationTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphFallbackTest.java",
+      "source_sha256": "27135d220315f61d4d82946083882b300f54a8cee2eb0057373e115953234507",
+      "destinations": [
+        "tests/core/java/org/cgse/core/GraphFallbackTest.java"
+      ],
+      "primary_kind": "core-acceptance"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphLongBoundaryTest.java",
+      "source_sha256": "b7149bd9899eee4a163bd0d15b52e81a29b97cb731eb564b4a4d1cde33e4a4ef",
+      "destinations": [
+        "tests/core/java/org/cgse/core/GraphLongBoundaryTest.java",
+        "tests/shared/java/org/cgse/fixtures/LongBoundaryFixture.java"
+      ],
+      "primary_kind": "core-acceptance"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphPipelineTest.java",
+      "source_sha256": "17380fbfedf8fc8581663202ca626137c0bd52648eeb638d0320647842f6361e",
+      "destinations": [
+        "tests/core/java/org/cgse/core/GraphPipelineTest.java"
+      ],
+      "primary_kind": "core-acceptance"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphRuntimeTest.java",
+      "source_sha256": "a8bf70928ebcd98c54895714d8c753d64dc924c1ae6bac96a1b7dd03e65740c2",
+      "destinations": [
+        "tests/core/java/org/cgse/core/GraphRuntimeTest.java"
+      ],
+      "primary_kind": "core-acceptance"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphSchedulingTest.java",
+      "source_sha256": "3057c4429b4fdf629e98c67e367cffc63bdcefe31c3c05c4d452a5809228ee84",
+      "destinations": [
+        "tests/core/java/org/cgse/core/GraphSchedulingTest.java"
+      ],
+      "primary_kind": "core-acceptance"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphSharedProgramTest.java",
+      "source_sha256": "762654677e4435a03f2aa6d0b0ec395c6b4e83fab8e5c50b462204964a65ee04",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphSharedProgramTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphUiRegressionTest.java",
+      "source_sha256": "29200b9f32f1ecac6a5003b7fff824f310e2bd10454fe0cd9f8a379791c42709",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/GraphUiRegressionTest.java",
+        "tests/core/java/org/cgse/core/GraphLayoutRegressionTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/PatternExpansionRegressionTest.java",
+      "source_sha256": "f1364c6abbbfabcf1e8463c2ec245ba37e12743435671e6b1d6d913de3bfd264",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/PatternExpansionRegressionTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/graph/PatternFingerprintTest.java",
+      "source_sha256": "a45eb51edbcf8e96c771d2ab7ad6afbceaadc5b391366b1e5524beece948a38e",
+      "destinations": [
+        "tests/adapter/java/org/gtlcore/gtlcore/integration/ae2/graph/PatternFingerprintTest.java"
+      ],
+      "primary_kind": "adapter-integration"
+    }
+  ],
+  "unrelated_upstream_tests_preserved": [
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/api/pattern/FixedPatternLayoutTest.java",
+      "reason": "Unrelated upstream GTL test; preserved in source repository"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/api/pattern/PatternLayoutSearchTest.java",
+      "reason": "Unrelated upstream GTL test; preserved in source repository"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/client/preview/MultiblockPreviewTest.java",
+      "reason": "Unrelated upstream GTL test; preserved in source repository"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/client/preview/PreviewControlsRegression.java",
+      "reason": "Unrelated upstream GTL test; preserved in source repository"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/client/preview/PreviewPerformanceRegression.java",
+      "reason": "Unrelated upstream GTL test; preserved in source repository"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/wireless/MeInventoryRequestLimiterTest.java",
+      "reason": "Unrelated upstream GTL test; preserved in source repository"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/integration/ae2/WirelessTerminalGridResolverTest.java",
+      "reason": "Unrelated upstream GTL test; preserved in source repository"
+    },
+    {
+      "source": "src/test/java/org/gtlcore/gtlcore/utils/TagExprFilterTest.java",
+      "reason": "Unrelated upstream GTL test; preserved in source repository"
+    }
+  ]
+}

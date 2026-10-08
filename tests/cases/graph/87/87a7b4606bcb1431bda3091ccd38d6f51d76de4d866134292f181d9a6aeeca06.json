@@ -1,0 +1,52 @@
+{
+  "id": "87a7b4606bcb1431bda3091ccd38d6f51d76de4d866134292f181d9a6aeeca06",
+  "kind": "graph",
+  "model": {
+    "target": "H",
+    "amount": 32,
+    "stock": {
+      "X": 16,
+      "Y": 16
+    },
+    "recipes": [
+      {
+        "id": "left",
+        "inputs": {
+          "X": 1
+        },
+        "outputs": {
+          "H": 1
+        }
+      },
+      {
+        "id": "right",
+        "inputs": {
+          "Y": 1
+        },
+        "outputs": {
+          "H": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "multi_source_n32"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/color-review-20260926/common-input/multi_source_n32.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/common-input/multi_source_n32.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

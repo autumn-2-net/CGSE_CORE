@@ -1,0 +1,17 @@
+package org.cgse.core;
+import java.math.*;import java.util.*;
+public final class MddOracle {
+ static final BigInteger Z=BigInteger.ZERO,O=BigInteger.ONE;
+ static boolean valid(List<ExactLinearProgram.Constraint> rows,BigInteger[] x){for(var r:rows){var s=Z;for(var e:r.terms().entrySet())s=s.add(e.getValue().multiply(x[e.getKey()]));if(s.compareTo(r.upper())>0)return false;}return true;}
+ static PlanningBudget budget(){return new PlanningBudget(0,20000000,256L<<20,()->false,System::nanoTime);}
+ public static void main(String[] args){var rng=new Random(927818);long checked=0;int sat=0,unsat=0,clauses=0;
+ for(int sample=0;sample<4000;sample++){int n=2+rng.nextInt(5),total=1;int[] size=new int[n];BigInteger[] low=new BigInteger[n],high=new BigInteger[n],plant=new BigInteger[n];for(int i=0;i<n;i++){low[i]=sample%13==0?O.shiftLeft(90):Z;size[i]=1+rng.nextInt(5);total*=size[i];high[i]=low[i].add(BigInteger.valueOf(size[i]-1));plant[i]=low[i].add(BigInteger.valueOf(rng.nextInt(size[i])));}
+ var rows=new ArrayList<ExactLinearProgram.Constraint>();for(int r=0;r<3+rng.nextInt(7);r++){var terms=new LinkedHashMap<Integer,BigInteger>();var rhs=BigInteger.valueOf(rng.nextInt(3)-1);for(int i=0;i<n;i++){var c=BigInteger.valueOf(rng.nextInt(9)-4);if(sample%17==0)c=c.multiply(O.shiftLeft(130));if(c.signum()!=0)terms.put(i,c);rhs=rhs.add(c.multiply(plant[i]));}rows.add(new ExactLinearProgram.Constraint(terms,rhs));}
+ var solutions=new ArrayList<BigInteger[]>();for(int code=0;code<total;code++){int v=code;var x=low.clone();for(int i=0;i<n;i++){x[i]=x[i].add(BigInteger.valueOf(v%size[i]));v/=size[i];}checked++;if(valid(rows,x))solutions.add(x);}
+ var budget=budget();var journal=new CountProof.Journal(32L<<20);budget.proofJournal(journal);try(var p=new CountDecisionDiagram(rows,low,high,budget,2000000)){while(!p.step()){}var x=p.counts();if(!solutions.isEmpty()){sat++;if(x==null||p.infeasible()||!valid(rows,x))throw new AssertionError("missed solution "+sample+" "+budget.diagnostics());for(int i=0;i<n;i++)if(x[i].compareTo(low[i])<0||x[i].compareTo(high[i])>0)throw new AssertionError("domain");}else{unsat++;if(x!=null||!p.infeasible())throw new AssertionError("missed unsat "+sample);}}
+ for(var proof:journal.diagrams())if(CountProof.verify(proof,20000000)!=CountProof.Verdict.VERIFIED)throw new AssertionError("invalid LCG proof "+sample+" "+proof);
+ if(budget.reservedBytes()!=0)throw new AssertionError("leak");}
+ var rows=List.of(new ExactLinearProgram.Constraint(Map.of(0,BigInteger.valueOf(3),1,BigInteger.valueOf(4)),BigInteger.valueOf(13)),new ExactLinearProgram.Constraint(Map.of(0,BigInteger.valueOf(-3),1,BigInteger.valueOf(-4)),BigInteger.valueOf(-13)));
+ for(int limit=1;limit<1024;limit++){int[] counter={0};int stop=limit;var b=new PlanningBudget(0,20000000,256L<<20,()->++counter[0]>=stop,System::nanoTime);try(var p=new CountDecisionDiagram(rows,new BigInteger[]{Z,Z},new BigInteger[]{BigInteger.TEN,BigInteger.TEN},b,2000000)){while(!p.step()){}}catch(java.util.concurrent.CancellationException expected){}if(b.reservedBytes()!=0)throw new AssertionError("cancel leak "+limit);}
+ System.out.println("PASS decision diagrams models=4000 assignments="+checked+" SAT="+sat+" UNSAT="+unsat+" exact_clauses="+clauses+"; 90-bit shifted finite domains, certificates, 1023 cancellation boundaries");}
+}

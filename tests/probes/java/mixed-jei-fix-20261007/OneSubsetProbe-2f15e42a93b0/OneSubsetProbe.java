@@ -1,0 +1,3 @@
+package org.cgse.core;
+import java.nio.file.*;import com.google.gson.*;
+public class OneSubsetProbe { public static void main(String[]a)throws Exception{var base=Path.of(a[0]);var config=JsonParser.parseString(Files.readString(Path.of(a[1]))).getAsJsonObject();var manual=MixedSweep.read(base.resolve("manual.json"));var extra=MixedSweep.read(base.resolve("extra-virtual.json"));var compiler=ParallelSubsetSweep.compiler(manual,extra,config);for(var item:config.getAsJsonArray("requests")){var request=item.getAsJsonObject();if(request.get("id").getAsString().equals("focus-29")){var row=MixedSweep.solve(manual,compiler,config,request);Files.writeString(Path.of(a[2]),row.toString());System.out.println(row);}}}}

@@ -1,0 +1,296 @@
+{
+  "id": "87a57703bde2ea7cb21f501afb070b19c8ccda1396a7e1b66e9ac0e43b8d5c08",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "F": 9,
+      "A0.0": 1,
+      "A1.0": 1,
+      "A2.0": 1,
+      "A3.0": 1
+    },
+    "recipes": [
+      {
+        "id": "t5",
+        "inputs": {
+          "F": 1,
+          "A3.3": 1,
+          "A2.2": 1,
+          "A0.3": 1
+        },
+        "outputs": {
+          "A3.2": 1,
+          "A2.1": 1,
+          "A0.0": 1
+        }
+      },
+      {
+        "id": "t7",
+        "inputs": {
+          "F": 1,
+          "A3.3": 1
+        },
+        "outputs": {
+          "A3.4": 1
+        }
+      },
+      {
+        "id": "t16",
+        "inputs": {
+          "F": 1,
+          "A2.1": 1,
+          "A3.1": 1
+        },
+        "outputs": {
+          "A2.0": 1,
+          "A3.0": 1
+        }
+      },
+      {
+        "id": "t17",
+        "inputs": {
+          "F": 1,
+          "A2.1": 1
+        },
+        "outputs": {
+          "A2.0": 1
+        }
+      },
+      {
+        "id": "t14",
+        "inputs": {
+          "F": 1,
+          "A1.0": 1
+        },
+        "outputs": {
+          "A1.3": 1
+        }
+      },
+      {
+        "id": "t8",
+        "inputs": {
+          "F": 1,
+          "A2.0": 1
+        },
+        "outputs": {
+          "A2.1": 1
+        }
+      },
+      {
+        "id": "t4",
+        "inputs": {
+          "F": 1,
+          "A0.2": 1,
+          "A3.0": 1
+        },
+        "outputs": {
+          "A0.3": 1,
+          "A3.3": 1
+        }
+      },
+      {
+        "id": "t15",
+        "inputs": {
+          "F": 1,
+          "A2.1": 1,
+          "A0.0": 1,
+          "A1.3": 1
+        },
+        "outputs": {
+          "A2.2": 1,
+          "A0.4": 1,
+          "A1.3": 1
+        }
+      },
+      {
+        "id": "t9",
+        "inputs": {
+          "F": 1,
+          "A2.1": 1,
+          "A1.3": 1,
+          "A0.0": 1
+        },
+        "outputs": {
+          "A2.2": 1,
+          "A1.2": 1,
+          "A0.1": 1
+        }
+      },
+      {
+        "id": "t1",
+        "inputs": {
+          "F": 1,
+          "A2.0": 1
+        },
+        "outputs": {
+          "A2.2": 1
+        }
+      },
+      {
+        "id": "t12",
+        "inputs": {
+          "F": 1,
+          "A2.1": 1,
+          "A3.4": 1
+        },
+        "outputs": {
+          "A2.2": 1,
+          "A3.4": 1
+        }
+      },
+      {
+        "id": "t18",
+        "inputs": {
+          "F": 1,
+          "A3.0": 1
+        },
+        "outputs": {
+          "A3.1": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "F": 1,
+          "A0.2": 1,
+          "A1.2": 1,
+          "A2.2": 1,
+          "A3.4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "t0",
+        "inputs": {
+          "F": 1,
+          "A3.0": 1,
+          "A0.0": 1,
+          "A2.0": 1
+        },
+        "outputs": {
+          "A3.3": 1,
+          "A0.1": 1,
+          "A2.0": 1
+        }
+      },
+      {
+        "id": "t6",
+        "inputs": {
+          "F": 1,
+          "A2.1": 1,
+          "A3.2": 1
+        },
+        "outputs": {
+          "A2.0": 1,
+          "A3.3": 1
+        }
+      },
+      {
+        "id": "t2",
+        "inputs": {
+          "F": 1,
+          "A1.0": 1,
+          "A3.3": 1
+        },
+        "outputs": {
+          "A1.3": 1,
+          "A3.3": 1
+        }
+      },
+      {
+        "id": "t19",
+        "inputs": {
+          "F": 1,
+          "A3.0": 1,
+          "A2.0": 1,
+          "A0.2": 1
+        },
+        "outputs": {
+          "A3.4": 1,
+          "A2.1": 1,
+          "A0.4": 1
+        }
+      },
+      {
+        "id": "mutation21",
+        "inputs": {
+          "F": 1,
+          "A0.2": 1
+        },
+        "outputs": {
+          "A0.4": 1
+        }
+      },
+      {
+        "id": "t10",
+        "inputs": {
+          "F": 1,
+          "A0.1": 1
+        },
+        "outputs": {
+          "A0.2": 1
+        }
+      },
+      {
+        "id": "t11",
+        "inputs": {
+          "F": 1,
+          "A2.2": 1
+        },
+        "outputs": {
+          "A2.1": 1
+        }
+      },
+      {
+        "id": "t3",
+        "inputs": {
+          "F": 1,
+          "A0.1": 1,
+          "A3.3": 1
+        },
+        "outputs": {
+          "A0.2": 1,
+          "A3.0": 1
+        }
+      },
+      {
+        "id": "t13",
+        "inputs": {
+          "F": 1,
+          "A0.3": 1,
+          "A1.2": 1,
+          "A2.0": 1
+        },
+        "outputs": {
+          "A0.0": 1,
+          "A1.1": 1,
+          "A2.1": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "evolved_rendezvous_00315"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/mutant-models/evolved_rendezvous_00315.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/mutants/evolved_rendezvous_00315.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

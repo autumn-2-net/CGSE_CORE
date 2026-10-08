@@ -1,0 +1,150 @@
+{
+  "id": "ec3e035f7ddae25c63f90482558e6038565c7de01e2cce2794ae7b0c5300067c",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "K0": 1,
+      "F": 1
+    },
+    "recipes": [
+      {
+        "id": "c0",
+        "inputs": {
+          "K0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "K1": 1
+        }
+      },
+      {
+        "id": "c1",
+        "inputs": {
+          "K1": 1
+        },
+        "outputs": {
+          "K2": 1
+        }
+      },
+      {
+        "id": "c2",
+        "inputs": {
+          "K2": 1
+        },
+        "outputs": {
+          "K3": 1
+        }
+      },
+      {
+        "id": "c3",
+        "inputs": {
+          "K3": 1
+        },
+        "outputs": {
+          "K4": 1
+        }
+      },
+      {
+        "id": "c4",
+        "inputs": {
+          "K4": 1
+        },
+        "outputs": {
+          "K5": 1
+        }
+      },
+      {
+        "id": "c5",
+        "inputs": {
+          "K5": 1
+        },
+        "outputs": {
+          "K6": 1
+        }
+      },
+      {
+        "id": "c6",
+        "inputs": {
+          "K6": 1
+        },
+        "outputs": {
+          "K7": 1
+        }
+      },
+      {
+        "id": "c7",
+        "inputs": {
+          "K7": 1
+        },
+        "outputs": {
+          "K8": 1
+        }
+      },
+      {
+        "id": "c8",
+        "inputs": {
+          "K8": 1
+        },
+        "outputs": {
+          "K9": 1
+        }
+      },
+      {
+        "id": "c9",
+        "inputs": {
+          "K9": 1
+        },
+        "outputs": {
+          "K10": 1
+        }
+      },
+      {
+        "id": "c10",
+        "inputs": {
+          "K10": 1
+        },
+        "outputs": {
+          "K11": 1
+        }
+      },
+      {
+        "id": "c11",
+        "inputs": {
+          "K11": 1
+        },
+        "outputs": {
+          "K0": 1,
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "optional_loss",
+        "inputs": {
+          "K0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "feedback_12_1"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/algorithm-review-20260928/future-inputs.json",
+      "pointer": "/60"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

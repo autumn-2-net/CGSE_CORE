@@ -1,0 +1,55 @@
+{
+  "id": "1914f08d4d81062690647b95d285bf16437353bc125855385aa832bd0bb3f00f",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 3
+    },
+    "recipes": [
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 596,
+          "X0_1": 868
+        }
+      },
+      {
+        "id": "deliver",
+        "inputs": {
+          "D0": 3,
+          "X0_0": 1788,
+          "X0_1": 2604
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "choice_n1_c1_cap3_s101"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/new-counterexamples-20260926/fixtures/choice_n1_c1_cap3_s101.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_a666711_new_counterexamples_20260926.zip!/fixtures/choice_n1_c1_cap3_s101.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,892 @@
+{
+  "id": "412317862bcf30b244d97783bf13dd3e1d9eff4ee3eb21eb3175c9d3de8626c4",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 1,
+      "r0_0.P": 1,
+      "U1": 1,
+      "U2": 2,
+      "r2_2.P": 1,
+      "U3": 2,
+      "r3_1.P": 1,
+      "U4": 2,
+      "r4_0.P": 1,
+      "U5": 1,
+      "U6": 1,
+      "r6_2.P": 1,
+      "U7": 3,
+      "r7_1.P": 1,
+      "CAT0": 4,
+      "CAT1": 14,
+      "FUEL1": 10,
+      "FUEL0": 17
+    },
+    "recipes": [
+      {
+        "id": "r4_1.start",
+        "inputs": {
+          "U4": 1,
+          "CAT0": 2
+        },
+        "outputs": {
+          "r4_1.P": 1
+        }
+      },
+      {
+        "id": "r5_2.burn",
+        "inputs": {
+          "r5_2.P": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X2_0": 137,
+          "X2_1": 158
+        }
+      },
+      {
+        "id": "r5_2.return",
+        "inputs": {
+          "r5_2.P": 1,
+          "FUEL1": 13
+        },
+        "outputs": {
+          "D5": 1,
+          "X2_0": 137,
+          "X2_1": 158,
+          "CAT1": 1
+        }
+      },
+      {
+        "id": "r3_0.return",
+        "inputs": {
+          "r3_0.P": 1,
+          "FUEL0": 12
+        },
+        "outputs": {
+          "D3": 1,
+          "X0_0": 986,
+          "X0_1": 258,
+          "CAT0": 4
+        }
+      },
+      {
+        "id": "r2_0.start",
+        "inputs": {
+          "U2": 1,
+          "CAT0": 2
+        },
+        "outputs": {
+          "r2_0.P": 1
+        }
+      },
+      {
+        "id": "r0_2.start",
+        "inputs": {
+          "U0": 1,
+          "CAT0": 2
+        },
+        "outputs": {
+          "r0_2.P": 1
+        }
+      },
+      {
+        "id": "r3_1.return",
+        "inputs": {
+          "r3_1.P": 1,
+          "FUEL1": 11
+        },
+        "outputs": {
+          "D3": 1,
+          "X1_0": 986,
+          "X1_1": 258,
+          "CAT1": 4
+        }
+      },
+      {
+        "id": "r4_1.burn",
+        "inputs": {
+          "r4_1.P": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X1_0": 762,
+          "X1_1": 84
+        }
+      },
+      {
+        "id": "r4_1.return",
+        "inputs": {
+          "r4_1.P": 1,
+          "FUEL1": 5
+        },
+        "outputs": {
+          "D4": 1,
+          "X1_0": 762,
+          "X1_1": 84,
+          "CAT0": 2
+        }
+      },
+      {
+        "id": "r7_0.start",
+        "inputs": {
+          "U7": 1,
+          "CAT0": 2
+        },
+        "outputs": {
+          "r7_0.P": 1
+        }
+      },
+      {
+        "id": "r5_1.start",
+        "inputs": {
+          "U5": 1,
+          "CAT0": 1
+        },
+        "outputs": {
+          "r5_1.P": 1
+        }
+      },
+      {
+        "id": "r1_2.start",
+        "inputs": {
+          "U1": 1,
+          "CAT1": 3
+        },
+        "outputs": {
+          "r1_2.P": 1
+        }
+      },
+      {
+        "id": "r1_0.burn",
+        "inputs": {
+          "r1_0.P": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 158,
+          "X0_1": 470
+        }
+      },
+      {
+        "id": "r0_1.burn",
+        "inputs": {
+          "r0_1.P": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 435,
+          "X1_1": 558
+        }
+      },
+      {
+        "id": "r6_0.return",
+        "inputs": {
+          "r6_0.P": 1,
+          "FUEL0": 3
+        },
+        "outputs": {
+          "D6": 1,
+          "X0_0": 13,
+          "X0_1": 28,
+          "CAT1": 2
+        }
+      },
+      {
+        "id": "r7_1.burn",
+        "inputs": {
+          "r7_1.P": 1
+        },
+        "outputs": {
+          "D7": 1,
+          "X1_0": 157,
+          "X1_1": 911
+        }
+      },
+      {
+        "id": "r0_0.start",
+        "inputs": {
+          "U0": 1,
+          "CAT0": 3
+        },
+        "outputs": {
+          "r0_0.P": 1
+        }
+      },
+      {
+        "id": "r4_2.return",
+        "inputs": {
+          "r4_2.P": 1,
+          "FUEL1": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X2_0": 762,
+          "X2_1": 84,
+          "CAT0": 1
+        }
+      },
+      {
+        "id": "r5_1.burn",
+        "inputs": {
+          "r5_1.P": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X1_0": 137,
+          "X1_1": 158
+        }
+      },
+      {
+        "id": "r0_0.return",
+        "inputs": {
+          "r0_0.P": 1,
+          "FUEL1": 10
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 435,
+          "X0_1": 558,
+          "CAT0": 3
+        }
+      },
+      {
+        "id": "r5_2.start",
+        "inputs": {
+          "U5": 1,
+          "CAT1": 1
+        },
+        "outputs": {
+          "r5_2.P": 1
+        }
+      },
+      {
+        "id": "r4_0.return",
+        "inputs": {
+          "r4_0.P": 1,
+          "FUEL0": 2
+        },
+        "outputs": {
+          "D4": 1,
+          "X0_0": 762,
+          "X0_1": 84,
+          "CAT1": 2
+        }
+      },
+      {
+        "id": "r6_2.burn",
+        "inputs": {
+          "r6_2.P": 1
+        },
+        "outputs": {
+          "D6": 1,
+          "X2_0": 13,
+          "X2_1": 28
+        }
+      },
+      {
+        "id": "r7_1.return",
+        "inputs": {
+          "r7_1.P": 1,
+          "FUEL0": 7
+        },
+        "outputs": {
+          "D7": 1,
+          "X1_0": 157,
+          "X1_1": 911,
+          "CAT0": 4
+        }
+      },
+      {
+        "id": "r4_0.burn",
+        "inputs": {
+          "r4_0.P": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X0_0": 762,
+          "X0_1": 84
+        }
+      },
+      {
+        "id": "r5_0.start",
+        "inputs": {
+          "U5": 1,
+          "CAT1": 4
+        },
+        "outputs": {
+          "r5_0.P": 1
+        }
+      },
+      {
+        "id": "r1_0.return",
+        "inputs": {
+          "r1_0.P": 1,
+          "FUEL0": 5
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 158,
+          "X0_1": 470,
+          "CAT1": 2
+        }
+      },
+      {
+        "id": "r2_1.return",
+        "inputs": {
+          "r2_1.P": 1,
+          "FUEL1": 13
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 240,
+          "X1_1": 225,
+          "CAT1": 4
+        }
+      },
+      {
+        "id": "r7_1.start",
+        "inputs": {
+          "U7": 1,
+          "CAT0": 4
+        },
+        "outputs": {
+          "r7_1.P": 1
+        }
+      },
+      {
+        "id": "r2_2.return",
+        "inputs": {
+          "r2_2.P": 1,
+          "FUEL1": 7
+        },
+        "outputs": {
+          "D2": 1,
+          "X2_0": 240,
+          "X2_1": 225,
+          "CAT1": 1
+        }
+      },
+      {
+        "id": "r1_2.return",
+        "inputs": {
+          "r1_2.P": 1,
+          "FUEL1": 13
+        },
+        "outputs": {
+          "D1": 1,
+          "X2_0": 158,
+          "X2_1": 470,
+          "CAT1": 3
+        }
+      },
+      {
+        "id": "r7_0.return",
+        "inputs": {
+          "r7_0.P": 1,
+          "FUEL0": 7
+        },
+        "outputs": {
+          "D7": 1,
+          "X0_0": 157,
+          "X0_1": 911,
+          "CAT0": 2
+        }
+      },
+      {
+        "id": "r6_2.start",
+        "inputs": {
+          "U6": 1,
+          "CAT0": 5
+        },
+        "outputs": {
+          "r6_2.P": 1
+        }
+      },
+      {
+        "id": "r5_1.return",
+        "inputs": {
+          "r5_1.P": 1,
+          "FUEL0": 5
+        },
+        "outputs": {
+          "D5": 1,
+          "X1_0": 137,
+          "X1_1": 158,
+          "CAT0": 1
+        }
+      },
+      {
+        "id": "r4_2.start",
+        "inputs": {
+          "U4": 1,
+          "CAT0": 1
+        },
+        "outputs": {
+          "r4_2.P": 1
+        }
+      },
+      {
+        "id": "r6_0.burn",
+        "inputs": {
+          "r6_0.P": 1
+        },
+        "outputs": {
+          "D6": 1,
+          "X0_0": 13,
+          "X0_1": 28
+        }
+      },
+      {
+        "id": "r0_1.return",
+        "inputs": {
+          "r0_1.P": 1,
+          "FUEL1": 3
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 435,
+          "X1_1": 558,
+          "CAT1": 2
+        }
+      },
+      {
+        "id": "r6_1.burn",
+        "inputs": {
+          "r6_1.P": 1
+        },
+        "outputs": {
+          "D6": 1,
+          "X1_0": 13,
+          "X1_1": 28
+        }
+      },
+      {
+        "id": "r4_0.start",
+        "inputs": {
+          "U4": 1,
+          "CAT1": 2
+        },
+        "outputs": {
+          "r4_0.P": 1
+        }
+      },
+      {
+        "id": "r6_0.start",
+        "inputs": {
+          "U6": 1,
+          "CAT1": 2
+        },
+        "outputs": {
+          "r6_0.P": 1
+        }
+      },
+      {
+        "id": "r3_1.burn",
+        "inputs": {
+          "r3_1.P": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X1_0": 986,
+          "X1_1": 258
+        }
+      },
+      {
+        "id": "r1_2.burn",
+        "inputs": {
+          "r1_2.P": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X2_0": 158,
+          "X2_1": 470
+        }
+      },
+      {
+        "id": "r2_2.burn",
+        "inputs": {
+          "r2_2.P": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X2_0": 240,
+          "X2_1": 225
+        }
+      },
+      {
+        "id": "r4_2.burn",
+        "inputs": {
+          "r4_2.P": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X2_0": 762,
+          "X2_1": 84
+        }
+      },
+      {
+        "id": "r2_0.burn",
+        "inputs": {
+          "r2_0.P": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 240,
+          "X0_1": 225
+        }
+      },
+      {
+        "id": "r2_0.return",
+        "inputs": {
+          "r2_0.P": 1,
+          "FUEL1": 13
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 240,
+          "X0_1": 225,
+          "CAT0": 2
+        }
+      },
+      {
+        "id": "r1_0.start",
+        "inputs": {
+          "U1": 1,
+          "CAT1": 2
+        },
+        "outputs": {
+          "r1_0.P": 1
+        }
+      },
+      {
+        "id": "r3_0.burn",
+        "inputs": {
+          "r3_0.P": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X0_0": 986,
+          "X0_1": 258
+        }
+      },
+      {
+        "id": "r2_1.burn",
+        "inputs": {
+          "r2_1.P": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 240,
+          "X1_1": 225
+        }
+      },
+      {
+        "id": "r5_0.burn",
+        "inputs": {
+          "r5_0.P": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X0_0": 137,
+          "X0_1": 158
+        }
+      },
+      {
+        "id": "r0_0.burn",
+        "inputs": {
+          "r0_0.P": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 435,
+          "X0_1": 558
+        }
+      },
+      {
+        "id": "r0_1.start",
+        "inputs": {
+          "U0": 1,
+          "CAT1": 2
+        },
+        "outputs": {
+          "r0_1.P": 1
+        }
+      },
+      {
+        "id": "r2_1.start",
+        "inputs": {
+          "U2": 1,
+          "CAT1": 4
+        },
+        "outputs": {
+          "r2_1.P": 1
+        }
+      },
+      {
+        "id": "r6_2.return",
+        "inputs": {
+          "r6_2.P": 1,
+          "FUEL0": 10
+        },
+        "outputs": {
+          "D6": 1,
+          "X2_0": 13,
+          "X2_1": 28,
+          "CAT0": 5
+        }
+      },
+      {
+        "id": "r2_2.start",
+        "inputs": {
+          "U2": 1,
+          "CAT1": 1
+        },
+        "outputs": {
+          "r2_2.P": 1
+        }
+      },
+      {
+        "id": "r1_1.burn",
+        "inputs": {
+          "r1_1.P": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 158,
+          "X1_1": 470
+        }
+      },
+      {
+        "id": "r7_2.start",
+        "inputs": {
+          "U7": 1,
+          "CAT0": 1
+        },
+        "outputs": {
+          "r7_2.P": 1
+        }
+      },
+      {
+        "id": "r0_2.burn",
+        "inputs": {
+          "r0_2.P": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X2_0": 435,
+          "X2_1": 558
+        }
+      },
+      {
+        "id": "r7_0.burn",
+        "inputs": {
+          "r7_0.P": 1
+        },
+        "outputs": {
+          "D7": 1,
+          "X0_0": 157,
+          "X0_1": 911
+        }
+      },
+      {
+        "id": "r7_2.return",
+        "inputs": {
+          "r7_2.P": 1,
+          "FUEL0": 10
+        },
+        "outputs": {
+          "D7": 1,
+          "X2_0": 157,
+          "X2_1": 911,
+          "CAT0": 1
+        }
+      },
+      {
+        "id": "r3_1.start",
+        "inputs": {
+          "U3": 1,
+          "CAT1": 4
+        },
+        "outputs": {
+          "r3_1.P": 1
+        }
+      },
+      {
+        "id": "r6_1.start",
+        "inputs": {
+          "U6": 1,
+          "CAT0": 1
+        },
+        "outputs": {
+          "r6_1.P": 1
+        }
+      },
+      {
+        "id": "r5_0.return",
+        "inputs": {
+          "r5_0.P": 1,
+          "FUEL0": 11
+        },
+        "outputs": {
+          "D5": 1,
+          "X0_0": 137,
+          "X0_1": 158,
+          "CAT1": 4
+        }
+      },
+      {
+        "id": "r1_1.return",
+        "inputs": {
+          "r1_1.P": 1,
+          "FUEL0": 10
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 158,
+          "X1_1": 470,
+          "CAT1": 1
+        }
+      },
+      {
+        "id": "r3_2.return",
+        "inputs": {
+          "r3_2.P": 1,
+          "FUEL1": 7
+        },
+        "outputs": {
+          "D3": 1,
+          "X2_0": 986,
+          "X2_1": 258,
+          "CAT0": 4
+        }
+      },
+      {
+        "id": "r7_2.burn",
+        "inputs": {
+          "r7_2.P": 1
+        },
+        "outputs": {
+          "D7": 1,
+          "X2_0": 157,
+          "X2_1": 911
+        }
+      },
+      {
+        "id": "r6_1.return",
+        "inputs": {
+          "r6_1.P": 1,
+          "FUEL1": 11
+        },
+        "outputs": {
+          "D6": 1,
+          "X1_0": 13,
+          "X1_1": 28,
+          "CAT0": 1
+        }
+      },
+      {
+        "id": "r0_2.return",
+        "inputs": {
+          "r0_2.P": 1,
+          "FUEL0": 6
+        },
+        "outputs": {
+          "D0": 1,
+          "X2_0": 435,
+          "X2_1": 558,
+          "CAT0": 2
+        }
+      },
+      {
+        "id": "r3_2.start",
+        "inputs": {
+          "U3": 1,
+          "CAT0": 4
+        },
+        "outputs": {
+          "r3_2.P": 1
+        }
+      },
+      {
+        "id": "r1_1.start",
+        "inputs": {
+          "U1": 1,
+          "CAT1": 1
+        },
+        "outputs": {
+          "r1_1.P": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 1,
+          "X0_0": 1247,
+          "X0_1": 2404,
+          "X1_0": 2038,
+          "X1_1": 1424,
+          "X2_0": 1905,
+          "X2_1": 1253,
+          "D1": 1,
+          "D2": 2,
+          "D3": 2,
+          "D4": 2,
+          "D5": 1,
+          "D6": 1,
+          "D7": 3
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r3_2.burn",
+        "inputs": {
+          "r3_2.P": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X2_0": 986,
+          "X2_1": 258
+        }
+      },
+      {
+        "id": "r3_0.start",
+        "inputs": {
+          "U3": 1,
+          "CAT0": 4
+        },
+        "outputs": {
+          "r3_0.P": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "manual_fuel_n8_c3_d2_a2_s107_entry"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/manual-inputs.json",
+      "pointer": "/199"
+    },
+    {
+      "source": ".local/web-review-20260927/large_scale/manual-input/manual_fuel_n8_c3_d2_a2_s107_entry.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/large_scale/manual-models/manual_fuel_n8_c3_d2_a2_s107_entry.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,58 @@
+{
+  "id": "9f5d8804a156cf1470aad234d26dbf4c2e234abcc01eacd40f7e2646d6219970",
+  "kind": "graph",
+  "model": {
+    "target": "target",
+    "amount": 10,
+    "stock": {
+      "a": 10,
+      "b": 10
+    },
+    "recipes": [
+      {
+        "id": "root",
+        "inputs": {
+          "mid": 1,
+          "a": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "from_a",
+        "inputs": {
+          "a": 1
+        },
+        "outputs": {
+          "mid": 1
+        }
+      },
+      {
+        "id": "from_b",
+        "inputs": {
+          "b": 1
+        },
+        "outputs": {
+          "mid": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "two branches compete scarce raw alternate available"
+  ],
+  "expected": "UNKNOWN",
+  "origins": [
+    {
+      "source": ".local/cgse-feedback-fixes-20261003/fallback/runtime/fixtures.json",
+      "pointer": "/7"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,32 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+[[mods]]
+modId="aedump"
+version="1.0.0"
+displayName="AE Network Dump"
+description='''Independent, local AE network and CGSE diagnostic capture. Full network snapshots for CGSE / MaxFast comparison.'''
+[[dependencies.aedump]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.aedump]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.20.2)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.aedump]]
+modId="ae2"
+mandatory=true
+versionRange="[15,)"
+ordering="AFTER"
+side="BOTH"
+[[dependencies.aedump]]
+modId="gtlcore"
+mandatory=true
+versionRange="[1.2,)"
+ordering="AFTER"
+side="BOTH"

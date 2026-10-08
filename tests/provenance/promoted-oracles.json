@@ -1,0 +1,52 @@
+{
+  "programs": [
+    {
+      "id": "MechanismBoundaryOracle-016e6d7b4d09",
+      "original_probe": "probes/java/algorithm-review-20260928/MechanismBoundaryOracle-016e6d7b4d09/MechanismBoundaryOracle.java",
+      "current": "regression/java/MechanismBoundaryOracle.java",
+      "adaptations": [
+        "Artifact directory moved to build/test-artifacts/algorithm-review and created before writing; all assertions retained"
+      ]
+    },
+    {
+      "id": "SymmetryOracle-b6dc4c201444",
+      "original_probe": "probes/java/algorithm-review-20260928/SymmetryOracle-b6dc4c201444/SymmetryOracle.java",
+      "current": "regression/java/SymmetryOracle.java",
+      "adaptations": [
+        "Artifact directory moved to build/test-artifacts/algorithm-review and created before writing; all assertions retained"
+      ]
+    },
+    {
+      "id": "ArchiveOracle-d65522d8b75e",
+      "original_probe": "probes/java/algorithm-review-20260928/ArchiveOracle-d65522d8b75e/ArchiveOracle.java",
+      "current": "regression/java/ArchiveOracle.java",
+      "adaptations": [
+        "Artifact directory moved to build/test-artifacts/algorithm-review and created before writing; all assertions retained"
+      ]
+    },
+    {
+      "id": "MirSafetyProbe-23503e75ea5a",
+      "original_probe": "probes/java/solver-hardcases-20261003/MirSafetyProbe-23503e75ea5a/MirSafetyProbe.java",
+      "current": "regression/java/MirSafetyProbe.java",
+      "adaptations": [
+        "Artifact directory moved to build/test-artifacts/rounding and created before writing; all assertions retained"
+      ]
+    },
+    {
+      "id": "ConstraintReview-62abbe35daba",
+      "original_probe": "probes/java/constraint-review-20260926/ConstraintReview-62abbe35daba/ConstraintReview.java",
+      "current": "regression/java/ConstraintReview.java",
+      "adaptations": [
+        "Equality proof sign accessor replaced by exact BigInteger multiplier accessor; algebraic assertion retained"
+      ]
+    },
+    {
+      "id": "GmiSafetyProbe-64ab1a33aeb3",
+      "original_probe": "probes/java/solver-hardcases-20261003/GmiSafetyProbe-64ab1a33aeb3/GmiSafetyProbe.java",
+      "current": "regression/java/GmiSafetyProbe.java",
+      "adaptations": [
+        "Artifact directory moved to build/test-artifacts/rounding and created before writing; all assertions retained"
+      ]
+    }
+  ]
+}

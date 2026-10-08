@@ -1,0 +1,306 @@
+{
+  "id": "05a5cfd79cd7d57b487eb1988826ae1ab6a0aa7d705ce7a2fb43e22b31f22f6b",
+  "kind": "graph",
+  "model": {
+    "target": "P6",
+    "amount": 6,
+    "stock": {
+      "F": 7,
+      "P0": 1,
+      "P1": 2,
+      "P2": 1,
+      "P3": 1,
+      "P4": 1,
+      "P5": 1
+    },
+    "recipes": [
+      {
+        "id": "r7",
+        "inputs": {
+          "P6": 1,
+          "P5": 2,
+          "F": 1
+        },
+        "outputs": {
+          "P3": 1
+        }
+      },
+      {
+        "id": "r15",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 1,
+          "P2": 1,
+          "P6": 1
+        }
+      },
+      {
+        "id": "alias",
+        "inputs": {
+          "P6": 1,
+          "P2": 1,
+          "P4": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P1": 2,
+          "P0": 1,
+          "P6": 1
+        }
+      },
+      {
+        "id": "r0",
+        "inputs": {
+          "F": 1,
+          "P5": 1,
+          "P1": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P1": 1
+        }
+      },
+      {
+        "id": "r12",
+        "inputs": {
+          "P3": 2,
+          "P6": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P2": 2,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r13",
+        "inputs": {
+          "F": 1,
+          "P2": 3
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "P3": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P4": 1,
+          "P1": 2
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "P6": 1,
+          "P2": 1,
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P6": 1,
+          "P1": 2
+        }
+      },
+      {
+        "id": "r14",
+        "inputs": {
+          "P1": 1,
+          "P5": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P3": 1
+        }
+      },
+      {
+        "id": "mut1",
+        "inputs": {
+          "P2": 2,
+          "F": 1
+        },
+        "outputs": {
+          "P5": 2
+        }
+      },
+      {
+        "id": "mut0",
+        "inputs": {
+          "P6": 2,
+          "F": 1
+        },
+        "outputs": {
+          "P0": 2
+        }
+      },
+      {
+        "id": "mut3",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P0": 1
+        }
+      },
+      {
+        "id": "mut2",
+        "inputs": {
+          "F": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "P3": 1,
+          "P2": 1,
+          "F": 1,
+          "P4": 2
+        },
+        "outputs": {
+          "P4": 1,
+          "P2": 1,
+          "P3": 1,
+          "P6": 1
+        }
+      },
+      {
+        "id": "r11",
+        "inputs": {
+          "P0": 1,
+          "P3": 1,
+          "P4": 2,
+          "F": 1
+        },
+        "outputs": {
+          "P3": 1
+        }
+      },
+      {
+        "id": "r9",
+        "inputs": {
+          "P2": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P5": 1,
+          "P2": 1,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "P3": 1,
+          "F": 1,
+          "P0": 2
+        },
+        "outputs": {
+          "P3": 1,
+          "P1": 1,
+          "P5": 2
+        }
+      },
+      {
+        "id": "r10",
+        "inputs": {
+          "P6": 1,
+          "P2": 1,
+          "P5": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P4": 1,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "F": 1,
+          "P6": 2
+        },
+        "outputs": {
+          "P3": 2,
+          "P1": 1,
+          "P0": 1
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "P4": 1,
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P1": 1
+        }
+      },
+      {
+        "id": "r16",
+        "inputs": {
+          "F": 1,
+          "P3": 2
+        },
+        "outputs": {
+          "P2": 1,
+          "P5": 1,
+          "P1": 1,
+          "P0": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "P2": 1,
+          "F": 1,
+          "P1": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P3": 1,
+          "P6": 1,
+          "P4": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "hard_random_0279"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/hard_random_0279.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/hard_random_0279.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

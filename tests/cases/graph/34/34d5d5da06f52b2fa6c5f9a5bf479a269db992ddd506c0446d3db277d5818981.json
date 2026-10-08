@@ -1,0 +1,449 @@
+{
+  "id": "34d5d5da06f52b2fa6c5f9a5bf479a269db992ddd506c0446d3db277d5818981",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 3,
+    "stock": {
+      "U0": 3,
+      "U1": 3,
+      "U2": 3,
+      "U3": 3,
+      "U4": 3,
+      "U5": 3,
+      "CAT": 3
+    },
+    "recipes": [
+      {
+        "id": "r0_0.start",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r0_0.P": 2
+        }
+      },
+      {
+        "id": "r0_0.middle",
+        "inputs": {
+          "r0_0.P": 3
+        },
+        "outputs": {
+          "r0_0.Q": 1
+        }
+      },
+      {
+        "id": "r0_0.end",
+        "inputs": {
+          "r0_0.Q": 2
+        },
+        "outputs": {
+          "D0": 3,
+          "X0_0": 1788,
+          "X0_1": 2604,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r0_1.start",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r0_1.P": 2
+        }
+      },
+      {
+        "id": "r0_1.middle",
+        "inputs": {
+          "r0_1.P": 3
+        },
+        "outputs": {
+          "r0_1.Q": 1
+        }
+      },
+      {
+        "id": "r0_1.end",
+        "inputs": {
+          "r0_1.Q": 2
+        },
+        "outputs": {
+          "D0": 3,
+          "X1_0": 1788,
+          "X1_1": 2604,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r1_0.start",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r1_0.P": 2
+        }
+      },
+      {
+        "id": "r1_0.middle",
+        "inputs": {
+          "r1_0.P": 3
+        },
+        "outputs": {
+          "r1_0.Q": 1
+        }
+      },
+      {
+        "id": "r1_0.end",
+        "inputs": {
+          "r1_0.Q": 2
+        },
+        "outputs": {
+          "D1": 3,
+          "X0_0": 2793,
+          "X0_1": 2967,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r1_1.start",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r1_1.P": 2
+        }
+      },
+      {
+        "id": "r1_1.middle",
+        "inputs": {
+          "r1_1.P": 3
+        },
+        "outputs": {
+          "r1_1.Q": 1
+        }
+      },
+      {
+        "id": "r1_1.end",
+        "inputs": {
+          "r1_1.Q": 2
+        },
+        "outputs": {
+          "D1": 3,
+          "X1_0": 2793,
+          "X1_1": 2967,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r2_0.start",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r2_0.P": 2
+        }
+      },
+      {
+        "id": "r2_0.middle",
+        "inputs": {
+          "r2_0.P": 3
+        },
+        "outputs": {
+          "r2_0.Q": 1
+        }
+      },
+      {
+        "id": "r2_0.end",
+        "inputs": {
+          "r2_0.Q": 2
+        },
+        "outputs": {
+          "D2": 3,
+          "X0_0": 1437,
+          "X0_1": 150,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r2_1.start",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r2_1.P": 2
+        }
+      },
+      {
+        "id": "r2_1.middle",
+        "inputs": {
+          "r2_1.P": 3
+        },
+        "outputs": {
+          "r2_1.Q": 1
+        }
+      },
+      {
+        "id": "r2_1.end",
+        "inputs": {
+          "r2_1.Q": 2
+        },
+        "outputs": {
+          "D2": 3,
+          "X1_0": 1437,
+          "X1_1": 150,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r3_0.start",
+        "inputs": {
+          "U3": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r3_0.P": 2
+        }
+      },
+      {
+        "id": "r3_0.middle",
+        "inputs": {
+          "r3_0.P": 3
+        },
+        "outputs": {
+          "r3_0.Q": 1
+        }
+      },
+      {
+        "id": "r3_0.end",
+        "inputs": {
+          "r3_0.Q": 2
+        },
+        "outputs": {
+          "D3": 3,
+          "X0_0": 1851,
+          "X0_1": 684,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r3_1.start",
+        "inputs": {
+          "U3": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r3_1.P": 2
+        }
+      },
+      {
+        "id": "r3_1.middle",
+        "inputs": {
+          "r3_1.P": 3
+        },
+        "outputs": {
+          "r3_1.Q": 1
+        }
+      },
+      {
+        "id": "r3_1.end",
+        "inputs": {
+          "r3_1.Q": 2
+        },
+        "outputs": {
+          "D3": 3,
+          "X1_0": 1851,
+          "X1_1": 684,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r4_0.start",
+        "inputs": {
+          "U4": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r4_0.P": 2
+        }
+      },
+      {
+        "id": "r4_0.middle",
+        "inputs": {
+          "r4_0.P": 3
+        },
+        "outputs": {
+          "r4_0.Q": 1
+        }
+      },
+      {
+        "id": "r4_0.end",
+        "inputs": {
+          "r4_0.Q": 2
+        },
+        "outputs": {
+          "D4": 3,
+          "X0_0": 1494,
+          "X0_1": 2130,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r4_1.start",
+        "inputs": {
+          "U4": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r4_1.P": 2
+        }
+      },
+      {
+        "id": "r4_1.middle",
+        "inputs": {
+          "r4_1.P": 3
+        },
+        "outputs": {
+          "r4_1.Q": 1
+        }
+      },
+      {
+        "id": "r4_1.end",
+        "inputs": {
+          "r4_1.Q": 2
+        },
+        "outputs": {
+          "D4": 3,
+          "X1_0": 1494,
+          "X1_1": 2130,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r5_0.start",
+        "inputs": {
+          "U5": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r5_0.P": 2
+        }
+      },
+      {
+        "id": "r5_0.middle",
+        "inputs": {
+          "r5_0.P": 3
+        },
+        "outputs": {
+          "r5_0.Q": 1
+        }
+      },
+      {
+        "id": "r5_0.end",
+        "inputs": {
+          "r5_0.Q": 2
+        },
+        "outputs": {
+          "D5": 3,
+          "X0_0": 1011,
+          "X0_1": 2985,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "r5_1.start",
+        "inputs": {
+          "U5": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r5_1.P": 2
+        }
+      },
+      {
+        "id": "r5_1.middle",
+        "inputs": {
+          "r5_1.P": 3
+        },
+        "outputs": {
+          "r5_1.Q": 1
+        }
+      },
+      {
+        "id": "r5_1.end",
+        "inputs": {
+          "r5_1.Q": 2
+        },
+        "outputs": {
+          "D5": 3,
+          "X1_0": 1011,
+          "X1_1": 2985,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "deliver.start",
+        "inputs": {
+          "D0": 1,
+          "X0_0": 1573,
+          "X0_1": 1628,
+          "D1": 1,
+          "X1_0": 1885,
+          "X1_1": 2212,
+          "D2": 1,
+          "D3": 1,
+          "D4": 1,
+          "D5": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "deliver.P": 2
+        }
+      },
+      {
+        "id": "deliver.middle",
+        "inputs": {
+          "deliver.P": 3
+        },
+        "outputs": {
+          "deliver.Q": 1
+        }
+      },
+      {
+        "id": "deliver.end",
+        "inputs": {
+          "deliver.Q": 2
+        },
+        "outputs": {
+          "GOAL": 3,
+          "CAT": 3
+        }
+      }
+    ]
+  },
+  "names": [
+    "choice_n6_c2_cap1_s101_ratio"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/new-counterexamples-20260926/fixtures/choice_n6_c2_cap1_s101_ratio.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_a666711_new_counterexamples_20260926.zip!/fixtures/choice_n6_c2_cap1_s101_ratio.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

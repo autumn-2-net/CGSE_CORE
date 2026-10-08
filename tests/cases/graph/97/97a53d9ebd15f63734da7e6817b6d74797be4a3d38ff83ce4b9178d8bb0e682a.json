@@ -1,0 +1,653 @@
+{
+  "id": "97a53d9ebd15f63734da7e6817b6d74797be4a3d38ff83ce4b9178d8bb0e682a",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 9,
+    "stock": {
+      "R0": 1,
+      "R1": 1,
+      "R2": 1,
+      "R3": 1,
+      "R4": 1,
+      "R5": 1,
+      "R6": 1,
+      "R7": 1,
+      "R8": 1,
+      "C0": 1,
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": 1,
+      "C5": 1,
+      "C6": 1,
+      "C7": 1,
+      "C8": 1,
+      "S0": 1,
+      "S1": 1,
+      "S2": 1,
+      "S3": 1,
+      "S4": 1,
+      "S5": 1,
+      "S6": 1,
+      "S7": 1,
+      "S8": 1
+    },
+    "recipes": [
+      {
+        "id": "cell0",
+        "inputs": {
+          "R7": 1,
+          "C8": 1,
+          "S6": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell1",
+        "inputs": {
+          "R0": 1,
+          "C0": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell2",
+        "inputs": {
+          "R6": 1,
+          "C1": 1,
+          "S7": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell3",
+        "inputs": {
+          "R2": 1,
+          "C7": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell4",
+        "inputs": {
+          "R2": 1,
+          "C2": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell5",
+        "inputs": {
+          "R6": 1,
+          "C5": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell6",
+        "inputs": {
+          "R7": 1,
+          "C1": 1,
+          "S8": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell7",
+        "inputs": {
+          "R8": 1,
+          "C3": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell8",
+        "inputs": {
+          "R3": 1,
+          "C8": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell9",
+        "inputs": {
+          "R2": 1,
+          "C8": 1,
+          "S1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell10",
+        "inputs": {
+          "R3": 1,
+          "C0": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell11",
+        "inputs": {
+          "R1": 1,
+          "C0": 1,
+          "S1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell12",
+        "inputs": {
+          "R4": 1,
+          "C2": 1,
+          "S6": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell13",
+        "inputs": {
+          "R4": 1,
+          "C8": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell14",
+        "inputs": {
+          "R1": 1,
+          "C3": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell15",
+        "inputs": {
+          "R8": 1,
+          "C0": 1,
+          "S8": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell16",
+        "inputs": {
+          "R1": 1,
+          "C5": 1,
+          "S6": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell17",
+        "inputs": {
+          "R7": 1,
+          "C6": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell18",
+        "inputs": {
+          "R5": 1,
+          "C0": 1,
+          "S5": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell19",
+        "inputs": {
+          "R8": 1,
+          "C1": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell20",
+        "inputs": {
+          "R7": 1,
+          "C2": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell21",
+        "inputs": {
+          "R7": 1,
+          "C3": 1,
+          "S1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell22",
+        "inputs": {
+          "R7": 1,
+          "C0": 1,
+          "S7": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell23",
+        "inputs": {
+          "R3": 1,
+          "C1": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell24",
+        "inputs": {
+          "R5": 1,
+          "C8": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell25",
+        "inputs": {
+          "R4": 1,
+          "C6": 1,
+          "S1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell26",
+        "inputs": {
+          "R4": 1,
+          "C4": 1,
+          "S8": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell27",
+        "inputs": {
+          "R7": 1,
+          "C7": 1,
+          "S5": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell28",
+        "inputs": {
+          "R5": 1,
+          "C3": 1,
+          "S8": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell29",
+        "inputs": {
+          "R3": 1,
+          "C3": 1,
+          "S6": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell30",
+        "inputs": {
+          "R0": 1,
+          "C1": 1,
+          "S1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell31",
+        "inputs": {
+          "R5": 1,
+          "C5": 1,
+          "S1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell32",
+        "inputs": {
+          "R6": 1,
+          "C2": 1,
+          "S8": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell33",
+        "inputs": {
+          "R6": 1,
+          "C3": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell34",
+        "inputs": {
+          "R8": 1,
+          "C8": 1,
+          "S7": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell35",
+        "inputs": {
+          "R1": 1,
+          "C1": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell36",
+        "inputs": {
+          "R2": 1,
+          "C5": 1,
+          "S7": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell37",
+        "inputs": {
+          "R6": 1,
+          "C6": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell38",
+        "inputs": {
+          "R4": 1,
+          "C0": 1,
+          "S4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell39",
+        "inputs": {
+          "R8": 1,
+          "C6": 1,
+          "S5": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell40",
+        "inputs": {
+          "R2": 1,
+          "C6": 1,
+          "S8": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell41",
+        "inputs": {
+          "R7": 1,
+          "C5": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell42",
+        "inputs": {
+          "R5": 1,
+          "C6": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell43",
+        "inputs": {
+          "R7": 1,
+          "C4": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell44",
+        "inputs": {
+          "R0": 1,
+          "C7": 1,
+          "S7": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell45",
+        "inputs": {
+          "R3": 1,
+          "C2": 1,
+          "S5": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell46",
+        "inputs": {
+          "R5": 1,
+          "C2": 1,
+          "S7": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell47",
+        "inputs": {
+          "R0": 1,
+          "C6": 1,
+          "S6": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell48",
+        "inputs": {
+          "R5": 1,
+          "C1": 1,
+          "S6": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell49",
+        "inputs": {
+          "R2": 1,
+          "C1": 1,
+          "S3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell50",
+        "inputs": {
+          "R3": 1,
+          "C6": 1,
+          "S0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell51",
+        "inputs": {
+          "R6": 1,
+          "C8": 1,
+          "S5": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell52",
+        "inputs": {
+          "R4": 1,
+          "C7": 1,
+          "S2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "cell53",
+        "inputs": {
+          "R0": 1,
+          "C5": 1,
+          "S5": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "latin_01777"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/cases/latin_01777.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/models/latin_01777.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

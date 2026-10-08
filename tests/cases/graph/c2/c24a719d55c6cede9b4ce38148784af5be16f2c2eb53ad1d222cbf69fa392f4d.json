@@ -1,0 +1,310 @@
+{
+  "id": "c24a719d55c6cede9b4ce38148784af5be16f2c2eb53ad1d222cbf69fa392f4d",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "F": 12,
+      "P0": 2,
+      "P1": 2,
+      "P2": 1,
+      "P3": 2,
+      "P4": 1
+    },
+    "recipes": [
+      {
+        "id": "r16",
+        "inputs": {
+          "F": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r0",
+        "inputs": {
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r18",
+        "inputs": {
+          "F": 1,
+          "P1": 2
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r17",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P2": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r13",
+        "inputs": {
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r12",
+        "inputs": {
+          "F": 1,
+          "P1": 2
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r15",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P3": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P2": 2,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r9",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P2": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P2": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P4": 2,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r11",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P4": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "F": 1,
+          "P2": 2
+        },
+        "outputs": {
+          "P2": 1,
+          "P4": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r19",
+        "inputs": {
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P3": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P2": 2,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "F": 1,
+          "P0": 2,
+          "P2": 1
+        },
+        "outputs": {
+          "P2": 3,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r7",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P2": 2
+        },
+        "outputs": {
+          "P2": 2,
+          "P3": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r10",
+        "inputs": {
+          "F": 1,
+          "P2": 3
+        },
+        "outputs": {
+          "P2": 1,
+          "P3": 1,
+          "P4": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r14",
+        "inputs": {
+          "F": 1,
+          "P2": 2
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P3": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "F": 1,
+          "P1": 1
+        },
+        "outputs": {
+          "P4": 1,
+          "STEP": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "P1": 2,
+          "P3": 1,
+          "P4": 5,
+          "STEP": 12
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "walk_h12_s0"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": "tools/graph-regression/fixtures/bounded/walk_h12_s0.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/color-review-20260926/recorded/regression/cases/walk_h12_s0.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/fused-20260926/CGSE_01c7721/recorded/regression/cases/walk_h12_s0.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_01c7721_fused_counterexamples_20260926.zip!/CGSE_01c7721/recorded/regression/cases/walk_h12_s0.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/recorded/regression/cases/walk_h12_s0.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_batch_145_cases_f4cbf89_20260926.zip!/CGSE_batch_f4cbf89/recorded/screen/cases/walk_h12_s0.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,48 @@
+{
+  "id": "f8a478f12c6d6fc2c85ee3509bd132674606c450540a316c3a6ae1f90d21b0f8",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U": 1
+    },
+    "recipes": [
+      {
+        "id": "0",
+        "inputs": {
+          "U": 1,
+          "BAD": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "1",
+        "inputs": {
+          "U": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "control_branch_rollback"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/controls/control_branch_rollback.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

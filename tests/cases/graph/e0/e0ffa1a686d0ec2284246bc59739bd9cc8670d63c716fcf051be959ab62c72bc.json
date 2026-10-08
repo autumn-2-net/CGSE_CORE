@@ -1,0 +1,96 @@
+{
+  "id": "e0ffa1a686d0ec2284246bc59739bd9cc8670d63c716fcf051be959ab62c72bc",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 3,
+    "stock": {
+      "U0": 9,
+      "CAT": 3
+    },
+    "recipes": [
+      {
+        "id": "r0_0.start",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r0_0.P": 2
+        }
+      },
+      {
+        "id": "r0_0.middle",
+        "inputs": {
+          "r0_0.P": 3
+        },
+        "outputs": {
+          "r0_0.Q": 1
+        }
+      },
+      {
+        "id": "r0_0.end",
+        "inputs": {
+          "r0_0.Q": 2
+        },
+        "outputs": {
+          "D0": 3,
+          "X0_0": 1788,
+          "X0_1": 2604,
+          "CAT": 3
+        }
+      },
+      {
+        "id": "deliver.start",
+        "inputs": {
+          "D0": 3,
+          "X0_0": 1788,
+          "X0_1": 2604,
+          "CAT": 1
+        },
+        "outputs": {
+          "deliver.P": 2
+        }
+      },
+      {
+        "id": "deliver.middle",
+        "inputs": {
+          "deliver.P": 3
+        },
+        "outputs": {
+          "deliver.Q": 1
+        }
+      },
+      {
+        "id": "deliver.end",
+        "inputs": {
+          "deliver.Q": 2
+        },
+        "outputs": {
+          "GOAL": 3,
+          "CAT": 3
+        }
+      }
+    ]
+  },
+  "names": [
+    "choice_n1_c1_cap3_s101_ratio"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/new-counterexamples-20260926/fixtures/choice_n1_c1_cap3_s101_ratio.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_a666711_new_counterexamples_20260926.zip!/fixtures/choice_n1_c1_cap3_s101_ratio.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

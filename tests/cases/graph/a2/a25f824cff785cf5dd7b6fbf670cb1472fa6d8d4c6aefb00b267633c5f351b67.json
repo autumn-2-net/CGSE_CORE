@@ -1,0 +1,72 @@
+{
+  "id": "a25f824cff785cf5dd7b6fbf670cb1472fa6d8d4c6aefb00b267633c5f351b67",
+  "kind": "graph",
+  "model": {
+    "target": "G",
+    "amount": 1,
+    "stock": {
+      "U": 4,
+      "F": 7
+    },
+    "recipes": [
+      {
+        "id": "produce",
+        "inputs": {
+          "U": 1,
+          "F": 1
+        },
+        "outputs": {
+          "D": 1,
+          "X": 1
+        }
+      },
+      {
+        "id": "loss",
+        "inputs": {
+          "D": 2,
+          "F": 1
+        },
+        "outputs": {
+          "J": 1
+        }
+      },
+      {
+        "id": "return",
+        "inputs": {
+          "J": 1,
+          "F": 1
+        },
+        "outputs": {
+          "U": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D": 2,
+          "X": 4,
+          "F": 1
+        },
+        "outputs": {
+          "G": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "rc_required_loss_f7_raw1"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/algorithm-review-20260928/rc-variants.json",
+      "pointer": "/21"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

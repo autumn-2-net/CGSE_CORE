@@ -1,0 +1,233 @@
+{
+  "id": "e85c694babc9f5369f0c2fc8114fe85f899a5d512e653aaee1f7f13e236f0759",
+  "kind": "graph",
+  "model": {
+    "target": "P4",
+    "amount": 7,
+    "stock": {
+      "F": 7,
+      "P0": 3,
+      "P1": 2,
+      "P2": 2,
+      "P3": 1
+    },
+    "recipes": [
+      {
+        "id": "r2",
+        "inputs": {
+          "P3": 2,
+          "P2": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P1": 1,
+          "P3": 2
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "P3": 1,
+          "F": 1,
+          "P0": 2
+        },
+        "outputs": {
+          "P2": 1,
+          "P4": 1,
+          "P3": 2
+        }
+      },
+      {
+        "id": "mut1",
+        "inputs": {
+          "F": 1,
+          "P0": 2
+        },
+        "outputs": {
+          "P1": 1
+        }
+      },
+      {
+        "id": "r10",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P4": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "r11",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P0": 1,
+          "P4": 2
+        },
+        "outputs": {
+          "P3": 1,
+          "P1": 1
+        }
+      },
+      {
+        "id": "r12",
+        "inputs": {
+          "F": 1,
+          "P3": 3,
+          "P0": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P4": 1,
+          "P3": 1,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "P1": 1,
+          "F": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P0": 1,
+          "P2": 1,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P4": 1
+        }
+      },
+      {
+        "id": "r0",
+        "inputs": {
+          "P1": 2,
+          "F": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P0": 2
+        }
+      },
+      {
+        "id": "r9",
+        "inputs": {
+          "P1": 1,
+          "P0": 1,
+          "P4": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P2": 1,
+          "P0": 1
+        }
+      },
+      {
+        "id": "alias",
+        "inputs": {
+          "F": 1,
+          "P0": 2,
+          "P3": 1
+        },
+        "outputs": {
+          "P4": 1,
+          "P2": 1,
+          "P3": 2
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "P2": 1,
+          "P1": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 2
+        }
+      },
+      {
+        "id": "mut0",
+        "inputs": {
+          "F": 1,
+          "P0": 2
+        },
+        "outputs": {
+          "P4": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "P0": 1,
+          "P1": 1,
+          "P4": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 1,
+          "P4": 2
+        }
+      },
+      {
+        "id": "r7",
+        "inputs": {
+          "P3": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P1": 2,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "F": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "P1": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "hard_random_1761"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/hard_random_1761.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/hard_random_1761.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

@@ -1,0 +1,13 @@
+package org.cgse.core;
+import java.util.*;import java.math.BigInteger;import java.util.concurrent.atomic.AtomicInteger;
+public class CycleLifecycleProbe {
+ static BigInteger b(long n){return BigInteger.valueOf(n);}static int checks;
+ static List<ExactLinearProgram.Constraint>rows(){return List.of(new ExactLinearProgram.Constraint(Map.of(0,b(1),1,b(-1),2,b(1),3,b(1)),b(0)),new ExactLinearProgram.Constraint(Map.of(1,b(1),2,b(-1),4,b(-1)),b(0)));}
+ static BigInteger[]lo(){return new BigInteger[]{b(54),b(0),b(0),b(2),b(0)};}static BigInteger[]hi(){return new BigInteger[]{b(54),null,null,b(2),b(34)};}
+ public static void main(String[]args){
+  for(int cap=1;cap<=180;cap++){var counter=new AtomicInteger();int limit=cap;var budget=new PlanningBudget(0,500000,64L<<20,()->counter.incrementAndGet()>limit,System::nanoTime);try(var s=new CountLcg(rows(),lo(),hi(),budget,20000,true)){s.shareRows();while(!s.step()){};}catch(java.util.concurrent.CancellationException expected){}if(budget.reservedBytes()!=0)throw new AssertionError("cancel leak "+cap);checks++;}
+  for(long bytes:new long[]{1,4096,8192,16384,32768,65536,262144,1048576}){var budget=new PlanningBudget(0,200000,bytes,()->false,System::nanoTime);try(var s=new CountLcg(rows(),lo(),hi(),budget,8192,true)){s.shareRows();while(!s.step()){}if(s.counts()!=null)throw new AssertionError("bad witness");}catch(PlanningBudget.Exhausted expected){}if(budget.reservedBytes()!=0||budget.peakBytes()>bytes)throw new AssertionError("memory "+bytes);checks++;}
+  for(boolean journal:List.of(false,true)){var budget=new PlanningBudget(0,2000000,64L<<20,()->false,System::nanoTime);if(journal)budget.proofJournal(new CountProof.Journal(4L<<20));try(var models=CountModelViews.create(rows(),lo(),hi(),budget);var s=new CountLcg(rows(),lo(),hi(),budget,20000,true)){s.shareRows();while(!s.step()){}if(!s.infeasible()||s.sharedRows().size()!=1)throw new AssertionError("no cut");models.publishCuts(models.available().get(0),s.sharedRows(),0,s);if(models.cutVersion()!=1)throw new AssertionError("not certified");try(var destination=new CountLcg(rows(),lo(),hi(),budget,20000,journal)){int imported=models.importCuts(models.available().get(0),0,destination,destination);if(!journal&&imported!=1)throw new AssertionError("not imported");while(!destination.step()){}if(!destination.infeasible())throw new AssertionError("no result");if(journal&&CountProof.verify(destination.certificate(),1000000)!=CountProof.Verdict.VERIFIED)throw new AssertionError("destination proof");}}if(budget.reservedBytes()!=0)throw new AssertionError("sharing leak");checks++;}
+  System.out.println("lifecycle checks="+checks);
+ }
+}

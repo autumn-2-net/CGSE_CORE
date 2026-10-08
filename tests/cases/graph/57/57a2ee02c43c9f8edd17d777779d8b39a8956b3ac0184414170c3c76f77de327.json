@@ -1,0 +1,263 @@
+{
+  "id": "57a2ee02c43c9f8edd17d777779d8b39a8956b3ac0184414170c3c76f77de327",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "CAT": 3,
+      "A": 2,
+      "B": 2,
+      "F": 13,
+      "U0": 1,
+      "U1": 1,
+      "U2": 1
+    },
+    "recipes": [
+      {
+        "id": "swap1",
+        "inputs": {
+          "F": 1,
+          "R0": 1
+        },
+        "outputs": {
+          "R1": 1
+        }
+      },
+      {
+        "id": "joinAlt0",
+        "inputs": {
+          "F": 1,
+          "DLB0": 1,
+          "DR0": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "B": 2,
+          "D0": 1
+        }
+      },
+      {
+        "id": "left0",
+        "inputs": {
+          "F": 1,
+          "L0": 1,
+          "A": 1
+        },
+        "outputs": {
+          "DL0": 1
+        }
+      },
+      {
+        "id": "leftAlt1",
+        "inputs": {
+          "F": 1,
+          "L1": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DLB1": 1
+        }
+      },
+      {
+        "id": "join0",
+        "inputs": {
+          "F": 1,
+          "DL0": 1,
+          "DR0": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1,
+          "B": 1,
+          "D0": 1
+        }
+      },
+      {
+        "id": "right0",
+        "inputs": {
+          "F": 1,
+          "R0": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DR0": 1
+        }
+      },
+      {
+        "id": "right2",
+        "inputs": {
+          "F": 1,
+          "R2": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DR2": 1
+        }
+      },
+      {
+        "id": "left2",
+        "inputs": {
+          "F": 1,
+          "L2": 1,
+          "A": 1
+        },
+        "outputs": {
+          "DL2": 1
+        }
+      },
+      {
+        "id": "swap0",
+        "inputs": {
+          "F": 1,
+          "L0": 1
+        },
+        "outputs": {
+          "L2": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "F": 1,
+          "D0": 1,
+          "D1": 1,
+          "D2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "split0",
+        "inputs": {
+          "F": 1,
+          "CAT": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "L0": 1,
+          "R0": 1
+        }
+      },
+      {
+        "id": "join1",
+        "inputs": {
+          "F": 1,
+          "DL1": 1,
+          "DR1": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1,
+          "B": 1,
+          "D1": 1
+        }
+      },
+      {
+        "id": "left1",
+        "inputs": {
+          "F": 1,
+          "L1": 1,
+          "A": 1
+        },
+        "outputs": {
+          "DL1": 1
+        }
+      },
+      {
+        "id": "split1",
+        "inputs": {
+          "F": 1,
+          "CAT": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "L1": 1,
+          "R1": 1
+        }
+      },
+      {
+        "id": "leftAlt0",
+        "inputs": {
+          "F": 1,
+          "L0": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DLB0": 1
+        }
+      },
+      {
+        "id": "split2",
+        "inputs": {
+          "F": 1,
+          "CAT": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "L2": 1,
+          "R2": 1
+        }
+      },
+      {
+        "id": "join2",
+        "inputs": {
+          "F": 1,
+          "DL2": 1,
+          "DR2": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "A": 1,
+          "B": 1,
+          "D2": 1
+        }
+      },
+      {
+        "id": "joinAlt1",
+        "inputs": {
+          "F": 1,
+          "DLB1": 1,
+          "DR1": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "B": 2,
+          "D1": 1
+        }
+      },
+      {
+        "id": "right1",
+        "inputs": {
+          "F": 1,
+          "R1": 1,
+          "B": 1
+        },
+        "outputs": {
+          "DR1": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "forkjoin_01358"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/cases/forkjoin_01358.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/models/forkjoin_01358.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

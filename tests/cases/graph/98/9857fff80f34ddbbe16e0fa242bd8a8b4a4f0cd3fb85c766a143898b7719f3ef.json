@@ -1,0 +1,196 @@
+{
+  "id": "9857fff80f34ddbbe16e0fa242bd8a8b4a4f0cd3fb85c766a143898b7719f3ef",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 10,
+    "stock": {
+      "G0.0": 1,
+      "G0.1": 1,
+      "G0.2": 1,
+      "G0.3": 1,
+      "G0.4": 1,
+      "G0.5": 1,
+      "G0.6": 1,
+      "G0.7": 1,
+      "G0.8": 1,
+      "G0.9": 1,
+      "G1.0": 1,
+      "G1.1": 1,
+      "G1.2": 1,
+      "G1.3": 1,
+      "G1.4": 1,
+      "G1.5": 1,
+      "G1.6": 1,
+      "G1.7": 1,
+      "G1.8": 1,
+      "G1.9": 1,
+      "G2.0": 1,
+      "G2.1": 1,
+      "G2.2": 1,
+      "G2.3": 1,
+      "G2.4": 1,
+      "G2.5": 1,
+      "G2.6": 1,
+      "G2.7": 1,
+      "G2.8": 1,
+      "G2.9": 1,
+      "G3.0": 1,
+      "G3.1": 1,
+      "G3.2": 1,
+      "G3.3": 1,
+      "G3.4": 1,
+      "G3.5": 1,
+      "G3.6": 1,
+      "G3.7": 1,
+      "G3.8": 1,
+      "G3.9": 1
+    },
+    "recipes": [
+      {
+        "id": "e7",
+        "inputs": {
+          "G0.1": 1,
+          "G1.5": 1,
+          "G2.2": 1,
+          "G3.9": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "e9",
+        "inputs": {
+          "G0.5": 1,
+          "G1.8": 1,
+          "G2.3": 1,
+          "G3.8": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "e11",
+        "inputs": {
+          "G0.8": 1,
+          "G1.6": 1,
+          "G2.1": 1,
+          "G3.0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "e17",
+        "inputs": {
+          "G0.6": 1,
+          "G1.2": 1,
+          "G2.5": 1,
+          "G3.5": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "e21",
+        "inputs": {
+          "G0.2": 1,
+          "G1.0": 1,
+          "G2.8": 1,
+          "G3.1": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "e23",
+        "inputs": {
+          "G0.9": 1,
+          "G1.3": 1,
+          "G2.0": 1,
+          "G3.6": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "e42",
+        "inputs": {
+          "G0.0": 1,
+          "G1.4": 1,
+          "G2.4": 1,
+          "G3.7": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "e48",
+        "inputs": {
+          "G0.4": 1,
+          "G1.1": 1,
+          "G2.7": 1,
+          "G3.2": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "e55",
+        "inputs": {
+          "G0.7": 1,
+          "G1.7": 1,
+          "G2.6": 1,
+          "G3.4": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "e58",
+        "inputs": {
+          "G0.3": 1,
+          "G1.9": 1,
+          "G2.9": 1,
+          "G3.3": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "reduced_hypermatch_01424_drop_60"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3-inputs.json",
+      "pointer": "/131"
+    },
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/reductions/reduced_hypermatch_01424_drop_60.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/reductions-models/reduced_hypermatch_01424_drop_60.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

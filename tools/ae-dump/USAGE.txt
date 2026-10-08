@@ -1,0 +1,85 @@
+AE Network Dump 1.0.0
+Minecraft 1.20.1 / Forge 47 / AE2 / CGSE-enabled GTLCore
+
+安装：把 dist/ae-dump-1.0.0.jar 放到 mods，与普通 GTLCore 一起加载。
+单机装到客户端；联机装在服务器即可，客户端不强制安装。
+这是独立诊断模组，不替换 GTLCore，不修改求解策略。
+
+玩家反馈缺料：
+1. 安装模组并重启后，重新计算那笔有问题的订单。
+2. 在聊天栏执行 /ae dump。
+3. 把日志提示路径下的 ZIP 发给开发者。目录是 logs/ae-dump/。
+4. /ae dump list 查看保留的预览；/ae dump 编号 导出指定预览。
+普通玩家只能导出自己的预览；管理员可导出所有已保留记录。
+
+自动导出：
+CGSE 异常、触及求解预算、回退以及未能完成判断，会自动生成 ZIP。
+普通缺料默认不会自动导出，避免请求器反复缺料刷满磁盘；用 /ae dump 手动导出。
+自动导出有每次运行的数量上限。达到上限后仍可手动导出保留的记录。
+后台机器请求不挤掉玩家记录的优先保留位置，但所有记录仍受全局内存和数量限制。
+
+管理员：
+/ae dump latest                    导出全服最近一次计算
+/ae dump network                   看向方块，直接导出其完整 ME 网络
+/ae dump network <x> <y> <z>        导出当前维度指定方块所在网络
+/execute in <维度> run ae dump network <x> <y> <z>
+/ae dump status                    查看采集和导出状态
+
+导出的范围是选中的整个连通 ME 网络，不是整个存档的所有互不相连网络。
+包括全部样板的原始编码 NBT、输入候选、倍率、返还物、有效性检查、产物、
+优先级、注册顺序、每种物料对应的配方顺序，以及全网缓存/实际展示/模拟可提取库存。
+还包含网络节点和连接、方块/部件 NBT、CPU 状态、请求参数、模组版本、配置、
+CGSE 实际编译输入、最终计划和有限长度的求解轨迹。MaxFast 预览同样可以采集。
+数量使用十进制整数字符串；流体保留 AE 原始基本单位，不经 double 转换。
+
+采集时点：
+玩家预览：求解前采集整网，手动导出保留那次快照，不重新读取当前库存。
+后台自动请求：默认保留 CGSE 实际输入，失败或手动导出时再采集整网，以免请求器反复复制整网。
+request.json 的 full_network_capture_timing 明确标注时点，cgse-input.json 保留实际求解用量。
+若需要后台请求也在求解前采集整网，可开启 captureEveryMachinePreview。
+全量采集需要额外时间；大型网络可能出现一次明显停顿，适合复现诊断时安装。
+
+配置：config/aedump-common.toml
+enabled                         总开关
+autoErrors                      异常、预算耗尽、回退自动导出
+autoMissing                     普通缺料也自动导出（默认关闭）
+captureEveryMachinePreview      每笔后台订单都预先全量采集（默认关闭）
+includeNodeNbt                  包含网络节点原始 NBT（默认开启）
+captureMiB / retainedMiB         采集/保留的近似内存额度
+recentRequests / retainMinutes  最多保留条数和时间
+automaticArchivesPerSession     自动导出上限
+maxUncompressedArchiveMiB       单包未压缩大小上限
+maxArchiveDirectoryMiB          目录容量上限；达到后请移走旧包，不会自动删除
+
+先检查 export-status.json：complete=false 表示有未完成部分，不能当成完整复现输入。
+如果关闭节点 NBT，网络计算数据仍会导出，但没有节点原始配置。
+这不是 JVM 堆转储，也不是可直接加载的存档；复现特殊样板仍需要对应整合包的模组和数据包。
+模组不自动上传任何内容，不启动合成，不实际抽取或插入物品。
+
+源码构建：
+源码位于 CGSE_CORE/tools/ae-dump。该工具使用 Java 17，独立于通用核心构建。
+从该目录运行：
+gradlew build -PgtlcoreJar=<包含org.cgse.core和GTL适配层的GTLCore.jar>
+直接构建的发布 JAR 位于 build/libs/；不要安装带 -dev 后缀的开发 JAR。
+
+已有 GTLCore 源码工作区时，可以从宿主目录复用其 Loom 工具链与缓存：
+gradlew -I <CGSE_CORE>/tools/ae-dump/build-with-core.init.gradle -PcgseAeDumpDir=<CGSE_CORE>/tools/ae-dump buildAeDump
+Windows 使用 gradlew.bat。路径含空格时给完整参数加引号。
+cgseAeDumpDir 必须明确指定；相对路径以宿主项目目录为基准。
+该入口先运行宿主 compileJava，再将诊断模组独立编译、打包与重映射；
+不会修改宿主 build.gradle，也不会将 AEDUMP 类放进宿主 JAR。
+复用入口的发布 JAR 位于 tools/ae-dump/dist/ae-dump-1.0.0.jar。
+
+迁移后的运行边界：
+BudgetMixin 和 PlanningWorkMixin 观察 org.cgse.core 的预算与求解工作。
+RouterMixin 仍观察 GTL 的订单入口，其重规划参数描述符使用 org.cgse.core。
+RequestWorkMixin 观察宿主请求；CaptureRecord 从 planning 委托读取实际库存、
+直接发射标志、部分订单搜索、回退标志和最终计划，从宿主读取快照与目录准备耗时。
+JSON schema 和已有字段保持不变；目录准备的墙钟与并行耗时是新增诊断字段。
+安装的 GTLCore 必须是使用此包名的迁移版本；旧 graph.core 包名版本不兼容。
+
+开发验证：
+在 CGSE_CORE 根目录运行 python tests/ae-dump/check_migration.py，检查 Mixin 描述符、
+源码与构建入口边界，并运行不依赖游戏的委托状态捕获测试。
+游戏环境仍需验证命令注册、Mixin 应用、玩家预览、机器请求、缺料、回退和 ZIP 导出。
+详见 tools/ae-dump/COVERAGE.md。

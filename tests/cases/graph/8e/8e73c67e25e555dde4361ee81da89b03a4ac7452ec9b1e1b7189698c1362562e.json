@@ -1,0 +1,217 @@
+{
+  "id": "8e73c67e25e555dde4361ee81da89b03a4ac7452ec9b1e1b7189698c1362562e",
+  "kind": "graph",
+  "model": {
+    "target": "P6",
+    "amount": 5,
+    "stock": {
+      "F": 11,
+      "P0": 3,
+      "P1": 3,
+      "P3": 3,
+      "P4": 2,
+      "P5": 1
+    },
+    "recipes": [
+      {
+        "id": "r9",
+        "inputs": {
+          "F": 1,
+          "P6": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P0": 2
+        }
+      },
+      {
+        "id": "mut0",
+        "inputs": {
+          "P4": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P6": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "P0": 1,
+          "P3": 1,
+          "P1": 1,
+          "P6": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P5": 1,
+          "P2": 1,
+          "P0": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P2": 2,
+          "P6": 1,
+          "P1": 1
+        }
+      },
+      {
+        "id": "r0",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P4": 2
+        },
+        "outputs": {
+          "P6": 1
+        }
+      },
+      {
+        "id": "r10",
+        "inputs": {
+          "P3": 2,
+          "P4": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P6": 1,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "P5": 1,
+          "F": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P5": 3
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P6": 1
+        },
+        "outputs": {
+          "P6": 1,
+          "P2": 1,
+          "P5": 1
+        }
+      },
+      {
+        "id": "mut1",
+        "inputs": {
+          "F": 1,
+          "P4": 3
+        },
+        "outputs": {
+          "P2": 2,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r11",
+        "inputs": {
+          "F": 1,
+          "P6": 1,
+          "P0": 1,
+          "P1": 2
+        },
+        "outputs": {
+          "P1": 1,
+          "P5": 2,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "P0": 1,
+          "P5": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P1": 1
+        }
+      },
+      {
+        "id": "r12",
+        "inputs": {
+          "P5": 1,
+          "P0": 1,
+          "P3": 1,
+          "P4": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P0": 1
+        }
+      },
+      {
+        "id": "r7",
+        "inputs": {
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P4": 2
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "P0": 2,
+          "F": 1,
+          "P1": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P3": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "F": 1,
+          "P0": 2
+        },
+        "outputs": {
+          "P3": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "hard_random_0901"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/hard_random_0901.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/hard_random_0901.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

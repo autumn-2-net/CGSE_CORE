@@ -1,0 +1,47 @@
+{
+  "id": "cd0339c5d8cbbb0eed0814bab6ad8ba63b385ddbc3659ecb4cddc93a1efef4e9",
+  "kind": "graph",
+  "model": {
+    "target": "target",
+    "amount": 7,
+    "stock": {
+      "raw": 10
+    },
+    "recipes": [
+      {
+        "id": "mid",
+        "inputs": {
+          "raw": 2
+        },
+        "outputs": {
+          "mid": 3
+        }
+      },
+      {
+        "id": "root",
+        "inputs": {
+          "mid": 2
+        },
+        "outputs": {
+          "target": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "ordinary chain"
+  ],
+  "expected": "UNKNOWN",
+  "origins": [
+    {
+      "source": ".local/cgse-feedback-fixes-20261003/fallback/runtime/fixtures.json",
+      "pointer": "/0"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

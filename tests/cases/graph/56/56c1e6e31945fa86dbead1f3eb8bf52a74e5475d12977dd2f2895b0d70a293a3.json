@@ -1,0 +1,252 @@
+{
+  "id": "56c1e6e31945fa86dbead1f3eb8bf52a74e5475d12977dd2f2895b0d70a293a3",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 8,
+      "U1": 8,
+      "U2": 8,
+      "U3": 8,
+      "U4": 8,
+      "U5": 8,
+      "U6": 8,
+      "U7": 8
+    },
+    "recipes": [
+      {
+        "id": "a0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0": 645,
+          "X1": 57
+        }
+      },
+      {
+        "id": "b0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "Y0": 645,
+          "Y1": 57
+        }
+      },
+      {
+        "id": "a1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0": 415,
+          "X1": 992
+        }
+      },
+      {
+        "id": "b1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "Y0": 415,
+          "Y1": 992
+        }
+      },
+      {
+        "id": "a2",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0": 874,
+          "X1": 191
+        }
+      },
+      {
+        "id": "b2",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "Y0": 874,
+          "Y1": 191
+        }
+      },
+      {
+        "id": "a3",
+        "inputs": {
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X0": 481,
+          "X1": 505
+        }
+      },
+      {
+        "id": "b3",
+        "inputs": {
+          "U3": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "Y0": 481,
+          "Y1": 505
+        }
+      },
+      {
+        "id": "a4",
+        "inputs": {
+          "U4": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X0": 73,
+          "X1": 515
+        }
+      },
+      {
+        "id": "b4",
+        "inputs": {
+          "U4": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "Y0": 73,
+          "Y1": 515
+        }
+      },
+      {
+        "id": "a5",
+        "inputs": {
+          "U5": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X0": 91,
+          "X1": 678
+        }
+      },
+      {
+        "id": "b5",
+        "inputs": {
+          "U5": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "Y0": 91,
+          "Y1": 678
+        }
+      },
+      {
+        "id": "a6",
+        "inputs": {
+          "U6": 1
+        },
+        "outputs": {
+          "D6": 1,
+          "X0": 439,
+          "X1": 482
+        }
+      },
+      {
+        "id": "b6",
+        "inputs": {
+          "U6": 1
+        },
+        "outputs": {
+          "D6": 1,
+          "Y0": 439,
+          "Y1": 482
+        }
+      },
+      {
+        "id": "a7",
+        "inputs": {
+          "U7": 1
+        },
+        "outputs": {
+          "D7": 1,
+          "X0": 747,
+          "X1": 417
+        }
+      },
+      {
+        "id": "b7",
+        "inputs": {
+          "U7": 1
+        },
+        "outputs": {
+          "D7": 1,
+          "Y0": 747,
+          "Y1": 417
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 8,
+          "D1": 8,
+          "D2": 8,
+          "D3": 8,
+          "D4": 8,
+          "D5": 8,
+          "D6": 8,
+          "D7": 8,
+          "X0": 18361,
+          "X1": 12457,
+          "Y0": 11759,
+          "Y1": 18239
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "bounded_n8_cap8_d2_w1000_s19_shift0"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": "tools/graph-regression/fixtures/bounded/bounded_n8_cap8_d2_w1000_s19_shift0.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/color-review-20260926/recorded/regression/cases/bounded_n8_cap8_d2_w1000_s19_shift0.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/fused-20260926/CGSE_01c7721/recorded/regression/cases/bounded_n8_cap8_d2_w1000_s19_shift0.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_01c7721_fused_counterexamples_20260926.zip!/CGSE_01c7721/recorded/regression/cases/bounded_n8_cap8_d2_w1000_s19_shift0.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/recorded/regression/cases/bounded_n8_cap8_d2_w1000_s19_shift0.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_batch_145_cases_f4cbf89_20260926.zip!/CGSE_batch_f4cbf89/recorded/screen/cases/bounded_n8_cap8_d2_w1000_s19_shift0.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

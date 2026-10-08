@@ -1,0 +1,40 @@
+// Reuse a configured GTL host Loom toolchain without changing its build.gradle.
+// Run from the host with -PcgseAeDumpDir=<CGSE_CORE>/tools/ae-dump.
+gradle.projectsEvaluated {
+    def p = gradle.rootProject
+    def location = p.findProperty('cgseAeDumpDir')
+    if (location == null || location.toString().isBlank()) {
+        throw new GradleException('Set -PcgseAeDumpDir=<CGSE_CORE>/tools/ae-dump when using build-with-core.init.gradle')
+    }
+    def addon = p.file(location).canonicalFile
+    if (!new File(addon, 'src/main/java/org/gtlcore/aedump/AeDump.java').isFile() ||
+            !new File(addon, 'src/main/resources/aedump.mixins.json').isFile()) {
+        throw new GradleException("cgseAeDumpDir does not contain the AEDUMP project: ${addon}")
+    }
+    def out = new File(addon, 'build')
+    def compile = p.tasks.register('compileAeDump', JavaCompile) {
+        dependsOn p.tasks.named('compileJava')
+        source = p.fileTree(new File(addon, 'src/main/java')) { include '**/*.java' }
+        classpath = p.sourceSets.main.compileClasspath + p.files(p.sourceSets.main.output.classesDirs)
+        destinationDirectory = new File(out, 'classes')
+        javaCompiler.set(p.tasks.named('compileJava', JavaCompile).flatMap { it.javaCompiler })
+        sourceCompatibility = '17'; targetCompatibility = '17'
+        options.encoding = 'UTF-8'; options.compilerArgs = ['-proc:none']
+    }
+    def jar = p.tasks.register('jarAeDump', Jar) {
+        dependsOn compile
+        from new File(out, 'classes')
+        from new File(addon, 'src/main/resources')
+        archiveFileName = 'ae-dump-1.0.0-dev.jar'
+        destinationDirectory = new File(out, 'dev')
+        manifest.attributes('MixinConfigs': 'aedump.mixins.json', 'FMLModType': 'MOD', 'Implementation-Version': '1.0.0')
+    }
+    def remap = p.extensions.getByName('loom').class.classLoader.loadClass('net.fabricmc.loom.task.RemapJarTask')
+    p.tasks.register('buildAeDump', remap) {
+        dependsOn jar
+        inputFile.set(jar.flatMap { it.archiveFile })
+        archiveFileName = 'ae-dump-1.0.0.jar'
+        destinationDirectory = new File(addon, 'dist')
+        addNestedDependencies = false
+    }
+}

@@ -1,0 +1,254 @@
+{
+  "id": "3c616c15554fee1cd51e8760766938d8f7e2f52dd46f69e3a6ba4ffe0bfd3ce8",
+  "kind": "graph",
+  "model": {
+    "target": "P4",
+    "amount": 6,
+    "stock": {
+      "F": 7,
+      "P0": 5,
+      "P1": 4,
+      "P2": 1,
+      "P3": 1
+    },
+    "recipes": [
+      {
+        "id": "r4",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 2,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "P1": 2,
+          "P3": 1,
+          "P2": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P1": 1,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "F": 1,
+          "P0": 2,
+          "P2": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P2": 1,
+          "P1": 1,
+          "P0": 1
+        }
+      },
+      {
+        "id": "r14",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P3": 1,
+          "P0": 1,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "F": 1,
+          "P2": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P1": 2
+        }
+      },
+      {
+        "id": "r11",
+        "inputs": {
+          "P0": 1,
+          "F": 1,
+          "P3": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P3": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "P4": 1,
+          "F": 1,
+          "P0": 2
+        },
+        "outputs": {
+          "P4": 2,
+          "P2": 1
+        }
+      },
+      {
+        "id": "mut0",
+        "inputs": {
+          "F": 1,
+          "P1": 3
+        },
+        "outputs": {
+          "P4": 1
+        }
+      },
+      {
+        "id": "mut2",
+        "inputs": {
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P3": 2
+        }
+      },
+      {
+        "id": "r10",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P4": 2
+        },
+        "outputs": {
+          "P0": 1,
+          "P1": 2
+        }
+      },
+      {
+        "id": "r7",
+        "inputs": {
+          "P2": 2,
+          "F": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P2": 1,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r9",
+        "inputs": {
+          "P3": 1,
+          "P0": 1,
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P2": 1,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r0",
+        "inputs": {
+          "F": 1,
+          "P4": 1
+        },
+        "outputs": {
+          "P1": 1
+        }
+      },
+      {
+        "id": "mut1",
+        "inputs": {
+          "P1": 3,
+          "F": 1
+        },
+        "outputs": {
+          "P0": 2
+        }
+      },
+      {
+        "id": "r12",
+        "inputs": {
+          "P1": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P1": 1,
+          "P0": 1,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r13",
+        "inputs": {
+          "P4": 1,
+          "F": 1,
+          "P1": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "P3": 2
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "F": 1,
+          "P2": 2,
+          "P0": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P4": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "F": 1,
+          "P4": 1,
+          "P0": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P1": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "hard_random_1450"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/hard_random_1450.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/hard_random_1450.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

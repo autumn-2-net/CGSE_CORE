@@ -1,0 +1,48 @@
+{
+  "id": "3e526f38a9d0cd283728890a14eb830d04097f023ac5f7bb1356b16f5fe76895",
+  "kind": "graph",
+  "model": {
+    "target": "target",
+    "amount": 10,
+    "stock": {
+      "a": 4,
+      "b": 6
+    },
+    "recipes": [
+      {
+        "id": "from_a",
+        "inputs": {
+          "a": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      },
+      {
+        "id": "from_b",
+        "inputs": {
+          "b": 1
+        },
+        "outputs": {
+          "target": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "split supply across two candidates"
+  ],
+  "expected": "UNKNOWN",
+  "origins": [
+    {
+      "source": ".local/cgse-feedback-fixes-20261003/fallback/runtime/fixtures.json",
+      "pointer": "/3"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

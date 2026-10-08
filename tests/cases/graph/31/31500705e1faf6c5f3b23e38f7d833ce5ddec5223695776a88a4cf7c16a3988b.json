@@ -1,0 +1,499 @@
+{
+  "id": "31500705e1faf6c5f3b23e38f7d833ce5ddec5223695776a88a4cf7c16a3988b",
+  "kind": "graph",
+  "model": {
+    "target": "target",
+    "amount": 1,
+    "stock": {
+      "quota0": 6,
+      "quota1": 6,
+      "quota2": 6,
+      "quota3": 6,
+      "quota4": 6,
+      "quota5": 6,
+      "quota6": 6,
+      "quota7": 6,
+      "quota8": 6,
+      "quota9": 6,
+      "quota10": 4,
+      "quota11": 4,
+      "quota12": 4,
+      "quota13": 4,
+      "quota14": 4,
+      "quota15": 3,
+      "quota16": 3,
+      "quota17": 3,
+      "quota18": 3,
+      "quota19": 3,
+      "quota20": 100,
+      "quota21": 100,
+      "quota22": 100,
+      "quota23": 100,
+      "quota24": 100,
+      "quota25": 1,
+      "quota26": 1,
+      "quota27": 1,
+      "quota28": 1,
+      "quota29": 1,
+      "row0": 100,
+      "row1": 465,
+      "row2": 100,
+      "row3": 465,
+      "row4": 100,
+      "row5": 465,
+      "row6": 100,
+      "row7": 465,
+      "row8": 100,
+      "row9": 465,
+      "row10": 30,
+      "row12": 30,
+      "row14": 20,
+      "row16": 15,
+      "row18": 120,
+      "row20": 120,
+      "row22": 120,
+      "row24": 120,
+      "row26": 120
+    },
+    "recipes": [
+      {
+        "id": "var0",
+        "inputs": {
+          "quota0": 1,
+          "row1": 20,
+          "row10": 1
+        },
+        "outputs": {
+          "marker0": 1,
+          "row0": 20,
+          "row11": 1
+        }
+      },
+      {
+        "id": "var1",
+        "inputs": {
+          "quota1": 1,
+          "row3": 20,
+          "row10": 1
+        },
+        "outputs": {
+          "marker1": 1,
+          "row2": 20,
+          "row11": 1
+        }
+      },
+      {
+        "id": "var2",
+        "inputs": {
+          "quota2": 1,
+          "row5": 20,
+          "row10": 1
+        },
+        "outputs": {
+          "marker2": 1,
+          "row4": 20,
+          "row11": 1
+        }
+      },
+      {
+        "id": "var3",
+        "inputs": {
+          "quota3": 1,
+          "row7": 20,
+          "row10": 1
+        },
+        "outputs": {
+          "marker3": 1,
+          "row6": 20,
+          "row11": 1
+        }
+      },
+      {
+        "id": "var4",
+        "inputs": {
+          "quota4": 1,
+          "row9": 20,
+          "row10": 1
+        },
+        "outputs": {
+          "marker4": 1,
+          "row8": 20,
+          "row11": 1
+        }
+      },
+      {
+        "id": "var5",
+        "inputs": {
+          "quota5": 1,
+          "row1": 15,
+          "row12": 1
+        },
+        "outputs": {
+          "marker5": 1,
+          "row0": 15,
+          "row13": 1
+        }
+      },
+      {
+        "id": "var6",
+        "inputs": {
+          "quota6": 1,
+          "row3": 15,
+          "row12": 1
+        },
+        "outputs": {
+          "marker6": 1,
+          "row2": 15,
+          "row13": 1
+        }
+      },
+      {
+        "id": "var7",
+        "inputs": {
+          "quota7": 1,
+          "row5": 15,
+          "row12": 1
+        },
+        "outputs": {
+          "marker7": 1,
+          "row4": 15,
+          "row13": 1
+        }
+      },
+      {
+        "id": "var8",
+        "inputs": {
+          "quota8": 1,
+          "row7": 15,
+          "row12": 1
+        },
+        "outputs": {
+          "marker8": 1,
+          "row6": 15,
+          "row13": 1
+        }
+      },
+      {
+        "id": "var9",
+        "inputs": {
+          "quota9": 1,
+          "row9": 15,
+          "row12": 1
+        },
+        "outputs": {
+          "marker9": 1,
+          "row8": 15,
+          "row13": 1
+        }
+      },
+      {
+        "id": "var10",
+        "inputs": {
+          "quota10": 1,
+          "row1": 30,
+          "row14": 1
+        },
+        "outputs": {
+          "marker10": 1,
+          "row0": 30,
+          "row15": 1
+        }
+      },
+      {
+        "id": "var11",
+        "inputs": {
+          "quota11": 1,
+          "row3": 30,
+          "row14": 1
+        },
+        "outputs": {
+          "marker11": 1,
+          "row2": 30,
+          "row15": 1
+        }
+      },
+      {
+        "id": "var12",
+        "inputs": {
+          "quota12": 1,
+          "row5": 30,
+          "row14": 1
+        },
+        "outputs": {
+          "marker12": 1,
+          "row4": 30,
+          "row15": 1
+        }
+      },
+      {
+        "id": "var13",
+        "inputs": {
+          "quota13": 1,
+          "row7": 30,
+          "row14": 1
+        },
+        "outputs": {
+          "marker13": 1,
+          "row6": 30,
+          "row15": 1
+        }
+      },
+      {
+        "id": "var14",
+        "inputs": {
+          "quota14": 1,
+          "row9": 30,
+          "row14": 1
+        },
+        "outputs": {
+          "marker14": 1,
+          "row8": 30,
+          "row15": 1
+        }
+      },
+      {
+        "id": "var15",
+        "inputs": {
+          "quota15": 1,
+          "row1": 45,
+          "row16": 1
+        },
+        "outputs": {
+          "marker15": 1,
+          "row0": 45,
+          "row17": 1
+        }
+      },
+      {
+        "id": "var16",
+        "inputs": {
+          "quota16": 1,
+          "row3": 45,
+          "row16": 1
+        },
+        "outputs": {
+          "marker16": 1,
+          "row2": 45,
+          "row17": 1
+        }
+      },
+      {
+        "id": "var17",
+        "inputs": {
+          "quota17": 1,
+          "row5": 45,
+          "row16": 1
+        },
+        "outputs": {
+          "marker17": 1,
+          "row4": 45,
+          "row17": 1
+        }
+      },
+      {
+        "id": "var18",
+        "inputs": {
+          "quota18": 1,
+          "row7": 45,
+          "row16": 1
+        },
+        "outputs": {
+          "marker18": 1,
+          "row6": 45,
+          "row17": 1
+        }
+      },
+      {
+        "id": "var19",
+        "inputs": {
+          "quota19": 1,
+          "row9": 45,
+          "row16": 1
+        },
+        "outputs": {
+          "marker19": 1,
+          "row8": 45,
+          "row17": 1
+        }
+      },
+      {
+        "id": "var20",
+        "inputs": {
+          "quota20": 1,
+          "row0": 1,
+          "row18": 1
+        },
+        "outputs": {
+          "marker20": 1,
+          "row1": 1,
+          "row19": 1
+        }
+      },
+      {
+        "id": "var21",
+        "inputs": {
+          "quota21": 1,
+          "row2": 1,
+          "row20": 1
+        },
+        "outputs": {
+          "marker21": 1,
+          "row3": 1,
+          "row21": 1
+        }
+      },
+      {
+        "id": "var22",
+        "inputs": {
+          "quota22": 1,
+          "row4": 1,
+          "row22": 1
+        },
+        "outputs": {
+          "marker22": 1,
+          "row5": 1,
+          "row23": 1
+        }
+      },
+      {
+        "id": "var23",
+        "inputs": {
+          "quota23": 1,
+          "row6": 1,
+          "row24": 1
+        },
+        "outputs": {
+          "marker23": 1,
+          "row7": 1,
+          "row25": 1
+        }
+      },
+      {
+        "id": "var24",
+        "inputs": {
+          "quota24": 1,
+          "row8": 1,
+          "row26": 1
+        },
+        "outputs": {
+          "marker24": 1,
+          "row9": 1,
+          "row27": 1
+        }
+      },
+      {
+        "id": "var25",
+        "inputs": {
+          "quota25": 1,
+          "row18": 20
+        },
+        "outputs": {
+          "marker25": 1,
+          "row19": 81,
+          "row28": 1
+        }
+      },
+      {
+        "id": "var26",
+        "inputs": {
+          "quota26": 1,
+          "row20": 20
+        },
+        "outputs": {
+          "marker26": 1,
+          "row21": 81,
+          "row28": 1
+        }
+      },
+      {
+        "id": "var27",
+        "inputs": {
+          "quota27": 1,
+          "row22": 20
+        },
+        "outputs": {
+          "marker27": 1,
+          "row23": 81,
+          "row28": 1
+        }
+      },
+      {
+        "id": "var28",
+        "inputs": {
+          "quota28": 1,
+          "row24": 20
+        },
+        "outputs": {
+          "marker28": 1,
+          "row25": 81,
+          "row28": 1
+        }
+      },
+      {
+        "id": "var29",
+        "inputs": {
+          "quota29": 1,
+          "row26": 20
+        },
+        "outputs": {
+          "marker29": 1,
+          "row27": 81,
+          "row28": 1
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "row0": 100,
+          "row1": 465,
+          "row2": 100,
+          "row3": 465,
+          "row4": 100,
+          "row5": 465,
+          "row6": 100,
+          "row7": 465,
+          "row8": 100,
+          "row9": 465,
+          "row10": 24,
+          "row11": 6,
+          "row12": 24,
+          "row13": 6,
+          "row14": 16,
+          "row15": 4,
+          "row16": 12,
+          "row17": 3,
+          "row18": 20,
+          "row19": 81,
+          "row20": 20,
+          "row21": 81,
+          "row22": 20,
+          "row23": 81,
+          "row24": 20,
+          "row25": 81,
+          "row26": 20,
+          "row27": 81,
+          "row28": 2
+        },
+        "outputs": {
+          "target": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    ""
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/next-boundary-20261004/natural-proof-fixture.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

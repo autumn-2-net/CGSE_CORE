@@ -1,0 +1,84 @@
+CGSE extraction validation — 2026-10-07, scope correction 2026-10-08
+======================================
+
+Source: GTLCore feat/ae-cycle-support, e788d3d34cbc2a621979fa18ea63ba71fa16ea5c.
+Filtered history: 41 commits whose author is autumn and whose actual changes
+affect portable CGSE. Author and committer identity, date, timezone and exact
+message were checked against the original objects. Host merges and unrelated
+shared-file history are excluded.
+
+Portable boundary
+-----------------
+189 core Java sources and 2 optional desktop sources. The original 180 algorithm
+sources match the source revision after package-name and line-ending normalization.
+The new portable services, presentation models and capture normalization have
+dedicated regressions. The core JAR requires java.base and java.management;
+the optional view JAR requires java.base and java.desktop.
+
+191 portable source files are managed by the GTL synchronization manifest.
+All match the host. Adapter implementation remains exclusively in GTLCore.
+The host's original build.gradle and eight tracked upstream tests were preserved.
+Nine synchronization tests cover conflicts, path boundaries, original-version
+recovery from real Git commit trailers, retirement hashes, rollback, line endings,
+idempotence and rejection of uncommitted source snapshots. No host metadata file
+is written. The scope correction changes no engine/view/AE dump production source.
+
+Automated checks
+----------------
+Standalone Gradle build passed on Java 17. The standard Python runner freshly
+compiled and passed all 29 entries: 6 core, 2 view and 21 independent oracles.
+GraphBenchmark passed separately. The strip PNG regression passed 147 checks;
+comparison with monolithic Java2D rendering found zero differing pixels.
+
+The GTL host passed cgseAdapterTest, remapJar, buildAeDump, spotlessJavaCheck and
+checkMixinPackageClasses. The adapter checks cover capture, large integer NBT,
+old save schemas, provider slots, fallback routing, asynchronous output ownership,
+runtime persistence, service delegation and shared UI packet layouts.
+
+The test corpus contains 20,927 canonical cases, 673 portable historical probes
+and 97 adapter probes. The migration map accounts for all 20 original CGSE test
+files, now 21 primary files plus a shared fixture. All indexed destinations exist.
+The complete-data archive contains 578 original paths and 543 unique gzip objects;
+original and compressed SHA-256 checks passed. Its scenario index records 55 input
+paths, 37,112 groups and 156,033 requests. Five native provider-order inputs retain
+their original AE drivers and are not misrepresented as portable replay cases.
+
+Resolution is not completeness
+------------------------------
+The selected finite/cover oracle campaign passed 2,944 cases. Count-model replay
+verified 187 conclusions and left 87 unresolved. The 231 curated fixtures across
+three permutations produced 657 verified results and 36 unresolved results.
+Historical probes retain 25 old assertion failures and 2 process timeouts from
+the audited run; they are distinct from the stable suite. See tests/known-limits.json
+and tests/provenance/historical-coverage.json for interpretation and evidence.
+
+The new scenario replay was exercised on 107 requests: 47 feasible plans were
+independently verified and 60 remained inconclusive. Every enabled known-feasible
+assertion passed. Complete manual/random JEI catalog transport also passed. No
+unknown outcome was reclassified as an infeasibility proof or a solved instance.
+
+Native dedicated-server checks
+------------------------------
+A disposable local Forge/AE/GTL server completed the live sequence in 197.672 s
+and exited normally. All 12 replaced JAR/config/script paths were restored and
+the test port was closed. No player world was used for these live mutations.
+
+Inventory replanning ignored 12 unrelated stock changes; 16 relevant events led
+to 3 bounded retries, with retry spacings respecting the increasing delay.
+Material balance was exact. Real molecular-assembler growth loops with one and
+four seeds completed, used four concurrent machines and preserved material balance.
+Actual request-service capture produced a feasible plan. Manual AEDUMP export and
+automatic export after a deliberately exhausted search budget both passed complete
+network archive validation. An early cutoff correctly marked solver-input capture
+incomplete without claiming the independent full-network dump was incomplete.
+
+The native run used host SHA-256
+46f1678405e456a40eaba75572c8a846e4aa881097a53c87a2e8234397d9c220.
+Final source-formatting/import-order changes were subsequently rebuilt and passed
+the host adapter checks; the native run was not repeated for formatting alone.
+AE dump SHA-256:
+9f87f3fee6267c047873233a4c059a09ad0766545c818541a434aa36a7b2f292.
+
+Commands and prerequisites live in tests/README.md and
+tests/adapter/live/README.md. Run reports, server logs and generated archives stay
+under build/ or .local/; none is required to build or run the portable regressions.

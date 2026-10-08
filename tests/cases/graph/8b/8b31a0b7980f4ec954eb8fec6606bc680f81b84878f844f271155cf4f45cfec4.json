@@ -1,0 +1,79 @@
+{
+  "id": "8b31a0b7980f4ec954eb8fec6606bc680f81b84878f844f271155cf4f45cfec4",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 9223372036854775807,
+    "stock": {
+      "K0": 1,
+      "F": 9223372036854775807
+    },
+    "recipes": [
+      {
+        "id": "c0_copy",
+        "inputs": {
+          "K0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "K1": 1
+        }
+      },
+      {
+        "id": "c0",
+        "inputs": {
+          "K0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "K1": 1
+        }
+      },
+      {
+        "id": "c1",
+        "inputs": {
+          "K1": 1
+        },
+        "outputs": {
+          "K2": 1
+        }
+      },
+      {
+        "id": "c2",
+        "inputs": {
+          "K2": 1
+        },
+        "outputs": {
+          "K0": 1,
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "optional_loss",
+        "inputs": {
+          "K0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "feedback_3_9223372036854775807_duplicate"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/algorithm-review-20260928/future-inputs.json",
+      "pointer": "/52"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

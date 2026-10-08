@@ -1,0 +1,1 @@
+public class RunFallbackTest { public static void main(String[] a){org.gtlcore.gtlcore.integration.ae2.graph.GraphFallbackTest.run();}}

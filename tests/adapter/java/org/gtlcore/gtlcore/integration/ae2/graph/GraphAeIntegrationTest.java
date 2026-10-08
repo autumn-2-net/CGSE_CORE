@@ -1,0 +1,526 @@
+package org.gtlcore.gtlcore.integration.ae2.graph;
+
+import org.gtlcore.gtlcore.config.AECraftingEngine;
+import org.gtlcore.gtlcore.config.AEGraphSeedPolicy;
+import org.cgse.core.*;
+
+import net.minecraft.SharedConstants;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.Bootstrap;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraftforge.registries.RegistryBuilder;
+
+import appeng.api.crafting.IPatternDetails;
+import appeng.api.stacks.AEFluidKey;
+import appeng.api.stacks.AEItemKey;
+import appeng.api.stacks.AEKey;
+import appeng.api.stacks.AEKeyType;
+import appeng.api.stacks.AEKeyTypesInternal;
+import appeng.api.stacks.GenericStack;
+import appeng.api.stacks.KeyCounter;
+import appeng.crafting.pattern.AEProcessingPattern;
+import dev.toma.configuration.config.format.YamlFormat;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/** Uses real AE keys and Minecraft NBT classes on the resolved mod classpath. */
+public final class GraphAeIntegrationTest {
+
+    public static void main(String[] args) throws Exception {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+        // The standalone harness installs the same real AE key types in a real
+        // Forge registry. This replaces mod startup, not NBT/key implementation.
+        var builder = new RegistryBuilder<AEKeyType>().setName(new ResourceLocation("gtlcore", "graph_test_keys"));
+        var create = RegistryBuilder.class.getDeclaredMethod("create");
+        create.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        var registry = (net.minecraftforge.registries.IForgeRegistry<AEKeyType>) create.invoke(builder);
+        AEKeyTypesInternal.setRegistry(() -> registry);
+        AEKeyTypesInternal.register(AEKeyType.items());
+        AEKeyTypesInternal.register(AEKeyType.fluids());
+        AEKey input = AEItemKey.of(Items.IRON_INGOT), output = AEItemKey.of(Items.IRON_BLOCK);
+        long amount = 9_007_199_254_740_993L;
+        var recipe = new GraphRecipe<AEKey>("test", "test", List.of(new GraphRecipe.Slot<>(input, 1)), Map.of(output, 1L));
+        var plan = new GraphPlanner<>(new GraphCompiler<>(List.of(recipe))).plan(output, amount, Map.of(input, amount),
+                true, true, new PlanningBudget(5000, 10000, () -> false));
+        if (!plan.feasible()) throw new AssertionError(plan.result());
+        var runtime = new GraphJobRuntime<>(plan, plan.initial(), Map.of());
+        CompoundTag saved = GraphJobCodec.write(runtime.snapshot());
+        var loaded = new GraphJobRuntime<>(GraphJobCodec.read(saved));
+        if (!saved.equals(GraphJobCodec.write(loaded.snapshot()))) throw new AssertionError("Actual NBT round trip changed the task");
+        System.out.println("AE key/NBT integration round trip passed: " + amount);
+        loadingDoesNotTouchWorld(plan);
+        pipelinePersistence(input, output);
+        GraphDependencyCodecTest.run();
+        conservedToolPersistence(input, output);
+        GraphSharedProgramTest.run(input, output);
+        var waterTag = new CompoundTag();
+        waterTag.putString("variant", "one");
+        var water = AEFluidKey.of(Fluids.WATER, waterTag);
+        var otherTag = new CompoundTag();
+        otherTag.putString("variant", "two");
+        if (water.equals(AEFluidKey.of(Fluids.WATER, otherTag))) throw new AssertionError("Fluid NBT collapsed");
+        CompoundTag fluids = new CompoundTag();
+        fluids.put("fluids", GraphJobCodec.amounts(Map.of(water, 3_000_000_000L)));
+        if (!GraphJobCodec.amounts(fluids, "fluids").equals(Map.of(water, 3_000_000_000L))) throw new AssertionError("Fluid NBT/long changed");
+
+        CompoundTag patternTag = new CompoundTag();
+        ListTag inputs = new ListTag(), outputs = new ListTag();
+        inputs.add(GenericStack.writeTag(new GenericStack(water, 1000)));
+        inputs.add(GenericStack.writeTag(new GenericStack(input, 2)));
+        outputs.add(GenericStack.writeTag(new GenericStack(output, 1)));
+        patternTag.put("in", inputs);
+        patternTag.put("out", outputs);
+        ItemStack encoded = new ItemStack(Items.PAPER);
+        encoded.setTag(patternTag);
+        IPatternDetails actualPattern = new AEProcessingPattern(AEItemKey.of(encoded));
+        GraphFallbackIntegrationTest.run(input, output, actualPattern);
+        wideQuantity(input, output, actualPattern);
+        var normalize = GtlPatternCatalog.class.getDeclaredMethod("normalize", IPatternDetails.class, String.class, KeyCounter.class, Level.class);
+        normalize.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        var variants = (List<GraphRecipe<AEKey>>) normalize.invoke(null, actualPattern, PatternFingerprint.of(actualPattern), new KeyCounter(), null);
+        if (variants.size() != 1 || !variants.get(0).inputs().equals(Map.of(water, 1000L, input, 2L))) throw new AssertionError("Real processing template units/multipliers changed");
+        System.out.println("Actual AE processing-pattern normalization and fluid NBT/long tests passed");
+        confirmationViews(variants.get(0), actualPattern, water, input, output);
+        graphRingViews(input, output, water);
+        planningAvailability(input, water);
+
+        var yaml = new YamlFormat();
+        yaml.writeEnum("ae2CraftingEngine", AECraftingEngine.GRAPH);
+        yaml.writeEnum("ae2GraphSeedPolicy", AEGraphSeedPolicy.ALLOW_CONSUME);
+        var file = new java.io.File("graph-config-roundtrip.yml");
+        yaml.writeFile(file);
+        var read = new YamlFormat();
+        read.readFile(file);
+        if (read.readEnum("ae2CraftingEngine", AECraftingEngine.class) != AECraftingEngine.GRAPH ||
+                read.readEnum("ae2GraphSeedPolicy", AEGraphSeedPolicy.class) != AEGraphSeedPolicy.ALLOW_CONSUME)
+            throw new AssertionError("Configuration enum round trip failed");
+        System.out.println("Actual YAML enum read/write passed: GRAPH / ALLOW_CONSUME");
+        mixedInputsAndReturns();
+        PatternExpansionRegressionTest.run();
+        PatternFingerprintTest.run();
+        CapturedPatternCatalogTest.run();
+        CapturedPatternExpansionTest.run();
+        ExactProcessingCaptureTest.run();
+        GraphAeAdapterTest.run();
+        ByproductDiscoveryTest.run();
+        AsyncOutputRegressionTest.run();
+    }
+
+    private static void loadingDoesNotTouchWorld(GraphPlan<AEKey> plan) {
+        var runtime = new GraphJobRuntime<>(plan, Map.of(), plan.initial());
+        CompoundTag saved = GraphJobCodec.write(runtime.snapshot());
+        saved.put("link", appeng.crafting.execution.CraftingCpuHelper.generateLinkData(java.util.UUID.randomUUID(), true, false));
+        CompoundTag parent = new CompoundTag();
+        parent.put(GraphJobCodec.NBT_KEY, saved);
+        var cpu = (appeng.api.networking.crafting.ICraftingCPU) java.lang.reflect.Proxy.newProxyInstance(
+                GraphAeIntegrationTest.class.getClassLoader(), new Class<?>[] { appeng.api.networking.crafting.ICraftingCPU.class },
+                (p, method, args) -> { throw new AssertionError("Loading accessed live CPU: " + method.getName()); });
+        var requested = new java.util.HashSet<AEKey>();
+        var host = (GraphCpuHost) java.lang.reflect.Proxy.newProxyInstance(GraphAeIntegrationTest.class.getClassLoader(),
+                new Class<?>[] { GraphCpuHost.class }, (p, method, args) -> {
+                    if (method.getName().equals("cpu")) return cpu;
+                    if (method.getName().equals("requesting")) {
+                        if ((boolean) args[1]) requested.add((AEKey) args[0]);
+                        else requested.remove(args[0]);
+                        return null;
+                    }
+                    throw new AssertionError("Loading called world/dirty hook: " + method.getName());
+                });
+        var controller = new GraphCpuController(host);
+        controller.read(parent);
+        if (!controller.ownsTask() || !requested.equals(plan.initial().keySet()))
+            throw new AssertionError("Loaded return index unavailable before first live tick");
+        var again = new CompoundTag();
+        controller.write(again);
+        var decoded = GraphJobCodec.read(again.getCompound(GraphJobCodec.NBT_KEY));
+        if (!decoded.expected().equals(plan.initial()) || decoded.remainingDelivery() != plan.amount())
+            throw new AssertionError("Deferred publication lost task ownership");
+        System.out.println("CPU load: in-memory output routing restored with no world, chunk or dirty callbacks");
+    }
+
+    private static void wideQuantity(AEKey input, AEKey output, IPatternDetails pattern) {
+        var recipe = new GraphRecipe<AEKey>("wide", "wide", List.of(new GraphRecipe.Slot<>(input, 1)), Map.of(output, 1L));
+        var graph = new GraphPlanner<>(new GraphCompiler<>(List.of(recipe))).plan(output, Long.MAX_VALUE,
+                Map.of(input, Long.MAX_VALUE), true, true, new PlanningBudget(5000, 10000, () -> false));
+        var view = new AeGraphPlan(graph, Map.of("wide", pattern), Set.of(), Map.of(input, Long.MAX_VALUE));
+        if (view.bytes() != Long.MAX_VALUE || view.usedItems().get(input) != Long.MAX_VALUE || view.simulation())
+            throw new AssertionError("AE byte estimate must saturate without truncating material");
+        if (view.exactBytes().compareTo(java.math.BigInteger.valueOf(Long.MAX_VALUE)) <= 0)
+            throw new AssertionError("CPU admission lost the full storage charge");
+        recipe = new GraphRecipe<>("wide", "wide", List.of(new GraphRecipe.Slot<>(input, 32)), Map.of(output, 1L));
+        graph = new GraphPlanner<>(new GraphCompiler<>(List.of(recipe))).plan(output, Long.MAX_VALUE,
+                Map.of(input, Long.MAX_VALUE), true, true, new PlanningBudget(5000, 10000, () -> false));
+        view = new AeGraphPlan(graph, Map.of("wide", pattern), Set.of(), Map.of(input, Long.MAX_VALUE));
+        if (!view.simulation() || view.usedItems().get(input) != Long.MAX_VALUE || view.missingItems().get(input) != Long.MAX_VALUE)
+            throw new AssertionError("Missing view must subtract exact totals before bounding display");
+        var emittedGraph = new GraphPlan<>(output, Long.MAX_VALUE, true, graph.steps(), graph.recipes(), graph.initialExact(), graph.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
+        var emissionView = new AeGraphPlan(emittedGraph, Map.of("wide", pattern), Set.of(input), Map.of());
+        if (emissionView.usedItems().get(input) != 0 || emissionView.emittedItems().get(input) != Long.MAX_VALUE)
+            throw new AssertionError("External requirement was clipped before partitioning used/emitted");
+        var source = org.cgse.fixtures.LongBoundaryFixture.nearFinish();
+        var keys = new java.util.LinkedHashMap<String, AEKey>();
+        int id = 0;
+        for (String name : List.of("C", "I", "X", "P")) {
+            var tag = new CompoundTag();
+            tag.putInt("wide_boundary", id++);
+            keys.put(name, AEItemKey.of(new ItemStack(Items.PAPER).copy()));
+            ItemStack stack = new ItemStack(Items.PAPER);
+            stack.setTag(tag);
+            keys.put(name, AEItemKey.of(stack));
+        }
+        var recipes = new java.util.LinkedHashMap<String, GraphRecipe<AEKey>>();
+        source.plan().recipes().forEach((name, r) -> {
+            var outs = new java.util.LinkedHashMap<AEKey, Long>();
+            r.outputs().forEach((k, n) -> outs.put(keys.get(k), n));
+            recipes.put(name, new GraphRecipe<>(name, name, r.slots().stream().map(s -> new GraphRecipe.Slot<>(keys.get(s.key()), s.amount())).toList(), outs));
+        });
+        var actual = new GraphPlan<>(keys.get("P"), Long.MAX_VALUE, true, source.plan().steps(), recipes,
+                Map.of(keys.get("C"), 1L), Map.of(keys.get("C"), 1L), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
+        var recovery = new RecoveryObligation<AEKey>(source.recovery().owner(), "order", actual.seeds(), 0, source.recovery().status());
+        var saved = new GraphJobRuntime.Snapshot<>(actual, Map.of(keys.get("C"), 1L, keys.get("P"), Long.MAX_VALUE - 1),
+                Map.<AEKey, Long>of(), Map.<AEKey, Long>of(), source.acceptedRuns(), source.cursor(), source.pipeline(), Long.MAX_VALUE,
+                source.state(), false, "", new OutputObligations.Snapshot<AEKey>(Map.of(), List.of(), 1), recovery, source.committedHistory());
+        var nbt = GraphJobCodec.write(saved);
+        var restored = new GraphJobRuntime<>(GraphJobCodec.read(nbt));
+        if (!restored.snapshot().acceptedRuns().equals(source.acceptedRuns()))
+            throw new AssertionError("NBT truncated accepted work above long");
+        if (!restored.pendingRuns().equals(Map.of("a", 2L, "b", 2L, "c", 1L)))
+            throw new AssertionError("Restored work changed");
+        System.out.println("AE long boundaries: byte cost, exact missing input and wide-work NBT passed");
+    }
+
+    private static void pipelinePersistence(AEKey input, AEKey output) {
+        // This return is not conserved: every iteration consumes one unit, so
+        // the witness still needs the protected cyclic pipeline.
+        var recipe = new GraphRecipe<AEKey>("loop", "loop", List.of(new GraphRecipe.Slot<>(input, 2)), Map.of(input, 1L, output, 1L));
+        var plan = new GraphPlan<>(output, 3, true, new PlanStep.Sequence(List.of(new PlanStep.Batch("loop", 3))),
+                Map.of("loop", recipe), Map.of(input, 4L), Map.of(input, 1L), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
+        var runtime = new GraphJobRuntime<>(plan, plan.initial(), Map.of());
+        var legacyFresh = GraphJobCodec.write(runtime.snapshot());
+        legacyFresh.putInt("schemaVersion", 3);
+        legacyFresh.remove("pipeline");
+        ListTag freshCursor = new ListTag();
+        CompoundTag freshPosition = new CompoundTag(); freshPosition.putInt("node",0); freshPosition.putLong("remaining",1);
+        freshCursor.add(freshPosition); legacyFresh.put("cursor",freshCursor);
+        new GraphJobRuntime<>(GraphJobCodec.read(legacyFresh));
+        runtime.tick(new GraphJobRuntime.Adapter<>() {
+
+            public long capacity(GraphRecipe<AEKey> r, long requested) {
+                return 1;
+            }
+
+            public GraphJobRuntime.Outcome push(GraphRecipe<AEKey> r, long runs, Map<AEKey, Long> inputs) {
+                return GraphJobRuntime.Outcome.ACCEPTED;
+            }
+
+            public long deliver(AEKey key, long count) {
+                return count;
+            }
+
+            public long refund(AEKey key, long count) {
+                return count;
+            }
+        }, 0, 1);
+        var saved = GraphJobCodec.write(runtime.snapshot());
+        if (runtime.snapshot().pendingSteps() == null) throw new AssertionError("Dependency pipeline was not exercised");
+        var reloaded = new GraphJobRuntime<>(GraphJobCodec.read(saved));
+        if (!saved.equals(GraphJobCodec.write(reloaded.snapshot()))) throw new AssertionError("Pipeline NBT round trip changed prefetched work");
+        // The same physically accepted prefix as an old schema-3 serial cursor.
+        var legacyPartial = saved.copy();
+        legacyPartial.putInt("schemaVersion", 3);
+        legacyPartial.remove("pipeline");
+        ListTag cursor = new ListTag();
+        for (var position : List.of(new PlanCursor.Position(0, 0), new PlanCursor.Position(1, 2))) {
+            CompoundTag row = new CompoundTag();
+            row.putInt("node", position.node());
+            row.putLong("remaining", position.remaining());
+            cursor.add(row);
+        }
+        legacyPartial.put("cursor", cursor);
+        var migrated = new GraphJobRuntime<>(GraphJobCodec.read(legacyPartial));
+        if (!migrated.pendingRuns().equals(Map.of("loop", 2L)) || !migrated.expected().equals(runtime.expected()))
+            throw new AssertionError("Old in-flight task migration lost accepted outputs or resent its prefix");
+        var ambiguous = saved.copy();
+        ambiguous.getList("inFlight", 10).getCompound(0).putBoolean("ambiguous", true);
+        if (new GraphJobRuntime<>(GraphJobCodec.read(ambiguous)).state() != GraphJobRuntime.State.NEEDS_ATTENTION)
+            throw new AssertionError("Ambiguous recovered output owner must not authorize pipeline dispatch");
+        var bad = saved.copy();
+        bad.getCompound("pendingSteps").getList("nodes",10).getCompound(0).putLong("count",3);
+        try {
+            new GraphJobRuntime<>(GraphJobCodec.read(bad));
+            throw new AssertionError("Corrupt pipeline count was accepted");
+        } catch (IllegalArgumentException expected) {}
+        System.out.println("Pipeline NBT: partial window, schema-3 in-flight migration, ambiguous owner and corrupt count checks passed");
+    }
+
+    private static void conservedToolPersistence(AEKey input, AEKey output) {
+        var recipe = new GraphRecipe<AEKey>("tool", "tool", List.of(new GraphRecipe.Slot<>(input, 1)), Map.of(input, 1L, output, 1L));
+        var plan = new GraphPlan<>(output, 3, true, new PlanStep.Sequence(List.of(new PlanStep.Batch("tool", 3))),
+                Map.of("tool", recipe), Map.of(input, 1L), Map.of(input, 1L), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
+        long[] totals = new long[3];
+        var adapter = new GraphJobRuntime.Adapter<AEKey>() {
+
+            public long capacity(GraphRecipe<AEKey> r, long requested) {
+                return 1;
+            }
+
+            public GraphJobRuntime.Outcome push(GraphRecipe<AEKey> r, long runs, Map<AEKey, Long> inputs) {
+                totals[0] += runs;
+                return GraphJobRuntime.Outcome.ACCEPTED;
+            }
+
+            public long deliver(AEKey key, long count) {
+                if (!key.equals(output)) throw new AssertionError("Wrong delivered key");
+                totals[1] += count;
+                return count;
+            }
+
+            public long refund(AEKey key, long count) {
+                if (!key.equals(input)) throw new AssertionError("Wrong refunded key");
+                totals[2] += count;
+                return count;
+            }
+        };
+        var runtime = new GraphJobRuntime<>(plan, plan.initial(), Map.of());
+        runtime.tick(adapter, 0, 1);
+        var current = runtime.snapshot();
+        var legacy = new GraphJobRuntime.Snapshot<>(plan, current.owned(), current.expected(), current.uncertainInputs(),
+                current.acceptedRuns(), List.of(), List.of(new PlanStep.Batch("tool", 2)), current.remainingDelivery(),
+                current.state(), current.suspended(), current.reason(), current.obligations(), current.recovery(), current.committedHistory());
+        var saved = GraphJobCodec.write(legacy);
+        runtime = new GraphJobRuntime<>(GraphJobCodec.read(saved));
+        if (!runtime.snapshot().pipeline().isEmpty() || !runtime.pendingRuns().equals(Map.of("tool", 2L)) || !runtime.expected().equals(current.expected()))
+            throw new AssertionError("Conserved-tool migration lost pending work or accepted outputs");
+        var bad = saved.copy();
+        bad.getList("pipeline", 10).getCompound(0).putLong("runs", 3);
+        try {
+            new GraphJobRuntime<>(GraphJobCodec.read(bad));
+            throw new AssertionError("Corrupt old pipeline accepted while migrating to DAG");
+        } catch (IllegalArgumentException expected) {}
+        for (int tick = 1; tick < 20 && !runtime.finished(); tick++) {
+            for (var returned : runtime.expected().entrySet()) runtime.accept(returned.getKey(), returned.getValue(), false);
+            runtime.tick(adapter, tick, 8);
+            runtime = new GraphJobRuntime<>(GraphJobCodec.read(GraphJobCodec.write(runtime.snapshot())));
+        }
+        if (!runtime.finished() || totals[0] != 3 || totals[1] != 3 || totals[2] != 1)
+            throw new AssertionError("Conserved-tool migration duplicated work, lost returns or stalled");
+        System.out.println("Conserved-tool NBT: old pipeline migrated, all returns preserved, corrupt count rejected, exact completion passed");
+    }
+
+    private static void planningAvailability(AEKey raw, AEKey water) {
+        var network = Map.of(raw, 5L, water, Long.MAX_VALUE);
+        var owned = Map.of(raw, 4L, water, 2000L);
+        var available = CraftingEngineRouter.planningAvailability(network, owned);
+        if (!available.equals(Map.of(raw, 9L, water, Long.MAX_VALUE)))
+            throw new AssertionError("Infinite network stock plus actual CPU water must remain available for replanning");
+        if (network.get(raw) != 5 || owned.get(raw) != 4 || owned.get(water) != 2000)
+            throw new AssertionError("Planning availability changed physical ownership");
+        if (!CraftingEngineRouter.planningAvailability(Map.of(water, Long.MAX_VALUE - 1000), Map.of(water, 2000L))
+                .equals(Map.of(water, Long.MAX_VALUE)))
+            throw new AssertionError("Large finite storage has the same availability bound");
+        boolean overflow = false;
+        try {
+            CheckedAmounts.add(Long.MAX_VALUE, 1);
+        } catch (ArithmeticException expected) {
+            overflow = true;
+        }
+        if (!overflow) throw new AssertionError("Physical material arithmetic must still reject overflow");
+        System.out.println("Replanning availability: infinity cell plus CPU-held water, finite boundary, immutable ownership passed");
+    }
+
+    private static void graphRingViews(AEKey input, AEKey output, AEKey water) {
+        GraphUiRegressionTest.packets(input, output);
+        long amount = 9_007_199_254_740_993L;
+        var recipe = new GraphRecipe<AEKey>("recover", "recover", List.of(new GraphRecipe.Slot<>(input, 1)), Map.of(input, 1L, output, 1L));
+        var steps = new PlanStep.Repeat(new PlanStep.Batch("recover", 1), amount);
+        var plan = new GraphPlan<>(output, amount, true, steps, Map.of("recover", recipe), Map.of(input, 1L),
+                Map.of(input, 1L), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
+        PlanVerifier.verify(plan);
+        var id = java.util.UUID.randomUUID();
+        var view = new GraphRingView(id, plan, plan.patternTimes());
+        var page = view.page(0);
+        if (page.total() != 4 || page.rows().size() != 4) throw new AssertionError("Display expanded production count");
+        if (!page.rows().stream().filter(row -> row.kind() == GraphRingView.Kind.RECIPE).findFirst().orElseThrow().count().equals(java.math.BigInteger.valueOf(amount)))
+            throw new AssertionError("Display rounded selected run count");
+        var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+        try {
+            GraphRingView.write(page, buffer);
+            if (!page.equals(GraphRingView.read(buffer)) || buffer.readableBytes() != 0) throw new AssertionError("Ring packet roundtrip");
+        } finally {
+            buffer.release();
+        }
+        boolean immutable = false;
+        try {
+            page.rows().clear();
+        } catch (UnsupportedOperationException expected) {
+            immutable = true;
+        }
+        if (!immutable) throw new AssertionError("Writable plan view");
+        java.util.ArrayList<PlanStep> children = new java.util.ArrayList<>();
+        for (int i = 0; i < 150; i++) children.add(new PlanStep.Batch("recover", 1));
+        var large = new GraphPlan<>(output, 150, true, new PlanStep.Sequence(children), Map.of("recover", recipe),
+                Map.of(input, 1L), Map.of(input, 1L), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
+        view = new GraphRingView(id, large, large.patternTimes());
+        int received = 0;
+        while (received < view.page(0).total()) {
+            page = view.page(received);
+            buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+            try {
+                GraphRingView.write(page, buffer);
+                if (!page.equals(GraphRingView.read(buffer))) throw new AssertionError("Display page changed");
+            } finally {
+                buffer.release();
+            }
+            received += page.rows().size();
+        }
+        if (received != 153) throw new AssertionError("Lost paged graph rows");
+        try (var scheduler = new PlanningScheduler(1, 2, 1, 2_000_000L)) {
+            var scheduled = scheduler.submit(new GraphRingView.Builder(id, large, large.patternTimes()),
+                    new PlanningBudget(0, 10000, () -> false)).get(5, java.util.concurrent.TimeUnit.SECONDS);
+            if (!view.page(0).equals(scheduled.page(0)) || !view.page(128).equals(scheduled.page(128)) || scheduler.slices() < 150)
+                throw new AssertionError("Sliced view lost rows or did not yield");
+            boolean limited = false;
+            try {
+                scheduler.submit(new GraphRingView.Builder(id, large, large.patternTimes()),
+                        new PlanningBudget(0, 10000, 128, () -> false, System::nanoTime)).get(5, java.util.concurrent.TimeUnit.SECONDS);
+            } catch (java.util.concurrent.ExecutionException e) {
+                limited = e.getCause() instanceof PlanningBudget.Exhausted;
+            }
+            if (!limited) throw new AssertionError("View ignored memory budget");
+        } catch (Exception e) {
+            throw new AssertionError("Graph view scheduler", e);
+        }
+        System.out.println("Crafting Ring: immutable selected view, exact >2^53 amounts, compressed recovery and paged packet roundtrips passed");
+    }
+
+    private static void confirmationViews(GraphRecipe<AEKey> recipe, IPatternDetails pattern,
+                                          AEKey water, AEKey input, AEKey output) {
+        var planner = new GraphPlanner<>(new GraphCompiler<>(List.of(recipe)));
+        var stock = Map.of(water, 1000L, input, 2L);
+        var missing = planner.plan(output, 4, stock, true, true, new PlanningBudget(5000, 10000, () -> false));
+        var nativePlan = new AeGraphPlan(missing, Map.of(recipe.binding(), pattern), Set.of(), stock);
+        var display = nativePlan.summaryView();
+        if (!display.simulation() || display.usedItems().get(water) != 1000 || display.usedItems().get(input) != 2 ||
+                display.missingItems().get(water) != 3000 || display.missingItems().get(input) != 6)
+            throw new AssertionError("Missing stock was counted twice in confirmation");
+        if (display.bytes() != nativePlan.bytes() || !display.finalOutput().equals(nativePlan.finalOutput()) ||
+                !display.patternTimes().equals(nativePlan.patternTimes()))
+            throw new AssertionError("Summary view lost plan data");
+        display.usedItems().add(input, 99);
+        if (nativePlan.usedItems().get(input) != 2) throw new AssertionError("Display mutated the execution plan");
+        if (nativePlan.graph() != missing || nativePlan.graph().feasible()) throw new AssertionError("Display replaced execution ownership");
+
+        var available = Map.of(water, 4000L, input, 8L);
+        var feasible = planner.plan(output, 4, available, true, true, new PlanningBudget(5000, 10000, () -> false));
+        var mutableBindings = new java.util.LinkedHashMap<String, IPatternDetails>();
+        mutableBindings.put(recipe.binding(), pattern);
+        var executable = new AeGraphPlan(feasible, mutableBindings, Set.of(), available);
+        mutableBindings.clear();
+        if (executable.bindings().get(recipe.binding()) != pattern || executable.patternTimes().get(pattern) != 4L)
+            throw new AssertionError("Plan retained mutable caller bindings or lost recipe counts");
+        try {
+            executable.patternTimes().clear();
+            throw new AssertionError("Pattern summary is mutable");
+        } catch (UnsupportedOperationException expected) {}
+        try {
+            executable.bindings().clear();
+            throw new AssertionError("Plan bindings are mutable");
+        } catch (UnsupportedOperationException expected) {}
+        var view = executable.summaryView();
+        if (view.simulation() || view.usedItems().get(water) != 4000 || view.usedItems().get(input) != 8 ||
+                !view.missingItems().isEmpty())
+            throw new AssertionError("Feasible summary changed extraction requirements");
+        AEKey lava = AEFluidKey.of(Fluids.LAVA);
+        var mixed = new GraphRecipe<AEKey>("byte-units", "byte-units",
+                List.of(new GraphRecipe.Slot<>(water, 1), new GraphRecipe.Slot<>(lava, 1), new GraphRecipe.Slot<>(input, 2)), Map.of(output, 1L));
+        for (long count : new long[] { 1, 1001, 123456 }) {
+            var graph = new GraphPlan<>(output, count, true, new PlanStep.Batch(mixed.id(), count), Map.of(mixed.id(), mixed),
+                    Map.of(water, count, lava, count, input, count * 2), Map.of(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
+            // Binding is not executed here; only the immutable quantity view is tested.
+            var charged = new AeGraphPlan(graph, Map.of(mixed.binding(), pattern), Set.of(), graph.initial());
+            long expected = (long) Math.ceil(32 + count + 3.0 * count * 8 / input.getType().getAmountPerByte() +
+                    2.0 * count * 8 / water.getType().getAmountPerByte());
+            if (charged.bytes() != expected) throw new AssertionError("Item/fluid fees were rounded per key instead of once: " + charged.bytes());
+        }
+        System.out.println("Confirmation views: real CraftingPlan compatibility, missing/used partition and execution isolation passed");
+    }
+
+    private static void mixedInputsAndReturns() throws Exception {
+        AEKey oak = AEItemKey.of(Items.OAK_PLANKS), birch = AEItemKey.of(Items.BIRCH_PLANKS);
+        AEKey bucket = AEItemKey.of(Items.BUCKET), bottle = AEItemKey.of(Items.GLASS_BOTTLE);
+        // Controlled custom-pattern fixture using the real AE input API: one
+        // condensed slot needs four equivalent units, with choice-dependent returns.
+        IPatternDetails pattern = new IPatternDetails() {
+
+            @Override
+            public boolean supportsPushInputsToExternalInventory() {
+                return false;
+            }
+
+            @Override
+            public AEItemKey getDefinition() {
+                return AEItemKey.of(Items.PAPER);
+            }
+
+            @Override
+            public GenericStack[] getOutputs() {
+                return new GenericStack[] { new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1) };
+            }
+
+            @Override
+            public IInput[] getInputs() {
+                return new IInput[] { new IInput() {
+
+                    @Override
+                    public GenericStack[] getPossibleInputs() {
+                        return new GenericStack[] { new GenericStack(oak, 1), new GenericStack(birch, 1) };
+                    }
+
+                    @Override
+                    public long getMultiplier() {
+                        return 4;
+                    }
+
+                    @Override
+                    public boolean isValid(AEKey key, Level level) {
+                        return key.equals(oak) || key.equals(birch);
+                    }
+
+                    @Override
+                    public AEKey getRemainingKey(AEKey key) {
+                        return key.equals(oak) ? bucket : bottle;
+                    }
+                } };
+            }
+        };
+        var normalize = GtlPatternCatalog.class.getDeclaredMethod("normalize", IPatternDetails.class, String.class, KeyCounter.class, Level.class);
+        normalize.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        var variants = (List<GraphRecipe<AEKey>>) normalize.invoke(null, pattern, PatternFingerprint.of(pattern), new KeyCounter(), null);
+        var mixed = variants.stream().filter(recipe -> recipe.inputs().equals(Map.of(oak, 2L, birch, 2L))).findFirst().orElseThrow();
+        if (mixed.slots().stream().anyMatch(slot -> slot.inputSlot() != 0)) throw new AssertionError("Condensed slot routing changed");
+        if (mixed.outputs().get(bucket) != 2 || mixed.outputs().get(bottle) != 2) throw new AssertionError("Returns not bound to selected inputs");
+        var inputs = GtlExecutionAdapter.class.getDeclaredMethod("inputs", GraphRecipe.class, long.class, int.class);
+        inputs.setAccessible(true);
+        KeyCounter[] dispatched = (KeyCounter[]) inputs.invoke(null, mixed, 3L, 1);
+        if (dispatched.length != 1 || dispatched[0].get(oak) != 6 || dispatched[0].get(birch) != 6) throw new AssertionError("Mixed input batch incorrectly routed");
+        CompoundTag first = new CompoundTag(), second = new CompoundTag();
+        first.putInt("a", 1);
+        first.putInt("b", 2);
+        second.putInt("b", 2);
+        second.putInt("a", 1);
+        if (!PatternFingerprint.key(AEFluidKey.of(Fluids.WATER, first)).equals(PatternFingerprint.key(AEFluidKey.of(Fluids.WATER, second))))
+            throw new AssertionError("Fingerprint depends on compound insertion order");
+        System.out.println("AE API mixed-slot/choice-dependent-return fixture and canonical NBT fingerprint passed");
+    }
+}

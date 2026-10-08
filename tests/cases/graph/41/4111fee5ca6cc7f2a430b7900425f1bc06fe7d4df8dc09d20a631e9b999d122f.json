@@ -1,0 +1,102 @@
+{
+  "id": "4111fee5ca6cc7f2a430b7900425f1bc06fe7d4df8dc09d20a631e9b999d122f",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 1000012,
+      "U1": 1000014
+    },
+    "recipes": [
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 1000012,
+          "X0_0": 362502312,
+          "X0_1": 378831144,
+          "X0_2": 399802752,
+          "X1_0": 1038515876,
+          "X1_1": 1118188252,
+          "X1_2": 560210392,
+          "D1": 1000014
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 713,
+          "X1_1": 781,
+          "X1_2": 148
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 688,
+          "X0_1": 716,
+          "X0_2": 812
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 688,
+          "X1_1": 716,
+          "X1_2": 812
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 713,
+          "X0_1": 781,
+          "X0_2": 148
+        }
+      }
+    ]
+  },
+  "names": [
+    "min_manual_large_n2_c2_d3_a1_s43_shuffle"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/manual-inputs.json",
+      "pointer": "/371"
+    },
+    {
+      "source": ".local/web-review-20260927/large_scale/manual-models/min_manual_large_n2_c2_d3_a1_s43_shuffle.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/large_scale/min-input/min_manual_large_n2_c2_d3_a1_s43_shuffle.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

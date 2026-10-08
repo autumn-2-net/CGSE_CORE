@@ -1,0 +1,22 @@
+plugins { id 'dev.architectury.loom' version '1.6-SNAPSHOT' }
+group = 'org.gtlcore.diagnostics'
+version = '1.0.0'
+base { archivesName = 'ae-dump' }
+java { sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17 }
+loom {
+    silentMojangMappingsLicense()
+    forge { mixinConfigs = ['aedump.mixins.json'] }
+}
+repositories { mavenCentral(); maven { url 'https://cursemaven.com' } }
+dependencies {
+    minecraft 'com.mojang:minecraft:1.20.1'
+    mappings loom.officialMojangMappings()
+    forge 'net.minecraftforge:forge:1.20.1-47.3.7'
+    modCompileOnly 'curse.maven:applied-energistics-2-223794:7148487'
+    // The host JAR must include the extracted org.cgse.core classes and GTL adapter.
+    // Keep this location explicit: CGSE_CORE does not assume a neighboring host checkout.
+    modCompileOnly files(providers.gradleProperty('gtlcoreJar'))
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.5.0'
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-proc:none'] }
+jar { manifest.attributes('MixinConfigs': 'aedump.mixins.json', 'FMLModType': 'MOD', 'Implementation-Version': project.version) }

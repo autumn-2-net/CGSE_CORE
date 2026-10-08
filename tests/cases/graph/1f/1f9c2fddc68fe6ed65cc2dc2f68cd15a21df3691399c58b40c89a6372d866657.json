@@ -1,0 +1,42 @@
+{
+  "id": "1f9c2fddc68fe6ed65cc2dc2f68cd15a21df3691399c58b40c89a6372d866657",
+  "kind": "graph",
+  "model": {
+    "target": "H",
+    "amount": 9223372036854775807,
+    "stock": {
+      "RAW": 9223372036854775807
+    },
+    "recipes": [
+      {
+        "id": "r1",
+        "inputs": {
+          "RAW": 1
+        },
+        "outputs": {
+          "H": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "long_max_1to1"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/color-review-20260926/common-input/long_max_1to1.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/common-input/long_max_1to1.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

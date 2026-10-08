@@ -1,0 +1,473 @@
+{
+  "id": "d7b491d22f8098dd24e543a96896f257e4e02b07a2f1933f73797d03510497a7",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 3,
+      "U1": 3,
+      "U2": 3,
+      "U3": 3,
+      "U4": 3,
+      "U5": 3,
+      "CAT": 1
+    },
+    "recipes": [
+      {
+        "id": "r0_0.stage1_burn",
+        "inputs": {
+          "r0_0.P0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 579,
+          "X0_1": 366
+        }
+      },
+      {
+        "id": "r0_0.stage0",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r0_0.P0": 1
+        }
+      },
+      {
+        "id": "r0_0.stage1",
+        "inputs": {
+          "r0_0.P0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 579,
+          "X0_1": 366,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r0_1.stage1_burn",
+        "inputs": {
+          "r0_1.P0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 579,
+          "X1_1": 366
+        }
+      },
+      {
+        "id": "r0_1.stage0",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r0_1.P0": 1
+        }
+      },
+      {
+        "id": "r0_1.stage1",
+        "inputs": {
+          "r0_1.P0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 579,
+          "X1_1": 366,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r1_0.stage1_burn",
+        "inputs": {
+          "r1_0.P0": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 905,
+          "X0_1": 946
+        }
+      },
+      {
+        "id": "r1_0.stage0",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r1_0.P0": 1
+        }
+      },
+      {
+        "id": "r1_0.stage1",
+        "inputs": {
+          "r1_0.P0": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 905,
+          "X0_1": 946,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r1_1.stage1_burn",
+        "inputs": {
+          "r1_1.P0": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 905,
+          "X1_1": 946
+        }
+      },
+      {
+        "id": "r1_1.stage0",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r1_1.P0": 1
+        }
+      },
+      {
+        "id": "r1_1.stage1",
+        "inputs": {
+          "r1_1.P0": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 905,
+          "X1_1": 946,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_0.stage1_burn",
+        "inputs": {
+          "r2_0.P0": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 725,
+          "X0_1": 436
+        }
+      },
+      {
+        "id": "r2_0.stage0",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r2_0.P0": 1
+        }
+      },
+      {
+        "id": "r2_0.stage1",
+        "inputs": {
+          "r2_0.P0": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 725,
+          "X0_1": 436,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r2_1.stage1_burn",
+        "inputs": {
+          "r2_1.P0": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 725,
+          "X1_1": 436
+        }
+      },
+      {
+        "id": "r2_1.stage0",
+        "inputs": {
+          "U2": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r2_1.P0": 1
+        }
+      },
+      {
+        "id": "r2_1.stage1",
+        "inputs": {
+          "r2_1.P0": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 725,
+          "X1_1": 436,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r3_0.stage1_burn",
+        "inputs": {
+          "r3_0.P0": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X0_0": 709,
+          "X0_1": 670
+        }
+      },
+      {
+        "id": "r3_0.stage0",
+        "inputs": {
+          "U3": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r3_0.P0": 1
+        }
+      },
+      {
+        "id": "r3_0.stage1",
+        "inputs": {
+          "r3_0.P0": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X0_0": 709,
+          "X0_1": 670,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r3_1.stage1_burn",
+        "inputs": {
+          "r3_1.P0": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X1_0": 709,
+          "X1_1": 670
+        }
+      },
+      {
+        "id": "r3_1.stage0",
+        "inputs": {
+          "U3": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r3_1.P0": 1
+        }
+      },
+      {
+        "id": "r3_1.stage1",
+        "inputs": {
+          "r3_1.P0": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X1_0": 709,
+          "X1_1": 670,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r4_0.stage1_burn",
+        "inputs": {
+          "r4_0.P0": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X0_0": 924,
+          "X0_1": 458
+        }
+      },
+      {
+        "id": "r4_0.stage0",
+        "inputs": {
+          "U4": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r4_0.P0": 1
+        }
+      },
+      {
+        "id": "r4_0.stage1",
+        "inputs": {
+          "r4_0.P0": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X0_0": 924,
+          "X0_1": 458,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r4_1.stage1_burn",
+        "inputs": {
+          "r4_1.P0": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X1_0": 924,
+          "X1_1": 458
+        }
+      },
+      {
+        "id": "r4_1.stage0",
+        "inputs": {
+          "U4": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r4_1.P0": 1
+        }
+      },
+      {
+        "id": "r4_1.stage1",
+        "inputs": {
+          "r4_1.P0": 1
+        },
+        "outputs": {
+          "D4": 1,
+          "X1_0": 924,
+          "X1_1": 458,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r5_0.stage1_burn",
+        "inputs": {
+          "r5_0.P0": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X0_0": 731,
+          "X0_1": 484
+        }
+      },
+      {
+        "id": "r5_0.stage0",
+        "inputs": {
+          "U5": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r5_0.P0": 1
+        }
+      },
+      {
+        "id": "r5_0.stage1",
+        "inputs": {
+          "r5_0.P0": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X0_0": 731,
+          "X0_1": 484,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r5_1.stage1_burn",
+        "inputs": {
+          "r5_1.P0": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X1_0": 731,
+          "X1_1": 484
+        }
+      },
+      {
+        "id": "r5_1.stage0",
+        "inputs": {
+          "U5": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "r5_1.P0": 1
+        }
+      },
+      {
+        "id": "r5_1.stage1",
+        "inputs": {
+          "r5_1.P0": 1
+        },
+        "outputs": {
+          "D5": 1,
+          "X1_0": 731,
+          "X1_1": 484,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "deliver.stage1_burn",
+        "inputs": {
+          "deliver.P0": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "deliver.stage0",
+        "inputs": {
+          "D0": 3,
+          "X0_0": 8434,
+          "X0_1": 5748,
+          "X1_0": 5285,
+          "X1_1": 4332,
+          "D1": 3,
+          "D2": 3,
+          "D3": 3,
+          "D4": 3,
+          "D5": 3,
+          "CAT": 1
+        },
+        "outputs": {
+          "deliver.P0": 1
+        }
+      },
+      {
+        "id": "deliver.stage1",
+        "inputs": {
+          "deliver.P0": 1
+        },
+        "outputs": {
+          "GOAL": 1,
+          "CAT": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "choice_n6_c2_cap3_s211_destructive"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/new-counterexamples-20260926/fixtures/choice_n6_c2_cap3_s211_destructive.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_a666711_new_counterexamples_20260926.zip!/fixtures/choice_n6_c2_cap3_s211_destructive.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

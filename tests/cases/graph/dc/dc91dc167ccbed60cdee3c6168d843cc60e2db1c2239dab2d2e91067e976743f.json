@@ -1,0 +1,164 @@
+{
+  "id": "dc91dc167ccbed60cdee3c6168d843cc60e2db1c2239dab2d2e91067e976743f",
+  "kind": "graph",
+  "model": {
+    "target": "P5",
+    "amount": 6,
+    "stock": {
+      "F": 10,
+      "P1": 1,
+      "P2": 1,
+      "P4": 4
+    },
+    "recipes": [
+      {
+        "id": "r7",
+        "inputs": {
+          "P3": 1,
+          "F": 1,
+          "P0": 2
+        },
+        "outputs": {
+          "P3": 2,
+          "P1": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "P5": 1,
+          "P3": 2,
+          "F": 1
+        },
+        "outputs": {
+          "P0": 1,
+          "P3": 1,
+          "P1": 1,
+          "P2": 1
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "P2": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P5": 1
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "P1": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P0": 1
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "P4": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P2": 3,
+          "P0": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "F": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "P5": 1,
+          "P2": 2,
+          "P1": 1
+        }
+      },
+      {
+        "id": "r0",
+        "inputs": {
+          "P1": 2,
+          "P5": 1,
+          "F": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "mut0",
+        "inputs": {
+          "P3": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P5": 1
+        }
+      },
+      {
+        "id": "r9",
+        "inputs": {
+          "F": 1,
+          "P3": 1,
+          "P5": 1,
+          "P0": 2
+        },
+        "outputs": {
+          "P5": 1,
+          "P1": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "P2": 1,
+          "F": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P0": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "F": 1,
+          "P4": 2
+        },
+        "outputs": {
+          "P2": 1,
+          "P0": 2
+        }
+      }
+    ]
+  },
+  "names": [
+    "hard_random_0632"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/cases/hard_random_0632.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/seeded/CGSE_seeded_4096/models/hard_random_0632.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

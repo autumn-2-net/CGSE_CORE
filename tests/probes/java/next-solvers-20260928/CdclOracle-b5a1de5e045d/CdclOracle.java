@@ -1,0 +1,19 @@
+package org.cgse.core;
+import java.util.*;import java.math.*;
+public class CdclOracle {
+ static BigInteger z=BigInteger.ZERO,o=BigInteger.ONE;
+ static boolean valid(List<ExactLinearProgram.Constraint> rows,BigInteger[] x){for(var r:rows){var v=z;for(var e:r.terms().entrySet())v=v.add(e.getValue().multiply(x[e.getKey()]));if(v.compareTo(r.upper())>0)return false;}return true;}
+ public static void main(String[] args){var rng=new Random(98721645);long tested=0;int sats=0,unsats=0,learned=0;
+  for(int test=0;test<4000;test++){
+   int n=2+rng.nextInt(7);var lo=new BigInteger[n];var hi=new BigInteger[n];var plant=new BigInteger[n];for(int i=0;i<n;i++){lo[i]=test%7==0?o.shiftLeft(90).add(BigInteger.valueOf(i)):z;hi[i]=lo[i].add(rng.nextInt(6)==0?z:o);plant[i]=rng.nextBoolean()?lo[i]:hi[i];}
+   var rows=new ArrayList<ExactLinearProgram.Constraint>();for(int r=0;r<4+rng.nextInt(18);r++){var m=new LinkedHashMap<Integer,BigInteger>();var scale=test%9==0?o.shiftLeft(150):o;var rhs=BigInteger.valueOf(rng.nextInt(7)-(test%2==0?0:3)).multiply(scale);for(int i=0;i<n;i++){var a=BigInteger.valueOf(rng.nextInt(11)-5).multiply(scale);if(a.signum()!=0)m.put(i,a);rhs=rhs.add(a.multiply(plant[i]));}rows.add(new ExactLinearProgram.Constraint(m,rhs));}
+   boolean possible=false;var solutions=new ArrayList<BigInteger[]>();for(int mask=0;mask<(1<<n);mask++){var x=lo.clone();for(int i=0;i<n;i++)if((mask&(1<<i))!=0)x[i]=hi[i];tested++;if(valid(rows,x)){possible=true;solutions.add(x);}}
+   var budget=new PlanningBudget(0,20_000_000,256L<<20,()->false,System::nanoTime);var journal=new CountProof.Journal(32L<<20);budget.proofJournal(journal);
+   try(var s=new CountCdcl(rows,lo,hi,budget,1_000_000)){while(!s.step()){}if(s.counts()!=null){sats++;if(!possible||!valid(rows,s.counts()))throw new AssertionError("false SAT "+test);for(int i=0;i<n;i++)if(s.counts()[i].compareTo(lo[i])<0||s.counts()[i].compareTo(hi[i])>0)throw new AssertionError("domain");}else if(s.infeasible()){unsats++;if(possible)throw new AssertionError("false UNSAT "+test);}else throw new AssertionError("small unresolved "+test+" "+budget.diagnostics());learned+=s.learnedConflicts().size();for(var c:s.learnedConflicts())for(var x:solutions){boolean all=true;for(var a:c.assumptions())if(!valid(List.of(a),x))all=false;if(all)throw new AssertionError("invalid learned clause "+test);}}
+   for(var proof:journal.entries())if(CountProof.verify(proof,2_000_000)!=CountProof.Verdict.VERIFIED)throw new AssertionError("proof "+test+" "+proof);
+   if(budget.reservedBytes()!=0)throw new AssertionError("memory "+budget.reservedBytes());
+  }
+  for(int pigeons=4;pigeons<=8;pigeons++){int holes=pigeons-1,n=holes*pigeons;var lo=new BigInteger[n];var hi=new BigInteger[n];Arrays.fill(lo,z);Arrays.fill(hi,o);var rows=new ArrayList<ExactLinearProgram.Constraint>();for(int p=0;p<pigeons;p++){var m=new HashMap<Integer,BigInteger>();for(int h=0;h<holes;h++)m.put(p*holes+h,o.negate());rows.add(new ExactLinearProgram.Constraint(m,o.negate()));}for(int h=0;h<holes;h++){var m=new HashMap<Integer,BigInteger>();for(int p=0;p<pigeons;p++)m.put(p*holes+h,o);rows.add(new ExactLinearProgram.Constraint(m,o));}var b=new PlanningBudget(0,20_000_000,256L<<20,()->false,System::nanoTime);try(var s=new CountCdcl(rows,lo,hi,b,4_000_000)){while(!s.step()){}if(s.counts()!=null)throw new AssertionError("pigeonhole SAT");System.out.println("pigeonhole "+pigeons+" "+b.diagnostics());}if(b.reservedBytes()!=0)throw new AssertionError("memory");}
+  System.out.println("PASS CDCL models=4000 assignments="+tested+" SAT="+sats+" UNSAT="+unsats+" checked_clauses="+learned+" exact proofs, shifted domains and 150-bit coefficients");
+ }
+}

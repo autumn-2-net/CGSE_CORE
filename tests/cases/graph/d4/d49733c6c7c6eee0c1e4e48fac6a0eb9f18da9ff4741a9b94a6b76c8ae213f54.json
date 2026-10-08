@@ -1,0 +1,124 @@
+{
+  "id": "d49733c6c7c6eee0c1e4e48fac6a0eb9f18da9ff4741a9b94a6b76c8ae213f54",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 80096,
+      "U1": 60311,
+      "U2": 90202
+    },
+    "recipes": [
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 5860
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 5860
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 117486
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 164026
+        }
+      },
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 117486
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "X0_0": 8535295786,
+          "D1": 60311,
+          "X1_0": 13815238172,
+          "D2": 90202,
+          "D0": 80096
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r0_0-alias",
+        "inputs": {
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 5860
+        }
+      },
+      {
+        "id": "r2_1@alias",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "X1_0": 164026,
+          "D2": 1
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "U2": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 164026
+        }
+      }
+    ]
+  },
+  "names": [
+    "lattice_wide_0058@metamorphic1"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/metamorphic-inputs.json",
+      "pointer": "/5"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

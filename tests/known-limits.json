@@ -1,0 +1,1949 @@
+{
+  "source_revision": "e788d3d3",
+  "limits": [
+    {
+      "suite": "fixtures-complete",
+      "case": "interval_n36_d2_s7_slack1",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20162896",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d12_w1000_s19_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20625604",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d12_w1000_s7_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20704623",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d8_w1000_s19_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20449270",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d9_w1000_s19_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20479875",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d9_w1000_s7_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20504297",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c3_s0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20221627",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c3_s1",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20253385",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c3_s2",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20218539",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c4_s0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20320211",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c4_s2",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20316499",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-0",
+      "seed": 20260926
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "interval_n36_d2_s7_slack1",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20162947",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d12_w1000_s19_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20631646",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d12_w1000_s7_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20639763",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d8_w1000_s19_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20458584",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d9_w1000_s19_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20579440",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d9_w1000_s7_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20566206",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c3_s0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20219473",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c3_s1",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20233754",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c3_s2",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20252326",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c4_s0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20321392",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c4_s2",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20321114",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "pool_mix7",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "TIMEOUT work=4484064",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "recycle_mix3",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "TIMEOUT work=15205613",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-1",
+      "seed": 20260927
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "interval_n36_d2_s19_slack1",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20164825",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "interval_n36_d2_s19_slack10",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20165320",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d12_w1000_s19_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20638583",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d12_w1000_s7_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20727084",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d8_w1000_s19_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20444086",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d8_w1000_s7_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20484407",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d9_w1000_s19_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20484358",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multi_n32_d9_w1000_s7_shift0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20494414",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c3_s1",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20257838",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c3_s2",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20236085",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c4_s0",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20323790",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "fixtures-complete",
+      "case": "multiway_n20_c4_s2",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "SEARCH_LIMIT work=20306430",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "fixtures-2",
+      "seed": 20260928
+    },
+    {
+      "suite": "model-corpus",
+      "case": "0442c547228f3c5196c8b9a0e6039e3fcee56d4815361334273b26727d57cba8",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500008",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-0"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "05ac0abfc7c8b8de86f47d81acaac17e6e82a244abb83d0de931bed365291838",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-0"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "0692709435ade934ec041617a0a170949835d4a01f3fdde549d3e274456384ee",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-0"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "107dccc98677f78a9689dbbcccd3fcf95c56ac375763f15f02da4a96b582728a",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-0"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-0"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-0"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "178322af8bfe1ee6469f749c1da1e3a569cb0e62e9497f5a2bbb7c445051cc17",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-0"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "1d98538b025aa97f015ba610d09fe1fe3f9b44cd227f9ccb9f2e8147917c19fc",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500270",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-0"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "1e847e3e6948c110be3126736a32201831fef53ead4d6990dcb89c836abfb8a2",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500003",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-0"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "852d0b06f7ec7833f9bcb96a0a2e3599d066ac1b18d61a3b8ca47b60c9102769",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500068",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "887fe8958869e3b317de28b5d367204223cb0280fb3666c6132567f6ac852aa2",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "88d1f6dbdce22f308b8e6c01a90c28e18b1ebf865f53640d5dc23c99e14384ff",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2499999",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "8b40718e4aae92abb5b00619a3cba0c7e6cf7054f972072607d01853b894c374",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "8b4e5f29553a313cd6dbe8c54230539874445ae8f00989b36a960e62f551609c",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500004",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "8fe26250c24c7993dea19c02a8af0fa7b84ffe2db26a8e995986d15493b2ceaa",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "9b1cd481aaef5acaa369dafdaaf53741c12b38706790cb846175a90619656c55",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "9df96fc4d0e8e97ee2e77aa92a4341919d7a1152eab32d8071efc8c28a71fe74",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-128"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "9f8910cb27a91655af9eada4922f80c257b1ec44e2841e58f6ef770336cfccbb",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "a064511961579519cc3faf0b90090fc7c6c3e8d7b7471625dc1e5e44f37fac81",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "a18f16aaf5b7fb63a459988338e58e34ac148d7d73e8c6a30569ee8df4c5f420",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500003",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "a65596b89e9eb4805fdd1e6d5a77cac08ee58aa636317dc73d8c731542c9b14b",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "a733ac9cae25e44107453969e60a5d2c05878c663c35a262cea86eb51cc715ad",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500003",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "a73d39e1951dfa997103022f4807cb9fad95c339628e79d818819d11b264b1b6",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "a9d83be7942de93a30e8c43c99a8e6f7393cdd036b414413169c853ed8479b40",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "aa1723a89d4643c01f5008620448e4e0cb2d0d96567560cb32cb9416aa85cf6b",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "adb7fe39f04d3c734e980c5aacd77c747dcc9a4e47af1cb63d7a03b0ba9fafa6",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "af3a59ddc15fad04a622c4627dae4711b4082eaada6a21723e4b0c3276abc78a",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "b066299f056ae62ccc3977992cb5a2e68da8676409cea3a3564d2ff17b3f0968",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-160"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "b4fab30428a95532962566319869d86f717e8f5252ff9792742eafc5749f3742",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "b77762acc50f972b25a48d41f110182955c3146f78bc6c14bac078a458d24529",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500545",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "b7cb0ac07b741e4774185bbe05599b1706960af52ee09f8347237e2a8921cc85",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "bb461d225f0175459846543284c303c50837b75ca1d3f1dc89b41ca5df001976",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500591",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "c5b8567fb5cebbab897b7982e15863baf17ebd3f28a8193888b7852a64d04b7d",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500088",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "ca31c0d129f1cdb4ac261c9e10bd3438e37cae401b57edafb6ae00b481052eb9",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "cb3e610114870e8e1f36302a0ffc3b23dc4451faaf4f394c9071020c060a3a7d",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "cb849169bd27d03247611c0603bb00bf20b64e2abf19b288e2c800935f1bf6d9",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2499999",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "cf566da7b7d4b8431f7aa4e66cd4a03027d3b150efb309d294ca11a6881658ae",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2499999",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "cfdff9b24c8ae29e6d565ae1bea2bc95ee5d81472ca43a8f060b148dd75c01a8",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2499999",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-192"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "d8ae8dfd678ae85633ee7e438dcb93bef68295243945deef6105bf00c9243530",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-224"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500006",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-224"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-224"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "dad3b972f1276deadf71f6f103b955de697881397a9ce48c1a1456bdb0eb0142",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-224"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-224"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "e4eb46e62f7d8fb80848cdd1d49fecfee32019e1e75815c272a284d93f04de50",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500003",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-224"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "e5db33a5a9aebb9251d20a7f80a14c73774a0441b3230b3ec2e7873e094fd791",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-224"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "eb61b1ecb5a0dba32722685b61d3687cc39479be48075dfc7b807466310f3c85",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500007",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-224"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "f1ec105091c0d7932b0f3fec823cb4b5d6ad036a1ca72b336f4bea428e37e522",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-224"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "f3f9aab6d700e6dbe5ae4616ab94f43422edb79dc0c46510cd7c03be99d2a4b5",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-256"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "f66e117f7729e4670f8fa4817dc142096ea723003ee7f6c0dcaa8cbc53c1b42b",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-256"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "f6a80d29462d7d63b3207e494fffece4c3c451ced8a5d291448576e051d13fb6",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500003",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-256"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "fec30a3add39ebc76a88a911f9addd458f047c4b14a23adf7dd624aeab965e8b",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-256"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-256"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "20493f36e8dafac78ecddb14deaf37cd09200e9490fa36d0ed884f31ed1e2354",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-32"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "27a91083642547e03096d5d94fd0aa9bc9bdf30b6a942ed96a3e6e65e8b6074b",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-32"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500005",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-32"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "346aa43cd719d6790508360f06f35d925d2712d01e7ef166cf27bd9eab74622f",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-32"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "3e93636014025cf40d3d5b2e9c4e469b83d0cecf2fa4e7257ae6253e2ade93b4",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500006",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "3fb502919f35bf89268765d7e8f08d5df28eb4e69cb9f3b2fc2c5e75108e2169",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "42199783d382918ceb4310f89dd5203cc2bc12adf1eb78887ab61ac7e8841b8c",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500822",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "43823fbc980e5b54bd0f77b991a91a10554628e940a4fbe24830781b7989854f",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500007",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "46ae9ed4ad62f98ead627cf1f2dfca403156591657be26ed0b421e84a226c5a5",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "4eee53cf1181964e7a452ae31359290be2904e48ed5491e6c8fe15bc75f0a8c8",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "50de28248fb18fa1db2deb788248bf3fd6bb9f448da299b0f3bd50cd13d3b93b",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "55814720bc0178658eae83b8270268f5d8b1563519d510bb85f4442c547037ba",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "5642eec3acbd061478c0e8301ebd315375358123fd4eb6d9b5da516036f69dd8",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "5c8bc93fce2053620c04e187c5df2e2e2c9671deac2e45c9b6d4ef6af91a4706",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-64"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "64a889df4156fb9c7754c554b9a32c31c59f64ff378ad907f4048e8e7fcdd6a3",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500003",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "64c16136bc00ac3a82b0512ee901b38082d452a9455aa84507b084055654e681",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500814",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "6e2f3b71db229198dde7208df59f62d5fe91ae27bc403231f8a133aac589d44c",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500002",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "71a22b0ae81f361d1d5cfde49083a849464df2386f865ffd7e8df73e1d2afe63",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2499999",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "7562bedb071d75e98318ff2e8f1e14290b2804c357433d5d30f2a71ad3c760e7",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500005",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "76422092e21a8e3ea969c1a320ecac988933963a91d589b3d40e18dfd4d5de0a",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "779b42df9e223b75142f749b2ce7e3f368c6f60b1bde83fbf680fa24bff6d9a6",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "79a7fa505b5c851d90bb6cd3178dc7ef7c13f2590d91e22fbdf415dd00562645",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500001",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f",
+      "oracle_truth": "SAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500005",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "7cd7e27a366c3b15a6a7abb690941acc1849e2adffd4e7a72f1ad037848f7ad9",
+      "oracle_truth": "UNKNOWN",
+      "observed": "UNRESOLVED",
+      "detail": "work=2499999",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    },
+    {
+      "suite": "model-corpus",
+      "case": "832fe9d3d9a9ea1a2be8dd56877ee74d57c84f25b9dff871fb1b793884db2041",
+      "oracle_truth": "UNSAT",
+      "observed": "UNRESOLVED",
+      "detail": "work=2500000",
+      "budget": {
+        "milliseconds": 3000,
+        "work": 20000000
+      },
+      "selection": "count-model-96"
+    }
+  ],
+  "portable_probe_failures": [
+    {
+      "id": "JumpSweepProbe-027691d18b99",
+      "source": "probes/java/solver-continuation-20261003/JumpSweepProbe-027691d18b99/JumpSweepProbe.java",
+      "origins": [
+        ".local/solver-continuation-20261003/endpoint-probes/JumpSweepProbe.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [
+        "probes/java/solver-continuation-20261003/JumpSweepProbe-1be2f37b22fe/JumpSweepProbe.java",
+        "probes/java/solver-continuation-20261003/JumpSweepProbe-abb20f82024f/JumpSweepProbe.java"
+      ],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: missed unbounded plateau 0 min=111111111111111111111111111714 jump=111111111111111111111111111713",
+      "role": "retained-open-regression",
+      "current_related_checks": [
+        "probes/java/solver-continuation-20261003/JumpSweepProbe-1be2f37b22fe/JumpSweepProbe.java",
+        "probes/java/solver-continuation-20261003/JumpSweepProbe-abb20f82024f/JumpSweepProbe.java"
+      ]
+    },
+    {
+      "id": "ParallelBench-1d8b4476d673",
+      "source": "probes/java/dispatch-regression/ParallelBench-1d8b4476d673/ParallelBench.java",
+      "origins": [
+        ".local/dispatch-regression/ParallelBench.java"
+      ],
+      "compile": "PASS",
+      "execution": "TIMEOUT",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Process time budget exceeded",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "SemanticGoalBefore-28c53f147800",
+      "source": "probes/java/new-stage-20261004/SemanticGoalBefore-28c53f147800/SemanticGoalBefore.java",
+      "origins": [
+        ".local/new-stage-20261004/proof-audit/SemanticGoalBefore.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: Old implementation unexpectedly passed",
+      "role": "negative-control-for-old-bug",
+      "current_related_checks": [
+        "core/java/org/cgse/core/GraphCoreTest.java#splitSources",
+        "core/java/org/cgse/core/ServiceExtractionTest.java"
+      ]
+    },
+    {
+      "id": "WideBranchRepro-2df6a2048ff9",
+      "source": "probes/java/constraint-review-20260926/WideBranchRepro-2df6a2048ff9/WideBranchRepro.java",
+      "origins": [
+        ".local/constraint-review-20260926/WideBranchRepro.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.util.NoSuchElementException",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "FocusedWarm-2ef5d76929ef",
+      "source": "probes/java/general-search-20260926/FocusedWarm-2ef5d76929ef/FocusedWarm.java",
+      "origins": [
+        ".local/general-search-20260926/FocusedWarm.java"
+      ],
+      "compile": "PASS",
+      "execution": "TIMEOUT",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Process time budget exceeded",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "WideCutProbe-3af3935d5d22",
+      "source": "probes/java/mixed-jei-fix-20261007/WideCutProbe-3af3935d5d22/WideCutProbe.java",
+      "origins": [
+        ".local/mixed-jei-fix-20261007/wide-cuts-experiment-v17/WideCutProbe.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: wide admission failed",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "PhaseSavingSafety-3b9a9b242197",
+      "source": "probes/java/solver-remaining-20261003/PhaseSavingSafety-3b9a9b242197/PhaseSavingSafety.java",
+      "origins": [
+        ".local/solver-remaining-20261003/lcg/phase-alternate-safety/PhaseSavingSafety.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [
+        "probes/java/solver-remaining-20261003/PhaseSavingSafety-a42b4e8abc06/PhaseSavingSafety.java"
+      ],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: insufficient phase activation coverage",
+      "role": "retained-open-regression",
+      "current_related_checks": [
+        "probes/java/solver-remaining-20261003/PhaseSavingSafety-a42b4e8abc06/PhaseSavingSafety.java"
+      ]
+    },
+    {
+      "id": "BudgetMemoryProbe-4aeca0d03aa2",
+      "source": "probes/java/solver-remaining-20261003/BudgetMemoryProbe-4aeca0d03aa2/BudgetMemoryProbe.java",
+      "origins": [
+        ".local/solver-remaining-20261003/lp/BudgetMemoryProbe.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: invalid release mutates ledger",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "BranchSchedulingChecks-4ba7a52e3282",
+      "source": "probes/java/strategy-scheduling/BranchSchedulingChecks-4ba7a52e3282/BranchSchedulingChecks.java",
+      "origins": [
+        ".local/strategy-scheduling/BranchSchedulingChecks.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: fixture must be unresolved, not a proof",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "AdmissionLifecycleChecks-57a0f0140426",
+      "source": "probes/java/mixed-jei-fix-20261007/AdmissionLifecycleChecks-57a0f0140426/AdmissionLifecycleChecks.java",
+      "origins": [
+        ".local/mixed-jei-fix-20261007/manual-admission-v22/AdmissionLifecycleChecks.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: not resumed FEASIBLE source_search@0: target=T; amount=1; nesting=0; sources=2 | compile@78: choice=1; recipes=2; regions=1; cyclic=1 | region_counts@1244: selected_counts_blocked; recipes=2; work=12 | plan_egraph@1305: classes=3; equalities=2; work=53 | region_solve@1380: MISSING_SEED; missing_keys=1 | count_closure@17433: reused; recipes=803; materials=803 | quantity@60772: proven_blocked=false | stock_view@64991: ordinary_source_headstart; allowance=32768 | source_order@65002: shortage_related=1; selected=2 | source_ranking@68418: global_labels; recipes=803; reached=802; quantitative=false; work=2008 | source_scout@71640: grouped_assignments=1 | graph_catalog@75051: packed_selected_mask; recipes=801; resources=803 | compile@96686: choice=2; recipes=801; regions=801; cyclic=0 | stock_view@124211: ordinary_source_headstart_limit; work=32770 | graph_topology@124237: reused; recipes=2; regions=1 | region_counts@125715: selected_counts_blocked; recipes=2; work=12 | plan_egraph@125780: classes=3; equalities=2; work=53 | stock_view@125877: round=1; variant=0; recipes=2; result=MISSING_SEED; missing_keys=1 | graph_topology@134106: reused; recipes=801; regions=801 | demand_program@136512: compiled; regions=801; weight=2403 | graph_topology@176884: reused; recipes=2; regions=1 | region_counts@178362: selected_counts_blocked; recipes=2; work=12 | plan_egraph@178427: classes=3; equalities=2; work=53 | stock_view@178524: round=1; variant=4; recipes=2; result=MISSING_SEED; missing_keys=1 | graph_topology@186754: reused; recipes=801; regions=801 | graph_topology@219239: reused; recipes=801; regions=801 | stock_view@252528: round=1; variant=5; recipes=801; result=FEASIBLE; missing_keys=0 | stock_view@252528: witness; rounds=1; recipes=801; variant=5; work=31585",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "RetainedViewBatchProbe-67929fb3e4a4",
+      "source": "probes/java/solver-next-20261004/RetainedViewBatchProbe-67929fb3e4a4/RetainedViewBatchProbe.java",
+      "origins": [
+        ".local/solver-next-20261004/scheduling/retained-batch-safety/RetainedViewBatchProbe.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [
+        "probes/java/solver-next-20261004/RetainedViewBatchProbe-8a179be25ddb/RetainedViewBatchProbe.java"
+      ],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: handoff rescheduled unfinished batch",
+      "role": "retained-open-regression",
+      "current_related_checks": [
+        "probes/java/solver-next-20261004/RetainedViewBatchProbe-8a179be25ddb/RetainedViewBatchProbe.java"
+      ]
+    },
+    {
+      "id": "ViewProbe-78cd4505cd31",
+      "source": "probes/java/solver-adaptive-20261003/ViewProbe-78cd4505cd31/ViewProbe.java",
+      "origins": [
+        ".local/solver-adaptive-20261003/scheduling/adaptive-variance/ViewProbe.java",
+        ".local/solver-adaptive-20261003/scheduling/final-policy/ViewProbe.java",
+        ".local/solver-continuation-20261003/scheduling-safety/ViewProbe.java",
+        ".local/solver-expansion-20261003/scheduling/ViewProbe.java",
+        ".local/solver-next-20261004/scheduling/retained-batch-safety-v2/ViewProbe.java",
+        ".local/solver-next-20261004/scheduling/retained-batch-safety/ViewProbe.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.IllegalStateException: Invalid view search continuation",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "FinalPolicyParity-7907c27c063d",
+      "source": "probes/java/solver-adaptive-20261003/FinalPolicyParity-7907c27c063d/FinalPolicyParity.java",
+      "origins": [
+        ".local/solver-adaptive-20261003/scheduling/FinalPolicyParity.java",
+        ".local/solver-adaptive-20261003/scheduling/final-policy/FinalPolicyParity.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: quantum",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "WidePortfolioReview-7a6c298eb858",
+      "source": "probes/java/count-order-review-20260926/WidePortfolioReview-7a6c298eb858/WidePortfolioReview.java",
+      "origins": [
+        ".local/count-order-review-20260926/WidePortfolioReview.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.util.NoSuchElementException",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "CountCounterReview-93ddfc069ad3",
+      "source": "probes/java/general-search-20260926/CountCounterReview-93ddfc069ad3/CountCounterReview.java",
+      "origins": [
+        ".local/general-search-20260926/CountCounterReview.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: MITM trial pins silently proved original domain UNSAT",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "BranchRepro-951dbbb3e796",
+      "source": "probes/java/constraint-review-20260926/BranchRepro-951dbbb3e796/BranchRepro.java",
+      "origins": [
+        ".local/constraint-review-20260926/BranchRepro.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.util.NoSuchElementException",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "BatchQuantumSafety-99a5d6015757",
+      "source": "probes/java/solver-remaining-20261003/BatchQuantumSafety-99a5d6015757/BatchQuantumSafety.java",
+      "origins": [
+        ".local/solver-remaining-20261003/lcg/BatchQuantumSafety.java",
+        ".local/solver-remaining-20261003/lcg/batch-review/BatchQuantumSafety.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: no progress",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "PhaseSavingSafety-a42b4e8abc06",
+      "source": "probes/java/solver-remaining-20261003/PhaseSavingSafety-a42b4e8abc06/PhaseSavingSafety.java",
+      "origins": [
+        ".local/solver-remaining-20261003/lcg/PhaseSavingSafety.java",
+        ".local/solver-remaining-20261003/lcg/phase-alternate-safety-2/PhaseSavingSafety.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [
+        "probes/java/solver-remaining-20261003/PhaseSavingSafety-3b9a9b242197/PhaseSavingSafety.java"
+      ],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: insufficient phase activation coverage",
+      "role": "retained-open-regression",
+      "current_related_checks": [
+        "probes/java/solver-remaining-20261003/PhaseSavingSafety-3b9a9b242197/PhaseSavingSafety.java"
+      ]
+    },
+    {
+      "id": "DeferredUnboundedHintProbe-a625f1558265",
+      "source": "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-a625f1558265/DeferredUnboundedHintProbe.java",
+      "origins": [
+        ".local/solver-remaining-20261003/lcg/deferred-unbounded-old-2/DeferredUnboundedHintProbe.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [
+        "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-4a7a90fbf680/DeferredUnboundedHintProbe.java",
+        "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-d0051cbd4939/DeferredUnboundedHintProbe.java"
+      ],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: missing target path true true false false diagnostics=count_lcg@554: local_pause; decisions=1; conflicts=0; backjumps=0; restarts=0; relaxed_reasons=0; lazy_reasons=0; explained_reasons=0; work=554 | count_lcg@42692: verified_witness; decisions=142; conflicts=97; backjumps=9; restarts=1; relaxed_reasons=507; lazy_reasons=994; explained_reasons=698; work=42692 preparation=0",
+      "role": "retained-open-regression",
+      "current_related_checks": [
+        "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-4a7a90fbf680/DeferredUnboundedHintProbe.java",
+        "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-d0051cbd4939/DeferredUnboundedHintProbe.java"
+      ]
+    },
+    {
+      "id": "DefaultPortfolioReview-a89825234bcf",
+      "source": "probes/java/count-order-review-20260926/DefaultPortfolioReview-a89825234bcf/DefaultPortfolioReview.java",
+      "origins": [
+        ".local/count-order-review-20260926/DefaultPortfolioReview.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.util.NoSuchElementException",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "CycleReview-bdf5841f6c61",
+      "source": "probes/java/submission-review-20260929/CycleReview-bdf5841f6c61/CycleReview.java",
+      "origins": [
+        ".local/submission-review-20260929/CycleReview.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [
+        "probes/java/cycle-review/CycleReview-8df540d5ada2/CycleReview.java"
+      ],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: SEARCH_LIMIT",
+      "role": "retained-open-regression",
+      "current_related_checks": [
+        "probes/java/cycle-review/CycleReview-8df540d5ada2/CycleReview.java"
+      ]
+    },
+    {
+      "id": "QuantityStagingChecks-bfb876d5d5c0",
+      "source": "probes/java/strategy-scheduling/QuantityStagingChecks-bfb876d5d5c0/QuantityStagingChecks.java",
+      "origins": [
+        ".local/strategy-scheduling/QuantityStagingChecks.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: Heavy fallback was lost",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "DeferredUnboundedHintProbe-d0051cbd4939",
+      "source": "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-d0051cbd4939/DeferredUnboundedHintProbe.java",
+      "origins": [
+        ".local/solver-remaining-20261003/lcg/deferred-unbounded-old/DeferredUnboundedHintProbe.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [
+        "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-4a7a90fbf680/DeferredUnboundedHintProbe.java",
+        "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-a625f1558265/DeferredUnboundedHintProbe.java"
+      ],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: missing target path true true false false",
+      "role": "retained-open-regression",
+      "current_related_checks": [
+        "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-4a7a90fbf680/DeferredUnboundedHintProbe.java",
+        "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-a625f1558265/DeferredUnboundedHintProbe.java"
+      ]
+    },
+    {
+      "id": "RestartSafety-d2a049fe09fd",
+      "source": "probes/java/solver-expansion-20261003/RestartSafety-d2a049fe09fd/RestartSafety.java",
+      "origins": [
+        ".local/solver-expansion-20261003/validation/RestartSafety.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: partial reachability must not prune",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "GraphPatchAudit-d53e52e513be",
+      "source": "probes/java/GraphPatchAudit.java/GraphPatchAudit-d53e52e513be/GraphPatchAudit.java",
+      "origins": [
+        ".local/GraphPatchAudit.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: Audit baseline changed: source splitting now works",
+      "role": "negative-control-for-old-bug",
+      "current_related_checks": [
+        "core/java/org/cgse/core/GraphCoreTest.java#splitSources",
+        "core/java/org/cgse/core/ServiceExtractionTest.java"
+      ]
+    },
+    {
+      "id": "NestedCompilerChecks-e3dde4ae2b8a",
+      "source": "probes/java/extreme-cycle/NestedCompilerChecks-e3dde4ae2b8a/NestedCompilerChecks.java",
+      "origins": [
+        ".local/extreme-cycle/NestedCompilerChecks.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.AssertionError: Physical per-key capacity must not wrap",
+      "role": "retained-open-regression",
+      "current_related_checks": []
+    },
+    {
+      "id": "NeighborhoodIndependentSafety-f1b9c547eeef",
+      "source": "probes/java/solver-remaining-20261003/NeighborhoodIndependentSafety-f1b9c547eeef/NeighborhoodIndependentSafety.java",
+      "origins": [
+        ".local/solver-remaining-20261003/lcg/neighborhood-independent-1/NeighborhoodIndependentSafety.java"
+      ],
+      "compile": "PASS",
+      "execution": "FAIL",
+      "same_named_current_variants": [
+        "probes/java/solver-remaining-20261003/NeighborhoodIndependentSafety-8bc9c22c0fd3/NeighborhoodIndependentSafety.java"
+      ],
+      "equivalence": "Preserved source; exact assertion equivalence is not assumed.",
+      "observed_limit_or_failure": "Exception in thread \"main\" java.lang.IllegalArgumentException: Invalid planning limits",
+      "role": "retained-open-regression",
+      "current_related_checks": [
+        "probes/java/solver-remaining-20261003/NeighborhoodIndependentSafety-8bc9c22c0fd3/NeighborhoodIndependentSafety.java"
+      ]
+    }
+  ]
+}

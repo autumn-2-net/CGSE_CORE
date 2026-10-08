@@ -1,0 +1,222 @@
+{
+  "id": "65bf48be0cc37e1c48c0fcdda5f5f1e0851d5715e30d53b9b08715e8ad71d8ef",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "K0": 1,
+      "F": 1
+    },
+    "recipes": [
+      {
+        "id": "c0",
+        "inputs": {
+          "K0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "K1": 1
+        }
+      },
+      {
+        "id": "c1",
+        "inputs": {
+          "K1": 1
+        },
+        "outputs": {
+          "K2": 1
+        }
+      },
+      {
+        "id": "c2",
+        "inputs": {
+          "K2": 1
+        },
+        "outputs": {
+          "K3": 1
+        }
+      },
+      {
+        "id": "c3",
+        "inputs": {
+          "K3": 1
+        },
+        "outputs": {
+          "K4": 1
+        }
+      },
+      {
+        "id": "c4",
+        "inputs": {
+          "K4": 1
+        },
+        "outputs": {
+          "K5": 1
+        }
+      },
+      {
+        "id": "c5",
+        "inputs": {
+          "K5": 1
+        },
+        "outputs": {
+          "K6": 1
+        }
+      },
+      {
+        "id": "c6",
+        "inputs": {
+          "K6": 1
+        },
+        "outputs": {
+          "K7": 1
+        }
+      },
+      {
+        "id": "c7",
+        "inputs": {
+          "K7": 1
+        },
+        "outputs": {
+          "K8": 1
+        }
+      },
+      {
+        "id": "c8",
+        "inputs": {
+          "K8": 1
+        },
+        "outputs": {
+          "K9": 1
+        }
+      },
+      {
+        "id": "c9",
+        "inputs": {
+          "K9": 1
+        },
+        "outputs": {
+          "K10": 1
+        }
+      },
+      {
+        "id": "c10",
+        "inputs": {
+          "K10": 1
+        },
+        "outputs": {
+          "K11": 1
+        }
+      },
+      {
+        "id": "c11",
+        "inputs": {
+          "K11": 1
+        },
+        "outputs": {
+          "K12": 1
+        }
+      },
+      {
+        "id": "c12",
+        "inputs": {
+          "K12": 1
+        },
+        "outputs": {
+          "K13": 1
+        }
+      },
+      {
+        "id": "c13",
+        "inputs": {
+          "K13": 1
+        },
+        "outputs": {
+          "K14": 1
+        }
+      },
+      {
+        "id": "c14",
+        "inputs": {
+          "K14": 1
+        },
+        "outputs": {
+          "K15": 1
+        }
+      },
+      {
+        "id": "c15",
+        "inputs": {
+          "K15": 1
+        },
+        "outputs": {
+          "K16": 1
+        }
+      },
+      {
+        "id": "c16",
+        "inputs": {
+          "K16": 1
+        },
+        "outputs": {
+          "K17": 1
+        }
+      },
+      {
+        "id": "c17",
+        "inputs": {
+          "K17": 1
+        },
+        "outputs": {
+          "K18": 1
+        }
+      },
+      {
+        "id": "c18",
+        "inputs": {
+          "K18": 1
+        },
+        "outputs": {
+          "K19": 1
+        }
+      },
+      {
+        "id": "c19",
+        "inputs": {
+          "K19": 1
+        },
+        "outputs": {
+          "K0": 1,
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "optional_loss",
+        "inputs": {
+          "K0": 1,
+          "F": 1
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "feedback_20_1"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/algorithm-review-20260928/future-inputs.json",
+      "pointer": "/66"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

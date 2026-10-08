@@ -1,0 +1,663 @@
+STATISTICS
+  Problem name     : t_P0548
+  Variables        : 309 (309 binary, 0 integer, 0 implicit integer, 0 continuous)
+  Constraints      : 105 initial, 105 maximal
+OBJECTIVE
+  Sense            : minimize
+VARIABLES
+  [binary] <t_C1003>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1004>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1005>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1011>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1012>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1013>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1014>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1015>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1016>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1017>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1018>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1019>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1020>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1021>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1024>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1025>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1026>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1033>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1034>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1035>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1041>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1042>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1043>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1044>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1045>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1046>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1047>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1048>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1049>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1051>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1062>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1063>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1068>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1069>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1075>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1076>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1082>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1083>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1084>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1090>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1091>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1092>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1093>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1094>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1095>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1096>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1097>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1098>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1099>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1100>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1101>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1102>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1103>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1104>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1105>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1106>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1107>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1108>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1109>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1112>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1113>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1114>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1120>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1121>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1122>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1123>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1124>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1125>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1126>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1127>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1128>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1130>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1141>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1142>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1147>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1148>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1154>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1155>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1159>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1160>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1161>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1162>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1163>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1164>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1165>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1166>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1167>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1168>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1169>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1170>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1171>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1172>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1173>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1174>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1175>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1176>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1177>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1178>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1179>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1180>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1181>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1182>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1183>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1184>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1185>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1186>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1187>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1188>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1189>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1190>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1191>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1192>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1193>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1194>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1195>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1200>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1201>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1202>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1210>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1211>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1212>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1213>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1214>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1215>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1216>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1217>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1218>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1219>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1220>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1221>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1222>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1223>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1224>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1225>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1226>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1227>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1228>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1229>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1230>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1231>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1232>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1233>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1234>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1235>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1236>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1237>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1238>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1239>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1240>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1257>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1258>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1259>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1267>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1268>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1269>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1270>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1271>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1272>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1273>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1274>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1275>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1276>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1277>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1278>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1279>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1280>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1284>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1285>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1286>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1294>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1295>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1296>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1297>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1298>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1299>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1300>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1301>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1302>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1303>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1304>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1305>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1306>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1307>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1308>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1309>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1310>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1311>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1312>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1313>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1314>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1315>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1316>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1317>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1318>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1319>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1320>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1324>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1325>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1330>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1331>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1332>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1333>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1334>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1335>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1336>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1337>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1347>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1348>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1349>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1350>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1351>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1352>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1353>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1354>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1355>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1359>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1369>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1370>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1371>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1379>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1380>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1381>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1382>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1383>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1384>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1385>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1386>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1387>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1388>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1389>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1390>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1391>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1392>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1393>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1394>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1395>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1396>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1397>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1398>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1399>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1400>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1401>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1402>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1403>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1407>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1408>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1409>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1417>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1418>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1419>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1420>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1421>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1422>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1423>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1424>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1425>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1426>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1427>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1428>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1429>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1431>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1436>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1437>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1438>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1439>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1440>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1441>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1442>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1443>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1444>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1445>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1446>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1447>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1448>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1449>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1450>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1451>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1452>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1453>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1487>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1488>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1489>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1490>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1491>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1492>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1493>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1494>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1501>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1504>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1510>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1511>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1513>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1518>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1519>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1520>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1522>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1523>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1524>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1527>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1529>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1530>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1532>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1534>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1537>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1538>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1540>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1542>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1543>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+  [binary] <t_C1548>: obj=0, global bounds=[-0,1], local bounds=[-0,1]
+FIXED
+  [binary] <t_C1499>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1498>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1497>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1496>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1495>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1485>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1484>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1483>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1481>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1364>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1363>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1362>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1360>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1252>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1251>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1250>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1244>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1208>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1207>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1206>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1506>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1507>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1508>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1514>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1515>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1517>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1535>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1545>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1547>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1039>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1050>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1118>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1129>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1055>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1134>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1246>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1486>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1482>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1480>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1479>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1469>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1468>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1467>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1466>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1465>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1464>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1463>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1462>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1365>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1361>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1358>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1357>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1356>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1253>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1249>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1245>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1243>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1242>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1241>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1209>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1205>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1199>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1198>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1197>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1196>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1158>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1157>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1156>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1153>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1152>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1145>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1144>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1143>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1140>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1139>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1138>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1137>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1136>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1135>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1133>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1132>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1131>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1079>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1078>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1077>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1074>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1073>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1072>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1071>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1070>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1067>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1066>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1065>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1064>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1061>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1030>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1029>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1023>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1022>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1010>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1008>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1002>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1001>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1500>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1525>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1248>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1204>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1028>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1009>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1007>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1502>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1503>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1505>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1521>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1536>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1378>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1377>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1376>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1375>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1374>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1373>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1372>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1368>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1367>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1366>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1060>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1059>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1058>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1057>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1056>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1054>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1053>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1052>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1040>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1038>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1037>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1036>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1032>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1031>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1430>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1544>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1455>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1541>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1410>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1416>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1533>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1509>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1539>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1150>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1411>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1472>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1516>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1414>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1088>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1415>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1086>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1085>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1081>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1412>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1406>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1405>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1404>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1293>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1292>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1291>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1289>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1288>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1287>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1283>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1281>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1512>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1528>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1116>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1115>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1111>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1328>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1322>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1321>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1266>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1265>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1264>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1260>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1255>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1477>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1476>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1473>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1471>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1323>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1262>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1256>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1254>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1526>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1329>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1326>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1478>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1474>: obj=0, global bounds=[-0,-0], local bounds=[-0,-0], fixed:-0
+  [binary] <t_C1470>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1531>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1546>: obj=0, global bounds=[1,1], local bounds=[1,1], fixed:1
+  [binary] <t_C1006>: obj=0, global bounds=[1,1], local bounds=[1,1], negated: 1 - <t_C1007>
+  [binary] <t_C1027>: obj=0, global bounds=[-0,0], local bounds=[-0,-0], negated: 1 - <t_C1028>
+  [binary] <t_C1203>: obj=0, global bounds=[-0,0], local bounds=[-0,-0], negated: 1 - <t_C1204>
+  [binary] <t_C1247>: obj=0, global bounds=[1,1], local bounds=[1,1], negated: 1 - <t_C1248>
+  [binary] <t_C1433>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1541>
+  [binary] <t_C1434>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1541>
+  [binary] <t_C1435>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1541>
+  [binary] <t_C1432>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1541>
+  [binary] <t_C1458>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1544>
+  [binary] <t_C1456>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1544>
+  [binary] <t_C1459>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1544>
+  [binary] <t_C1460>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1544>
+  [binary] <t_C1454>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1544>
+  [binary] <t_C1461>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1544>
+  [binary] <t_C1457>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1544>
+  [binary] <t_C1475>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1546>
+  [binary] <t_C1263>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1526>
+  [binary] <t_C1290>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1528>
+  [binary] <t_C1327>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1531>
+  [binary] <t_C1338>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1533>
+  [binary] <t_C1339>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1533>
+  [binary] <t_C1340>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1533>
+  [binary] <t_C1341>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1533>
+  [binary] <t_C1342>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1533>
+  [binary] <t_C1343>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1533>
+  [binary] <t_C1344>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1533>
+  [binary] <t_C1345>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1533>
+  [binary] <t_C1346>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1533>
+  [binary] <t_C1413>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1539>
+  [binary] <t_C1089>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1509>
+  [binary] <t_C1087>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1509>
+  [binary] <t_C1080>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1509>
+  [binary] <t_C1146>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1516>
+  [binary] <t_C1149>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1516>
+  [binary] <t_C1151>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1516>
+  [binary] <t_C1282>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1528>
+  [binary] <t_C1119>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1512>
+  [binary] <t_C1117>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1512>
+  [binary] <t_C1110>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1512>
+  [binary] <t_C1261>: obj=0, global bounds=[1,1], local bounds=[1,1], aggregated: +1<t_C1526>
+CONSTRAINTS
+  [knapsack] <R1003>: +259<t_C1501>[B] +188<~t_C1018>[B] +167<~t_C1014>[B] +161<t_C1015>[B] +120<~t_C1017>[B] +106<~t_C1011>[B] +71<~t_C1021>[B] +68<~t_C1019>[B] +68<~t_C1020>[B] +59<~t_C1012>[B] +35<~t_C1016>[B] +10<~t_C1013>[B] <= 1053;
+  [knapsack] <R1050>: +309<t_C1548>[B] +192<~t_C1491>[B] +189<~t_C1489>[B] +120<~t_C1492>[B] +106<~t_C1487>[B] +100<~t_C1493>[B] +71<~t_C1494>[B] +68<~t_C1490>[B] +10<~t_C1488>[B] <= 856;
+  [knapsack] <R1102>: +95<t_C1112>[B] +78<t_C1033>[B] +73<t_C1298>[B] +63<t_C1123>[B] +52<t_C1044>[B] +50<t_C1394>[B] +36<t_C1271>[B] +31<t_C1082>[B] +27<t_C1382>[B] +22<t_C1407>[B] +20<t_C1003>[B] +20<t_C1093>[B] +20<t_C1312>[B] +19<t_C1420>[B] +18<t_C1103>[B] +17<t_C1284>[B] +16<t_C1359>[B] +15<t_C1024>[B] +14<t_C1200>[B] +13<t_C1014>[B] +13<t_C1257>[B] +10<t_C1162>[B] +10<t_C1369>[B] <= 350;
+  [knapsack] <R1006>: +355<t_C1504>[B] +189<~t_C1048>[B] +167<~t_C1044>[B] +161<t_C1045>[B] +120<~t_C1047>[B] +106<~t_C1041>[B] +71<~t_C1051>[B] +68<~t_C1049>[B] +59<~t_C1042>[B] +35<~t_C1046>[B] +10<~t_C1043>[B] <= 986;
+  [knapsack] <R1103>: +94<~t_C1113>[B] +77<~t_C1034>[B] +72<~t_C1299>[B] +62<~t_C1124>[B] +51<~t_C1045>[B] +49<~t_C1395>[B] +35<~t_C1272>[B] +33<~t_C1068>[B] +30<~t_C1083>[B] +27<~t_C1147>[B] +26<~t_C1383>[B] +25<~t_C1232>[B] +21<~t_C1408>[B] +19<~t_C1313>[B] +19<~t_C1004>[B] +19<~t_C1094>[B] +18<~t_C1421>[B] +17<~t_C1104>[B] +16<~t_C1285>[B] +14<~t_C1211>[B] +14<~t_C1025>[B] +13<~t_C1201>[B] +12<~t_C1258>[B] +12<~t_C1015>[B] +12<~t_C1439>[B] +11<~t_C1187>[B] +11<~t_C1062>[B] +11<~t_C1075>[B] +10<~t_C1220>[B] +10<~t_C1175>[B] +9<~t_C1324>[B] +9<~t_C1370>[B] +9<~t_C1141>[B] +9<~t_C1154>[B] +9<~t_C1163>[B] <= 781;
+  [knapsack] <R1064>: +290<~t_C1513>[B] +189<t_C1127>[B] +167<t_C1123>[B] +161<~t_C1124>[B] +120<t_C1126>[B] +106<t_C1120>[B] +71<t_C1130>[B] +68<t_C1128>[B] +59<t_C1121>[B] +35<t_C1125>[B] +10<t_C1122>[B] <= 670;
+  [knapsack] <R1012>: +420<t_C1510>[B] +189<~t_C1097>[B] +167<~t_C1093>[B] +161<t_C1094>[B] +120<~t_C1096>[B] +106<~t_C1090>[B] +71<~t_C1100>[B] +68<~t_C1098>[B] +68<~t_C1099>[B] +59<~t_C1091>[B] +35<~t_C1095>[B] +10<~t_C1092>[B] <= 1054;
+  [knapsack] <R1013>: +228<t_C1511>[B] +183<~t_C1107>[B] +160<t_C1104>[B] +160<~t_C1103>[B] +120<~t_C1106>[B] +71<~t_C1109>[B] +68<~t_C1108>[B] +59<~t_C1101>[B] +35<~t_C1105>[B] +10<~t_C1102>[B] <= 866;
+  [knapsack] <R1061>: +418<~t_C1510>[B] +189<t_C1097>[B] +167<t_C1093>[B] +161<~t_C1094>[B] +120<t_C1096>[B] +106<t_C1090>[B] +71<t_C1100>[B] +68<t_C1098>[B] +68<t_C1099>[B] +59<t_C1091>[B] +35<t_C1095>[B] +10<t_C1092>[B] <= 738;
+  [knapsack] <R1015>: +480<t_C1513>[B] +189<~t_C1127>[B] +167<~t_C1123>[B] +161<t_C1124>[B] +120<~t_C1126>[B] +106<~t_C1120>[B] +71<~t_C1130>[B] +68<~t_C1128>[B] +59<~t_C1121>[B] +35<~t_C1125>[B] +10<~t_C1122>[B] <= 986;
+  [knapsack] <R1093>: +695<~t_C1542>[B] +189<t_C1440>[B] +180<t_C1442>[B] +161<~t_C1439>[B] +120<t_C1443>[B] +100<t_C1444>[B] +93<t_C1436>[B] +71<t_C1445>[B] +68<t_C1441>[B] +34<t_C1437>[B] +10<t_C1438>[B] <= 1026;
+  [knapsack] <R1020>: +334<t_C1518>[B] +189<~t_C1166>[B] +167<~t_C1162>[B] +161<t_C1163>[B] +149<~t_C1168>[B] +120<~t_C1165>[B] +100<~t_C1169>[B] +81<~t_C1159>[B] +77<~t_C1170>[B] +71<~t_C1171>[B] +68<~t_C1167>[B] +59<~t_C1160>[B] +35<~t_C1164>[B] +10<~t_C1161>[B] <= 1287;
+  [knapsack] <R1021>: +408<t_C1519>[B] +189<~t_C1178>[B] +161<t_C1175>[B] +149<~t_C1180>[B] +120<~t_C1177>[B] +100<~t_C1181>[B] +81<~t_C1172>[B] +77<~t_C1182>[B] +71<~t_C1183>[B] +68<~t_C1179>[B] +59<~t_C1173>[B] +35<~t_C1176>[B] +10<~t_C1174>[B] <= 1120;
+  [knapsack] <R1022>: +616<t_C1520>[B] +189<~t_C1190>[B] +161<t_C1187>[B] +149<~t_C1192>[B] +120<~t_C1189>[B] +100<~t_C1193>[B] +81<~t_C1184>[B] +77<~t_C1194>[B] +71<~t_C1195>[B] +68<~t_C1191>[B] +59<~t_C1185>[B] +35<~t_C1188>[B] +10<~t_C1186>[B] <= 1120;
+  [knapsack] <R1104>: +95<t_C1114>[B] +78<t_C1035>[B] +73<t_C1300>[B] +63<t_C1125>[B] +52<t_C1046>[B] +50<t_C1396>[B] +36<t_C1273>[B] +34<t_C1069>[B] +31<t_C1084>[B] +28<t_C1148>[B] +27<t_C1384>[B] +26<t_C1233>[B] +22<t_C1409>[B] +20<t_C1005>[B] +20<t_C1095>[B] +20<t_C1314>[B] +19<t_C1422>[B] +18<t_C1105>[B] +17<t_C1286>[B] +15<t_C1026>[B] +15<t_C1212>[B] +14<t_C1202>[B] +13<t_C1016>[B] +13<t_C1259>[B] +13<t_C1333>[B] +12<t_C1063>[B] +12<t_C1076>[B] +12<t_C1188>[B] +12<t_C1431>[B] +11<t_C1176>[B] +11<t_C1221>[B] +10<t_C1142>[B] +10<t_C1155>[B] +10<t_C1164>[B] +10<t_C1325>[B] +10<t_C1371>[B] <= 195;
+  [knapsack] <R1024>: +333<t_C1522>[B] +161<t_C1211>[B] +149<~t_C1214>[B] +100<~t_C1215>[B] +71<~t_C1216>[B] +68<~t_C1213>[B] +35<~t_C1212>[B] +10<~t_C1210>[B] <= 594;
+  [knapsack] <R1025>: +434<t_C1523>[B] +189<~t_C1223>[B] +161<t_C1220>[B] +149<~t_C1225>[B] +120<~t_C1222>[B] +100<~t_C1226>[B] +81<~t_C1217>[B] +77<~t_C1227>[B] +71<~t_C1228>[B] +68<~t_C1224>[B] +59<~t_C1218>[B] +35<~t_C1221>[B] +10<~t_C1219>[B] <= 1120;
+  [knapsack] <R1026>: +386<t_C1524>[B] +189<~t_C1235>[B] +161<t_C1232>[B] +149<~t_C1237>[B] +120<~t_C1234>[B] +100<~t_C1238>[B] +81<~t_C1229>[B] +77<~t_C1239>[B] +71<~t_C1240>[B] +68<~t_C1236>[B] +59<~t_C1230>[B] +35<~t_C1233>[B] +10<~t_C1231>[B] <= 1120;
+  [knapsack] <R1055>: +415<~t_C1504>[B] +189<t_C1048>[B] +167<t_C1044>[B] +161<~t_C1045>[B] +120<t_C1047>[B] +106<t_C1041>[B] +71<t_C1051>[B] +68<t_C1049>[B] +59<t_C1042>[B] +35<t_C1046>[B] +10<t_C1043>[B] <= 670;
+  [knapsack] <R1029>: +296<t_C1527>[B] +189<~t_C1275>[B] +189<~t_C1277>[B] +167<~t_C1271>[B] +161<t_C1272>[B] +145<~t_C1269>[B] +120<~t_C1274>[B] +110<~t_C1279>[B] +104<~t_C1278>[B] +93<~t_C1267>[B] +71<~t_C1280>[B] +68<~t_C1276>[B] +59<~t_C1268>[B] +35<~t_C1273>[B] +10<~t_C1270>[B] <= 1521;
+  [knapsack] <R1062>: +235<~t_C1511>[B] +120<t_C1106>[B] +120<t_C1107>[B] +71<t_C1109>[B] +68<t_C1108>[B] +59<t_C1101>[B] +35<t_C1103>[B] +35<t_C1105>[B] +35<~t_C1104>[B] +10<t_C1102>[B] <= 363;
+  [knapsack] <R1031>: +495<t_C1529>[B] +189<~t_C1302>[B] +189<~t_C1304>[B] +167<~t_C1298>[B] +161<t_C1299>[B] +145<~t_C1296>[B] +120<~t_C1301>[B] +110<~t_C1306>[B] +104<~t_C1305>[B] +93<~t_C1294>[B] +71<~t_C1307>[B] +68<~t_C1303>[B] +59<~t_C1295>[B] +35<~t_C1300>[B] +10<~t_C1297>[B] <= 1521;
+  [knapsack] <R1032>: +507<t_C1530>[B] +189<~t_C1317>[B] +167<~t_C1312>[B] +161<t_C1313>[B] +138<~t_C1315>[B] +136<~t_C1310>[B] +110<~t_C1319>[B] +104<~t_C1318>[B] +93<~t_C1308>[B] +71<~t_C1320>[B] +68<~t_C1316>[B] +59<~t_C1309>[B] +35<~t_C1314>[B] +10<~t_C1311>[B] <= 1341;
+  [knapsack] <R1075>: +679<~t_C1524>[B] +189<t_C1235>[B] +161<~t_C1232>[B] +149<t_C1237>[B] +120<t_C1234>[B] +100<t_C1238>[B] +81<t_C1229>[B] +77<t_C1239>[B] +71<t_C1240>[B] +68<t_C1236>[B] +59<t_C1230>[B] +35<t_C1233>[B] +10<t_C1231>[B] <= 965;
+  [knapsack] <R1034>: +440<t_C1532>[B] +189<~t_C1335>[B] +145<~t_C1331>[B] +104<~t_C1336>[B] +93<~t_C1330>[B] +71<~t_C1337>[B] +68<~t_C1334>[B] +35<~t_C1333>[B] +10<~t_C1332>[B] <= 715;
+  [knapsack] <R1094>: +448<~t_C1543>[B] +189<t_C1448>[B] +180<t_C1450>[B] +120<t_C1451>[B] +100<t_C1452>[B] +93<t_C1446>[B] +71<t_C1453>[B] +68<t_C1449>[B] +10<t_C1447>[B] <= 831;
+  [knapsack] <R1036>: +394<t_C1534>[B] +189<~t_C1350>[B] +189<~t_C1352>[B] +145<~t_C1348>[B] +110<~t_C1354>[B] +104<~t_C1353>[B] +93<~t_C1347>[B] +71<~t_C1355>[B] +68<~t_C1351>[B] +10<~t_C1349>[B] <= 979;
+  [knapsack] <R1045>: +483<t_C1543>[B] +189<~t_C1448>[B] +180<~t_C1450>[B] +120<~t_C1451>[B] +100<~t_C1452>[B] +93<~t_C1446>[B] +71<~t_C1453>[B] +68<~t_C1449>[B] +10<~t_C1447>[B] <= 831;
+  [knapsack] <R1039>: +682<t_C1537>[B] +189<~t_C1386>[B] +180<~t_C1388>[B] +167<~t_C1382>[B] +161<t_C1383>[B] +120<~t_C1385>[B] +120<~t_C1389>[B] +100<~t_C1390>[B] +71<~t_C1391>[B] +68<~t_C1387>[B] +59<~t_C1379>[B] +35<~t_C1384>[B] +34<~t_C1380>[B] +10<~t_C1381>[B] <= 1314;
+  [knapsack] <R1040>: +513<t_C1538>[B] +189<~t_C1398>[B] +180<~t_C1400>[B] +167<~t_C1394>[B] +161<t_C1395>[B] +120<~t_C1397>[B] +120<~t_C1401>[B] +100<~t_C1402>[B] +71<~t_C1403>[B] +68<~t_C1399>[B] +59<~t_C1392>[B] +35<~t_C1396>[B] +10<~t_C1393>[B] <= 1280;
+  [knapsack] <R1070>: +657<~t_C1519>[B] +189<t_C1178>[B] +161<~t_C1175>[B] +149<t_C1180>[B] +120<t_C1177>[B] +100<t_C1181>[B] +81<t_C1172>[B] +77<t_C1182>[B] +71<t_C1183>[B] +68<t_C1179>[B] +59<t_C1173>[B] +35<t_C1176>[B] +10<t_C1174>[B] <= 965;
+  [knapsack] <R1042>: +559<t_C1540>[B] +189<~t_C1424>[B] +180<~t_C1426>[B] +167<~t_C1420>[B] +161<t_C1421>[B] +120<~t_C1423>[B] +120<~t_C1427>[B] +100<~t_C1428>[B] +93<~t_C1417>[B] +71<~t_C1429>[B] +68<~t_C1425>[B] +35<~t_C1422>[B] +34<~t_C1418>[B] +10<~t_C1419>[B] <= 1348;
+  [knapsack] <R1089>: +551<~t_C1538>[B] +189<t_C1398>[B] +180<t_C1400>[B] +167<t_C1394>[B] +161<~t_C1395>[B] +120<t_C1397>[B] +120<t_C1401>[B] +100<t_C1402>[B] +71<t_C1403>[B] +68<t_C1399>[B] +59<t_C1392>[B] +35<t_C1396>[B] +10<t_C1393>[B] <= 964;
+  [knapsack] <R1044>: +431<t_C1542>[B] +189<~t_C1440>[B] +180<~t_C1442>[B] +161<t_C1439>[B] +120<~t_C1443>[B] +100<~t_C1444>[B] +93<~t_C1436>[B] +71<~t_C1445>[B] +68<~t_C1441>[B] +34<~t_C1437>[B] +10<~t_C1438>[B] <= 1026;
+  [knapsack] <R1091>: +573<~t_C1540>[B] +189<t_C1424>[B] +180<t_C1426>[B] +167<t_C1420>[B] +161<~t_C1421>[B] +120<t_C1423>[B] +120<t_C1427>[B] +100<t_C1428>[B] +93<t_C1417>[B] +71<t_C1429>[B] +68<t_C1425>[B] +35<t_C1422>[B] +34<t_C1418>[B] +10<t_C1419>[B] <= 1032;
+  [knapsack] <R1099>: +647<~t_C1548>[B] +192<t_C1491>[B] +189<t_C1489>[B] +120<t_C1492>[B] +106<t_C1487>[B] +100<t_C1493>[B] +71<t_C1494>[B] +68<t_C1490>[B] +10<t_C1488>[B] <= 856;
+  [knapsack] <R1078>: +1009<~t_C1527>[B] +189<t_C1275>[B] +189<t_C1277>[B] +167<t_C1271>[B] +161<~t_C1272>[B] +145<t_C1269>[B] +120<t_C1274>[B] +110<t_C1279>[B] +104<t_C1278>[B] +93<t_C1267>[B] +71<t_C1280>[B] +68<t_C1276>[B] +59<t_C1268>[B] +35<t_C1273>[B] +10<t_C1270>[B] <= 1205;
+  [knapsack] <R1074>: +631<~t_C1523>[B] +189<t_C1223>[B] +161<~t_C1220>[B] +149<t_C1225>[B] +120<t_C1222>[B] +100<t_C1226>[B] +81<t_C1217>[B] +77<t_C1227>[B] +71<t_C1228>[B] +68<t_C1224>[B] +59<t_C1218>[B] +35<t_C1221>[B] +10<t_C1219>[B] <= 965;
+  [knapsack] <R1080>: +810<~t_C1529>[B] +189<t_C1302>[B] +189<t_C1304>[B] +167<t_C1298>[B] +161<~t_C1299>[B] +145<t_C1296>[B] +120<t_C1301>[B] +110<t_C1306>[B] +104<t_C1305>[B] +93<t_C1294>[B] +71<t_C1307>[B] +68<t_C1303>[B] +59<t_C1295>[B] +35<t_C1300>[B] +10<t_C1297>[B] <= 1205;
+  [knapsack] <R1081>: +738<~t_C1530>[B] +189<t_C1317>[B] +167<t_C1312>[B] +161<~t_C1313>[B] +138<t_C1315>[B] +136<t_C1310>[B] +110<t_C1319>[B] +104<t_C1318>[B] +93<t_C1308>[B] +71<t_C1320>[B] +68<t_C1316>[B] +59<t_C1309>[B] +35<t_C1314>[B] +10<t_C1311>[B] <= 1145;
+  [knapsack] <R1073>: +326<~t_C1522>[B] +161<~t_C1211>[B] +149<t_C1214>[B] +100<t_C1215>[B] +71<t_C1216>[B] +68<t_C1213>[B] +35<t_C1212>[B] +10<t_C1210>[B] <= 559;
+  [knapsack] <R1083>: +375<~t_C1532>[B] +189<t_C1335>[B] +145<t_C1331>[B] +104<t_C1336>[B] +93<t_C1330>[B] +71<t_C1337>[B] +68<t_C1334>[B] +35<t_C1333>[B] +10<t_C1332>[B] <= 715;
+  [knapsack] <R1069>: +737<~t_C1518>[B] +189<t_C1166>[B] +167<t_C1162>[B] +161<~t_C1163>[B] +149<t_C1168>[B] +120<t_C1165>[B] +100<t_C1169>[B] +81<t_C1159>[B] +77<t_C1170>[B] +71<t_C1171>[B] +68<t_C1167>[B] +59<t_C1160>[B] +35<t_C1164>[B] +10<t_C1161>[B] <= 971;
+  [knapsack] <R1085>: +685<~t_C1534>[B] +189<t_C1350>[B] +189<t_C1352>[B] +145<t_C1348>[B] +110<t_C1354>[B] +104<t_C1353>[B] +93<t_C1347>[B] +71<t_C1355>[B] +68<t_C1351>[B] +10<t_C1349>[B] <= 979;
+  [knapsack] <R1100>: +178<~t_C1112>[B] +164<~t_C1114>[B] +163<t_C1113>[B] +158<~t_C1298>[B] +145<~t_C1300>[B] +144<t_C1299>[B] +139<~t_C1033>[B] +132<~t_C1123>[B] +128<~t_C1035>[B] +127<t_C1034>[B] +122<~t_C1125>[B] +121<t_C1124>[B] +120<~t_C1394>[B] +110<~t_C1396>[B] +109<t_C1395>[B] +109<~t_C1044>[B] +100<~t_C1046>[B] +99<t_C1045>[B] +81<~t_C1069>[B] +80<t_C1068>[B] +77<~t_C1271>[B] +71<~t_C1273>[B] +70<t_C1272>[B] +70<~t_C1148>[B] +69<t_C1147>[B] +67<~t_C1529>[B] +58<~t_C1082>[B] +58<~t_C1513>[B] +57<~t_C1233>[B] +56<t_C1232>[B] +53<~t_C1084>[B] +52<t_C1083>[B] +52<~t_C1382>[B] +52<~t_C1534>[B] +48<~t_C1384>[B] +48<~t_C1504>[B] +47<t_C1383>[B] +46<~t_C1407>[B] +46<~t_C1538>[B] +43<~t_C1093>[B] +42<~t_C1409>[B] +42<~t_C1420>[B] +41<t_C1408>[B] +39<~t_C1095>[B] +39<~t_C1422>[B] +38<t_C1094>[B] +38<t_C1421>[B] +37<~t_C1212>[B] +36<t_C1211>[B] +35<~t_C1003>[B] +34<~t_C1284>[B] +33<~t_C1103>[B] +33<~t_C1333>[B] +33<~t_C1431>[B] +33<~t_C1527>[B] +32<~t_C1200>[B] +32<~t_C1286>[B] +32<~t_C1005>[B] +31<t_C1004>[B] +31<t_C1285>[B] +31<~t_C1105>[B] +30<t_C1104>[B] +30<~t_C1202>[B] +29<t_C1201>[B] +28<~t_C1257>[B] +27<~t_C1014>[B] +27<~t_C1188>[B] +26<t_C1187>[B] +26<~t_C1024>[B] +26<~t_C1259>[B] +26<~t_C1063>[B] +25<t_C1062>[B] +25<t_C1258>[B] +25<~t_C1016>[B] +25<~t_C1548>[B] +24<t_C1015>[B] +24<~t_C1026>[B] +24<~t_C1176>[B] +24<~t_C1221>[B] +24<~t_C1312>[B] +24<~t_C1524>[B] +23<t_C1025>[B] +23<t_C1175>[B] +23<t_C1220>[B] +23<t_C1439>[B] +23<~t_C1325>[B] +23<~t_C1369>[B] +22<t_C1324>[B] +22<~t_C1314>[B] +22<~t_C1142>[B] +21<t_C1141>[B] +21<t_C1313>[B] +21<~t_C1371>[B] +20<t_C1370>[B] +20<~t_C1162>[B] +20<~t_C1537>[B] +19<~t_C1510>[B] +19<~t_C1359>[B] +18<~t_C1164>[B] +18<~t_C1530>[B] +18<~t_C1540>[B] +17<t_C1163>[B] +16<~t_C1543>[B] +16<~t_C1076>[B] +15<t_C1075>[B] +13<~t_C1511>[B] +13<~t_C1522>[B] +13<~t_C1155>[B] +12<t_C1154>[B] +12<~t_C1501>[B] +12<~t_C1532>[B] +12<~t_C1542>[B] +11<~t_C1520>[B] +10<~t_C1519>[B] +10<~t_C1523>[B] +9<~t_C1518>[B] <= 3204;
+  [knapsack] <R1071>: +449<~t_C1520>[B] +189<t_C1190>[B] +161<~t_C1187>[B] +149<t_C1192>[B] +120<t_C1189>[B] +100<t_C1193>[B] +81<t_C1184>[B] +77<t_C1194>[B] +71<t_C1195>[B] +68<t_C1191>[B] +59<t_C1185>[B] +35<t_C1188>[B] +10<t_C1186>[B] <= 965;
+  [knapsack] <R1088>: +416<~t_C1537>[B] +189<t_C1386>[B] +180<t_C1388>[B] +167<t_C1382>[B] +161<~t_C1383>[B] +120<t_C1385>[B] +120<t_C1389>[B] +100<t_C1390>[B] +71<t_C1391>[B] +68<t_C1387>[B] +59<t_C1379>[B] +35<t_C1384>[B] +34<t_C1380>[B] +10<t_C1381>[B] <= 998;
+  [knapsack] <R1052>: +378<~t_C1501>[B] +120<t_C1017>[B] +120<t_C1018>[B] +106<t_C1011>[B] +71<t_C1021>[B] +68<t_C1019>[B] +68<t_C1020>[B] +59<t_C1012>[B] +35<t_C1014>[B] +35<t_C1016>[B] +35<~t_C1015>[B] +10<t_C1013>[B] <= 537;
+  [setppc] <R1138>: <t_C1165>[B] +<t_C1166>[B] <= 1;
+  [setppc] <R1145>: <t_C1212>[B] +<~t_C1211>[B] <= 1;
+  [setppc] <R1146>: <t_C1221>[B] +<~t_C1220>[B] <= 1;
+  [setppc] <R1147>: <t_C1222>[B] +<t_C1223>[B] <= 1;
+  [setppc] <R1148>: <t_C1233>[B] +<~t_C1232>[B] <= 1;
+  [setppc] <R1149>: <t_C1234>[B] +<t_C1235>[B] <= 1;
+  [setppc] <R1170>: <t_C1420>[B] +<t_C1422>[B] +<~t_C1421>[B] <= 1;
+  [setppc] <R1139>: <t_C1176>[B] +<~t_C1175>[B] <= 1;
+  [setppc] <R1151>: <t_C1257>[B] +<t_C1259>[B] +<~t_C1258>[B] <= 1;
+  [setppc] <R1052_clq_669_0>: <t_C1018>[B] +<~t_C1501>[B] <= 1;
+  [setppc] <R1153>: <t_C1271>[B] +<t_C1273>[B] +<~t_C1272>[B] <= 1;
+  [setppc] <R1140>: <t_C1177>[B] +<t_C1178>[B] <= 1;
+  [setppc] <R1141>: <t_C1188>[B] +<~t_C1187>[B] <= 1;
+  [setppc] <R1154>: <t_C1274>[B] +<t_C1275>[B] <= 1;
+  [setppc] <R1155>: <t_C1284>[B] +<t_C1286>[B] +<~t_C1285>[B] <= 1;
+  [setppc] <R1062_clq_495_0>: <t_C1107>[B] +<~t_C1511>[B] <= 1;
+  [setppc] <R1142>: <t_C1189>[B] +<t_C1190>[B] <= 1;
+  [setppc] <R1157>: <t_C1298>[B] +<t_C1300>[B] +<~t_C1299>[B] <= 1;
+  [setppc] <R1158>: <t_C1301>[B] +<t_C1302>[B] <= 1;
+  [setppc] <R1159>: <t_C1312>[B] +<t_C1314>[B] +<~t_C1313>[B] <= 1;
+  [setppc] <R1160>: <t_C1325>[B] +<~t_C1324>[B] <= 1;
+  [setppc] <R1171>: <t_C1423>[B] +<t_C1424>[B] <= 1;
+  [setppc] <R1143>: <t_C1200>[B] +<t_C1202>[B] +<~t_C1201>[B] <= 1;
+  [setppc] <R1162>: <t_C1369>[B] +<t_C1371>[B] +<~t_C1370>[B] <= 1;
+  [setppc] <R1136>: <t_C1155>[B] +<~t_C1154>[B] <= 1;
+  [setppc] <R1164>: <t_C1382>[B] +<t_C1384>[B] +<~t_C1383>[B] <= 1;
+  [setppc] <R1165>: <t_C1385>[B] +<t_C1386>[B] <= 1;
+  [setppc] <R1166>: <t_C1394>[B] +<t_C1396>[B] +<~t_C1395>[B] <= 1;
+  [setppc] <R1109>: <t_C1003>[B] +<t_C1005>[B] +<~t_C1004>[B] <= 1;
+  [setppc] <R1167>: <t_C1397>[B] +<t_C1398>[B] <= 1;
+  [setppc] <R1111>: <t_C1014>[B] +<t_C1016>[B] +<~t_C1015>[B] <= 1;
+  [setppc] <R1112>: <t_C1017>[B] +<t_C1018>[B] <= 1;
+  [setppc] <R1113>: <t_C1024>[B] +<t_C1026>[B] +<~t_C1025>[B] <= 1;
+  [setppc] <R1168>: <t_C1407>[B] +<t_C1409>[B] +<~t_C1408>[B] <= 1;
+  [setppc] <R1115>: <t_C1033>[B] +<t_C1035>[B] +<~t_C1034>[B] <= 1;
+  [setppc] <R1137>: <t_C1162>[B] +<t_C1164>[B] +<~t_C1163>[B] <= 1;
+  [setppc] <R1117>: <t_C1044>[B] +<t_C1046>[B] +<~t_C1045>[B] <= 1;
+  [setppc] <R1118>: <t_C1047>[B] +<t_C1048>[B] <= 1;
+  [setppc] <R1134>: <t_C1142>[B] +<~t_C1141>[B] <= 1;
+  [setppc] <R1120>: <t_C1063>[B] +<~t_C1062>[B] <= 1;
+  [setppc] <R1121>: <t_C1069>[B] +<~t_C1068>[B] <= 1;
+  [setppc] <R1122>: <t_C1076>[B] +<~t_C1075>[B] <= 1;
+  [setppc] <R1123>: <t_C1082>[B] +<t_C1084>[B] +<~t_C1083>[B] <= 1;
+  [setppc] <R1052_clq_537_0>: <t_C1014>[B] +<~t_C1015>[B] +<~t_C1501>[B] <= 1;
+  [setppc] <R1125>: <t_C1093>[B] +<t_C1095>[B] +<~t_C1094>[B] <= 1;
+  [setppc] <R1126>: <t_C1096>[B] +<t_C1097>[B] <= 1;
+  [setppc] <R1127>: <t_C1103>[B] +<t_C1105>[B] +<~t_C1104>[B] <= 1;
+  [setppc] <R1128>: <t_C1106>[B] +<t_C1107>[B] <= 1;
+  [setppc] <R1129>: <t_C1112>[B] +<t_C1114>[B] +<~t_C1113>[B] <= 1;
+  [setppc] <R1135>: <t_C1148>[B] +<~t_C1147>[B] <= 1;
+  [setppc] <R1131>: <t_C1123>[B] +<t_C1125>[B] +<~t_C1124>[B] <= 1;
+  [setppc] <R1132>: <t_C1126>[B] +<t_C1127>[B] <= 1;
+  [setppc] <R1062_clq_363_0>: <t_C1103>[B] +<~t_C1104>[B] +<~t_C1511>[B] <= 1;
+  [setppc] <orbitope_component_0_1row_comp_0_col0>: <t_C1020>[B] +<~t_C1019>[B] <= 1;
+  [setppc] <orbitope_component_1_1row_comp_1_col0>: <t_C1350>[B] +<~t_C1352>[B] <= 1;
+  [setppc] <orbitope_component_2_1row_comp_2_col0>: <t_C1099>[B] +<~t_C1098>[B] <= 1;
+  [logicor] <R1063>: logicor(<t_C1113>[B],<~t_C1112>[B],<~t_C1114>[B]);
+END

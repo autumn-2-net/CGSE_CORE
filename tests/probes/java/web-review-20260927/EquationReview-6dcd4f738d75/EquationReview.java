@@ -1,0 +1,12 @@
+package org.cgse.core;
+import java.math.*;import java.util.*;
+public final class EquationReview {
+ static boolean valid(List<ExactLinearProgram.Constraint> rows,BigInteger[] x,BigInteger[] lo,BigInteger[] hi){for(int i=0;i<x.length;i++)if(x[i].compareTo(lo[i])<0||x[i].compareTo(hi[i])>0)return false;for(var r:rows){var s=BigInteger.ZERO;for(var t:r.terms().entrySet())s=s.add(t.getValue().multiply(x[t.getKey()]));if(s.compareTo(r.upper())>0)return false;}return true;}
+ static boolean enumerate(int i,BigInteger[] x,BigInteger[] lo,BigInteger[] hi,List<ExactLinearProgram.Constraint> rows){if(i==x.length)return valid(rows,x,lo,hi);for(x[i]=lo[i];x[i].compareTo(hi[i])<=0;x[i]=x[i].add(BigInteger.ONE))if(enumerate(i+1,x,lo,hi,rows))return true;return false;}
+ public static void main(String[] args){Random r=new Random(979342);int sat=0;for(int sample=0;sample<10000;sample++){
+ int n=2+r.nextInt(2),total=n+r.nextInt(3);BigInteger[] lo=new BigInteger[total],hi=new BigInteger[total];var eq=new LinkedHashMap<Integer,BigInteger>();var reverse=new LinkedHashMap<Integer,BigInteger>();BigInteger rhs=BigInteger.valueOf(r.nextInt(101)-50);
+ for(int i=0;i<total;i++){lo[i]=BigInteger.valueOf(r.nextInt(3));if(sample%4==0)lo[i]=lo[i].add(BigInteger.ONE.shiftLeft(80));hi[i]=lo[i].add(BigInteger.valueOf(i<n?1+r.nextInt(5):0));var v=BigInteger.valueOf((1+r.nextInt(9))*(r.nextBoolean()?1:-1));eq.put(i,v);reverse.put(i,v.negate());rhs=rhs.add(v.multiply(lo[i]));}
+ var rows=new ArrayList<ExactLinearProgram.Constraint>();rows.add(new ExactLinearProgram.Constraint(eq,rhs));rows.add(new ExactLinearProgram.Constraint(reverse,rhs.negate()));for(int j=0;j<3;j++){var terms=new LinkedHashMap<Integer,BigInteger>();var b=BigInteger.valueOf(r.nextInt(31)-10);for(int i=0;i<total;i++){var v=BigInteger.valueOf(r.nextInt(9)-4);if(v.signum()!=0)terms.put(i,v);b=b.add(v.multiply(lo[i]));}rows.add(new ExactLinearProgram.Constraint(terms,b));}
+ boolean truth=enumerate(0,new BigInteger[total],lo,hi,rows);var budget=new PlanningBudget(0,20_000_000,256L<<20,()->false,System::nanoTime);var work=new CountDiophantine(rows,lo,hi,budget);while(!work.step()){};var x=work.counts();if(x!=null&&!valid(rows,x,lo,hi))throw new AssertionError("false witness "+sample);if(truth!=(x!=null))throw new AssertionError("miss "+sample+" truth="+truth);if(truth)sat++;
+ }System.out.println("PASS 10000 independent bounded equation oracles; SAT="+sat+"; negative coefficients, fixed offsets and >long coordinates");}
+}

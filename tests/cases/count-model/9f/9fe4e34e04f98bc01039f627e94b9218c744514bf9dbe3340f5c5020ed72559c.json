@@ -1,0 +1,170 @@
+{
+  "id": "9fe4e34e04f98bc01039f627e94b9218c744514bf9dbe3340f5c5020ed72559c",
+  "kind": "count-model",
+  "model": {
+    "lower": [
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "2",
+      "1",
+      "0"
+    ],
+    "upper": [
+      "4",
+      "4",
+      "1",
+      "0",
+      "0",
+      "2",
+      "1",
+      "0"
+    ],
+    "rows": [
+      {
+        "terms": {
+          "0": "-1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "0": "1"
+        },
+        "upper": "4"
+      },
+      {
+        "terms": {
+          "1": "-1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "1": "1"
+        },
+        "upper": "4"
+      },
+      {
+        "terms": {
+          "2": "-1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "2": "1"
+        },
+        "upper": "1"
+      },
+      {
+        "terms": {
+          "3": "1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "3": "-1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "4": "1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "4": "-1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "5": "1"
+        },
+        "upper": "2"
+      },
+      {
+        "terms": {
+          "5": "-1"
+        },
+        "upper": "-2"
+      },
+      {
+        "terms": {
+          "6": "1"
+        },
+        "upper": "1"
+      },
+      {
+        "terms": {
+          "6": "-1"
+        },
+        "upper": "-1"
+      },
+      {
+        "terms": {
+          "7": "1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "7": "-1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "1": "1",
+          "0": "-1"
+        },
+        "upper": "0"
+      },
+      {
+        "terms": {
+          "1": "-1",
+          "0": "1"
+        },
+        "upper": "0"
+      }
+    ]
+  },
+  "names": [
+    "z3/pb-bug"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/solver-adaptive-20261003/baseline-public/cases.json",
+      "pointer": "/28"
+    },
+    {
+      "source": ".local/solver-benchmarks-20261003/cases-extra-finite.json",
+      "pointer": "/6"
+    },
+    {
+      "source": ".local/solver-benchmarks-20261003/cases.json",
+      "pointer": "/28"
+    },
+    {
+      "source": ".local/solver-benchmarks-20261003/z3-cases.json",
+      "pointer": "/0"
+    },
+    {
+      "source": ".local/solver-next-20261004/expanded/public-priority.json",
+      "pointer": "/28"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

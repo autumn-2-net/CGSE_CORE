@@ -1,0 +1,16 @@
+* text=auto
+*.java text eol=lf
+*.py text eol=lf
+*.gradle text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.txt text eol=lf
+gradlew text eol=lf
+*.bat text eol=crlf
+*.gz binary
+*.zip binary
+*.jar binary
+# Captured oracle material has provenance checksums over its original bytes.
+tests/oracles/inputs/** -text
+tests/oracles/reference/** -text
+tests/datasets/captures/** -text

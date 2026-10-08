@@ -1,0 +1,154 @@
+{
+  "id": "80072d3711bffb86dd442f5c4253666e53d505a64bd1a1140ea9f7baa0722092",
+  "kind": "graph",
+  "model": {
+    "target": "P5",
+    "amount": 6,
+    "stock": {
+      "F": 10,
+      "P1": 2,
+      "P3": 1,
+      "P4": 4
+    },
+    "recipes": [
+      {
+        "id": "r0",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "r1",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P1": 1,
+          "P2": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "P2": 1
+        }
+      },
+      {
+        "id": "r3",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P2": 1,
+          "P3": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r4",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P3": 1,
+          "P4": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P4": 2,
+          "P5": 1
+        }
+      },
+      {
+        "id": "r5",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P1": 1,
+          "P3": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P4": 1
+        }
+      },
+      {
+        "id": "r6",
+        "inputs": {
+          "F": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "P2": 2,
+          "P3": 1
+        }
+      },
+      {
+        "id": "r7",
+        "inputs": {
+          "F": 1,
+          "P1": 1,
+          "P3": 1,
+          "P5": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P4": 2,
+          "P5": 1
+        }
+      },
+      {
+        "id": "r8",
+        "inputs": {
+          "F": 1,
+          "P0": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P5": 2
+        }
+      },
+      {
+        "id": "r9",
+        "inputs": {
+          "F": 1,
+          "P4": 2
+        },
+        "outputs": {
+          "P0": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "mass_20040"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/large_scale/random/fixtures/mass_20040.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

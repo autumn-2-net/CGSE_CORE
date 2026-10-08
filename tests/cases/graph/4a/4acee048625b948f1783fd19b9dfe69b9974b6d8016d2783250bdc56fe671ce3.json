@@ -1,0 +1,52 @@
+{
+  "id": "4acee048625b948f1783fd19b9dfe69b9974b6d8016d2783250bdc56fe671ce3",
+  "kind": "graph",
+  "model": {
+    "target": "H",
+    "amount": 1000000000,
+    "stock": {
+      "X": 500000000,
+      "Y": 500000000
+    },
+    "recipes": [
+      {
+        "id": "left",
+        "inputs": {
+          "X": 1
+        },
+        "outputs": {
+          "H": 1
+        }
+      },
+      {
+        "id": "right",
+        "inputs": {
+          "Y": 1
+        },
+        "outputs": {
+          "H": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "multi_source_n1000000000"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/color-review-20260926/common-input/multi_source_n1000000000.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/common-input/multi_source_n1000000000.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

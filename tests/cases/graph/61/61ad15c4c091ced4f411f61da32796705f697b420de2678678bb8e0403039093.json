@@ -1,0 +1,334 @@
+{
+  "id": "61ad15c4c091ced4f411f61da32796705f697b420de2678678bb8e0403039093",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 1,
+      "r0_0.P": 1,
+      "U1": 2,
+      "U2": 2,
+      "U3": 2,
+      "r3_1.P": 1,
+      "CAT1": 2,
+      "CAT0": 5,
+      "FUEL1": 13,
+      "FUEL0": 17
+    },
+    "recipes": [
+      {
+        "id": "r2_0.return",
+        "inputs": {
+          "r2_0.P": 1,
+          "FUEL0": 7
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 470,
+          "X0_1": 278,
+          "CAT0": 3
+        }
+      },
+      {
+        "id": "r1_0.return",
+        "inputs": {
+          "r1_0.P": 1,
+          "FUEL0": 3
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 929,
+          "X0_1": 604,
+          "CAT0": 5
+        }
+      },
+      {
+        "id": "r1_1.start",
+        "inputs": {
+          "U1": 1,
+          "CAT1": 1
+        },
+        "outputs": {
+          "r1_1.P": 1
+        }
+      },
+      {
+        "id": "r0_0.burn",
+        "inputs": {
+          "r0_0.P": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 782,
+          "X0_1": 317
+        }
+      },
+      {
+        "id": "r0_1.start",
+        "inputs": {
+          "U0": 1,
+          "CAT1": 5
+        },
+        "outputs": {
+          "r0_1.P": 1
+        }
+      },
+      {
+        "id": "r3_1.return",
+        "inputs": {
+          "r3_1.P": 1,
+          "FUEL0": 11
+        },
+        "outputs": {
+          "D3": 1,
+          "X1_0": 863,
+          "X1_1": 401,
+          "CAT1": 2
+        }
+      },
+      {
+        "id": "r3_0.start",
+        "inputs": {
+          "U3": 1,
+          "CAT1": 2
+        },
+        "outputs": {
+          "r3_0.P": 1
+        }
+      },
+      {
+        "id": "r0_1.return",
+        "inputs": {
+          "r0_1.P": 1,
+          "FUEL1": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 782,
+          "X1_1": 317,
+          "CAT1": 5
+        }
+      },
+      {
+        "id": "r0_1.burn",
+        "inputs": {
+          "r0_1.P": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "X1_0": 782,
+          "X1_1": 317
+        }
+      },
+      {
+        "id": "r1_0.burn",
+        "inputs": {
+          "r1_0.P": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X0_0": 929,
+          "X0_1": 604
+        }
+      },
+      {
+        "id": "r3_0.return",
+        "inputs": {
+          "r3_0.P": 1,
+          "FUEL0": 4
+        },
+        "outputs": {
+          "D3": 1,
+          "X0_0": 863,
+          "X0_1": 401,
+          "CAT1": 2
+        }
+      },
+      {
+        "id": "r3_1.start",
+        "inputs": {
+          "U3": 1,
+          "CAT1": 2
+        },
+        "outputs": {
+          "r3_1.P": 1
+        }
+      },
+      {
+        "id": "r1_1.burn",
+        "inputs": {
+          "r1_1.P": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 929,
+          "X1_1": 604
+        }
+      },
+      {
+        "id": "r1_0.start",
+        "inputs": {
+          "U1": 1,
+          "CAT0": 5
+        },
+        "outputs": {
+          "r1_0.P": 1
+        }
+      },
+      {
+        "id": "r3_0.burn",
+        "inputs": {
+          "r3_0.P": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X0_0": 863,
+          "X0_1": 401
+        }
+      },
+      {
+        "id": "r3_1.burn",
+        "inputs": {
+          "r3_1.P": 1
+        },
+        "outputs": {
+          "D3": 1,
+          "X1_0": 863,
+          "X1_1": 401
+        }
+      },
+      {
+        "id": "r0_0.return",
+        "inputs": {
+          "r0_0.P": 1,
+          "FUEL1": 13
+        },
+        "outputs": {
+          "D0": 1,
+          "X0_0": 782,
+          "X0_1": 317,
+          "CAT0": 5
+        }
+      },
+      {
+        "id": "r2_0.start",
+        "inputs": {
+          "U2": 1,
+          "CAT0": 3
+        },
+        "outputs": {
+          "r2_0.P": 1
+        }
+      },
+      {
+        "id": "r0_0.start",
+        "inputs": {
+          "U0": 1,
+          "CAT0": 5
+        },
+        "outputs": {
+          "r0_0.P": 1
+        }
+      },
+      {
+        "id": "r1_1.return",
+        "inputs": {
+          "r1_1.P": 1,
+          "FUEL0": 3
+        },
+        "outputs": {
+          "D1": 1,
+          "X1_0": 929,
+          "X1_1": 604,
+          "CAT1": 1
+        }
+      },
+      {
+        "id": "r2_0.burn",
+        "inputs": {
+          "r2_0.P": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X0_0": 470,
+          "X0_1": 278
+        }
+      },
+      {
+        "id": "r2_1.return",
+        "inputs": {
+          "r2_1.P": 1,
+          "FUEL0": 5
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 470,
+          "X1_1": 278,
+          "CAT0": 5
+        }
+      },
+      {
+        "id": "r2_1.burn",
+        "inputs": {
+          "r2_1.P": 1
+        },
+        "outputs": {
+          "D2": 1,
+          "X1_0": 470,
+          "X1_1": 278
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D0": 1,
+          "X0_0": 4443,
+          "X0_1": 2482,
+          "X1_0": 863,
+          "X1_1": 401,
+          "D1": 2,
+          "D2": 2,
+          "D3": 2
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r2_1.start",
+        "inputs": {
+          "U2": 1,
+          "CAT0": 5
+        },
+        "outputs": {
+          "r2_1.P": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "manual_fuel_n4_c2_d2_a2_s107_entry"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/manual-inputs.json",
+      "pointer": "/118"
+    },
+    {
+      "source": ".local/web-review-20260927/large_scale/manual-input/manual_fuel_n4_c2_d2_a2_s107_entry.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/large_scale/manual-models/manual_fuel_n4_c2_d2_a2_s107_entry.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

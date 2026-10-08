@@ -1,0 +1,54 @@
+Maintenance boundaries
+======================
+
+The portable module is the source of truth for exact arithmetic, captured input
+normalization, immutable catalogs, graph compilation, macro/recovery views,
+integer and reachability solving, proof generation/checking, work and memory
+accounting, cooperative/parallel strategy scheduling, material ledgers, execution
+orders, pipelined dispatch, checkpoints and replan coordination.
+
+The same source tree also owns plan summaries and streaming ring/layout models.
+Optional AWT rasterization and SVG/PNG writing live in tools/view. Minecraft GPU
+render targets, icons, hover input, menus, packets and text localization remain
+GTL adapter code.
+
+Entry points and host duties
+---------------------------
+CapturedRecipe<K> expands already-captured alternatives. It never invokes live
+pattern callbacks. GraphCompiler and PreparedCatalog expose immutable recipes
+and reusable topology. GraphPlanner / GraphPlanningWork provide
+synchronous and resumable planning using the same continuation.
+
+PlanningBudget is one cumulative request budget. Workers share it; compilation
+and search accounting remain separate, while memory/time/cancellation apply to
+the request. Closing a continuation releases its resources.
+
+PlanningRequest<K,P> owns future, cancellation and progress. RequestPlanningWork<K>
+coordinates main planning, optional catalyst work and bounded fallback; the host
+maps a successful GraphPlan<K> to its external plan object.
+
+GraphJobRuntime<K> owns logical execution and persisted snapshots. The GTL
+GraphJobCodec, maintained in GTLCore, translates the unchanged NBT schema.
+GtlExecutionAdapter handles real inventory/pattern dispatch. ReplanCoordinator
+owns retry timing and checkpoint/epoch state; the host captures fresh inventory
+and installs a replacement plan on the host thread.
+
+The host must preserve dispatch outcomes (accepted, rejected, blocked or in
+doubt), exact long quantities, stable material equality and recipe binding IDs.
+Do not convert actual resource counts to floating point or treat UNKNOWN/search
+limits as impossibility. Report missing stock and missing startup separately.
+
+GTL integration maintenance
+--------------------------
+Production AE/GTL adapters, provider hooks, menus, configuration and localization
+are maintained in GTLCore. They are not copied into this repository. Host API
+changes and adapter compatibility are checked in that project.
+tools/sync_gtl.py copies only the portable sources and optional desktop exporter.
+The previous source baseline comes from the CGSE-Commit trailer in host history;
+local edits are rejected rather than overwritten. No host bookkeeping files are
+created. tests/adapter contains CGSE integration tests, not adapter production code.
+
+Core-only tests run without AE. Adapter tests compile against the actual host
+APIs. Live tests must use an isolated server and matching host/addon versions.
+Dataset replay diagnoses planner behavior independently of machines and live
+inventories. It is not a substitute for adapter/dispatch tests.

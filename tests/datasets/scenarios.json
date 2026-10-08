@@ -1,0 +1,1653 @@
+{
+  "schema": "cgse-catalog-reference-scenarios-v1",
+  "json_paths_scanned": 42465,
+  "unique_json_contents_scanned": 37282,
+  "invalid_json": [
+    {
+      "source": ".local/cgse-debug-20261002/native-server/config/ftbbackups2.json",
+      "error": "Expecting property name enclosed in double quotes: line 2 column 2 (char 3)"
+    }
+  ],
+  "large_json_audit": [
+    {
+      "source": "fluid-tail-20261001/block-entities.json",
+      "sha256": "bec6fa9296b212bf2d7878018a9286e17f2e2c225d6d667f05e8d46a19943d5b",
+      "bytes": 77317189,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "graph-large-before-samples.json",
+      "sha256": "5defd6aa695cce2be23b8eb188c4c45a9a6b35a77f2e7ee0347c2e3cebb364d4",
+      "bytes": 260997126,
+      "role": "JDK profiling samples (raw, not request cases)",
+      "preserved": true
+    },
+    {
+      "source": "graph-planner-baseline-samples.json",
+      "sha256": "03c44619c3282b8e8803cc0abe3e6868963b01b35de84d46d39e1d72bc702200",
+      "bytes": 495145991,
+      "role": "JDK profiling samples (raw, not request cases)",
+      "preserved": true
+    },
+    {
+      "source": "green-cell-20261002/entities.json",
+      "sha256": "3a1ecc762279e7bb2b9c681ffe5d27c28c6f7e803774e32bd8897d07f1df6c37",
+      "bytes": 93239027,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "linear-search-20261002/prior-cases.json",
+      "sha256": "e741f509f0a7ece93247b53776870c27b32609d84cc3e2b449291929f63d960a",
+      "bytes": 51399245,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "miracle-cycle-20261002/entities.json",
+      "sha256": "70ab2933df4ae56e1e5526b4a46c85173a605378bdbe67fbe3a679bf8561703e",
+      "bytes": 44276513,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "mixed-jei-stress-20261007/configured-repro/extra.json",
+      "sha256": "a909c2c636d93a4c38129ac6f0e99290e0e7dcc318ea7ba80c2cf1f8566cccf9",
+      "bytes": 35419153,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "mixed-jei-stress-20261007/extra-configured.json",
+      "sha256": "a909c2c636d93a4c38129ac6f0e99290e0e7dcc318ea7ba80c2cf1f8566cccf9",
+      "bytes": 35419153,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "mixed-jei-stress-20261007/extra-physical.json",
+      "sha256": "6ad77e5a6e82d42303cd5cb33f1205e0a28c1f3caaad92b9022946a975724a9d",
+      "bytes": 40013249,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "mixed-jei-stress-20261007/extra-virtual.json",
+      "sha256": "ba3107e2ee35fc772d880b49f321bd331d63ab93503c6354d8f5d6ab634e52d6",
+      "bytes": 44180215,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "mixed-jei-stress-20261007/extra.json",
+      "sha256": "112849d6fb8c500182a65f9393489d8f45f2d8be18e16f37750ba0344ae4dfc8",
+      "bytes": 39969969,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "pruned-search-20261002/archive-cuts-0.json",
+      "sha256": "7014047a92566cad0bf78c2799a31dc6a7c0969951bfa54726e6c657c8d8ba4e",
+      "bytes": 182556904,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "pruned-search-20261002/archive-cuts-3.json",
+      "sha256": "c4d5ee68c97a1640641f83bc1e6d31499f50a057fd91e45294de6422ecee4d4f",
+      "bytes": 64973087,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "pruned-search-20261002/archive-cuts-4.json",
+      "sha256": "cda0ef2c51bf007b82f86f63cb2934a74622c57fb1bb40631782c84925fd94d4",
+      "bytes": 81316022,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "pruned-search-20261002/archived-baseline.json",
+      "sha256": "ee8dbc00e232bf9e6e875e47136e01b37c2b695b977dd1138be4dc03ea071694",
+      "bytes": 93833488,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "quantity-regression-20261002/deep-diagnosis.json",
+      "sha256": "848f01deb424047232846cd74941acfcbe770d1788167aeed852c9d9bc39efff",
+      "bytes": 50659876,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    },
+    {
+      "source": "quantity-regression-20261002/deep-native.json",
+      "sha256": "24114e440612e28d5ee3ba3cba32126bbc03470b04a6160df00bb8982bdc2e7e",
+      "bytes": 49670541,
+      "role": "catalog, network capture or scenario input",
+      "preserved": true
+    }
+  ],
+  "source_files": 55,
+  "groups": 37112,
+  "requests": 156033,
+  "files": [
+    {
+      "container": "$",
+      "groups": 3,
+      "rows": 3,
+      "requests": 72,
+      "embedded_catalog_groups": 3,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "cgse-feedback-fixes-20261003/fallback/hard-boundaries-remaining-v2.json",
+      "sha256": "3ef7a6081dd4338cf1c3ad79221625d40fc6bcbcf9e83f2b1befa18f83c75bc1",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 3,
+      "rows": 3,
+      "requests": 6,
+      "embedded_catalog_groups": 3,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "cgse-feedback-fixes-20261003/fallback/random-dag-remaining-v2.json",
+      "sha256": "15b3c0ffe4ded05a574a519dd39346a66eeb95e403ced250d8ae2f74388fdf4d",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 3141,
+      "rows": 3141,
+      "requests": 19337,
+      "embedded_catalog_groups": 3141,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "native_reference_id",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "linear-search-20261002/all-linear.json",
+      "sha256": "144e793d634240946f69a1db89bf5b599b49418d079b1cbafd696fb6296dcd26",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 2,
+      "rows": 2,
+      "requests": 3,
+      "embedded_catalog_groups": 2,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "linear-search-20261002/confirmed-failures.json",
+      "sha256": "b7063ba75a210aec3aab135744ba14203d0c5b2d90850c9c28244e9c1c43dd25",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 1,
+      "rows": 1,
+      "requests": 18,
+      "embedded_catalog_groups": 1,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "linear-search-20261002/counterexample-212.json",
+      "sha256": "72352ab5e2982c5dc2f78d13c81ab47c020745d7cb1d2c88b56672a2f3034455",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 24,
+      "rows": 24,
+      "requests": 648,
+      "embedded_catalog_groups": 24,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "linear-search-20261002/hard-boundaries.json",
+      "sha256": "4ffc164e110e493ee0b263c4e57cab3e1aae7f57577fb7c9d62dd4a581e0bb12",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "cases",
+      "groups": 287,
+      "rows": 287,
+      "requests": 287,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 287,
+      "fields": [
+        "amount",
+        "id",
+        "stock",
+        "target",
+        "verify_cache"
+      ],
+      "has_native_orders": true,
+      "source": "linear-search-20261002/native-spec.json",
+      "sha256": "d603b9c87ada773671177c9da2a91afe40ae39f961e4e794c637f4d0c82b310a",
+      "catalog_policy": "native AE provider-order capture; original native driver required",
+      "global_catalog": null,
+      "evidence": [
+        "linear-search-20261002/RandomOrderAudit.java: live provider-order replay"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 161,
+      "rows": 161,
+      "requests": 4322,
+      "embedded_catalog_groups": 156,
+      "external_catalog_groups": 5,
+      "fields": [
+        "catalog",
+        "dump",
+        "fallback",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "linear-search-20261002/prior-cases.json",
+      "sha256": "e741f509f0a7ece93247b53776870c27b32609d84cc3e2b449291929f63d960a",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "pruned-search-20261002/run_regression.py: jobs and QuantitySweep catalog argument"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 1152,
+      "rows": 1152,
+      "requests": 2073,
+      "embedded_catalog_groups": 1152,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "linear-search-20261002/random-dag.json",
+      "sha256": "f2f1e4cde801979348c3de12d2203c2eb52504d3191bddf9983410dfa9fa3f1e",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 1,
+      "rows": 1,
+      "requests": 1,
+      "embedded_catalog_groups": 1,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "linear-search-20261002/repro.json",
+      "sha256": "c32a2eeda4b54122d471f989dbf4cef214ea5b602798a0386c53dd45dbb1c96f",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 196,
+      "rows": 196,
+      "requests": 196,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 196,
+      "fields": [
+        "amount",
+        "id",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "miracle-cycle-20261002/audit-cycle-cases.json",
+      "sha256": "7d510ec69b737a715efb41b06c5a5ceba082bdf1af6187616739e928b7edd3af",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "miracle-cycle-20261002/next_audit_cases.py: copies server/local/ae-audit/catalog.json to audit-original-catalog.json",
+        "miracle-cycle-20261002/NetworkAudit.java: prepare captures catalog, run uses per-case stock or allStock"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 4906,
+      "rows": 4906,
+      "requests": 4906,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 4906,
+      "fields": [
+        "amount",
+        "id",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "miracle-cycle-20261002/audit-dependent-cases.json",
+      "sha256": "1c0ae1b3f6353272363194221e033ede7a1f8865d59bf89e88321ac3d317a2ea",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "miracle-cycle-20261002/next_audit_cases.py: copies server/local/ae-audit/catalog.json to audit-original-catalog.json",
+        "miracle-cycle-20261002/NetworkAudit.java: prepare captures catalog, run uses per-case stock or allStock"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 44,
+      "rows": 44,
+      "requests": 44,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 44,
+      "fields": [
+        "amount",
+        "dump",
+        "id",
+        "stock",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "miracle-cycle-20261002/audit-formal-cases.json",
+      "sha256": "814fdb9612d713768cd357a1597ba1ff4df05f464a1d33798f925dedaab9a224",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "miracle-cycle-20261002/next_audit_cases.py: copies server/local/ae-audit/catalog.json to audit-original-catalog.json",
+        "miracle-cycle-20261002/NetworkAudit.java: prepare captures catalog, run uses per-case stock or allStock"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 2,
+      "rows": 2,
+      "requests": 2,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 2,
+      "fields": [
+        "amount",
+        "dump",
+        "id",
+        "stock",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "miracle-cycle-20261002/audit-formal-first-cases.json",
+      "sha256": "8eff432e3464d32e2df476e062baf92ebe536e3bc31d226c7947a68ac94e4712",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "miracle-cycle-20261002/next_audit_cases.py: copies server/local/ae-audit/catalog.json to audit-original-catalog.json",
+        "miracle-cycle-20261002/NetworkAudit.java: prepare captures catalog, run uses per-case stock or allStock"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 42,
+      "rows": 42,
+      "requests": 42,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 42,
+      "fields": [
+        "amount",
+        "dump",
+        "id",
+        "stock",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "miracle-cycle-20261002/audit-formal-rest-cases.json",
+      "sha256": "b8557f6e51cf4726caf1755cc3922bc6a16b8c37b6595cb8382deebd4c619318",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "miracle-cycle-20261002/next_audit_cases.py: copies server/local/ae-audit/catalog.json to audit-original-catalog.json",
+        "miracle-cycle-20261002/NetworkAudit.java: prepare captures catalog, run uses per-case stock or allStock"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 6364,
+      "rows": 6364,
+      "requests": 6364,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 6364,
+      "fields": [
+        "amount",
+        "id",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "miracle-cycle-20261002/audit-linear-cases.json",
+      "sha256": "db635c2369f55f90444202bb9a8bbb5a208d3f7a2d5085b879587647cc62c6a7",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "miracle-cycle-20261002/next_audit_cases.py: copies server/local/ae-audit/catalog.json to audit-original-catalog.json",
+        "miracle-cycle-20261002/NetworkAudit.java: prepare captures catalog, run uses per-case stock or allStock"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 1200,
+      "rows": 1200,
+      "requests": 1200,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 1200,
+      "fields": [
+        "amount",
+        "id",
+        "stock",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "miracle-cycle-20261002/audit-tight-cases.json",
+      "sha256": "bef2b7ff136ed601722ea8e4714f01c57f2ff0b2cec3a143bea4fe5b5801fb87",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "miracle-cycle-20261002/next_audit_cases.py: copies server/local/ae-audit/catalog.json to audit-original-catalog.json",
+        "miracle-cycle-20261002/NetworkAudit.java: prepare captures catalog, run uses per-case stock or allStock"
+      ]
+    },
+    {
+      "container": "cases",
+      "groups": 939,
+      "rows": 939,
+      "requests": 939,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 939,
+      "fields": [
+        "amount",
+        "id",
+        "stock",
+        "target",
+        "verify_cache"
+      ],
+      "has_native_orders": true,
+      "source": "miracle-cycle-20261002/server/local/random-order/cases.json",
+      "sha256": "979c08a7670ed9c5d9dece1ba2b674e56c1c1d562147d77af38cdb075ddcf768",
+      "catalog_policy": "native AE provider-order capture; original native driver required",
+      "global_catalog": null,
+      "evidence": [
+        "miracle-cycle-20261002/RandomOrderAudit.java: live provider-order replay"
+      ]
+    },
+    {
+      "container": "cases",
+      "groups": 69,
+      "rows": 69,
+      "requests": 69,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 69,
+      "fields": [
+        "amount",
+        "expected_feasible",
+        "id",
+        "stock",
+        "target",
+        "verify_cache"
+      ],
+      "has_native_orders": true,
+      "source": "miracle-cycle-20261002/server/local/random-order/partial.json",
+      "sha256": "f226edbdad716cef9ccf7b60e9bb21ec42bd8206b843f3ba49316b161e02b9e3",
+      "catalog_policy": "native AE provider-order capture; original native driver required",
+      "global_catalog": null,
+      "evidence": [
+        "miracle-cycle-20261002/RandomOrderAudit.java: live provider-order replay"
+      ]
+    },
+    {
+      "container": "cases",
+      "groups": 2,
+      "rows": 2,
+      "requests": 2,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 2,
+      "fields": [
+        "amount",
+        "id",
+        "stock",
+        "target",
+        "verify_cache"
+      ],
+      "has_native_orders": true,
+      "source": "miracle-cycle-20261002/server/local/random-order/smoke.json",
+      "sha256": "28e89f2f2ff034defe6ce29a357f0ff7fb6a015065f70ff5a27969d332bde5df",
+      "catalog_policy": "native AE provider-order capture; original native driver required",
+      "global_catalog": null,
+      "evidence": [
+        "miracle-cycle-20261002/RandomOrderAudit.java: live provider-order replay"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 64,
+      "rows": 64,
+      "requests": 64,
+      "embedded_catalog_groups": 64,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "new-stage-20261004/order-audit/policy-fixture.json",
+      "sha256": "3c281a6b8ae96799f7953aafbb5f84216d34260863b1aaba9664d27663b870a8",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 64,
+      "rows": 64,
+      "requests": 64,
+      "embedded_catalog_groups": 64,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "next-boundary-20261004/boundary-final-r1/first-witness-ab/policy-fixture.json",
+      "sha256": "3c281a6b8ae96799f7953aafbb5f84216d34260863b1aaba9664d27663b870a8",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 64,
+      "rows": 64,
+      "requests": 64,
+      "embedded_catalog_groups": 64,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "next-boundary-20261004/solver-stage-20261007-final/first-witness-ab/policy-fixture.json",
+      "sha256": "3c281a6b8ae96799f7953aafbb5f84216d34260863b1aaba9664d27663b870a8",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 256,
+      "rows": 256,
+      "requests": 744,
+      "embedded_catalog_groups": 256,
+      "external_catalog_groups": 0,
+      "fields": [
+        "baseline_group",
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "pinned_bindings",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/archive-cuts-0.json",
+      "sha256": "7014047a92566cad0bf78c2799a31dc6a7c0969951bfa54726e6c657c8d8ba4e",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 256,
+      "rows": 256,
+      "requests": 768,
+      "embedded_catalog_groups": 256,
+      "external_catalog_groups": 0,
+      "fields": [
+        "baseline_group",
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "pinned_bindings",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/archive-cuts-1.json",
+      "sha256": "46bed2c80943262580cc95983f56b47aa28573ece185a1ec0c5b171fb86fe167",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 256,
+      "rows": 256,
+      "requests": 768,
+      "embedded_catalog_groups": 256,
+      "external_catalog_groups": 0,
+      "fields": [
+        "baseline_group",
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "pinned_bindings",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/archive-cuts-2.json",
+      "sha256": "a905af741d54fe025ad85abea0859e0027895807e151cfda05c8a5e503d7dd99",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 256,
+      "rows": 256,
+      "requests": 768,
+      "embedded_catalog_groups": 256,
+      "external_catalog_groups": 0,
+      "fields": [
+        "baseline_group",
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "pinned_bindings",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/archive-cuts-3.json",
+      "sha256": "c4d5ee68c97a1640641f83bc1e6d31499f50a057fd91e45294de6422ecee4d4f",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 208,
+      "rows": 208,
+      "requests": 624,
+      "embedded_catalog_groups": 208,
+      "external_catalog_groups": 0,
+      "fields": [
+        "baseline_group",
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "pinned_bindings",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/archive-cuts-4.json",
+      "sha256": "cda0ef2c51bf007b82f86f63cb2934a74622c57fb1bb40631782c84925fd94d4",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 314,
+      "rows": 314,
+      "requests": 314,
+      "embedded_catalog_groups": 314,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "dump",
+        "fallback",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "native_reference_id",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/archived-baseline.json",
+      "sha256": "ee8dbc00e232bf9e6e875e47136e01b37c2b695b977dd1138be4dc03ea071694",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 1,
+      "rows": 1,
+      "requests": 3,
+      "embedded_catalog_groups": 1,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "cut_seed",
+        "dump",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "retained_alternatives",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/counterexample-998.json",
+      "sha256": "e90ec74f5591b174e5f5af04f255fa4566fa667da8bce2cc684c3e0fcff64a7d",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 1920,
+      "rows": 1920,
+      "requests": 4990,
+      "embedded_catalog_groups": 1920,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "cut_seed",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "retained_alternatives",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/dag-cuts.json",
+      "sha256": "3c39d11cce0919b7ef5c8074c540e4136e8c65151b5c458407ff6785d365fcba",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 12,
+      "rows": 12,
+      "requests": 48,
+      "embedded_catalog_groups": 12,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "cut_seed",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "retained_alternatives",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/jvm-boundaries.json",
+      "sha256": "7bf2a50f64e7047c83a861ac59ad5c59a9db14e8e439e98820f178d1916ca100",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "cases",
+      "groups": 202,
+      "rows": 202,
+      "requests": 202,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 202,
+      "fields": [
+        "amount",
+        "id",
+        "kind",
+        "stock",
+        "target",
+        "verify_cache"
+      ],
+      "has_native_orders": true,
+      "source": "pruned-search-20261002/native-spec.json",
+      "sha256": "02179709662e3f712721572a87c35e22a9b1a76c7f2cda2a76b9725400ce1383",
+      "catalog_policy": "native AE provider-order capture; original native driver required",
+      "global_catalog": null,
+      "evidence": [
+        "pruned-search-20261002/RandomOrderAudit.java: live provider-order replay"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 1,
+      "rows": 1,
+      "requests": 21,
+      "embedded_catalog_groups": 1,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "cut_seed",
+        "dump",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "retained_alternatives",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "pruned-search-20261002/near-998.json",
+      "sha256": "42c5fa9c4419d1c78e315bea57ca051f73ba410abd9ff97fb74cb81a4d31b388",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 96,
+      "rows": 96,
+      "requests": 3594,
+      "embedded_catalog_groups": 96,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "quantity-regression-20261002/constructive.json",
+      "sha256": "5b676bce7c8cfea631b613e578817a0eab65ec59a964d891e4ebbdb3bf552c47",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 5,
+      "rows": 5,
+      "requests": 212,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 5,
+      "fields": [
+        "dump",
+        "id",
+        "kind",
+        "requests",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "quantity-regression-20261002/cycles-production.json",
+      "sha256": "169e0eca17df28cc95c0935ded6eed4c164b66b222811087e17fd09d414b487f",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "quantity-regression-20261002/prepare.py: SOURCE and catalog",
+        "quantity-regression-20261002/QuantitySweep.java: catalog override and stock precedence"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 98,
+      "rows": 98,
+      "requests": 4027,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 98,
+      "fields": [
+        "id",
+        "kind",
+        "requests",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "quantity-regression-20261002/cycles.json",
+      "sha256": "c22b3297c69d5213258e3aa9a86af6f6dbf9d4fcf61efc9d9ace249f4c59d007",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "quantity-regression-20261002/prepare.py: SOURCE and catalog",
+        "quantity-regression-20261002/QuantitySweep.java: catalog override and stock precedence"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 21,
+      "rows": 21,
+      "requests": 39,
+      "embedded_catalog_groups": 21,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "dump",
+        "fallback",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "max_extra_copies",
+        "memory",
+        "parallelism",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "quantity-regression-20261002/deep-diagnosis.json",
+      "sha256": "848f01deb424047232846cd74941acfcbe770d1788167aeed852c9d9bc39efff",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 24,
+      "rows": 24,
+      "requests": 336,
+      "embedded_catalog_groups": 24,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "fallback",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "quantity-regression-20261002/deep-native.json",
+      "sha256": "24114e440612e28d5ee3ba3cba32126bbc03470b04a6160df00bb8982bdc2e7e",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 24,
+      "rows": 24,
+      "requests": 336,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 24,
+      "fields": [
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "quantity-regression-20261002/deep.json",
+      "sha256": "c6379c3b3a94436ce259f34cfaac8f0401250bbee4bbf708ae02a0671b001626",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "quantity-regression-20261002/prepare.py: SOURCE and catalog",
+        "quantity-regression-20261002/QuantitySweep.java: catalog override and stock precedence"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 106,
+      "rows": 106,
+      "requests": 4120,
+      "embedded_catalog_groups": 63,
+      "external_catalog_groups": 43,
+      "fields": [
+        "catalog",
+        "dump",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "requests",
+        "stock",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "quantity-regression-20261002/final-order-checks.json",
+      "sha256": "20bc0732f4cff597a7f12ec36bb40ba7a4f83dc9c74e58c6fb99fa0bf189bea3",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "quantity-regression-20261002/prepare.py: SOURCE and catalog",
+        "quantity-regression-20261002/QuantitySweep.java: catalog override and stock precedence"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 36,
+      "rows": 36,
+      "requests": 180,
+      "embedded_catalog_groups": 36,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "dump",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "quantity-regression-20261002/focused.json",
+      "sha256": "9d585382a02afe7c814104d6908aae4bc485fa044427273cdd7e16e6e57b2646",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 400,
+      "rows": 400,
+      "requests": 15600,
+      "embedded_catalog_groups": 0,
+      "external_catalog_groups": 400,
+      "fields": [
+        "id",
+        "kind",
+        "known_feasible_max",
+        "requests",
+        "stock",
+        "target",
+        "timeout",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "quantity-regression-20261002/linear.json",
+      "sha256": "6fbd1f9e96b9250aaf6ddb93c0974695a4bda5db8ff7c6c083def180988ddcb9",
+      "catalog_policy": "group.catalog when present; otherwise preserved original audit catalog",
+      "global_catalog": "miracle-cycle-20261002/audit-original-catalog.json",
+      "evidence": [
+        "quantity-regression-20261002/prepare.py: SOURCE and catalog",
+        "quantity-regression-20261002/QuantitySweep.java: catalog override and stock precedence"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 11,
+      "rows": 11,
+      "requests": 77,
+      "embedded_catalog_groups": 11,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "review-expansion-20261004/order-ablation/cases.json",
+      "sha256": "cfe231d21e7406edfbbbf44094035745850c694f4635786d7fdd618042046e7f",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 4608,
+      "rows": 4608,
+      "requests": 25788,
+      "embedded_catalog_groups": 4608,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "review-startup-20261004/large-0.json",
+      "sha256": "01ba4a3f33c8c85ea65ca4403e7dfa883882a907fc4ec99dffe8fd74381dc415",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 4608,
+      "rows": 4608,
+      "requests": 25788,
+      "embedded_catalog_groups": 4608,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "review-startup-20261004/large-1.json",
+      "sha256": "9e8ee4d230cc4857022c96dd04c80874321d7db98110bceb505268a594d7e8cc",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 4608,
+      "rows": 4608,
+      "requests": 25788,
+      "embedded_catalog_groups": 4608,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "review-startup-20261004/large-2.json",
+      "sha256": "a186a5954b90a4e569368536623de53ef2337ff38d6d0fd36a12fa37be6d7cca",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 6,
+      "rows": 6,
+      "requests": 12,
+      "embedded_catalog_groups": 6,
+      "external_catalog_groups": 0,
+      "fields": [
+        "baseline_group",
+        "catalog",
+        "dump",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "pinned_bindings",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "solver-expansion-20261003/validation/archive-failures-fixtures.json",
+      "sha256": "8990c7c639b30a957325fcb9403231a2d653e94b03bf96ef05505183165269c5",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 15,
+      "rows": 15,
+      "requests": 21,
+      "embedded_catalog_groups": 15,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "stock",
+        "suite",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "solver-expansion-20261003/validation/remaining-fallback.json",
+      "sha256": "a2aaeb179e638cfe0f07309c84a1706d6e1bddaef2ba6a272b40fbcdb5854cf1",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 18,
+      "rows": 18,
+      "requests": 66,
+      "embedded_catalog_groups": 18,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "count_upper",
+        "cut_seed",
+        "dump",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "retained_alternatives",
+        "stock",
+        "target",
+        "timeout",
+        "topological_order",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "solver-stability-review-20261002/cases.json",
+      "sha256": "6a24b8994f1b99203387d348a01cd569a447997e26f4964eb568e436d5b55c81",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 2,
+      "rows": 2,
+      "requests": 2,
+      "embedded_catalog_groups": 2,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "count_upper",
+        "cut_seed",
+        "dump",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "retained_alternatives",
+        "stock",
+        "target",
+        "timeout",
+        "topological_order",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "solver-stability-review-20261002/phase-cases.json",
+      "sha256": "22cd78c623b941983e21357a0bd700290e08b6ad4d6ed1a606a26810be5e67b5",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 3,
+      "rows": 3,
+      "requests": 4,
+      "embedded_catalog_groups": 3,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "count_upper",
+        "cut_seed",
+        "dump",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "requests",
+        "retained_alternatives",
+        "stock",
+        "target",
+        "timeout",
+        "topological_order",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "solver-stability-review-20261002/profile-cases.json",
+      "sha256": "a3c47550cdedd8518b1bdf0d8e77c9ef5cfc40788f9a600d1fee10ea22c5151a",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 5,
+      "rows": 5,
+      "requests": 35,
+      "embedded_catalog_groups": 5,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "solver-stage-20261006/combined-low-budget.json",
+      "sha256": "9fa591335b9142ff05c74af8b64bd16da7e5f0f269efb02b252ed0887731c1e3",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 2,
+      "rows": 2,
+      "requests": 14,
+      "embedded_catalog_groups": 2,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "solver-stage-20261006/low-budget.json",
+      "sha256": "f9b6d9d6ecfb6ba7429870e7e55d39e0a2ec54e142e50c76213c17773dead2a3",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    },
+    {
+      "container": "$",
+      "groups": 3,
+      "rows": 3,
+      "requests": 21,
+      "embedded_catalog_groups": 3,
+      "external_catalog_groups": 0,
+      "fields": [
+        "catalog",
+        "id",
+        "kind",
+        "known_feasible_max",
+        "memory",
+        "random_seed",
+        "requests",
+        "stock",
+        "target",
+        "work"
+      ],
+      "has_native_orders": false,
+      "source": "solver-stage-20261006/new-low-budget.json",
+      "sha256": "ed3166df0b4d2c969c02377c239e66694dae2272346a892e557db78fdc66d803",
+      "catalog_policy": "each group.catalog; no global catalog substitution",
+      "global_catalog": null,
+      "evidence": [
+        "quantity-regression-20261002/QuantitySweep.java: main selects group.catalog when present"
+      ]
+    }
+  ]
+}

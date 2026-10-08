@@ -1,0 +1,129 @@
+{
+  "id": "a4c12a69830b323455503f575c561bf98b0a9b794c711378c7b032403f650338",
+  "kind": "graph",
+  "model": {
+    "target": "GOAL",
+    "amount": 1,
+    "stock": {
+      "U0": 900439,
+      "U1": 205130,
+      "U2": 507177,
+      "CAT": 1
+    },
+    "recipes": [
+      {
+        "id": "r1_0",
+        "inputs": {
+          "U1": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "CAT": 1,
+          "X0_0": 31677
+        }
+      },
+      {
+        "id": "r0_0-alias",
+        "inputs": {
+          "CAT": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "D0": 1,
+          "X0_0": 29496
+        }
+      },
+      {
+        "id": "r0_1",
+        "inputs": {
+          "U0": 1,
+          "CAT": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "D0": 1,
+          "X1_0": 29496
+        }
+      },
+      {
+        "id": "finish",
+        "inputs": {
+          "D2": 507176,
+          "D0": 900439,
+          "X0_0": 28683460401,
+          "X1_0": 20927001641,
+          "D1": 205130
+        },
+        "outputs": {
+          "GOAL": 1
+        }
+      },
+      {
+        "id": "r2_1",
+        "inputs": {
+          "CAT": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "X1_0": 32638,
+          "D2": 1,
+          "CAT": 1
+        }
+      },
+      {
+        "id": "r0_0",
+        "inputs": {
+          "CAT": 1,
+          "U0": 1
+        },
+        "outputs": {
+          "D0": 1,
+          "CAT": 1,
+          "X0_0": 29496
+        }
+      },
+      {
+        "id": "r2_0",
+        "inputs": {
+          "CAT": 1,
+          "U2": 1
+        },
+        "outputs": {
+          "CAT": 1,
+          "X0_0": 32638,
+          "D2": 1
+        }
+      },
+      {
+        "id": "r1_1",
+        "inputs": {
+          "CAT": 1,
+          "U1": 1
+        },
+        "outputs": {
+          "D1": 1,
+          "CAT": 1,
+          "X1_0": 31677
+        }
+      }
+    ]
+  },
+  "names": [
+    "shared_catalyst_0194@metamorphic2"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/metamorphic-inputs.json",
+      "pointer": "/22"
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

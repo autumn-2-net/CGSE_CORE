@@ -1,0 +1,51 @@
+{
+  "id": "1d9d0c702690fd567420c692b6a3b0f819def6b452a64573925a8c8f4526db77",
+  "kind": "graph",
+  "model": {
+    "target": "B",
+    "amount": 32,
+    "stock": {
+      "A": 64
+    },
+    "recipes": [
+      {
+        "id": "r1",
+        "inputs": {
+          "A": 2
+        },
+        "outputs": {
+          "B": 1
+        }
+      },
+      {
+        "id": "r2",
+        "inputs": {
+          "B": 2
+        },
+        "outputs": {
+          "A": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "lossy_cycle_n32"
+  ],
+  "expected": "SAT",
+  "origins": [
+    {
+      "source": ".local/color-review-20260926/common-input/lossy_cycle_n32.json",
+      "pointer": ""
+    },
+    {
+      "source": "CGSE_638bf50_vs_max_fast_and_solvers_20260926.zip!/common-input/lossy_cycle_n32.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}

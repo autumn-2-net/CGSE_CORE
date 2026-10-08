@@ -1,0 +1,138 @@
+{
+  "id": "2445dbff630174c666f337b643a3db47738d9b28773a4db546c91af131791712",
+  "kind": "graph",
+  "model": {
+    "target": "P3",
+    "amount": 1,
+    "stock": {
+      "F": 4,
+      "W": 3,
+      "OFF0": 1,
+      "OFF1": 1,
+      "OFF2": 1,
+      "OFF3": 1
+    },
+    "recipes": [
+      {
+        "id": "build0",
+        "inputs": {
+          "F": 1,
+          "W": 1,
+          "OFF0": 1
+        },
+        "outputs": {
+          "P0": 1
+        }
+      },
+      {
+        "id": "erase0",
+        "inputs": {
+          "F": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "W": 1,
+          "OFF0": 1
+        }
+      },
+      {
+        "id": "build1",
+        "inputs": {
+          "F": 1,
+          "W": 1,
+          "OFF1": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "P1": 1,
+          "P0": 1
+        }
+      },
+      {
+        "id": "erase1",
+        "inputs": {
+          "F": 1,
+          "P1": 1
+        },
+        "outputs": {
+          "W": 1,
+          "OFF1": 1
+        }
+      },
+      {
+        "id": "build2",
+        "inputs": {
+          "F": 1,
+          "W": 1,
+          "OFF2": 1,
+          "P0": 1
+        },
+        "outputs": {
+          "P2": 1,
+          "P0": 1
+        }
+      },
+      {
+        "id": "erase2",
+        "inputs": {
+          "F": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "W": 1,
+          "OFF2": 1
+        }
+      },
+      {
+        "id": "build3",
+        "inputs": {
+          "F": 1,
+          "W": 1,
+          "OFF3": 1,
+          "P1": 1,
+          "P2": 1
+        },
+        "outputs": {
+          "P3": 1,
+          "P1": 1,
+          "P2": 1
+        }
+      },
+      {
+        "id": "erase3",
+        "inputs": {
+          "F": 1,
+          "P3": 1
+        },
+        "outputs": {
+          "W": 1,
+          "OFF3": 1
+        }
+      }
+    ]
+  },
+  "names": [
+    "manual_diamond_reclaim_short"
+  ],
+  "expected": "UNSAT",
+  "origins": [
+    {
+      "source": ".local/web-review-20260927/round3-inputs.json",
+      "pointer": "/154"
+    },
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/manual/manual_diamond_reclaim_short.json",
+      "pointer": ""
+    },
+    {
+      "source": ".local/web-review-20260927/round3/CGSE_round3/manual-models/manual_diamond_reclaim_short.json",
+      "pointer": ""
+    }
+  ],
+  "seed": 20260926,
+  "budget": {
+    "milliseconds": 3000,
+    "work": 20000000
+  },
+  "expectation_conflict": false
+}
