@@ -91,6 +91,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     private int sourceAttempts, allocationAfterSources = 8;
     private long allocationTurnStarted, allocationTurnAllowance;
     private CatalystPolicy catalystPolicy = CatalystPolicy.STOCK;
+    private final java.util.concurrent.atomic.AtomicBoolean registeredSearch = new java.util.concurrent.atomic.AtomicBoolean();
 
     public GraphPlanningWork<K> catalysts(CatalystPolicy policy) {
         if (phase != 0) throw new IllegalStateException("Planning already started");
@@ -131,6 +132,8 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         this.nesting = nesting;
         pending.add(Map.of());
         budget.note("source_search", "target=" + target + "; amount=" + amount + "; nesting=" + nesting + "; sources=" + compiler.producers(target).size());
+        compiler.searchOpened();
+        registeredSearch.set(true);
     }
 
     @Override
@@ -1140,6 +1143,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
 
     @Override
     public void close() {
+        if (registeredSearch.compareAndSet(true, false)) compiler.searchClosed();
         finishObservation(PlanningBudget.CandidateOutcome.ABANDONED);
         budget.release(graphMemory);
         graphMemory = 0;

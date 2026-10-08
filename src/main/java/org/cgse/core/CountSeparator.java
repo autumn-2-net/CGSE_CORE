@@ -48,6 +48,7 @@ final class CountSeparator implements AutoCloseable {
     private final long allowance;
     private int cursor, maxSeparator;
     private boolean prepared, complete, infeasible;
+    private CountInterfaceSearch interfaceSearch;
 
     CountSeparator(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower, BigInteger[] upper, PlanningBudget budget) {
         this(rows, lower, upper, budget, 262144);
@@ -69,6 +70,13 @@ final class CountSeparator implements AutoCloseable {
         if (complete) return true;
         try {
             charge();
+            if (interfaceSearch != null) {
+                if (!interfaceSearch.step()) return false;
+                counts = interfaceSearch.counts();
+                interfaceSearch.close();
+                interfaceSearch = null;
+                return finish(false, counts == null ? "interface_declined" : "interface_witness");
+            }
             if (!prepared) {
                 prepared = true;
                 prepare();
@@ -139,6 +147,19 @@ final class CountSeparator implements AutoCloseable {
     }
 
     private void prepare() {
+        boolean wide = false;
+        for (int i = 0; i < lower.length; i++) {
+            charge();
+            if (upper[i] != null && upper[i].compareTo(lower[i]) < 0) {
+                finish(true, "empty_domain");
+                return;
+            }
+            wide |= upper[i] == null || upper[i].subtract(lower[i]).compareTo(BigInteger.valueOf(31)) > 0;
+        }
+        if (wide) {
+            interfaceSearch = new CountInterfaceSearch(original, lower, upper, budget, allowance - work);
+            return;
+        }
         domains = new int[lower.length];
         assignment = new int[lower.length];
         BitSet live = new BitSet();
@@ -308,6 +329,8 @@ final class CountSeparator implements AutoCloseable {
 
     @Override
     public void close() {
+        if (interfaceSearch != null) interfaceSearch.close();
+        interfaceSearch = null;
         budget.release(memory);
         memory = 0;
     }

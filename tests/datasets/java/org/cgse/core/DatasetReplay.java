@@ -114,8 +114,11 @@ public final class DatasetReplay {
     }
 
     private static boolean solve(Catalog data, GraphCompiler<String> compiler, Request request, String mode, long seed,
-                                 long timeout, long workLimit, long memory, BufferedWriter writer) throws Exception {
-        PlanningBudget budget = new PlanningBudget(timeout, workLimit, memory, () -> false, System::nanoTime);
+                                 long timeout, long workLimit, long memory, BufferedWriter writer,
+                                 PlanningScheduler scheduler, int workers, boolean expanded) throws Exception {
+        long effectiveWork = PlanningBudget.parallelWorkLimit(workLimit, workers, expanded);
+        PlanningBudget budget = new PlanningBudget(timeout, effectiveWork, memory, () -> false, System::nanoTime);
+        if (scheduler != null) budget.enableMetrics();
         long started = System.nanoTime();
         String result, error = "";
         boolean verified = false, feasible = false;
@@ -126,8 +129,11 @@ public final class DatasetReplay {
                         Map.of(), data.preserve(), data.force(), budget).catalysts(policy)))) {
             GraphPlan<String> plan;
             try {
-                while (!work.value.step()) {}
-                plan = work.value.result();
+                if (scheduler != null) plan = scheduler.submit(work.value, budget).get();
+                else {
+                    while (!work.value.step()) {}
+                    plan = work.value.result();
+                }
             } catch (PlanningBudget.Exhausted exhausted) {
                 plan = work.value.limited(exhausted);
             }
@@ -156,6 +162,8 @@ public final class DatasetReplay {
             error = failure.toString();
             failure.printStackTrace(System.err);
         }
+        if (budget.reservedBytes() != 0) error += " Unreleased request reservation: " + budget.reservedBytes();
+        if (scheduler != null && budget.metrics().peakActiveWorkers() > workers) error += " Worker cap exceeded";
         String assessment = !error.isEmpty() ? "ERROR" : verified ? "VERIFIED_FEASIBLE" : "INCONCLUSIVE";
         String row = "{\"mode\":" + quote(mode) + ",\"seed\":" + seed + ",\"target\":" + quote(request.target()) +
                 ",\"amount\":" + request.amount() + ",\"expected\":" + quote(request.expected()) + ",\"result\":" + quote(result) +
@@ -164,6 +172,8 @@ public final class DatasetReplay {
                 ",\"selected_jei_recipes\":" + selectedJei + ",\"seed_types\":" + seeds + ",\"missing_types\":" + missing +
                 ",\"work\":" + budget.nodes() + ",\"search_work\":" + budget.searchWork() + ",\"compilation_work\":" + budget.compilationWork() +
                 ",\"peak_bytes\":" + budget.peakBytes() + ",\"elapsed_ms\":" + (System.nanoTime() - started) / 1_000_000.0 +
+                ",\"workers\":" + workers + ",\"expanded_budget\":" + expanded + ",\"effective_work_limit\":" + effectiveWork +
+                ",\"peak_workers\":" + (scheduler == null ? 1 : budget.metrics().peakActiveWorkers()) +
                 ",\"error\":" + quote(error) + "}";
         writer.write(row);
         writer.newLine();
@@ -191,9 +201,15 @@ public final class DatasetReplay {
             System.out.println("Loaded complete catalogs: manual=" + manual.recipes().size() + " extra=" + extra.recipes().size() +
                     " stock_keys=" + manual.stock().size() + " resource_keys=" + KEYS.size());
             int errors = 0;
-            for (String mode : modes) {
-                GraphCompiler<String> compiler = compiler(manual, extra, mode, seed);
-                for (Request request : requests) if (!solve(manual, compiler, request, mode, seed, timeout, workLimit, memory, writer)) errors++;
+            int workers = args.length > 2 ? Integer.parseInt(args[2]) : 1;
+            boolean expanded = args.length > 3 && Boolean.parseBoolean(args[3]);
+            if (workers <= 0) throw new IllegalArgumentException("Non-positive worker count");
+            try (var scheduler = workers == 1 ? null : new PlanningScheduler(workers, 8, 4096, 4_000_000)) {
+                for (String mode : modes) {
+                    GraphCompiler<String> compiler = compiler(manual, extra, mode, seed);
+                    for (Request request : requests)
+                        if (!solve(manual, compiler, request, mode, seed, timeout, workLimit, memory, writer, scheduler, workers, expanded)) errors++;
+                }
             }
             if (errors > 0) throw new AssertionError("Invalid or unexpected results: " + errors);
         }

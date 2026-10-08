@@ -90,6 +90,8 @@ def main():
     parser.add_argument('--seed', type=int, default=73)
     parser.add_argument('--milliseconds', type=int, default=3000)
     parser.add_argument('--work', type=int, default=20_000_000)
+    parser.add_argument('--workers', type=int, default=1, help='Use the real retained-work scheduler when greater than one')
+    parser.add_argument('--expanded-budget', action='store_true', help='Apply the production parallel work multiplier')
     parser.add_argument('--memory-mib', type=int, default=256)
     parser.add_argument('--heap', default='3g')
     parser.add_argument('--timeout', type=int, default=300, help='Process wall limit in seconds')
@@ -97,6 +99,8 @@ def main():
     parser.add_argument('--no-compile', action='store_true')
     parser.add_argument('--output', type=Path, default=ROOT / 'build/datasets')
     args = parser.parse_args()
+    if args.workers < 1:
+        parser.error('Worker count must be positive')
     manifest = json.loads((BASE / 'index.json').read_text(encoding='utf-8'))
     entries = {entry['source']: entry for entry in manifest['files']}
     if args.verify_only:
@@ -177,7 +181,8 @@ def main():
     run = {'schema': 'cgse-complete-dataset-replay-v1', 'sources': [manual_entry, extra_entry],
            'manual': stats(manual), 'extra': stats(extra), 'modes': modes, 'seed': args.seed, 'requests': requests,
            'preserve_seeds': manual.get('preserve_seeds', True), 'force_craft': manual.get('force_craft', True),
-           'budget': {'milliseconds': args.milliseconds, 'work': args.work, 'memory_bytes': args.memory_mib << 20},
+           'budget': {'milliseconds': args.milliseconds, 'work': args.work, 'memory_bytes': args.memory_mib << 20,
+                      'workers': args.workers, 'expanded': args.expanded_budget},
            'transfer_sha256': sha256(transfer)}
     (output / 'run.json').write_text(json.dumps(run, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     def java(name):
@@ -196,7 +201,8 @@ def main():
     print(json.dumps({'manual': run['manual'], 'extra': run['extra'], 'requests': len(requests), 'modes': modes}), flush=True)
     with (output / 'replay.log').open('w', encoding='utf-8') as log:
         result = subprocess.run([java('java'), '-ea', '-Dfile.encoding=UTF-8', '-Xmx' + args.heap, '-cp', str(classes),
-                                 'org.cgse.core.DatasetReplay', str(transfer), str(output / 'results.jsonl')],
+                                 'org.cgse.core.DatasetReplay', str(transfer), str(output / 'results.jsonl'),
+                                 str(args.workers), str(args.expanded_budget).lower()],
                                 cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, timeout=args.timeout)
     rows = [json.loads(line) for line in (output / 'results.jsonl').read_text(encoding='utf-8').splitlines()]
     summary = {'requests': len(rows), 'expected_rows': len(modes) * len(requests), 'exit_code': result.returncode,

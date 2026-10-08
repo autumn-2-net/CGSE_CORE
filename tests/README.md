@@ -69,6 +69,38 @@ established.
 
 ## Known limits and historical material
 
+The standard suite includes `LargeSourceSelectionTest` (9,002-source catalogs,
+reopened stock boundaries, shuffled priority ties and interrupted selection),
+`InterfaceSearchTest` (1,200 independent finite-domain oracle/order cases,
+unbounded and 40-digit internal domains, scoped component memoization, proof
+checks, cancellation and quota decline), and `CompilerCacheMetricsTest`
+(eviction, nested compiler identity and 128 requests on four worker threads).
+The interface search is a positive count neighborhood. Its local infeasibility
+answers are scoped to a component and interface assignment; no negative answer
+or UNKNOWN is exported as an infeasibility proof for the original model.
+Composed counts still go through the global execution scheduler and validator.
+
+`GraphCompiler.cacheMetrics()` observes all cache families and retained macro
+compilers, deduplicating compilers by identity without retaining old snapshots
+in a global registry. It reports logical weight, estimated bytes, hits/misses,
+capacity evictions, and active `GraphPlanningWork` lifetimes (including nested
+seed searches until close). Estimates can count shared structures in multiple
+families and exclude arbitrary host key/binding objects: they are not a heap
+census or a memory limit. A concurrent snapshot is not atomic across compilers.
+The comparison harness records these separately from peak request reservations;
+older revisions without the API report -1. Use `--fixture-dir` to compare a
+generated fixture campaign; the input digest is checked at completion as well.
+The source-selection stress families are reproducible without captured game data:
+
+```text
+python tests/benchmarks/generate_source_cases.py
+python tests/benchmarks/compare_planning.py --java-home <jdk-directory> --baseline <commit> --fixture-dir build/source-selection-fixtures
+```
+
+These cover a reopened inventory boundary, demand shared by two downstream
+recipes, and a seeded growth recipe. Both work accounts are reported; results
+from this targeted family are not a claim of the same speedup on all recipes.
+
 At migration validation, all 2,944 selected finite/cover oracle inputs passed.
 The count corpus produced 187 independently verified conclusions and 87 unresolved
 budget limits. The fixed fixtures produced 657 verified results and 36 unresolved

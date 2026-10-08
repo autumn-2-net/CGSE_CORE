@@ -363,23 +363,28 @@ final class GraphStockViewWork<K> implements AutoCloseable {
                 var sources = compiler.producers(key);
                 long needed = Math.max(1, demand.getOrDefault(key, 1L) - (force && target.equals(key) ? 0 : stock.getOrDefault(key, 0L)));
                 long rankingWork = Math.min(262_144, budget.remainingWork());
-                var ordered = variant == 0 ? sources : variant == 3 ? ranking.sources(key, needed, rankingWork) :
-                        ranking.sources(key, variant == 2 || variant == 4 || variant == 6 || variant == 9, rankingWork);
                 GraphRecipe<K> chosen = null;
-                for (var recipe : ordered) {
-                    check();
-                    if (!excluded.contains(recipe.id()) && !triedSources.getOrDefault(key, Set.of()).contains(recipe.id())) {
-                        chosen = recipe;
-                        break;
+                int ordinal = 0;
+                if (variant != 0) {
+                    var choice = ranking.choose(key, variant == 2 || variant == 4 || variant == 6 || variant == 9,
+                            needed, variant == 3, excluded, triedSources.getOrDefault(key, Set.of()), rankingWork);
+                    if (choice != null) {
+                        chosen = choice.recipe();
+                        ordinal = choice.ordinal();
+                    }
+                }
+                if (chosen == null) {
+                    for (var recipe : sources) {
+                        check();
+                        if (excluded.contains(recipe.id())) continue;
+                        if (!triedSources.getOrDefault(key, Set.of()).contains(recipe.id())) {
+                            chosen = recipe;
+                            break;
+                        }
+                        ordinal++;
                     }
                 }
                 if (chosen == null) continue;
-                int ordinal = 0;
-                for (var recipe : sources) {
-                    check();
-                    if (recipe == chosen) break;
-                    if (!excluded.contains(recipe.id())) ordinal++;
-                }
                 if (ordinal != 0) choices.put(key, ordinal);
                 long output = Math.max(1, chosen.executionOutputs().getOrDefault(key, 0L) - chosen.inputs().getOrDefault(key, 0L));
                 long runs = needed / output + (needed % output == 0 ? 0 : 1);

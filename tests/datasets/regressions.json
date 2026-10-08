@@ -1,0 +1,19 @@
+{
+  "schema": "cgse-captured-regressions-v1",
+  "campaigns": [
+    {
+      "name": "emitter-residual-progress",
+      "source": "mixed-jei-stress-20261007/manual.json",
+      "extra": "extra-virtual.json",
+      "target": "gtlcore:max_emitter",
+      "modes": ["manual", "extra-first", "random"],
+      "amounts": [1, 100, 1000],
+      "seed": 73,
+      "work": 20000000,
+      "milliseconds": 0,
+      "memory_mib": 256,
+      "expected": "SAT",
+      "reason": "A quantitatively improving stock view must obtain more than its initial exploration share while older disassembly branches stall. The complete captured catalog and stock are retained."
+    }
+  ]
+}

@@ -40,6 +40,27 @@ Run integrity verification without Java or the original checkout:
 python tests/datasets/run.py --verify-only
 ```
 
+Named positive regressions retain the complete captures and set explicit work
+caps in `regressions.json`. An unresolved result fails these campaigns; it is
+not converted into a mathematical infeasibility result. Run them with:
+
+```text
+python tests/datasets/regressions.py --java-home <jdk-directory>
+python tests/datasets/regressions.py --java-home <jdk-directory> --workers 4 --expanded-budget --output build/captured-parallel
+```
+
+`emitter-residual-progress` covers 1, 100 and 1,000 MAX emitters in manual,
+JEI-first and randomized producer orders. It exercises the quantitative stock
+view earning additional turns after observed refinement. New borrowed turns
+stop once that family's charged work catches up with the original family;
+atomic steps can overshoot this soft scheduling boundary. This is a headless replay of real
+captured inventory and all 68,187 recipes, not a live Minecraft server test.
+The multi-worker mode uses the production retained-work scheduler, including
+compiler forks. `--expanded-budget` applies `PlanningBudget.parallelWorkLimit`;
+results record the effective cap and peak active workers. Search and compilation
+keep separate accounts and share each account across the workers. This does not
+multiply the allowance independently for each worker.
+
 Run complete hand-authored and deterministically shuffled mixed catalogs using
 Python 3 and JDK 17, without Minecraft, Gradle or third-party libraries:
 

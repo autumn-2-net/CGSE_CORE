@@ -14,7 +14,7 @@ public final class PlanningComparison {
         long millis = Long.parseLong(args[1]), work = Long.parseLong(args[2]), bytes = Long.parseLong(args[3]);
         String mode = args[4];
         if (!Set.of("accounts", "total", "wall").contains(mode)) throw new IllegalArgumentException(mode);
-        System.out.println("name\tcache\tmode\tresult\tsearch\tcompilation\ttotal\tprepare_ns\tsolve_ns\tpeak_reserved_bytes\tfirst_verified_search\tfirst_verified_compilation\tfirst_verified_ns\torigins\tlimit_detail");
+        System.out.println("name\tcache\tmode\tresult\tsearch\tcompilation\ttotal\tprepare_ns\tsolve_ns\tpeak_reserved_bytes\tfirst_verified_search\tfirst_verified_compilation\tfirst_verified_ns\torigins\tlimit_detail\tcache_estimated_bytes\tcompiler_count\tactive_searches\tcache_stats");
         try (var input = new DataInputStream(new BufferedInputStream(Files.newInputStream(Path.of(args[0]))))) {
             for (int remaining = input.readInt(); remaining > 0; remaining--) {
                 String name = GraphFixtureRegression.string(input), target = GraphFixtureRegression.string(input);
@@ -70,10 +70,24 @@ public final class PlanningComparison {
                     } catch (NoSuchMethodException olderRevision) {
                         // Keep unavailable distinct from zero or final-return cost.
                     }
+                    long cacheBytes = -1, compilers = -1, active = -1;
+                    String cacheStats = "unavailable";
+                    try {
+                        Object metrics = GraphCompiler.class.getMethod("cacheMetrics").invoke(compiler);
+                        var type = metrics.getClass();
+                        cacheBytes = (long) type.getMethod("estimatedBytes").invoke(metrics);
+                        compilers = (int) type.getMethod("compilers").invoke(metrics);
+                        active = (long) type.getMethod("activeSearches").invoke(metrics);
+                        cacheStats = type.getMethod("caches").invoke(metrics).toString();
+                        if (active != 0) throw new AssertionError("Closed request remains active: " + active);
+                    } catch (NoSuchMethodException olderRevision) {
+                        // Older revisions did not expose persistent cache estimates.
+                    }
                     System.out.println(String.join("\t", name, cache, mode, capped ? "HARNESS_TOTAL_LIMIT" : plan.result().name(),
                             Long.toString(budget.searchWork()), Long.toString(budget.compilationWork()), Long.toString(budget.nodes()),
                             Long.toString(prepare), Long.toString(elapsed), Long.toString(budget.peakBytes()),
-                            Long.toString(firstSearch), Long.toString(firstCompile), Long.toString(firstNanos), clean(origins), clean(budget.failureDetail())));
+                            Long.toString(firstSearch), Long.toString(firstCompile), Long.toString(firstNanos), clean(origins), clean(budget.failureDetail()),
+                            Long.toString(cacheBytes), Long.toString(compilers), Long.toString(active), clean(cacheStats)));
                 }
             }
             if (input.read() != -1) throw new AssertionError("Trailing fixture bytes");

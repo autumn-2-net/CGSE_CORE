@@ -143,21 +143,41 @@ final class GraphStockViewPortfolio<K> implements AutoCloseable {
                 until = until > Long.MAX_VALUE - used ? Long.MAX_VALUE : until + used;
             }
         }
-        // Newly admitted source heuristics share one exploration allowance.
-        // Their cheap repair estimates must not displace the continuation of
-        // an established view. Credit grows with actual original-view work;
-        // once those views finish, the new family can use the entire remainder.
+        // Newly admitted source heuristics share an exploration allowance.
+        // Observed refinement may earn additional turns, bounded by charged
+        // work so an established continuation keeps running. Once the original
+        // views finish, the new family can use the entire remainder.
         if (done.get(active) || selected.turn >= 32_768) {
             selected.next();
             if (original.live == 0 && quantitative.live == 0) {
                 viewsComplete = true;
                 return false;
             }
-            selected = quantitative.live > 0 && (original.live == 0 || quantitative.work < original.work / 8) ?
+            selected = quantitative.live > 0 && (original.live == 0 || quantitative.work < original.work / 8 || quantitativePromising()) ?
                     quantitative : original;
             return false;
         }
         return false;
+    }
+
+    /**
+     * Exploration has a guaranteed small share, but a productive new family
+     * must not stay confined to it while older views expand increasingly costly
+     * branches. Compare observed repair costs after refinement, and stop granting
+     * extra turns once charged work catches up with the still-live original
+     * family. An atomic step may overshoot; the shared hard budget still applies.
+     * These estimates select a turn; they cannot discard a source or prove that
+     * the lower-cost proposal is executable.
+     */
+    private boolean quantitativePromising() {
+        if (quantitative.work >= original.work) return false;
+        double originalCost = Double.POSITIVE_INFINITY, quantitativeCost = Double.POSITIVE_INFINITY;
+        for (int i = 0; i < views.size(); i++) if (!done.get(i) && views.get(i).refined()) {
+            var view = views.get(i);
+            if (view.quantitative()) quantitativeCost = Math.min(quantitativeCost, view.estimatedRepairCost());
+            else originalCost = Math.min(originalCost, view.estimatedRepairCost());
+        }
+        return quantitativeCost < originalCost;
     }
 
     GraphPlan<K> result() {

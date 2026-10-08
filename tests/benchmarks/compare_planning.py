@@ -22,7 +22,8 @@ ROOT = Path(__file__).resolve().parents[2]
 def fingerprint(paths):
     digest = hashlib.sha256()
     for path in sorted(paths):
-        digest.update(path.relative_to(ROOT).as_posix().encode('utf-8'))
+        label = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+        digest.update(label.as_posix().encode('utf-8'))
         digest.update(b'\0')
         digest.update(path.read_bytes())
         digest.update(b'\0')
@@ -34,6 +35,7 @@ def main():
     parser.add_argument('--java-home', required=True)
     parser.add_argument('--baseline', default='HEAD', help='Local Git revision, resolved and archived read-only')
     parser.add_argument('--case', default='.*')
+    parser.add_argument('--fixture-dir', type=Path, default=ROOT / 'tests/regression/fixtures')
     parser.add_argument('--permutations', type=int, default=3)
     parser.add_argument('--milliseconds', type=int, default=3000)
     parser.add_argument('--work', type=int, default=20_000_000)
@@ -84,7 +86,9 @@ def main():
     spec = importlib.util.spec_from_file_location('fixtures', ROOT / 'tests/regression/run.py')
     fixtures = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(fixtures)
-    cases = [json.loads(p.read_text(encoding='utf-8')) for p in sorted((ROOT / 'tests/regression/fixtures').rglob('*.json'))]
+    fixture_paths = sorted(args.fixture_dir.resolve().rglob('*.json'))
+    fixture_fingerprint = fingerprint(fixture_paths)
+    cases = [json.loads(p.read_text(encoding='utf-8')) for p in fixture_paths]
     cases = [case for case in cases if re.search(args.case, case['name'])]
     if not cases:
         parser.error('No cases selected')
@@ -115,7 +119,8 @@ def main():
                 for row in batch:
                     row.update(revision=revision, permutation=permutation)
                     for field in ('search', 'compilation', 'total', 'prepare_ns', 'solve_ns', 'peak_reserved_bytes',
-                                  'first_verified_search', 'first_verified_compilation', 'first_verified_ns'):
+                                  'first_verified_search', 'first_verified_compilation', 'first_verified_ns',
+                                  'cache_estimated_bytes', 'compiler_count', 'active_searches'):
                         row[field] = int(row[field])
                 rows.extend(batch)
                 (output / 'rows.json').write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding='utf-8')
@@ -134,13 +139,16 @@ def main():
                 groups.append(dict(revision=revision, mode=mode, cache=cache, cases=len(group), results=results,
                                    p50_ns=quantile('solve_ns', .5), p95_ns=quantile('solve_ns', .95), p99_ns=quantile('solve_ns', .99),
                                    max_peak_reserved_bytes=max(row['peak_reserved_bytes'] for row in group),
+                                   max_cache_estimated_bytes=max(row['cache_estimated_bytes'] for row in group),
                                    total_search=sum(row['search'] for row in group), total_compilation=sum(row['compilation'] for row in group)))
-    if candidate_fingerprint != fingerprint((ROOT / 'src/main/java').rglob('*.java')) or harness_fingerprint != fingerprint(harness_paths):
+    if (candidate_fingerprint != fingerprint((ROOT / 'src/main/java').rglob('*.java')) or
+            harness_fingerprint != fingerprint(harness_paths) or fixture_fingerprint != fingerprint(fixture_paths)):
         raise RuntimeError('Benchmark inputs changed during the run; rerun before comparing revisions')
     summary = dict(baseline=baseline, candidate_head=candidate, candidate_worktree=True, workers=1,
                    candidate_source_sha256=candidate_fingerprint, harness_source_sha256=harness_fingerprint,
+                   fixture_source_sha256=fixture_fingerprint,
                    milliseconds=args.milliseconds, work=args.work, memory_mib=args.memory_mib, modes=args.modes,
-                   cache_estimates='Request reservations exclude persistent compiler caches and JVM heap/RSS', groups=groups)
+                   cache_estimates='Request reservations and logical compiler-cache estimates are separate; neither measures JVM heap/RSS. Older cache telemetry is -1.', groups=groups)
     (output / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
     print(output / 'summary.json')
 
