@@ -40,6 +40,9 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     private long graphMemory;
     private GraphSolve<K> solving;
     private GraphStockViewPortfolio<K> stockView;
+    private GraphPlan<K> stockInterruptedCandidate;
+    private PlanningBudget.CandidateOrigin stockInterruptedOrigin;
+    private boolean validatingStockProposal;
     private boolean stockViewTried, stockViewDelayed;
     private Boolean cheapCountView;
     private long firstGraphStarted, firstGraphWork, stockDelayStarted, stockDelayAllowance;
@@ -47,6 +50,9 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     private int stockResumePhase = -1;
     private Bootstrap bootstrap;
     private PlanVerification<K> verifying;
+    private PlanningBudget.CandidateObservation candidateObservation;
+    private boolean validationPending;
+    private PlanningBudget.CandidateOrigin candidateOrigin = PlanningBudget.CandidateOrigin.SOURCE_GRAPH;
     private ForceCraftProof<K> productionProof;
     private AllocationSearch<K> allocating;
     private IntegerCountSearch<K> countSearch;
@@ -142,6 +148,13 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     }
 
     private boolean step(PlanningScheduler.Slice slice) {
+        var observation = phase == 4 ? candidateObservation : null;
+        long validationWork = observation == null ? 0 : budget.threadWork();
+        long validationNanos = observation == null ? 0 : System.nanoTime();
+        var validationOwner = phase == 4 && validatingStockProposal ? stockView : null;
+        int validationView = validationOwner == null ? -1 : validationOwner.proposalView();
+        long validationSearch = validationOwner == null ? 0 : budget.threadSearchWork();
+        String failureBeforeStep = budget.failureDetail();
         try {
             if (compilationActive()) budget.compilationCheck();
             else budget.check();
@@ -333,6 +346,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 case 2 -> {
                     if (!solving.step()) return false;
                     candidate = solving.result();
+                    candidateOrigin = PlanningBudget.CandidateOrigin.SOURCE_GRAPH;
                     if (sourceAttempts == 1) firstGraphWork = budget.searchWork() - firstGraphStarted;
                     budget.note("region_solve", candidate.result() + "; missing_keys=" + candidate.missingExact().size());
                     solving.close();
@@ -354,11 +368,12 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     if (bootstrap != null) {
                         if (!bootstrap.step(slice)) return false;
                         candidate = bootstrap.result;
+                        candidateOrigin = PlanningBudget.CandidateOrigin.BOOTSTRAP;
                         bootstrap.close();
                         bootstrap = null;
                     }
                     if (candidate.feasible()) {
-                        verifying = new PlanVerification<>(candidate, budget);
+                        beginVerification(candidateOrigin);
                         phase = 4;
                     } else {
                         if (best == null || (!candidate.missing().isEmpty() &&
@@ -375,12 +390,34 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                         if (productionProof == null) productionProof = new ForceCraftProof<>(candidate, verifying, requiredSeeds, budget);
                         if (!productionProof.step()) return false;
                         boolean productive = productionProof.proved();
+                        CandidateFeedback feedback = productionProof.feedback();
+                        var outcome = productionProof.outcome();
                         productionProof.close();
                         productionProof = null;
+                        if (outcome == ForceCraftProof.Outcome.MEMORY_LIMIT && validatingStockProposal && stockView != null) {
+                            retireStockFrontier();
+                            return false;
+                        }
                         if (!productive) {
-                            budget.note("force_craft", "candidate_rejected; production_not_proved_after_rewrite");
+                            budget.note("force_craft", "candidate_rejected; reason=" + outcome);
+                            finishObservation(feedback == CandidateFeedback.REJECTED ? PlanningBudget.CandidateOutcome.REJECTED :
+                                    PlanningBudget.CandidateOutcome.INCONCLUSIVE);
                             verifying.close();
                             verifying = null;
+                            if (validatingStockProposal) {
+                                if (stockView != null) stockView.feedback(feedback);
+                                candidate = stockInterruptedCandidate;
+                                candidateOrigin = stockInterruptedOrigin;
+                                stockInterruptedCandidate = null;
+                                stockInterruptedOrigin = null;
+                                validatingStockProposal = false;
+                                if (stockView != null) phase = 19;
+                                else if (stockResumePhase >= 0) {
+                                    phase = stockResumePhase;
+                                    stockResumePhase = -1;
+                                } else afterSolve();
+                                return false;
+                            }
                             if (retryWithTargetSeed()) return false;
                             // Reject this witness, not the remaining allocation
                             // and count searches. Keep an unresolved placeholder
@@ -392,7 +429,15 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                             return false;
                         }
                     }
+                    finishObservation(PlanningBudget.CandidateOutcome.ACCEPTED);
                     verified = candidate;
+                    if (validatingStockProposal) {
+                        if (stockView != null) stockView.feedback(CandidateFeedback.ACCEPTED);
+                        stockView = null;
+                        stockInterruptedCandidate = null;
+                        stockInterruptedOrigin = null;
+                        validatingStockProposal = false;
+                    }
                     if (optimizeSeeds(candidate)) return false;
                     result = candidate;
                     discardQuantityAnalysis();
@@ -444,7 +489,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     if (allocated != null) {
                         budget.note("allocation", "witness_found");
                         candidate = allocated;
-                        verifying = new PlanVerification<>(candidate, budget);
+                        beginVerification(PlanningBudget.CandidateOrigin.ALLOCATION);
                         phase = 4;
                     } else {
                         budget.note("allocation", "no_witness; continuing alternatives");
@@ -540,7 +585,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                         if (allocating != null) allocating.discard();
                         allocating = null;
                         candidate = counted;
-                        verifying = new PlanVerification<>(candidate, budget);
+                        beginVerification(PlanningBudget.CandidateOrigin.INTEGER_COUNTS);
                         phase = 4;
                     } else if (proved) {
                         // This proof concerns every allowed source and the
@@ -586,7 +631,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                         if (allocated != null) {
                             budget.note("allocation_scout", "witness; work=" + (budget.searchWork() - allocationScoutStarted));
                             candidate = allocated;
-                            verifying = new PlanVerification<>(candidate, budget);
+                            beginVerification(PlanningBudget.CandidateOrigin.ALLOCATION);
                             phase = 4;
                             return false;
                         }
@@ -598,13 +643,17 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     if (!stockView.step()) return false;
                     var proposal = stockView.result();
                     if (stockView.paused()) stockPausedAt = budget.searchWork();
-                    else {
+                    else if (proposal == null) {
                         stockView.close();
                         stockView = null;
                     }
                     if (proposal != null) {
+                        stockInterruptedCandidate = candidate;
+                        stockInterruptedOrigin = candidateOrigin;
+                        validatingStockProposal = true;
                         candidate = proposal;
-                        verifying = new PlanVerification<>(candidate, budget);
+                        beginVerification(stockView.supportProposal() ? PlanningBudget.CandidateOrigin.SUPPORT_NEIGHBORHOOD :
+                                PlanningBudget.CandidateOrigin.STOCK_VIEW);
                         phase = 4;
                     } else if (stockResumePhase >= 0) {
                         phase = stockResumePhase;
@@ -616,12 +665,56 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 }
             }
         } catch (PlanningBudget.Exhausted limit) {
+            if (limit.limit() == PlanningBudget.Limit.MEMORY_LIMIT && validatingStockProposal && stockView != null) {
+                // Retaining optional search state must not crowd out the final
+                // verifier. Rebuild that verifier after releasing the views;
+                // never resume its partially mutated, memory-failed state.
+                if (productionProof != null) productionProof.close();
+                productionProof = null;
+                if (verifying != null) verifying.close();
+                retireStockFrontier();
+                budget.failureDetail(failureBeforeStep);
+                verifying = new PlanVerification<>(candidate, budget);
+                phase = 4;
+                return false;
+            }
+            finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
             result = limited(limit);
         } catch (ArithmeticException overflow) {
+            finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
             budget.failureDetail("arithmetic: " + overflow + " at " + (overflow.getStackTrace().length == 0 ? "unknown" : overflow.getStackTrace()[0]));
             result = failure(GraphPlan.Result.AMOUNT_LIMIT);
+        } catch (IllegalArgumentException invalid) {
+            finishObservation(PlanningBudget.CandidateOutcome.INVALID);
+            throw invalid;
+        } finally {
+            if (observation != null) observation.step(validationWork, validationNanos);
+            if (validationOwner != null) validationOwner.validationWork(validationView, budget.threadSearchWork() - validationSearch);
         }
         return result != null;
+    }
+
+    private void beginVerification(PlanningBudget.CandidateOrigin origin) {
+        candidateOrigin = origin;
+        if (validationPending) throw new IllegalStateException("Previous candidate has no validation outcome");
+        validationPending = true;
+        // A recursively manufactured seed is not the requested final witness.
+        candidateObservation = nesting == 0 ? budget.observeCandidate(origin) : null;
+        budget.note("candidate", "proposed; origin=" + origin);
+        verifying = new PlanVerification<>(candidate, budget);
+    }
+
+    private void retireStockFrontier() {
+        stockView.close();
+        stockView = null;
+        budget.note("stock_view", "released_for_final_validation; memory_pressure");
+    }
+
+    private void finishObservation(PlanningBudget.CandidateOutcome outcome) {
+        if (validationPending) budget.note("candidate", "outcome=" + outcome + "; origin=" + candidateOrigin);
+        validationPending = false;
+        if (candidateObservation != null) candidateObservation.finish(outcome);
+        candidateObservation = null;
     }
 
     private void beginAllocationTurn() {
@@ -847,7 +940,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         budget.note("source_witness", "stock_cost; verified=" + (proposal != null) + "; original_frontier_retained");
         if (proposal == null) return false;
         candidate = proposal;
-        verifying = new PlanVerification<>(candidate, budget);
+        beginVerification(PlanningBudget.CandidateOrigin.STOCK_WITNESS);
         return true;
     }
 
@@ -1047,6 +1140,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
 
     @Override
     public void close() {
+        finishObservation(PlanningBudget.CandidateOutcome.ABANDONED);
         budget.release(graphMemory);
         graphMemory = 0;
         graph = null;
@@ -1061,6 +1155,9 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         solving = null;
         if (stockView != null) stockView.close();
         stockView = null;
+        stockInterruptedCandidate = null;
+        stockInterruptedOrigin = null;
+        validatingStockProposal = false;
         if (missingAnalysis != null) missingAnalysis.close();
         missingAnalysis = null;
         if (productionProof != null) productionProof.close();

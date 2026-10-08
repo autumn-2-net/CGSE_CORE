@@ -39,7 +39,7 @@ final class GraphStockViewWork<K> implements AutoCloseable {
     private long work, stepStarted;
     private long completedWork, roundCost;
     private int missingKeys = -1, stalledRounds;
-    private boolean initialized, done;
+    private boolean initialized, done, closed, validationRejected, triedTargetSeedConsumption;
     private GraphSupportNeighborhood<K> neighborhood;
 
     GraphStockViewWork<K> neighborhood(GraphSupportNeighborhood<K> neighborhood) {
@@ -128,6 +128,28 @@ final class GraphStockViewWork<K> implements AutoCloseable {
     }
 
     private boolean advance() {
+        if (validationRejected) {
+            validationRejected = false;
+            // A final-validator rejection belongs to this witness. Keep the
+            // compiled graph for a different execution policy before changing
+            // its sources; identical counts do not imply identical execution.
+            if (!triedTargetSeedConsumption && !preserve && force && !external.contains(target) &&
+                    graph.regions().stream().anyMatch(region -> region.cyclic() && region.recipes().size() > 1 &&
+                            region.recipes().stream().anyMatch(recipe -> recipe.executionOutputs().containsKey(target)))) {
+                triedTargetSeedConsumption = true;
+                solving = new GraphSolve<>(graph, target, amount, stock, external, seeds, preserve, force,
+                        budget, started, policy, stock).program(compiler.demandProgram(graph, budget))
+                        .scoutRegions().allowTargetSeedConsumption(true);
+                budget.note("stock_view", "retry_rejected_witness; same_sources; variant=" + variant);
+                return false;
+            }
+            boolean refined = changeSources(java.util.List.of(target), true);
+            if (!refined) refined = changeSources(graph.selected().keySet(), true);
+            budget.release(graphMemory);
+            graphMemory = 0;
+            graph = null;
+            if (!refined || rounds >= 64) return done = true;
+        }
         if (compiling != null) {
             if (!compiling.step()) return false;
             graph = compiling.result();
@@ -138,6 +160,7 @@ final class GraphStockViewWork<K> implements AutoCloseable {
             long bytes = graph.estimatedBytes();
             if (!budget.tryReserve(bytes)) throw Stopped.INSTANCE;
             graphMemory = bytes;
+            triedTargetSeedConsumption = false;
             solving = new GraphSolve<>(graph, target, amount, stock, external, seeds, preserve, force,
                     budget, started, policy, stock).program(compiler.demandProgram(graph, budget)).scoutRegions();
             return false;
@@ -285,8 +308,12 @@ final class GraphStockViewWork<K> implements AutoCloseable {
     }
 
     private boolean changeMissingSources(GraphPlan<K> candidate) {
+        return changeSources(candidate.missingExact().keySet(), false);
+    }
+
+    private boolean changeSources(Iterable<K> keys, boolean firstOnly) {
         boolean changed = false;
-        for (K key : candidate.missingExact().keySet()) {
+        for (K key : keys) {
             check();
             var source = graph.selected().get(key);
             if (source == null) continue;
@@ -304,6 +331,7 @@ final class GraphStockViewWork<K> implements AutoCloseable {
                     tried.add(source.id());
                 }
                 changed = true;
+                if (firstOnly) return true;
                 break;
             }
         }
@@ -386,6 +414,23 @@ final class GraphStockViewWork<K> implements AutoCloseable {
         return result;
     }
 
+    void validationWork(long used) {
+        work = work > Long.MAX_VALUE - used ? Long.MAX_VALUE : work + used;
+    }
+
+    void feedback(CandidateFeedback feedback) {
+        if (closed || result == null || !done) throw new IllegalStateException("No stock-view candidate awaiting validation");
+        if (feedback == CandidateFeedback.ACCEPTED) {
+            close();
+            return;
+        }
+        // Both a rejected witness and an inconclusive proof may try another
+        // source locally. Neither enters the full model's learned conflicts.
+        result = null;
+        done = false;
+        validationRejected = true;
+    }
+
     boolean compilationActive() {
         return compiling != null;
     }
@@ -423,6 +468,7 @@ final class GraphStockViewWork<K> implements AutoCloseable {
 
     @Override
     public void close() {
+        closed = true;
         if (fork != null) fork.close();
         fork = null;
         repairCandidate = null;

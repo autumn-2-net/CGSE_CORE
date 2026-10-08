@@ -71,6 +71,13 @@ final class GraphSupportNeighborhood<K> implements AutoCloseable {
         return true;
     }
 
+    void rejectCandidate() {
+        // The local count search already validates its witness. If the outer
+        // validator cannot accept it, retain the support pool, not a stale
+        // result to emit again. A larger support may start a fresh local turn.
+        result = null;
+    }
+
     boolean step() {
         long before = budget.threadSearchWork();
         String previousFailure = budget.failureDetail();

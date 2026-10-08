@@ -42,6 +42,31 @@ are recorded in `provenance/duplicates.json`; original archive members are liste
 `provenance/archive-entries.json`. Complete captures are gzip compressed with original
 and compressed SHA-256 checksums in `datasets/index.json`.
 
+## Controlled planning comparison
+
+```text
+python tests/benchmarks/compare_planning.py --java-home <jdk17> --baseline <commit> --case <regex> --work 20000000 --milliseconds 3000
+```
+
+The comparison archives baseline Java sources without modifying either checkout and
+runs the same fixtures/permutations serially with one worker and identical memory
+and time limits. `accounts` grants `--work` separately to search and compilation;
+`total` additionally stops at their combined work limit. `wall` uses only the time
+and memory limits. The aggregate cutoff is imposed between planner steps: any atomic
+overshoot is recorded and cannot count as a completed witness. It is never an UNSAT
+conclusion. Cold, warm and equivalent newly decoded recipe snapshots are separate
+rows. A new snapshot is a new compiler; this does not simulate an adapter failing to
+notice an in-place pattern edit.
+
+`rows.json` records results/limit details, both work accounts, preparation/solve times,
+request reservation peaks and outer candidate-validation observations when available.
+`summary.json` includes p50/p95/p99 solve times. Older revisions without candidate
+telemetry use `-1`, not an invented first-witness measurement. Memory figures exclude
+persistent compiler caches and JVM heap/RSS. Benchmark completion means that returned
+conclusions and executable prefixes passed their checks; inspect result distributions
+for budget limits. It does not mean that all inputs were solved or that a speedup was
+established.
+
 ## Known limits and historical material
 
 At migration validation, all 2,944 selected finite/cover oracle inputs passed.
