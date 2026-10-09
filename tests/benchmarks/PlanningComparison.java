@@ -14,8 +14,16 @@ public final class PlanningComparison {
         long millis = Long.parseLong(args[1]), work = Long.parseLong(args[2]), bytes = Long.parseLong(args[3]);
         String mode = args[4];
         if (!Set.of("accounts", "total", "wall").contains(mode)) throw new IllegalArgumentException(mode);
+        int warmup = args.length > 5 ? Integer.parseInt(args[5]) : 0;
+        int repetitions = args.length > 6 ? Integer.parseInt(args[6]) : 1;
+        if (warmup < 0 || repetitions < 1) throw new IllegalArgumentException("Invalid repetitions");
         System.out.println("name\tcache\tmode\tresult\tsearch\tcompilation\ttotal\tprepare_ns\tsolve_ns\tpeak_reserved_bytes\tfirst_verified_search\tfirst_verified_compilation\tfirst_verified_ns\torigins\tlimit_detail\tcache_estimated_bytes\tcompiler_count\tactive_searches\tcache_stats");
-        try (var input = new DataInputStream(new BufferedInputStream(Files.newInputStream(Path.of(args[0]))))) {
+        for (int repetition = -warmup; repetition < repetitions; repetition++)
+            run(args[0], millis, work, bytes, mode, repetition >= 0);
+    }
+
+    private static void run(String fixture, long millis, long work, long bytes, String mode, boolean report) throws Exception {
+        try (var input = new DataInputStream(new BufferedInputStream(Files.newInputStream(Path.of(fixture))))) {
             for (int remaining = input.readInt(); remaining > 0; remaining--) {
                 String name = GraphFixtureRegression.string(input), target = GraphFixtureRegression.string(input);
                 long amount = input.readLong();
@@ -83,7 +91,7 @@ public final class PlanningComparison {
                     } catch (NoSuchMethodException olderRevision) {
                         // Older revisions did not expose persistent cache estimates.
                     }
-                    System.out.println(String.join("\t", name, cache, mode, capped ? "HARNESS_TOTAL_LIMIT" : plan.result().name(),
+                    if (report) System.out.println(String.join("\t", name, cache, mode, capped ? "HARNESS_TOTAL_LIMIT" : plan.result().name(),
                             Long.toString(budget.searchWork()), Long.toString(budget.compilationWork()), Long.toString(budget.nodes()),
                             Long.toString(prepare), Long.toString(elapsed), Long.toString(budget.peakBytes()),
                             Long.toString(firstSearch), Long.toString(firstCompile), Long.toString(firstNanos), clean(origins), clean(budget.failureDetail()),

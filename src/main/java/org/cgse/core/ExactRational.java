@@ -64,15 +64,32 @@ final class ExactRational implements Comparable<ExactRational> {
     private ExactRational combine(ExactRational other, boolean subtract) {
         if (other.signum() == 0) return this;
         if (signum() == 0) return subtract ? other.negate() : other;
+        if (denominator.equals(other.denominator)) {
+            BigInteger result = subtract ? numerator.subtract(other.numerator) : numerator.add(other.numerator);
+            if (denominator.equals(BigInteger.ONE)) return of(result);
+            if (result.signum() == 0) return ZERO;
+            BigInteger cancel = result.gcd(denominator);
+            return new ExactRational(quotient(result, cancel), quotient(denominator, cancel), true);
+        }
+        // Adding an integer cannot change coprimality of a reduced fraction.
+        // Avoid GCD/division work in integral simplex and lattice columns.
+        if (denominator.equals(BigInteger.ONE)) {
+            BigInteger scaled = numerator.multiply(other.denominator);
+            return new ExactRational(subtract ? scaled.subtract(other.numerator) : scaled.add(other.numerator), other.denominator, true);
+        }
+        if (other.denominator.equals(BigInteger.ONE)) {
+            BigInteger scaled = other.numerator.multiply(denominator);
+            return new ExactRational(subtract ? numerator.subtract(scaled) : numerator.add(scaled), denominator, true);
+        }
         BigInteger common = denominator.gcd(other.denominator);
-        BigInteger left = denominator.divide(common), right = other.denominator.divide(common);
+        BigInteger left = quotient(denominator, common), right = quotient(other.denominator, common);
         BigInteger a = numerator.multiply(right), b = other.numerator.multiply(left);
         BigInteger result = subtract ? a.subtract(b) : a.add(b);
         if (result.signum() == 0) return ZERO;
         // With coprime inputs, any remaining cancellation divides the old
         // denominator GCD, not the much larger new denominator product.
         BigInteger cancel = common.equals(BigInteger.ONE) ? BigInteger.ONE : result.gcd(common);
-        return new ExactRational(result.divide(cancel), left.multiply(other.denominator.divide(cancel)), true);
+        return new ExactRational(quotient(result, cancel), left.multiply(quotient(other.denominator, cancel)), true);
     }
 
     ExactRational subtract(ExactRational other) {
@@ -81,19 +98,29 @@ final class ExactRational implements Comparable<ExactRational> {
 
     ExactRational multiply(ExactRational other) {
         if (signum() == 0 || other.signum() == 0) return ZERO;
-        BigInteger a = numerator.gcd(other.denominator), b = other.numerator.gcd(denominator);
+        if (equals(ONE)) return other;
+        if (other.equals(ONE)) return this;
+        if (integral() && other.integral()) return of(numerator.multiply(other.numerator));
+        BigInteger a = other.integral() ? BigInteger.ONE : numerator.gcd(other.denominator);
+        BigInteger b = integral() ? BigInteger.ONE : other.numerator.gcd(denominator);
         // Cross-cancellation completely reduces this product. Recomputing a
         // GCD of the products repeats the expensive part of every LP pivot.
-        return new ExactRational(numerator.divide(a).multiply(other.numerator.divide(b)),
-                denominator.divide(b).multiply(other.denominator.divide(a)), true);
+        return new ExactRational(quotient(numerator, a).multiply(quotient(other.numerator, b)),
+                quotient(denominator, b).multiply(quotient(other.denominator, a)), true);
     }
 
     ExactRational divide(ExactRational other) {
         if (other.signum() == 0) throw new ArithmeticException("Zero denominator");
         if (signum() == 0) return ZERO;
-        BigInteger a = numerator.gcd(other.numerator), b = denominator.gcd(other.denominator);
-        return new ExactRational(numerator.divide(a).multiply(other.denominator.divide(b)),
-                denominator.divide(b).multiply(other.numerator.divide(a)), true);
+        if (other.equals(ONE)) return this;
+        BigInteger a = numerator.gcd(other.numerator);
+        BigInteger b = integral() || other.integral() ? BigInteger.ONE : denominator.gcd(other.denominator);
+        return new ExactRational(quotient(numerator, a).multiply(quotient(other.denominator, b)),
+                quotient(denominator, b).multiply(quotient(other.numerator, a)), true);
+    }
+
+    private static BigInteger quotient(BigInteger value, BigInteger divisor) {
+        return divisor.equals(BigInteger.ONE) ? value : value.divide(divisor);
     }
 
     BigInteger floor() {

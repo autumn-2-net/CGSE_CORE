@@ -37,6 +37,9 @@ def main():
     parser.add_argument('--case', default='.*')
     parser.add_argument('--fixture-dir', type=Path, default=ROOT / 'tests/regression/fixtures')
     parser.add_argument('--permutations', type=int, default=3)
+    parser.add_argument('--warmup', type=int, default=0, help='Unreported full campaigns per JVM before measurement')
+    parser.add_argument('--repetitions', type=int, default=1, help='Measured full campaigns per JVM')
+    parser.add_argument('--require-same-work', action='store_true', help='Fail if any paired result or work account changes')
     parser.add_argument('--preserve-order', action='store_true', help='Replay recorded recipe/slot order without shuffling')
     parser.add_argument('--milliseconds', type=int, default=3000)
     parser.add_argument('--work', type=int, default=20_000_000)
@@ -44,7 +47,7 @@ def main():
     parser.add_argument('--modes', nargs='+', choices=['accounts', 'total', 'wall'], default=['accounts', 'total'])
     parser.add_argument('--output', type=Path, default=ROOT / 'build/planning-comparison')
     args = parser.parse_args()
-    if args.permutations <= 0 or args.milliseconds < 0 or args.work <= 0 or args.memory_mib <= 0:
+    if args.permutations <= 0 or args.milliseconds < 0 or args.work <= 0 or args.memory_mib <= 0 or args.warmup < 0 or args.repetitions <= 0:
         parser.error('Invalid budget or permutation count')
     if 'wall' in args.modes and args.milliseconds == 0:
         parser.error('Wall-only comparison requires a finite --milliseconds limit')
@@ -114,12 +117,14 @@ def main():
                 with log.open('w', encoding='utf-8') as stream:
                     subprocess.run([str(java), '-ea', '-Xmx2g', '-Dfile.encoding=UTF-8', '-cp', str(output / revision / 'classes'),
                                     'org.cgse.core.PlanningComparison', str(fixture), str(args.milliseconds), str(args.work),
-                                    str(args.memory_mib << 20), mode], stdout=stream, check=True,
-                                   timeout=max(120, len(cases) * 3 * (args.milliseconds / 1000 + 3)))
+                                    str(args.memory_mib << 20), mode, str(args.warmup), str(args.repetitions)], stdout=stream, check=True,
+                                   timeout=max(120, len(cases) * 3 * (args.warmup + args.repetitions) * (args.milliseconds / 1000 + 3)))
                 with log.open(encoding='utf-8') as stream:
                     batch = list(csv.DictReader(stream, delimiter='\t'))
-                for row in batch:
-                    row.update(revision=revision, permutation=permutation)
+                if len(batch) != len(cases) * 3 * args.repetitions:
+                    raise AssertionError('Incomplete planning comparison')
+                for i, row in enumerate(batch):
+                    row.update(revision=revision, permutation=permutation, repetition=i // (len(cases) * 3))
                     for field in ('search', 'compilation', 'total', 'prepare_ns', 'solve_ns', 'peak_reserved_bytes',
                                   'first_verified_search', 'first_verified_compilation', 'first_verified_ns',
                                   'cache_estimated_bytes', 'compiler_count', 'active_searches'):
@@ -127,6 +132,14 @@ def main():
                 rows.extend(batch)
                 (output / 'rows.json').write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding='utf-8')
                 print(f'{revision} {mode} permutation={permutation}: {len(batch)} checked', flush=True)
+    if args.require_same_work:
+        paired = {}
+        for row in rows:
+            key = tuple(row[field] for field in ('name', 'cache', 'mode', 'permutation', 'repetition'))
+            outcome = tuple(row[field] for field in ('result', 'search', 'compilation', 'total',
+                                                    'first_verified_search', 'first_verified_compilation'))
+            if paired.setdefault(key, outcome) != outcome:
+                raise AssertionError('Paired planning result/work changed: ' + str(key))
     groups = []
     for revision in sources:
         for mode in args.modes:
@@ -147,6 +160,8 @@ def main():
             harness_fingerprint != fingerprint(harness_paths) or fixture_fingerprint != fingerprint(fixture_paths)):
         raise RuntimeError('Benchmark inputs changed during the run; rerun before comparing revisions')
     summary = dict(baseline=baseline, candidate_head=candidate, candidate_worktree=True, workers=1,
+                   warmup=args.warmup, repetitions=args.repetitions,
+                   require_same_work=args.require_same_work,
                    candidate_source_sha256=candidate_fingerprint, harness_source_sha256=harness_fingerprint,
                    fixture_source_sha256=fixture_fingerprint,
                    milliseconds=args.milliseconds, work=args.work, memory_mib=args.memory_mib, modes=args.modes,

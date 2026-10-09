@@ -835,11 +835,12 @@ final class CountLcg implements AutoCloseable {
             return;
         }
         if (infinities > 1) return;
+        BigInteger residual = row.upper().subtract(sum);
         // No variable can cross its opposite domain endpoint while the row
         // has at least this much slack. In particular, wide sparse rows need
         // not scan all their terms after every unrelated integer split.
         if (infinities == 0 && cached.maximumChange != null &&
-                row.upper().subtract(sum).compareTo(cached.maximumChange) >= 0)
+                residual.compareTo(cached.maximumChange) >= 0)
             return;
         if (infinities == 0 && cached.booleanOrder != null) {
             BigInteger maximumChange = BigInteger.ZERO;
@@ -853,7 +854,7 @@ final class CountLcg implements AutoCloseable {
             // Every unfixed domain in this mode is [0,1]. Re-read it after
             // backtracking: a bound can tighten only if its exact one-step
             // contribution exceeds the row's remaining slack.
-            if (row.upper().subtract(sum).compareTo(maximumChange) >= 0) return;
+            if (residual.compareTo(maximumChange) >= 0) return;
         }
         // Propagate using a frozen set of bounds; new implications are placed
         // on the queue, so none of their explanations can refer to themselves.
@@ -865,15 +866,24 @@ final class CountLcg implements AutoCloseable {
             int id = term.getKey();
             BigInteger a = term.getValue();
             if (a.signum() == 0 || infinities == 1 && id != infinite) continue;
+            BigInteger magnitude = a.abs();
+            // A finite row's residual is nonnegative. If this variable's
+            // entire domain fits, its implied bound is already true. Keep
+            // the same scan charge, but do not divide or allocate a literal.
+            if (infinities == 0 && high[id] != null &&
+                    (low[id].equals(high[id]) || residual.compareTo(magnitude.multiply(high[id].subtract(low[id]))) >= 0))
+                continue;
             BigInteger endpoint = a.signum() > 0 ? low[id] : high[id];
-            BigInteger other = endpoint == null ? sum : sum.subtract(a.multiply(endpoint));
-            Literal next = a.signum() > 0 ? new Literal(id, false, floor(row.upper().subtract(other), a)) :
-                    new Literal(id, true, floor(row.upper().subtract(other), a.negate()).negate());
+            // floor((b - (sum - a*x))/|a|) is x +/- floor(residual/|a|).
+            // Reuse the frozen residual, even when x is far beyond 64 bits.
+            BigInteger distance = floor(residual, magnitude);
+            Literal next = a.signum() > 0 ? new Literal(id, false, endpoint.add(distance)) :
+                    new Literal(id, true, endpoint == null ? distance.negate() : endpoint.subtract(distance));
             if (truth(next) != 1) {
                 candidates.add(next);
                 // The opposite bound must violate this integer row by at
                 // least one. Spend only the surplus on relaxing its reason.
-                BigInteger slack = other.add(a.multiply(next.opposite().value)).subtract(row.upper()).subtract(BigInteger.ONE);
+                BigInteger slack = magnitude.multiply(distance.add(BigInteger.ONE)).subtract(residual).subtract(BigInteger.ONE);
                 explanations.add(new LinearReason(row, id, slack, prefix, rowId));
             }
         }
@@ -1258,6 +1268,9 @@ final class CountLcg implements AutoCloseable {
     }
 
     private static BigInteger floor(BigInteger n, BigInteger d) {
+        if (d.equals(BigInteger.ONE)) return n;
+        if (n.bitLength() <= 63 && d.bitLength() <= 63)
+            return BigInteger.valueOf(Math.floorDiv(n.longValue(), d.longValue()));
         BigInteger[] qr = n.divideAndRemainder(d);
         return qr[1].signum() < 0 ? qr[0].subtract(BigInteger.ONE) : qr[0];
     }

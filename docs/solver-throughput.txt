@@ -1,0 +1,106 @@
+Fixed-work solver throughput
+============================
+
+This optimization changes arithmetic implementation, not search budgets,
+operation weights, branching order or the treatment of UNKNOWN. It follows a
+JDK Flight Recorder sample of the retained-prefix planning regressions, which
+identified exact rational normalization and LCG propagation as CPU/allocation
+hotspots. Profiling identifies candidates; serial warmed comparisons establish
+whether they actually become faster.
+
+LCG propagation
+---------------
+For a row sum(a_i*x_i) <= b, compute the residual b - minimum once at the frozen
+trail prefix. With a finite endpoint, the implied bound is endpoint plus or
+minus floor(residual / abs(a_i)). This avoids multiplying a potentially enormous
+endpoint and subtracting it from the row activity for every literal. When the
+entire current domain fits in the residual, the implied bound is already true:
+skip the division and literal allocation while retaining its original scan
+charge. A fixed domain is the zero-width case.
+
+An infinite upper endpoint is handled separately; its residual may be negative.
+The explanation slack remains abs(a_i)*(floor(residual/abs(a_i))+1)-residual-1,
+which is exact for both signs. All implications still use the same frozen trail
+prefix and are only applied after the row scan. Positive-denominator division
+uses primitive floorDiv only when BOTH operands fit signed 64 bits, with an
+exact BigInteger path outside that range. No fluid/count quantity is converted
+through floating point.
+
+Rational arithmetic
+-------------------
+Equal denominators need only one numerator addition and, for nonintegers, one
+cancellation GCD. Adding an integer to a reduced fraction preserves coprimality.
+Integer products and multiplication/division by one do not need normalization.
+The general cross-cancelled path remains in place; dividing by a GCD of one
+returns the existing immutable BigInteger. The original 2048-bit precision
+limit is checked on every newly constructed result, including fast paths.
+
+Correctness coverage
+--------------------
+ExactRationalRegressionTest uses an independent full-product fraction oracle,
+including signed, overlapping/equal denominators, exact cancellation and the
+precision boundary. CountLcgWatchTest checks exhaustive integer boxes and
+independent proof replay. Its extra 192 variants exercise shifted domains around
+Long.MIN_VALUE/Long.MAX_VALUE, coefficients through 1023 bits and models whose
+upper caps must be inferred from rows. Retained states, learned reasons,
+cancellation and memory cleanup remain covered by the existing suites.
+
+Reproducible measurement
+------------------------
+Run these serially, without concurrent regression campaigns. Replace JDK17 with
+the local JDK 17 directory. The baseline is the model-scope fix immediately before
+these arithmetic changes; every script records source/harness identities.
+
+  python tests/benchmarks/compare_throughput.py --java-home JDK17
+    --baseline cae59245 --forks 3 --warmup 5 --samples 5 --cases 16
+    --output build/throughput-comparison
+
+Five deterministic groups cover Boolean, finite-integer and >64-bit shifted LCG
+domains, plus unit-coefficient and dense exact LPs. Models are constructed before
+timing. Each JVM warms up first; baseline/candidate launch order alternates across
+forks. Every measured case must retain the same work and full canonical witness
+or unresolved result. Some bounded LCG attempts may remain UNKNOWN: throughput
+does not turn them into infeasibility proofs or solved cases. ThreadMXBean
+measures actual thread allocation, independently of logical memory reservations.
+Validation and witness serialization are outside the timed/allocation interval.
+
+The planning comparison can also warm up and repeat complete requests:
+
+  python tests/benchmarks/compare_planning.py --java-home JDK17
+    --baseline cae59245 --fixture-dir tests/regression/fixtures/retained-prefix
+    --preserve-order --permutations 2 --warmup 2 --repetitions 3
+    --work 20000000 --milliseconds 0 --memory-mib 256 --modes accounts
+    --require-same-work --output build/throughput-planning
+
+This includes cold, warm and replaced compiler states, final execution validation
+and compilation/search cost accounts. --require-same-work rejects any paired
+change to outcome or the work needed for the first/final witness. It is optional
+for comparisons of algorithm changes that intentionally explore different states.
+
+These are local JVM measurements, not claims about live server tick time or RSS.
+Core/view regressions, shuffled planning fixtures, captured inventory/full-recipe
+replay and four-worker budgets are separate correctness checks.
+
+Recorded local comparison (2026-10-09)
+-------------------------------------
+JDK 17.0.19, 512 MiB benchmark heap, three independent JVM forks per revision,
+five warmup and five measured rounds, 16 cases per specialist group. Ratios below
+are candidate/baseline; below one is less time or fewer allocated bytes. Work and
+the complete canonical witnesses/outcomes are identical in every measured case.
+
+  Group             Time ratio    Allocation ratio    Outcome per 16 cases
+  LCG Boolean          0.914              0.778          16 witnesses
+  LCG finite           0.806              0.444           7 witnesses, 9 UNKNOWN
+  LCG shifted          0.764              0.459           4 witnesses, 12 UNKNOWN
+  LP unit              0.655              0.548          16 optimal
+  LP dense             0.972              0.791          16 optimal
+
+The small dense-LP timing difference should not be treated as a universal speedup.
+The finite/shifted UNKNOWN entries are deliberately capped specialist attempts,
+not whole-planner failures. No extra work allowance was supplied to either side.
+
+The separate retained-prefix planning campaign ran five fixed hard models in
+cold/warm/replaced states, with two warmups and three measured repetitions in
+each of two JVMs per revision. Both revisions validated all 90 measured requests
+with identical compilation/search and first-witness work. The median total time
+per 15-request campaign was 9.365 s before and 8.803 s after (ratio 0.940).

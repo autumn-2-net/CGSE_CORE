@@ -51,6 +51,7 @@ public final class CountLcgWatchTest {
             run(new Model(rows, low, high), width, trial % 20 == 0);
         }
         integerFrontiers();
+        wideArithmetic();
         pigeonAndLimits();
         System.out.println("LCG watches: " + checked + " exhaustive models, " + resumptions +
                 " resumptions, " + imported + " imported nogoods, proofs and budget/cancellation cleanup passed");
@@ -87,7 +88,51 @@ public final class CountLcgWatchTest {
         }
     }
 
+    /** Exercise both primitive division boundaries and exact signed residuals. */
+    private static void wideArithmetic() {
+        Random random = new Random(716_881);
+        int[] bits = { 1, 62, 63, 64, 129, 1023 };
+        BigInteger[] offsets = { BigInteger.ZERO, BigInteger.valueOf(Long.MIN_VALUE),
+                BigInteger.valueOf(Long.MAX_VALUE), BigInteger.ONE.shiftLeft(80).negate() };
+        for (int trial = 0; trial < 96; trial++) {
+            int n = 3, width = 3;
+            var low = new BigInteger[n];
+            var high = new BigInteger[n];
+            var witness = new BigInteger[n];
+            var rows = new ArrayList<ExactLinearProgram.Constraint>();
+            for (int i = 0; i < n; i++) {
+                low[i] = offsets[(trial + i) % offsets.length];
+                high[i] = low[i].add(BigInteger.TWO);
+                witness[i] = low[i].add(BigInteger.valueOf(random.nextInt(width)));
+                // The unbounded-domain variant must infer this cap itself.
+                rows.add(new ExactLinearProgram.Constraint(Map.of(i, BigInteger.valueOf(3)), high[i].multiply(BigInteger.valueOf(3))));
+            }
+            for (int r = 0; r < 3; r++) {
+                var terms = new LinkedHashMap<Integer, BigInteger>();
+                var reverse = new LinkedHashMap<Integer, BigInteger>();
+                BigInteger rhs = BigInteger.ZERO;
+                for (int i = 0; i < n; i++) {
+                    BigInteger a = new BigInteger(bits[(trial + r + i) % bits.length], random).add(BigInteger.ONE);
+                    if (random.nextBoolean()) a = a.negate();
+                    terms.put(i, a);
+                    reverse.put(i, a.negate());
+                    rhs = rhs.add(a.multiply(witness[i]));
+                }
+                rows.add(new ExactLinearProgram.Constraint(terms, rhs.subtract(BigInteger.valueOf(trial % 2))));
+                rows.add(new ExactLinearProgram.Constraint(reverse, rhs.negate()));
+            }
+            Collections.shuffle(rows, random);
+            var model = new Model(rows, low, high);
+            run(model, width, true);
+            run(model, width, true, true);
+        }
+    }
+
     private static void run(Model model, int width, boolean proof) {
+        run(model, width, proof, false);
+    }
+
+    private static void run(Model model, int width, boolean proof, boolean inferCaps) {
         int states = 1;
         for (int i = 0; i < model.low.length; i++) states *= width;
         boolean possible = false;
@@ -106,7 +151,9 @@ public final class CountLcgWatchTest {
             }
         }
         PlanningBudget budget = budget(20_000_000, 64L << 20);
-        try (CountLcg search = new CountLcg(model.rows, model.low, model.high, budget, 1024, proof)) {
+        BigInteger[] high = model.high.clone();
+        if (inferCaps) Arrays.fill(high, null);
+        try (CountLcg search = new CountLcg(model.rows, model.low, high, budget, 1024, proof)) {
             // These full assignments were independently rejected by an input
             // row; imported conflicts therefore never narrow the valid set.
             for (CountConflict clause : forbidden) if (search.learn(clause)) imported++;
