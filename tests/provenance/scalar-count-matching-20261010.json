@@ -1,0 +1,998 @@
+{
+  "schema": "cgse-scalar-matching-followup-v1",
+  "date": "2026-10-10",
+  "baseline": "01dff2868ee99fe00065f67f4960086f02d053a9",
+  "candidate_source_sha256": "0e2f63392e5ca303ca4914be1e379c0cc97627e2b942eea46eeb249e01f608d6",
+  "production_java_files": 198,
+  "harness_sha256": "a43e6aefdb2b7fc180dc5076a7a65e5b4f986f3bd7be965bcfaebb6ad5eb0c00",
+  "test_source_sha256": "eeddfd56b9ad7ed54f5503bb49dd1059c11cb3f251fe58eabe98cfef9b07fbb1",
+  "review_bases": [
+    "15a473de",
+    "e788d3d3"
+  ],
+  "scope": "Portable main-count scalar matching and representation-aware scout admission; no host/fallback changes.",
+  "entry": "Main integer-count stage with finite recipe embedding and original-coordinate/prefix verification.",
+  "budget": {
+    "work_per_account": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1
+  },
+  "account_policy": "Separate shared search and compilation limits; no larger request cap or work discount.",
+  "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+  "permutations": 3,
+  "orders": [
+    {
+      "order": 0,
+      "baseline": {
+        "PASS": 248,
+        "UNRESOLVED": 20,
+        "UNSUPPORTED": 6
+      },
+      "baseline_total_recorded_work": 574127900,
+      "candidate": {
+        "PASS": 250,
+        "UNRESOLVED": 18,
+        "UNSUPPORTED": 6
+      },
+      "candidate_total_recorded_work": 522935346
+    },
+    {
+      "order": 1,
+      "baseline": {
+        "PASS": 247,
+        "UNRESOLVED": 21,
+        "UNSUPPORTED": 6
+      },
+      "baseline_total_recorded_work": 601277964,
+      "candidate": {
+        "PASS": 248,
+        "UNRESOLVED": 20,
+        "UNSUPPORTED": 6
+      },
+      "candidate_total_recorded_work": 558179378
+    },
+    {
+      "order": 2,
+      "baseline": {
+        "PASS": 248,
+        "UNRESOLVED": 20,
+        "UNSUPPORTED": 6
+      },
+      "baseline_total_recorded_work": 580728251,
+      "candidate": {
+        "PASS": 250,
+        "UNRESOLVED": 18,
+        "UNSUPPORTED": 6
+      },
+      "candidate_total_recorded_work": 531157806
+    }
+  ],
+  "gained": [
+    {
+      "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b",
+      "names": [
+        "generated/subset-n40-bits40"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19994918"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=3644367"
+      ]
+    },
+    {
+      "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f",
+      "names": [
+        "generated/subset-n40-bits48"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19996695"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=3670677"
+      ]
+    },
+    {
+      "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f/order=1",
+      "names": [
+        "generated/subset-n40-bits48"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19996796"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=5046547"
+      ]
+    },
+    {
+      "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b/order=2",
+      "names": [
+        "generated/subset-n40-bits40"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19995591"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=4398025"
+      ]
+    },
+    {
+      "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f/order=2",
+      "names": [
+        "generated/subset-n40-bits48"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19995757"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=4724270"
+      ]
+    }
+  ],
+  "lost": [],
+  "contradictions": [],
+  "new_boundary_orders": [
+    {
+      "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b",
+      "names": [
+        "generated/subset-n40-bits40"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19994918"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=3644367"
+      ]
+    },
+    {
+      "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f",
+      "names": [
+        "generated/subset-n40-bits48"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19996695"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=3670677"
+      ]
+    },
+    {
+      "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b/order=1",
+      "names": [
+        "generated/subset-n40-bits40"
+      ],
+      "before": [
+        "PASS",
+        "SAT",
+        "work=14711453"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=5628489"
+      ]
+    },
+    {
+      "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f/order=1",
+      "names": [
+        "generated/subset-n40-bits48"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19996796"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=5046547"
+      ]
+    },
+    {
+      "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b/order=2",
+      "names": [
+        "generated/subset-n40-bits40"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19995591"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=4398025"
+      ]
+    },
+    {
+      "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f/order=2",
+      "names": [
+        "generated/subset-n40-bits48"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19995757"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=4724270"
+      ]
+    }
+  ],
+  "largest_positive_work_increases": [
+    {
+      "id": "9df96fc4d0e8e97ee2e77aa92a4341919d7a1152eab32d8071efc8c28a71fe74/order=2",
+      "names": [
+        "generated/subset-n40-bits12"
+      ],
+      "before": 904184,
+      "after": 904384,
+      "ratio": 1.0002211939162826
+    },
+    {
+      "id": "9df96fc4d0e8e97ee2e77aa92a4341919d7a1152eab32d8071efc8c28a71fe74",
+      "names": [
+        "generated/subset-n40-bits12"
+      ],
+      "before": 886599,
+      "after": 886766,
+      "ratio": 1.000188360239522
+    },
+    {
+      "id": "9df96fc4d0e8e97ee2e77aa92a4341919d7a1152eab32d8071efc8c28a71fe74/order=1",
+      "names": [
+        "generated/subset-n40-bits12"
+      ],
+      "before": 891003,
+      "after": 891126,
+      "ratio": 1.0001380466732435
+    },
+    {
+      "id": "7cd7e27a366c3b15a6a7abb690941acc1849e2adffd4e7a72f1ad037848f7ad9/order=2",
+      "names": [
+        "scip/lseu-objective-1120/raw/normalized"
+      ],
+      "before": 14869119,
+      "after": 14869122,
+      "ratio": 1.0000002017604406
+    }
+  ],
+  "remaining_original": [
+    {
+      "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "names": [
+        "generated/sparse-equality-n144-s2"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996355"
+      ]
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "names": [
+        "scip/lseu-objective-1119"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996829"
+      ]
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "names": [
+        "scip/lseu-objective-1119/embedded/normalized"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996815"
+      ]
+    },
+    {
+      "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "names": [
+        "generated/sparse-equality-n257-s2"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997988"
+      ]
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "names": [
+        "scip/lseu-objective-1119/raw/original"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996829"
+      ]
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "names": [
+        "generated/sparse-equality-n96-s2"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994541"
+      ]
+    },
+    {
+      "id": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
+      "names": [
+        "generated/wide-equality-n64-w1000000"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19992391"
+      ]
+    },
+    {
+      "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "names": [
+        "generated/sparse-equality-n257-s1"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997674"
+      ]
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": [
+        "generated/sparse-equality-n144-s1"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19995231"
+      ]
+    },
+    {
+      "id": "a18f16aaf5b7fb63a459988338e58e34ac148d7d73e8c6a30569ee8df4c5f420",
+      "names": [
+        "generated/subset-n48-bits40"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19993019"
+      ]
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "names": [
+        "scip/lseu-objective-1119/embedded/original"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994853"
+      ]
+    },
+    {
+      "id": "a65596b89e9eb4805fdd1e6d5a77cac08ee58aa636317dc73d8c731542c9b14b",
+      "names": [
+        "generated/subset-n48-bits24"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997128"
+      ]
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "names": [
+        "scip/lseu-objective-1119/embedded/reduced"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19993457"
+      ]
+    },
+    {
+      "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+      "names": [
+        "wide-79"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994678"
+      ]
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "names": [
+        "scip/lseu-objective-1119/raw/reduced"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19995419"
+      ]
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994388"
+      ]
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "names": [
+        "scip/lseu-objective-1119/raw/normalized"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994389"
+      ]
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994276"
+      ]
+    }
+  ],
+  "unbounded_conversion_exclusions": [
+    {
+      "id": "1d98538b025aa97f015ba610d09fe1fe3f9b44cd227f9ccb9f2e8147917c19fc",
+      "names": [
+        ""
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "634987e49633e9f7285515251456ff25414b58880996b00e1080090e552467a1",
+      "names": [
+        "miracle24-observed-branch"
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "a9d83be7942de93a30e8c43c99a8e6f7393cdd036b414413169c853ed8479b40",
+      "names": [
+        ""
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "b77762acc50f972b25a48d41f110182955c3146f78bc6c14bac078a458d24529",
+      "names": [
+        ""
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "d938bd8a7fd480f9a59eb8753befd825491ab0de9eacce267d3e978051150c64",
+      "names": [
+        "z3/t83"
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "e4eb46e62f7d8fb80848cdd1d49fecfee32019e1e75815c272a284d93f04de50",
+      "names": [
+        ""
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    }
+  ],
+  "remaining_truth_source": "numeric-oracles-20261009.json and effort-and-rational-lp-20261009.json",
+  "parity": {
+    "baseline_passed": 72,
+    "candidate_passed": 72,
+    "lost": [],
+    "contradictions": []
+  },
+  "validation": {
+    "standard": {
+      "programs": 60,
+      "passed": 60,
+      "results_sha256": "4c440ffa64a016f7700b98be2b622cd48be49c9cb76d191e95053177030dcccd"
+    },
+    "curated_graphs": {
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "c944c3599b0a7a49841313e99aec1451550d9cc54048e2add219994a27709242",
+      "cases": 239,
+      "permutations": 3,
+      "inputs_sha256": [
+        "040d45c8d5728b24a87d9ff5b2dce78100448a28c9140bd89cbd7d4de1c1b728",
+        "86fbd385defe450ab4c84fb1cd4136e263a9e4bd98a8d1fca51f2dd80b9353e5",
+        "b9258985707ebf1dbfa9bd0bc8dbcd108fe0884eea36697d13c178b25a0ea577"
+      ]
+    },
+    "expanded_graphs": {
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "ee181cbb2568e4c2d02a1ee07526d5495a25abcc63f6c81555bd2e05347d9a9b",
+      "cases": 800,
+      "permutations": 3,
+      "inputs_sha256": [
+        "a58448b493d224e5e7a65b6cc580745cc27f68ec3bc75fca6ce1cfa64d9e8807",
+        "f5c55a271c03cb36ef1ce5491c87510d33dd8937ea7352435b87524b24e37dbb",
+        "ff654555673f2185e02d42025d5dc2086dd5aa328fd99e9737a92a28d74e91e7"
+      ]
+    },
+    "scalar_oracle": {
+      "models": 192,
+      "orders": 576,
+      "enumerated_assignments": 196608,
+      "sat": 128,
+      "unsat": 64,
+      "specialized_runs": 351,
+      "log_sha256": "eca44ee0608841ae09155110033e6a555284d291f7cc442b3da523556a5700e2"
+    },
+    "captured_serial": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "verified": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "dc27b0ad5e433cf85829915a2f7ab281b735bbd2a683b03ebb220c6635f2d484",
+        "search_work": [
+          124482,
+          155353,
+          156160,
+          458784,
+          8025851,
+          8840168,
+          112502,
+          9758992,
+          9588723
+        ],
+        "compilation_work": [
+          60088,
+          5632,
+          0,
+          161385,
+          465649,
+          393643,
+          14708,
+          948718,
+          851282
+        ],
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "0d27ffba995eb268d1729f2e07cbb9bd2de7d865fbabf6c45635e099b29bbf81",
+        "search_work": [
+          145593,
+          2440680,
+          9205647
+        ],
+        "compilation_work": [
+          63808,
+          766212,
+          1011252
+        ],
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "d6de62db9776caa5bde9c96269b6713901012e402528d87df5998b6136d62fdf",
+        "search_work": [
+          9702759,
+          15095223,
+          10732798
+        ],
+        "compilation_work": [
+          1042750,
+          1616917,
+          882994
+        ],
+        "peak_reserved_bytes": 70584863
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "verified": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "691cf5c9a9c0f392ab6ff7039397b4180c179a6f08abcc9e64c68ff3c708cd32",
+        "search_work": [
+          20701638,
+          24859116,
+          14395420,
+          33217936
+        ],
+        "compilation_work": [
+          2888015,
+          2990099,
+          1541173,
+          4156054
+        ],
+        "peak_reserved_bytes": 72825838
+      }
+    ],
+    "captured_parallel": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "verified": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "4cc8f5f741479b63236306ebbf93f761c5d5e2f584c9ce2509a28fe9c5331027",
+        "search_work": [
+          124482,
+          155353,
+          156160,
+          458784,
+          8025852,
+          8840173,
+          112502,
+          9759082,
+          9588737
+        ],
+        "compilation_work": [
+          59118,
+          5632,
+          0,
+          161581,
+          465649,
+          393643,
+          14708,
+          948718,
+          851282
+        ],
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "f6fb783317d1ca49e4db7a958e4064cd822d528807429654d9cdde3ebdff2da5",
+        "search_work": [
+          145593,
+          2440692,
+          9205622
+        ],
+        "compilation_work": [
+          62807,
+          766258,
+          1011827
+        ],
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "dc79163d9788b5cb1a02ef03fb8aa2b7b7179e9b954f0c7bb80599f6e105c647",
+        "search_work": [
+          9702760,
+          15046210,
+          10732774
+        ],
+        "compilation_work": [
+          1043325,
+          1617499,
+          882994
+        ],
+        "peak_reserved_bytes": 70237289
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "verified": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "780b3991cab399ff1f61da907516150a3c0c1b1994010d5f26971ffc83535d9e",
+        "search_work": [
+          20765381,
+          24811244,
+          14339513,
+          33170819
+        ],
+        "compilation_work": [
+          2998452,
+          3164823,
+          1541680,
+          4336531
+        ],
+        "peak_reserved_bytes": 72825838
+      }
+    ],
+    "captured_expanded": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "verified": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "1d62d4ac72bb23dcbcf99550a4467ef81fc289d43ecc9e574389f10236502064",
+        "search_work": [
+          124482,
+          155353,
+          156160,
+          458784,
+          8025881,
+          8840149,
+          112502,
+          9759066,
+          9588737
+        ],
+        "compilation_work": [
+          59118,
+          5632,
+          0,
+          161581,
+          465649,
+          393643,
+          14708,
+          948718,
+          851282
+        ],
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "9423f7b549525fb13cf29b9140b348253d524aed82d3d0a8c732a33118741a41",
+        "search_work": [
+          145593,
+          2440692,
+          9205638
+        ],
+        "compilation_work": [
+          62807,
+          766258,
+          1011827
+        ],
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "bbb821b968f81d148e18e003c6d3529f40b292516ec0e3a1c1f666993f06cb93",
+        "search_work": [
+          9702767,
+          15095226,
+          10732810
+        ],
+        "compilation_work": [
+          1043325,
+          1618627,
+          882994
+        ],
+        "peak_reserved_bytes": 70584863
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "verified": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "35928e27a9394e0958f02ee3a8bde6882c90308c9c08a3535ee1a687ed8206ea",
+        "search_work": [
+          20765398,
+          24811250,
+          14339513,
+          33170842
+        ],
+        "compilation_work": [
+          2998452,
+          3164823,
+          1541680,
+          4336531
+        ],
+        "peak_reserved_bytes": 72825838
+      }
+    ]
+  },
+  "build": {
+    "offline_assemble": true,
+    "source_jar_matches_all_production_files": true,
+    "core_jar_sha256": "f1865568cb6525cb283a2e194c88bf11dbda542257ee5bc35ff3fd63c9a93f93",
+    "sources_jar_sha256": "ae95cc424ff140f67fad32db245ba0a4c7601e9c46efb7423295691946760440"
+  },
+  "limits": [
+    "Logical work is not wall-time or measured JVM RSS.",
+    "Captured AE/JEI replay is not a new live server/adapter test.",
+    "Known UNSAT budget exits remain UNKNOWN without a completed CGSE proof.",
+    "General multidimensional/unbounded/numeric and H/J audit gaps remain."
+  ]
+}

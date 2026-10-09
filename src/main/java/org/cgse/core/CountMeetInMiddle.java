@@ -91,6 +91,7 @@ final class CountMeetInMiddle implements CountContinuation {
     private long[] compactGoalLow, compactGoalHigh, compactQuery;
     private BigInteger[] goalLow, goalHigh, sum, counts;
     private Enumeration enumeratingLeft, enumeratingRight;
+    private ScalarTable scalar;
     private long entryBytes;
     private Entry[] ranged;
     private BigInteger[] queryLow, queryHigh;
@@ -167,6 +168,16 @@ final class CountMeetInMiddle implements CountContinuation {
                 }
             }
             if (!weighted) return 0;
+            // A single exact row with two choices per coordinate has a much
+            // cheaper representation than a multidimensional object table.
+            // The matcher rechecks this certificate after normalization; this
+            // estimate affects admission only, never a feasibility conclusion.
+            if (activeRows == 1 && sizes[count - 1] == 2 && scalarEquality(rows, lower, upper, left + right, budget)) {
+                long scalarBytes = 256 + 24 * left;
+                long scalarWork = Math.max(1024, 4 * (left + right) + 8 * terms);
+                if (scalarBytes <= budget.availableBytes() / 4 && scalarWork <= budget.remainingWork() / 2)
+                    return scalarWork;
+            }
             // No exponential work is admitted just because the variable count
             // is small. Include signature dimension, integer payload and both
             // tables' traversal; the later exact matcher retains its own caps.
@@ -181,6 +192,46 @@ final class CountMeetInMiddle implements CountContinuation {
         } finally {
             budget.release(bytes);
         }
+    }
+
+    private static boolean scalarEquality(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
+                                          BigInteger[] upper, long states, PlanningBudget budget) {
+        Map<Integer, BigInteger> forward = null;
+        BigInteger target = null, span = null;
+        boolean reverse = false;
+        BigInteger limit = BigInteger.valueOf(Long.MAX_VALUE / 4);
+        for (var row : rows) {
+            var terms = row.terms();
+            BigInteger bound = row.upper(), mass = BigInteger.ZERO, maximum = BigInteger.ZERO;
+            for (var term : row.terms().entrySet()) {
+                budget.check();
+                int id = term.getKey();
+                BigInteger value = term.getValue();
+                bound = bound.subtract(value.multiply(lower[id]));
+                if (lower[id].equals(upper[id]) || value.signum() == 0) continue;
+                mass = mass.add(value.abs());
+                maximum = maximum.add(value.max(BigInteger.ZERO));
+            }
+            if (maximum.compareTo(bound) <= 0) continue;
+            if (mass.compareTo(limit) > 0 || bound.abs().compareTo(limit) > 0) return false;
+            if (forward == null) {
+                forward = terms;
+                target = bound;
+                span = mass;
+            } else if (!terms.equals(forward) || !bound.equals(target)) {
+                if (!bound.equals(target.negate()) || terms.size() != forward.size()) return false;
+                for (var term : terms.entrySet()) {
+                    budget.check();
+                    if (!term.getValue().negate().equals(forward.get(term.getKey()))) return false;
+                }
+                reverse = true;
+            }
+        }
+        // Small coefficients collapse many assignments onto the same reachable
+        // sum. Keep the existing propagation/merged-state strategies ahead of
+        // exponential enumeration when their integer range is already smaller
+        // than the two tables. This is a scheduling choice, not a domain cut.
+        return reverse && span.compareTo(BigInteger.valueOf(states)) > 0;
     }
 
     CountMeetInMiddle(List<ExactLinearProgram.Constraint> original, BigInteger[] lower,
@@ -210,6 +261,7 @@ final class CountMeetInMiddle implements CountContinuation {
         }
         try {
             charge();
+            if (scalar != null && (phase == 1 || phase == 2)) return scalar.step();
             switch (phase) {
                 case 0 -> {
                     if (rowIndex == original.size()) return prepare();
@@ -490,16 +542,6 @@ final class CountMeetInMiddle implements CountContinuation {
         entryBytes = 160L + dims * (80L + (bits + 31L) / 8);
         long estimatedBytes = entryBytes * leftStates;
         long estimatedWork = ((long) leftStates + rightStates) * dims;
-        // Enumeration may prune or merge signatures, so retain a small scout
-        // even when the unpruned table is too expensive. Do not spend most of
-        // an order discovering an already predictable memory/work overrun.
-        if (estimatedBytes / 2 > budget.availableBytes() && estimatedWork > allowance) {
-            allowance = Math.min(allowance, work + 65536);
-            costProbe = true;
-        }
-        budget.note("count_match_admission", "left=" + leftStates + "; right=" + rightStates +
-                "; dimensions=" + dims + "; coefficient_bits=" + bits + "; estimated_bytes=" + estimatedBytes +
-                "; estimated_work=" + estimatedWork + "; allowance=" + allowance + "; scout=" + costProbe);
         // Prefix snapshots retain each depth's partial sums. Restoring the
         // parent then needs no inverse BigInteger arithmetic on every row.
         long prefixBytes = (domains.size() + 2L) * (32L + dims * (88L + (bits + 31L) / 8));
@@ -517,12 +559,105 @@ final class CountMeetInMiddle implements CountContinuation {
         equalities = Arrays.equals(goalLow, goalHigh);
         if (!equalities) preparePointRange();
         prepareCompact();
+        if (equalities && compactCoefficients != null && dims == 1 &&
+                domains.stream().allMatch(domain -> domain.size == 2)) {
+            long scalarBytes = 256L + 24L * leftStates;
+            if (budget.tryReserve(scalarBytes)) {
+                memory += scalarBytes;
+                scalar = new ScalarTable();
+                budget.note("count_match_scalar", "gray_binary; table_bytes=" + scalarBytes +
+                        "; left=" + leftStates + "; right=" + rightStates);
+                phase = 1;
+                return false;
+            }
+        }
+        // Enumeration may prune or merge signatures, so retain a small scout
+        // even when the unpruned table is too expensive. The scalar table above
+        // has its own complete reservation and must not inherit this estimate
+        // for object signatures (or turn a small continuation into a cutoff).
+        if (estimatedBytes / 2 > budget.availableBytes() && estimatedWork > allowance) {
+            allowance = Math.min(allowance, work + 65536);
+            costProbe = true;
+        }
+        budget.note("count_match_admission", "left=" + leftStates + "; right=" + rightStates +
+                "; dimensions=" + dims + "; coefficient_bits=" + bits + "; estimated_bytes=" + estimatedBytes +
+                "; estimated_work=" + estimatedWork + "; allowance=" + allowance + "; scout=" + costProbe);
         sum = new BigInteger[dims];
         Arrays.fill(sum, BigInteger.ZERO);
         enumeratingLeft = new Enumeration(0, split, split, domains.size());
         enumeratingRight = new Enumeration(split, domains.size(), 0, split);
         phase = 1;
         return false;
+    }
+
+    /**
+     * One certified-long equality: one sum update per Gray-code assignment and
+     * primitive open addressing. Occupancy is separate from the key, so zero
+     * and negative sums are ordinary states. A stored code is interchangeable
+     * only because ALL surviving constraints use this one signature.
+     */
+    private final class ScalarTable {
+
+        final long[] keys = new long[leftStates * 2];
+        final int[] codes = new int[leftStates * 2];
+        final int mask = keys.length - 1;
+        int cursor, code, slot;
+        long value, key;
+        boolean pending;
+
+        boolean step() {
+            for (int quantum = 0; quantum < 16; quantum++) {
+                if (!pending) {
+                    if (cursor == (phase == 1 ? leftStates : rightStates)) {
+                        if (phase == 2) return finish(true, "exhaustive_infeasible");
+                        phase = 2;
+                        cursor = code = 0;
+                        value = 0;
+                        return false;
+                    }
+                    charge();
+                    code = cursor ^ (cursor >>> 1);
+                    if (cursor != 0) {
+                        int bit = Integer.numberOfTrailingZeros(cursor);
+                        long coefficient = compactCoefficients[(phase == 1 ? 0 : split) + bit][1][0];
+                        value += (code & (1 << bit)) == 0 ? -coefficient : coefficient;
+                    }
+                    key = phase == 1 ? value : compactGoalHigh[0] - value;
+                    long hash = key;
+                    hash = (hash ^ (hash >>> 33)) * 0xff51afd7ed558ccdL;
+                    hash = (hash ^ (hash >>> 33)) * 0xc4ceb9fe1a85ec53L;
+                    slot = (int) (hash ^ (hash >>> 33)) & mask;
+                    pending = true;
+                }
+                // A collision chain is itself resumable. Charge every slot;
+                // neither duplicate signatures nor unlucky hashes bypass the
+                // request cap, cancellation or the worker's bounded turn.
+                charge();
+                if (codes[slot] == 0) {
+                    if (phase == 1) {
+                        keys[slot] = key;
+                        codes[slot] = code + 1;
+                        signatures++;
+                    }
+                } else if (keys[slot] == key) {
+                    if (phase == 2) {
+                        counts = lower.clone();
+                        decode(codes[slot] - 1, 0, split);
+                        decode(code, split, domains.size());
+                        rowIndex = 0;
+                        phase = 3;
+                        return false;
+                    }
+                } else {
+                    slot = (slot + 1) & mask;
+                    continue;
+                }
+                if (phase == 2) probes++;
+                pending = false;
+                cursor++;
+            }
+            return false;
+        }
     }
 
     /**
@@ -912,6 +1047,7 @@ final class CountMeetInMiddle implements CountContinuation {
         paused = false;
         left.clear();
         compactLeft.clear();
+        scalar = null;
         rows.clear();
         budget.release(memory);
         memory = 0;

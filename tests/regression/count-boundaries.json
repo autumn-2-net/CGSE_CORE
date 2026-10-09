@@ -2,6 +2,18 @@
   "work": 20000000,
   "cases": [
     {
+      "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b",
+      "names": ["generated/subset-n40-bits40"],
+      "expected": "SAT",
+      "reason": "Certified scalar matching must be admitted at its actual representation cost; 01dff286 is unresolved at 20M. Independent native truth is recorded in numeric-oracles-20261009.json."
+    },
+    {
+      "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f",
+      "names": ["generated/subset-n40-bits48"],
+      "expected": "SAT",
+      "reason": "Retained Gray-code matching and primitive signatures replace object-table traversal for a certified long equality; 01dff286 is unresolved at 20M."
+    },
+    {
       "id": "64a889df4156fb9c7754c554b9a32c31c59f64ff378ad907f4048e8e7fcdd6a3",
       "names": ["scip/lseu-objective-1120/embedded/normalized"],
       "expected": "SAT",

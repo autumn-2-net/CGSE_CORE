@@ -184,3 +184,13 @@ At the same 40M limits, the complete miracle catalog improves from 12/16 to
 16/16 verified requests; four earlier JEI-first limits now join the maintained
 positive regressions. This does not remove the full count-model admission limit
 or close the separate numeric, cost-attribution and host-residency gaps above.
+
+2026-10-10 scalar numeric follow-up
+---------------------------------
+scalar-count-matching.txt records a specialized retained MITM implementation
+and admission based on its actual primitive table cost. The complete 822-case
+count comparison gains five conclusions with no lost answers. Two original
+limits are now checked SAT under all three orders; 18 original limits remain
+(11 independently known SAT, seven known UNSAT). Small reachable ranges retain
+their earlier strategy priority. No request cap, host adapter or fallback role
+changes, and H/J observability gaps remain open.

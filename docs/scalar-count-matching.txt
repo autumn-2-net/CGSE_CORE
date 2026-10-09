@@ -1,0 +1,119 @@
+Review follow-up: affordable scalar count matching
+=================================================
+2026-10-10, baseline 01dff286.
+
+The review's numeric-search gap includes two finite subset-sum models with 40
+binary variables and 40/48-bit coefficients. They are independently known SAT,
+but the main count entry exhausted 20M work. The root matcher estimated an
+object table's cost and declined the scout; LP/branch search then used the cap.
+
+This change specializes the existing CountMeetInMiddle; it adds no native
+dependency, changes no request limit and does not assign cycles to fallback.
+
+Representation and continuation
+-------------------------------
+After the existing projection, the fast path requires exactly one equality,
+two options in every compiled domain and a BigInteger certificate bounding all
+prefixes/complements within signed-long arithmetic. Other models retain the
+multidimensional/BigInteger matcher. An original-coordinate row check remains
+mandatory before exposing a witness.
+
+A reflected Gray enumeration changes one option per assignment. One primitive
+sum update replaces repeated prefix construction/backtracking. An open-addressed
+long/int table stores a sum and a recoverable option code; its separate occupancy
+marker admits zero and negative sums. Duplicate sums are interchangeable only
+because every surviving constraint is represented by that same coordinate.
+The largest admitted binary table reserves about 24 MiB, plus the existing
+projection/domain workspace. This is a reservation, not a measured JVM heap or
+RSS figure. The existing per-half state cap is unchanged.
+
+Every hash slot inspection is charged. A collision chain, Gray cursor and
+partially populated table survive a local pause. Small batches bound atomic
+enumeration work; workers share the existing request work/memory/cancellation
+accounts. Disposal releases the table reservation. Exhausting work or memory
+is not infeasibility. Only complete enumeration of an unrestricted domain may
+give a negative result; existing restricted-face trials remain positive-only.
+
+Admission and scheduling
+------------------------
+The root scout checks the representation it can actually use before assigning
+an allowance. It estimates both half enumerations and compact table storage,
+leaving work and memory for the other engines. The estimate is not a proof or
+a new request budget; a slower-than-estimated search yields its retained state.
+
+An initial experiment made a 12-bit-coefficient subset model about 2.6x more
+expensive: the cheap early table displaced strategies that merge many states.
+The final policy does not prioritize this exponential scout when the reachable
+integer range is smaller than the enumerated state count. It retains the old
+admission path for that case. This changes strategy order, never coverage.
+
+SCIP's knapsack handler was consulted for the principle of estimating specialized
+state-space cost before selecting an exact method. Its dynamic programming
+cost depends on capacity, which is unsuitable for these 40/48-bit sums. The
+Gray/open-addressing implementation here is independently written; it is not a
+copy of SCIP's knapsack optimizer:
+https://raw.githubusercontent.com/scipopt/scip/master/src/scip/cons_knapsack.c
+
+Validation and reproduction
+---------------------------
+CountScalarMatchingTest checks 192 finite models against 196608 exhaustive
+assignments and replays three row orders (576 cases). It covers signed and
+100-bit origins, duplicate sums, safe/unsafe primitive bounds, additional active
+constraints, interrupted/uninterrupted work equality, refusals, cancellation,
+and four workers sharing both adequate and exhausted budgets.
+
+The two canonical positive cases are maintained in count-boundaries.json.
+The full comparison uses all 274 canonical models and three deterministic
+row/column/term orders at the same 20M work, 256 MiB, one worker and no wall
+deadline. It independently checks original rows/domains and primitive execution
+prefixes. Unbounded recipe-conversion exclusions remain separate from UNKNOWN
+and from infeasibility proofs.
+
+Equal-budget results (tests/provenance/scalar-count-matching-20261010.json):
+
+  Order           Baseline conclusions    Current conclusions    Current UNKNOWN
+  Original        248 / 274               250 / 274              18
+  Shuffle 1       247 / 274               248 / 274              20
+  Shuffle 2       248 / 274               250 / 274              18
+
+Each order also has the same six unbounded-conversion exclusions. Across 822
+checks, conclusions increase from 743 to 748, with no lost or contradictory
+answers; both revisions also pass all 72 parity/neighbor checks. Both new
+canonical models now have checked SAT plans in all three orders. One shuffled
+boundary was already solved by the baseline, so this is five new conclusions,
+not six. Their current recorded work ranges from 3,644,367 to 5,628,489.
+
+Total recorded work across the comparison falls from 1,756,134,115 to
+1,612,272,530 (about 8.2%). The largest work increase among previously completed
+cases is 0.023%, from the bounded admission checks. This does not assert a
+wall-time speedup or finite-budget order-independent completeness.
+
+All 60 standard programs, 3117 graph fixture/order checks (239 curated plus 800
+generated, each in three orders), and 57 full-catalog requests pass. The latter
+are 19 requests each at one worker, four workers with the same cap, and four
+workers with the production 2x allowance. The complete 68187-recipe catalog
+and original captured stock are retained. Offline assemble succeeds and all
+198 production sources match the source JAR byte for byte.
+
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline 01dff286 --permutations 3 --parity --timeout 1800
+    --output build/scalar-frontier-final
+  python tests/run.py --java-home JDK17 --suite standard --timeout 600
+  python tests/run.py --java-home JDK17 --suite fixtures
+    --permutations 3 --milliseconds 0 --work 20000000 --timeout 600
+  python tests/benchmarks/generate_choice_cases.py --seeds 32 --start-seed 100
+    --amounts 1,2,3,16,1000 --output build/choice-expanded
+  python tests/run.py --java-home JDK17 --suite fixtures
+    --fixture-dir build/choice-expanded --permutations 3 --milliseconds 0
+    --work 20000000 --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17 --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4 --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4
+    --expanded-budget --timeout 600
+
+Captured-network replay is not a fresh AE server/dispatch run. This change does
+not close the audits' separate host-residency or complete cost-attribution gaps.
+The 18 remaining original-order numeric limits are 11 known SAT records and
+seven known UNSAT records according to the existing independent oracle evidence.
+CGSE still reports UNKNOWN for them: larger sparse/wide equalities, 48-variable
+subset sums and the lseu objective-bound proof family remain future work.
