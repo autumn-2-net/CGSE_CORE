@@ -97,6 +97,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     long auxiliaryUntil = 262144;
     boolean auxiliaryCompared, auxiliaryLive;
     boolean proofTask, proofContradiction;
+    boolean deferredVisit;
     CountDecisionDiagram diagram;
     CountObbt obbt;
     boolean gomoryTried;

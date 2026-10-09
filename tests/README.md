@@ -16,7 +16,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Suite | Command / location | Coverage |
 | --- | --- | --- |
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
-| Stable oracles | `--suite oracles` | 23 independent oracle programs plus ten pinned count-model boundaries |
+| Stable oracles | `--suite oracles` | 23 independent oracle programs plus twelve pinned count-model boundaries |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
 | Fixed counterexamples | `--suite fixtures --keep-going` | All 239 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
@@ -33,6 +33,18 @@ fixture, portable probe and corpus case; it can take substantially longer and in
 known hard inputs. Benchmark/dataset/AE/live suites are explicit separate entries because their
 resource requirements differ. Use `--case <regex>`, `--shard 0/4`, `--milliseconds`,
 `--work`, and `--timeout` to control a repeatable selection and its budgets.
+
+The continuation/LP follow-up is documented in `../docs/effort-and-rational-lp.txt`.
+It records the equal-budget three-order comparison and the separate known-SAT
+miracle-crystal full-catalog cutoffs. Those cutoffs are not counted as passes.
+The next boundary is `../docs/source-refinement-and-dispatch.txt`: seed/source
+repair, local-region row admission, exact feedback propagation and cooperative
+dispatch accounting. `SourceRefinementTest`, `PropagationFeedbackTest`,
+`RegionBoundaryProjectionTest` and `PlanningDispatchAccountingTest` are in the
+standard suite. The pinned full-capture cases can be run with
+`python tests/datasets/regressions.py --java-home <jdk17>` and with
+`--workers 4`, optionally `--expanded-budget`. Extra-first miracle-crystal
+cutoffs remain recorded known-SAT failures, not passing expectations.
 
 The full corpus preserves recipes in their input order, stock, exact quantities,
 bindings, physical input slots, configuration/reusable flags, external supply and

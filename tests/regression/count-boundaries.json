@@ -2,6 +2,18 @@
   "work": 20000000,
   "cases": [
     {
+      "id": "64a889df4156fb9c7754c554b9a32c31c59f64ff378ad907f4048e8e7fcdd6a3",
+      "names": ["scip/lseu-objective-1120/embedded/normalized"],
+      "expected": "SAT",
+      "reason": "Keep resumed frontiers eligible and measure their scheduling share by completed effort; c67ead23 is unresolved at 20M. Native oracle truth is recorded in numeric-oracles-20261009.json."
+    },
+    {
+      "id": "7cd7e27a366c3b15a6a7abb690941acc1849e2adffd4e7a72f1ad037848f7ad9",
+      "names": ["scip/lseu-objective-1120/raw/normalized"],
+      "expected": "SAT",
+      "reason": "Keep resumed frontiers eligible and measure their scheduling share by completed effort; c67ead23 is unresolved at 20M. Native oracle truth is recorded in numeric-oracles-20261009.json."
+    },
+    {
       "id": "1e847e3e6948c110be3126736a32201831fef53ead4d6990dcb89c836abfb8a2",
       "names": [
         "scip/lseu-objective-1120/embedded/reduced"

@@ -135,14 +135,24 @@ public final class PlanningScheduler implements AutoCloseable {
             return next(true);
         }
 
+        /** The work charges its own step; only check cancellation and slice fairness here. */
+        public boolean nextUncharged() {
+            return next(false, false);
+        }
+
         private boolean next(boolean compilation) {
+            return next(compilation, true);
+        }
+
+        private boolean next(boolean compilation, boolean charge) {
             // An advance can perform many charged arithmetic operations. Count
             // their deterministic effort as well as continuation calls, so one
             // expensive order yields even before its wall-time slice expires.
             if (steps != 0 && (steps >= stepsPerSlice || owner.budget.threadWork() - workStarted >= stepsPerSlice ||
                     System.nanoTime() - deadline >= 0))
                 return false;
-            if (compilation) owner.budget.compilationCheck();
+            if (!charge) owner.budget.checkpoint();
+            else if (compilation) owner.budget.compilationCheck();
             else owner.budget.check();
             steps++;
             return true;

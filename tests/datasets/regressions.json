@@ -14,6 +14,34 @@
       "memory_mib": 256,
       "expected": "SAT",
       "reason": "A quantitatively improving stock view must obtain more than its initial exploration share while older disassembly branches stall. The complete captured catalog and stock are retained."
+    },
+    {
+      "name": "miracle-seed-source",
+      "source": "mixed-jei-stress-20261007/manual.json",
+      "extra": "extra-virtual.json",
+      "target": "gtlcore:miracle_crystal",
+      "modes": ["manual", "manual-first", "random"],
+      "amounts": [1],
+      "seed": 73,
+      "work": 20000000,
+      "milliseconds": 0,
+      "memory_mib": 256,
+      "expected": "SAT",
+      "reason": "Seed producer repair and unresolved-region diversification must retain the full captured witness. The larger mixed catalog cannot make the independently verified manual plan infeasible. Extra-first remains a separate unresolved boundary, not an accepted pass."
+    },
+    {
+      "name": "miracle-quantity-source",
+      "source": "mixed-jei-stress-20261007/manual.json",
+      "extra": "extra-virtual.json",
+      "target": "gtlcore:miracle_crystal",
+      "modes": ["random"],
+      "amounts": [10, 100, 1000],
+      "seed": 73,
+      "work": 40000000,
+      "milliseconds": 0,
+      "memory_mib": 256,
+      "expected": "SAT",
+      "reason": "Pinned default-budget quantity boundaries from the complete 68187-recipe catalog. Every accepted plan must pass exact primitive execution and captured-stock checks."
     }
   ]
 }

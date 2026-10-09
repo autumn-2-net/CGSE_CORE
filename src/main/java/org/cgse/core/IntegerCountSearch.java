@@ -53,6 +53,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private IntegerCountBranch<K> shellProbe;
     private long shellWork, shellAllowance;
     private long work, improvementUntil = Long.MAX_VALUE, firstWitnessWork = -1, firstWitnessNanos;
+    private long frontierWork, continuationWork;
     private int branches, rounds, suspensions, boundPrunes, choicePrunes, peakWidth;
 
     private record Incumbent<K>(GraphPlan<K> plan, PlanPreference<K> cost, long memory) {}
@@ -306,10 +307,10 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         List<IntegerCountBranch<K>> selected = new ArrayList<>();
         long resident = pending.stream().filter(branch -> branch.initialized).count() +
                 deferred.stream().filter(branch -> branch.initialized).count();
-        // A retained continuation must not wait for an exponentially growing
-        // fresh frontier to empty. Reserve one turn in four; the rest still
-        // explores fresh branches and shares their proofs deterministically.
-        if (!deferred.isEmpty() && (rounds & 3) == 3) selected.add(deferred.removeFirst());
+        // Reserve a quarter of completed effort for continuations. Atomic LP
+        // or compilation steps can exceed a worker quantum, so counting turns
+        // alone does not actually preserve that share of the request budget.
+        if (!deferred.isEmpty() && continuationWork <= frontierWork / 3) selected.add(deferred.removeFirst());
         int scanned = pending.size();
         while (selected.size() < width && scanned-- > 0) {
             var branch = pending.removeFirst();
@@ -360,6 +361,8 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                 }
         for (var branch : wave) {
             work += branch.work;
+            if (branch.deferredVisit) continuationWork += Math.min(branch.work, Long.MAX_VALUE - continuationWork);
+            else frontierWork += Math.min(branch.work, Long.MAX_VALUE - frontierWork);
             branch.work = 0;
             if (branch.choicePruned) choicePrunes++;
             if (!continueSearch) {
@@ -406,7 +409,12 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             switch (branch.state) {
                 case OPEN -> {
                     suspensions++;
-                    pending.addLast(branch);
+                    // A resumed split parent still owns the same retained
+                    // frontier throughout its visit. Putting it back behind
+                    // fresh children after one worker quantum defeats the
+                    // reserved continuation turns as the child queue grows.
+                    if (branch.deferredVisit) deferred.addLast(branch);
+                    else pending.addLast(branch);
                 }
                 case FOUND -> {
                     retain(branch);
@@ -418,12 +426,14 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                     // neither remove children nor open another domain.
                     if (branch.retainSplitWitness()) {
                         suspensions++;
+                        branch.deferredVisit = true;
                         deferred.addLast(branch);
                     } else branch.close();
                 }
                 case UNRESOLVED -> {
                     if (branch.resume()) {
                         suspensions++;
+                        branch.deferredVisit = true;
                         deferred.addLast(branch);
                     } else {
                         if (branch.auxiliaryMode == 0 && !branch.splitWitness) unresolved = true;

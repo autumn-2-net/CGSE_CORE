@@ -1,0 +1,845 @@
+{
+  "baseline": "c67ead23a1c84c2dc44231387f587a831be6fede",
+  "candidate_source_sha256": "7a7f7aca2a089781408997a7845d35c9c6020e816be8b2673035cc0ee4a0b714",
+  "harness_sha256": "a43e6aefdb2b7fc180dc5076a7a65e5b4f986f3bd7be965bcfaebb6ad5eb0c00",
+  "review_bases": [
+    "15a473ded4d7bf303415fe31533b50411a870592",
+    "e788d3d34cbc2a621979fa18ea63ba71fa16ea5c"
+  ],
+  "entry": "main-counts: finite recipe embedding, original row/domain and primitive prefix verification",
+  "work_per_account": 20000000,
+  "workers": 1,
+  "milliseconds": 0,
+  "memory_bytes": 268435456,
+  "account_policy": "Separate shared search and compilation accounts; no increased cap or multiplier.",
+  "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+  "permutations": 3,
+  "orders": [
+    {
+      "order": 0,
+      "baseline": {
+        "PASS": 246,
+        "UNRESOLVED": 22,
+        "UNSUPPORTED": 6
+      },
+      "baseline_total_recorded_work": 621304915,
+      "candidate": {
+        "PASS": 248,
+        "UNRESOLVED": 20,
+        "UNSUPPORTED": 6
+      },
+      "candidate_total_recorded_work": 574250701
+    },
+    {
+      "order": 1,
+      "baseline": {
+        "PASS": 244,
+        "UNRESOLVED": 24,
+        "UNSUPPORTED": 6
+      },
+      "baseline_total_recorded_work": 584518554,
+      "candidate": {
+        "PASS": 247,
+        "UNRESOLVED": 21,
+        "UNSUPPORTED": 6
+      },
+      "candidate_total_recorded_work": 581259680
+    },
+    {
+      "order": 2,
+      "baseline": {
+        "PASS": 245,
+        "UNRESOLVED": 23,
+        "UNSUPPORTED": 6
+      },
+      "baseline_total_recorded_work": 608623370,
+      "candidate": {
+        "PASS": 248,
+        "UNRESOLVED": 20,
+        "UNSUPPORTED": 6
+      },
+      "candidate_total_recorded_work": 560713765
+    }
+  ],
+  "gained": [
+    {
+      "id": "64a889df4156fb9c7754c554b9a32c31c59f64ff378ad907f4048e8e7fcdd6a3",
+      "names": [
+        "scip/lseu-objective-1120/embedded/normalized"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19997183"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=15092776"
+      ]
+    },
+    {
+      "id": "7cd7e27a366c3b15a6a7abb690941acc1849e2adffd4e7a72f1ad037848f7ad9",
+      "names": [
+        "scip/lseu-objective-1120/raw/normalized"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19994364"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=15116333"
+      ]
+    },
+    {
+      "id": "64a889df4156fb9c7754c554b9a32c31c59f64ff378ad907f4048e8e7fcdd6a3/order=1",
+      "names": [
+        "scip/lseu-objective-1120/embedded/normalized"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19995138"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=15389548"
+      ]
+    },
+    {
+      "id": "7cd7e27a366c3b15a6a7abb690941acc1849e2adffd4e7a72f1ad037848f7ad9/order=1",
+      "names": [
+        "scip/lseu-objective-1120/raw/normalized"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19998869"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=15053322"
+      ]
+    },
+    {
+      "id": "af3a59ddc15fad04a622c4627dae4711b4082eaada6a21723e4b0c3276abc78a/order=1",
+      "names": [
+        "scip/stein27_inf"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19997263"
+      ],
+      "after": [
+        "PASS",
+        "UNSAT",
+        "work=19733912"
+      ]
+    },
+    {
+      "id": "64a889df4156fb9c7754c554b9a32c31c59f64ff378ad907f4048e8e7fcdd6a3/order=2",
+      "names": [
+        "scip/lseu-objective-1120/embedded/normalized"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19999581"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=14949424"
+      ]
+    },
+    {
+      "id": "7cd7e27a366c3b15a6a7abb690941acc1849e2adffd4e7a72f1ad037848f7ad9/order=2",
+      "names": [
+        "scip/lseu-objective-1120/raw/normalized"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19996622"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=14869119"
+      ]
+    },
+    {
+      "id": "fec30a3add39ebc76a88a911f9addd458f047c4b14a23adf7dd624aeab965e8b/order=2",
+      "names": [
+        "generated/wide-equality-n64-w31"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19994421"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=13799247"
+      ]
+    }
+  ],
+  "lost": [],
+  "contradictions": [],
+  "remaining_original": [
+    {
+      "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "names": [
+        "generated/sparse-equality-n144-s2"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996355"
+      ]
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "names": [
+        "scip/lseu-objective-1119"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996829"
+      ]
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "names": [
+        "scip/lseu-objective-1119/embedded/normalized"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996814"
+      ]
+    },
+    {
+      "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "names": [
+        "generated/sparse-equality-n257-s2"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997988"
+      ]
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "names": [
+        "scip/lseu-objective-1119/raw/original"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996833"
+      ]
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "names": [
+        "generated/sparse-equality-n96-s2"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994541"
+      ]
+    },
+    {
+      "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b",
+      "names": [
+        "generated/subset-n40-bits40"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994918"
+      ]
+    },
+    {
+      "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f",
+      "names": [
+        "generated/subset-n40-bits48"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996695"
+      ]
+    },
+    {
+      "id": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
+      "names": [
+        "generated/wide-equality-n64-w1000000"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19992391"
+      ]
+    },
+    {
+      "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "names": [
+        "generated/sparse-equality-n257-s1"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997674"
+      ]
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": [
+        "generated/sparse-equality-n144-s1"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19995231"
+      ]
+    },
+    {
+      "id": "a18f16aaf5b7fb63a459988338e58e34ac148d7d73e8c6a30569ee8df4c5f420",
+      "names": [
+        "generated/subset-n48-bits40"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19993020"
+      ]
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "names": [
+        "scip/lseu-objective-1119/embedded/original"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994855"
+      ]
+    },
+    {
+      "id": "a65596b89e9eb4805fdd1e6d5a77cac08ee58aa636317dc73d8c731542c9b14b",
+      "names": [
+        "generated/subset-n48-bits24"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997128"
+      ]
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "names": [
+        "scip/lseu-objective-1119/embedded/reduced"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19993457"
+      ]
+    },
+    {
+      "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+      "names": [
+        "wide-79"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994678"
+      ]
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "names": [
+        "scip/lseu-objective-1119/raw/reduced"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19995419"
+      ]
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994388"
+      ]
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "names": [
+        "scip/lseu-objective-1119/raw/normalized"
+      ],
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994389"
+      ]
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48"
+      ],
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994276"
+      ]
+    }
+  ],
+  "unsupported_original": [
+    {
+      "id": "1d98538b025aa97f015ba610d09fe1fe3f9b44cd227f9ccb9f2e8147917c19fc",
+      "names": [
+        ""
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "634987e49633e9f7285515251456ff25414b58880996b00e1080090e552467a1",
+      "names": [
+        "miracle24-observed-branch"
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "a9d83be7942de93a30e8c43c99a8e6f7393cdd036b414413169c853ed8479b40",
+      "names": [
+        ""
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "b77762acc50f972b25a48d41f110182955c3146f78bc6c14bac078a458d24529",
+      "names": [
+        ""
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "d938bd8a7fd480f9a59eb8753befd825491ab0de9eacce267d3e978051150c64",
+      "names": [
+        "z3/t83"
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "e4eb46e62f7d8fb80848cdd1d49fecfee32019e1e75815c272a284d93f04de50",
+      "names": [
+        ""
+      ],
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    }
+  ],
+  "native_truth_provenance": "numeric-oracles-20261009.json",
+  "validation": {
+    "standard_programs": 54,
+    "pinned_models": 12,
+    "rational_models": 360,
+    "changed_domains": 1440,
+    "checked_cuts": 896,
+    "sat_witnesses": 253,
+    "unsat_models": 107,
+    "local_pauses": 22,
+    "serialized_derivations": 64,
+    "cancellation_points": 300,
+    "parity_cases": 72,
+    "parity_losses": [],
+    "curated_graph_cases": 239,
+    "expanded_graph_cases": 800,
+    "graph_orders": 3,
+    "captured_recipes": 68187,
+    "capture_random_requests": 80,
+    "capture_random_work_per_account": 20000000,
+    "parallel_requests_base": 9,
+    "parallel_requests_expanded": 9,
+    "parallel_workers": 4,
+    "parallel_base_work_per_account": 20000000,
+    "assemble": "PASS",
+    "scope": "Offline source, model and captured-network tests. No new live server or JVM heap/RSS measurement."
+  },
+  "reproduce": {
+    "models": "python tests/benchmarks/compare_count_models.py --java-home JDK17 --baseline c67ead23 --permutations 3 --parity --timeout 1500",
+    "standard": "python tests/run.py --java-home JDK17 --suite standard",
+    "random_capture": "python tests/datasets/run.py --java-home JDK17 --modes manual,manual-first,extra-first,random --random-targets 10 --amounts 1,1000 --milliseconds 0 --work 20000000",
+    "parallel": "python tests/datasets/regressions.py --java-home JDK17 --workers 4",
+    "parallel_expanded": "python tests/datasets/regressions.py --java-home JDK17 --workers 4 --expanded-budget"
+  },
+  "capture_limit": {
+    "truth": "SAT: verified manual-catalog witness also uses allowed primitives in either mixed catalog order.",
+    "manual_source_sha256": "d093b95c224e6d9d29284b7cf4b75406f96f23644f08e0e8fa8090078c64df46",
+    "extra_source_sha256": "ba3107e2ee35fc772d880b49f321bd331d63ab93503c6354d8f5d6ab634e52d6",
+    "target": "gtlcore:miracle_crystal",
+    "amounts": [
+      1,
+      1000
+    ],
+    "seed": 73,
+    "workers": 1,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "reproduce": "python tests/datasets/run.py --java-home JDK17 --target gtlcore:miracle_crystal --modes extra-first,random --amounts 1,1000 --seed 73 --milliseconds 0 --work 20000000 --require-feasible",
+    "note": "Nonzero harness status is the deliberately failed known-SAT assertion after SEARCH_LIMIT, not a solver crash or UNSAT proof.",
+    "rows": [
+      {
+        "revision": "baseline",
+        "work_per_account": 20000000,
+        "mode": "manual",
+        "amount": 1,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 145593,
+        "compilation_work": 151774,
+        "error": ""
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 20000000,
+        "mode": "manual",
+        "amount": 1000,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 199499,
+        "compilation_work": 5902,
+        "error": ""
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 20000000,
+        "mode": "manual-first",
+        "amount": 1,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 3373990,
+        "compilation_work": 649254,
+        "error": ""
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 20000000,
+        "mode": "manual-first",
+        "amount": 1000,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 3369771,
+        "compilation_work": 540981,
+        "error": ""
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 20000000,
+        "mode": "extra-first",
+        "amount": 1,
+        "assessment": "ERROR",
+        "search_work": 20000001,
+        "compilation_work": 1817468,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 20000000,
+        "mode": "extra-first",
+        "amount": 1000,
+        "assessment": "ERROR",
+        "search_work": 20000001,
+        "compilation_work": 1864519,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 20000000,
+        "mode": "random",
+        "amount": 1,
+        "assessment": "ERROR",
+        "search_work": 20000001,
+        "compilation_work": 1654556,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 20000000,
+        "mode": "random",
+        "amount": 1000,
+        "assessment": "ERROR",
+        "search_work": 20000001,
+        "compilation_work": 910034,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 20000000,
+        "mode": "manual",
+        "amount": 1,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 145593,
+        "compilation_work": 151774,
+        "error": ""
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 20000000,
+        "mode": "manual",
+        "amount": 1000,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 199499,
+        "compilation_work": 5902,
+        "error": ""
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 20000000,
+        "mode": "manual-first",
+        "amount": 1,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 3373990,
+        "compilation_work": 649254,
+        "error": ""
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 20000000,
+        "mode": "manual-first",
+        "amount": 1000,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 3369771,
+        "compilation_work": 540981,
+        "error": ""
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 20000000,
+        "mode": "extra-first",
+        "amount": 1,
+        "assessment": "ERROR",
+        "search_work": 20000001,
+        "compilation_work": 1817468,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 20000000,
+        "mode": "extra-first",
+        "amount": 1000,
+        "assessment": "ERROR",
+        "search_work": 20000001,
+        "compilation_work": 1864519,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 20000000,
+        "mode": "random",
+        "amount": 1,
+        "assessment": "ERROR",
+        "search_work": 20000001,
+        "compilation_work": 1654556,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 20000000,
+        "mode": "random",
+        "amount": 1000,
+        "assessment": "ERROR",
+        "search_work": 20000001,
+        "compilation_work": 910034,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 40000000,
+        "mode": "manual",
+        "amount": 1,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 145593,
+        "compilation_work": 151774,
+        "error": ""
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 40000000,
+        "mode": "manual",
+        "amount": 1000,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 199499,
+        "compilation_work": 5902,
+        "error": ""
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 40000000,
+        "mode": "manual-first",
+        "amount": 1,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 3373990,
+        "compilation_work": 649254,
+        "error": ""
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 40000000,
+        "mode": "manual-first",
+        "amount": 1000,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 3369771,
+        "compilation_work": 540981,
+        "error": ""
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 40000000,
+        "mode": "extra-first",
+        "amount": 1,
+        "assessment": "ERROR",
+        "search_work": 40000001,
+        "compilation_work": 3334504,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 40000000,
+        "mode": "extra-first",
+        "amount": 1000,
+        "assessment": "ERROR",
+        "search_work": 40000001,
+        "compilation_work": 3866835,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 40000000,
+        "mode": "random",
+        "amount": 1,
+        "assessment": "ERROR",
+        "search_work": 40000001,
+        "compilation_work": 3456498,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "candidate",
+        "work_per_account": 40000000,
+        "mode": "random",
+        "amount": 1000,
+        "assessment": "ERROR",
+        "search_work": 40000001,
+        "compilation_work": 3231881,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 40000000,
+        "mode": "manual",
+        "amount": 1,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 145593,
+        "compilation_work": 151774,
+        "error": ""
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 40000000,
+        "mode": "manual",
+        "amount": 1000,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 199499,
+        "compilation_work": 5902,
+        "error": ""
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 40000000,
+        "mode": "manual-first",
+        "amount": 1,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 3373990,
+        "compilation_work": 649254,
+        "error": ""
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 40000000,
+        "mode": "manual-first",
+        "amount": 1000,
+        "assessment": "VERIFIED_FEASIBLE",
+        "search_work": 3369771,
+        "compilation_work": 540981,
+        "error": ""
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 40000000,
+        "mode": "extra-first",
+        "amount": 1,
+        "assessment": "ERROR",
+        "search_work": 40000001,
+        "compilation_work": 3334504,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 40000000,
+        "mode": "extra-first",
+        "amount": 1000,
+        "assessment": "ERROR",
+        "search_work": 40000001,
+        "compilation_work": 3866835,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 40000000,
+        "mode": "random",
+        "amount": 1,
+        "assessment": "ERROR",
+        "search_work": 40000001,
+        "compilation_work": 3456498,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      },
+      {
+        "revision": "baseline",
+        "work_per_account": 40000000,
+        "mode": "random",
+        "amount": 1000,
+        "assessment": "ERROR",
+        "search_work": 40000001,
+        "compilation_work": 3231881,
+        "error": "java.lang.AssertionError: Expected feasible replay but got SEARCH_LIMIT"
+      }
+    ],
+    "baseline_and_candidate_identical_outcomes_and_work_at_each_cap": true
+  }
+}

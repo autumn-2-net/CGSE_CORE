@@ -1,0 +1,135 @@
+Review follow-up: continuation scheduling and exact LP proposals
+===============================================================
+2026-10-09, baseline c67ead23.
+
+Both supplied reviews describe older snapshots (15a473de and e788d3d3).
+The earlier six priorities are substantially wired in: CountStride reaches
+eligible separator/MITM scouts; candidate outcomes feed retained searches;
+CountHall reuses a covering matching and alternating SCC/free-resource paths;
+GraphCatalogIndex and GraphDemandProgram share catalog/topology work;
+CountScheduleOrder/CountStartup provide execution hints and scoped explanations;
+CountViewCuts and affine proof records validate cross-coordinate transfers.
+These are bounded mechanisms, not complete arbitrary-domain or catalog solvers.
+
+This change fixes two remaining gaps in those mechanisms.
+
+1. A retained branch returned to the ordinary pending queue after one OPEN
+   worker quantum, even when its current continuation visit was unfinished.
+   Growing fresh child queues could therefore bury already-paid root searches.
+   A deferred visit now stays in the continuation queue across its quanta.
+   The existing quarter-share is measured using completed branch work instead
+   of one out of four dispatch rounds: atomic compilation/LP steps can cost
+   more than a quantum. The counters saturate and the comparison uses division,
+   avoiding overflow from multiplying large configured work limits.
+
+   This changes scheduling, not domain coverage. Children still cover a split
+   parent's space; a parent continuation does not create duplicate children.
+   Local cutoffs remain UNKNOWN. Root proof promotion and final execution
+   verification keep their existing scope checks. No budget cap is increased.
+
+2. CountLpLearning previously proposed row-sum multipliers by rounding scaled
+   floating-point duals. That can turn simple rational proportions into large
+   inexact integer ratios and lose useful exact cancellation/rounding strength.
+   It now first tries bounded continued-fraction proposals, clears their common
+   denominator and builds the same exact nonnegative original-row combination.
+   Coefficients and the rounded right-hand side are computed with BigInteger.
+   The old scaled proposals remain available when this optional attempt fails.
+
+   A reconstructed multiplier is a heuristic suggestion, not a certified LP
+   dual. No floating-point verdict becomes a proof. Every admitted consequence
+   has explicit integer parents and a divisor; branch bounds only choose useful
+   consequences and never become hidden premises. Reconstruction, arithmetic
+   and memory use the existing request account and ownership boundary.
+
+Equal-resource main-count replay
+-------------------------------
+The canonical 274 inputs and two deterministic row/column/term shuffles each
+use 20,000,000 work per account, 256 MiB, one worker, and no wall deadline.
+The harness embeds finite models in recipes and validates every positive plan
+against original rows, variable bounds and primitive execution prefixes.
+
+                         c67ead23             This change
+  Original order         246 complete         248 complete
+  Shuffle 1              244 complete         247 complete
+  Shuffle 2              245 complete         248 complete
+  Total                  735 / 822            743 / 822
+  Lost conclusions          -                    0
+  Oracle contradictions     0                    0
+
+There are still six unbounded-to-finite conversion exclusions per order.
+These are unsupported test embeddings, not UNSAT or solver successes.
+The 72 separate parity/feasible-neighbor checks also preserve all conclusions.
+
+Both normalized lseu-1120 variants now finish in every tested order. The original
+order needs about 15.1M total charged work, previously reaching the 20M search
+cap without a conclusion. The original-order lseu family improves from 6/15 to
+8/15. Several previously solved variants drop from about 6M to about 0.3M work.
+One stein27_inf shuffle and one wide-equality shuffle also become conclusive.
+These are logical-work observations, not a wall-time/CPU speedup claim.
+
+RationalLpLearningTest independently enumerates 360 small Boolean models,
+checks 1,440 changing domains and 896 learned cuts against ALL original feasible
+assignments, and checks retained search results (253 SAT, 107 UNSAT). It replays
+64 serialized original-row derivations, checks complete LCG certificates,
+22 local pauses, 300 cancellation points, memory refusal and work exhaustion.
+Two newly solved count models join the pinned boundary suite (now 12 cases).
+
+Reproduce:
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline c67ead23 --permutations 3 --parity --timeout 1500
+  python tests/run.py --java-home JDK17 --suite standard
+
+The 54 standard programs, 239 curated and 800 generated graph fixtures in three
+orders (3,117 validations), 80 complete-catalog random requests at 20M, and nine
+four-worker requests at each base/expanded budget passed. Offline assemble also
+passed; the source JAR byte-matches all 197 tested production files. These passing
+captures are distinct from the explicitly failing miracle-crystal cases below.
+
+Remaining gaps, including a newly reproduced catalog boundary
+-------------------------------------------------------------
+1. Twenty original-order count models still exhaust the fixed budget: 13 known
+   SAT and seven known UNSAT. They comprise seven lseu-1119 representations,
+   six large sparse equalities, five subset sums and two wide-domain models.
+   The 48-coordinate numeric admission and bounded MITM table limits remain.
+   Stronger search/proof coverage is still needed; completed continuation work
+   alone does not make the portfolio as capable as general SCIP/CP-SAT.
+
+2. The full model still admits at most 8,192 recipes/resources and optional
+   support neighborhoods at most 512 recipes (256 per contributed candidate).
+   This review now has a concrete large-catalog failure: the complete 5,903
+   manual + 62,284 virtual JEI recipes, requesting miracle_crystal at 1 or 1,000.
+   Manual and manual-first orders verify; extra-first and seed-73 random orders
+   reach the 20M search cap. An identical baseline replay has the same results
+   AND charged work. This change does not introduce that failure. At 40M both
+   versions still match and reach SEARCH_LIMIT on the four mixed-order cases;
+   this is not a proof of infeasibility.
+   The manual witness remains available in the larger catalog, so these are
+   known feasible requests. Partial diagnostics show repeated small cyclic
+   source choices, region model admission limits and a full 4,096-choice queue.
+   They do not yet isolate one sufficient algorithmic fix.
+
+   Reproduce the deliberately failing known-SAT check:
+     python tests/datasets/run.py --java-home JDK17 --target gtlcore:miracle_crystal
+       --amounts 1,1000 --modes extra-first,random --seed 73
+       --milliseconds 0 --work 20000000 --require-feasible
+   It exits nonzero on the search cutoff; do not count it as a passed regression.
+   Increasing limits or calling a restricted model's failure globally UNSAT is
+   not a fix. The next compiler/selection change should target this actual family.
+
+3. Preparation/restoration/seed/fallback costs still lack fully unified candidate
+   attribution. The new effort counters concern branch scheduling only. They
+   do not close audit J, or measure startup guard pruning benefit automatically.
+
+4. Aggregate compiler reservation estimates are not live JVM heap/RSS or proof
+   that obsolete host snapshots lose their last reference. This update has no
+   new real-server/client validation. Complete captured-network replay remains
+   offline evidence; the prior live integration record applies to its own build.
+
+Detailed IDs, hashes, budgets and validation results are recorded in
+tests/provenance/effort-and-rational-lp-20261009.json. Historical reviews and
+earlier unresolved observations are preserved rather than relabeled as passes.
+
+The subsequent source-refinement-and-dispatch.txt stage targets the captured
+miracle-crystal family above. It resolves the seed-73 shuffled quantities at
+40M, retains extra-first failures, and separately corrects scheduled work
+accounting. The main-count conclusions in this document remain unchanged.

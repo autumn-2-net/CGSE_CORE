@@ -279,7 +279,10 @@ final class CountLpLearning {
         }
         if (!numerical.phaseOneInfeasible() && objective >= 0) minimumDual = Math.min(minimumDual, 1);
         Cut cut = null;
-        if (maximumDual > 0 && Double.isFinite(maximumDual)) {
+        var rational = rationalWeights(numerical.dual(), source,
+                numerical.phaseOneInfeasible() ? -1 : objective);
+        if (rational != null) cut = combine(rows, rational, low, high);
+        if (cut == null && maximumDual > 0 && Double.isFinite(maximumDual)) {
             int span = Double.isFinite(minimumDual) ? Math.max(0, Math.getExponent(maximumDual) - Math.getExponent(minimumDual)) : 0;
             // Coarse proposals are cheap. A bounded extra precision adapts to
             // mixed row scales instead of silently losing every small weight.
@@ -301,6 +304,54 @@ final class CountLpLearning {
             }
         }
         return new Result(point, cut, numerical.phaseOneInfeasible(), numerical.work(), budget, bytes);
+    }
+
+    /** Small rational multipliers are proposals; only the exact row sum below can prove anything. */
+    private Map<Integer, BigInteger> rationalWeights(double[] dual, List<Integer> source, int objective) {
+        Map<Integer, long[]> fractions = new TreeMap<>();
+        BigInteger denominator = BigInteger.ONE;
+        for (int i = 0; i < source.size(); i++) {
+            check();
+            double value = dual[i];
+            if (!(value > 0) || !Double.isFinite(value)) continue;
+            long[] fraction = approximate(value);
+            if (fraction == null) return null;
+            if (fraction[0] == 0) continue;
+            fractions.put(source.get(i), fraction);
+            var next = BigInteger.valueOf(fraction[1]);
+            integer(Math.max(denominator.bitLength(), next.bitLength()));
+            denominator = multiply(denominator.divide(denominator.gcd(next)), next);
+            if (denominator.bitLength() > 256) return null;
+        }
+        Map<Integer, BigInteger> weights = new TreeMap<>();
+        for (var entry : fractions.entrySet()) {
+            check();
+            var fraction = entry.getValue();
+            integer(denominator.bitLength());
+            weights.put(entry.getKey(), multiply(BigInteger.valueOf(fraction[0]), denominator.divide(BigInteger.valueOf(fraction[1]))));
+        }
+        if (objective >= 0) weights.merge(objective, denominator, this::add);
+        return weights;
+    }
+
+    private long[] approximate(double value) {
+        if (value > 1e9) return null;
+        double remainder = value;
+        long p0 = 0, p1 = 1, q0 = 1, q1 = 0;
+        for (int step = 0; step < 32; step++) {
+            check();
+            double whole = Math.floor(remainder);
+            if (!Double.isFinite(whole) || whole > 1e9) return null;
+            long part = (long) whole;
+            if (q1 != 0 && part > (65536 - q0) / q1) return null;
+            long q = part * q1 + q0;
+            if (part != 0 && p1 > (Long.MAX_VALUE - p0) / part) return null;
+            long p = part * p1 + p0;
+            if (Math.abs(value - (double) p / q) <= 1e-8 * Math.max(1, value)) return new long[] { p, q };
+            p0 = p1; p1 = p; q0 = q1; q1 = q;
+            remainder = 1 / (remainder - whole);
+        }
+        return null;
     }
 
     private BigInteger weight(double value, double maximum, int precision) {

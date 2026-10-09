@@ -165,11 +165,13 @@ final class GraphStockViewWork<K> implements AutoCloseable {
                     budget, started, policy, stock).program(compiler.demandProgram(graph, budget)).scoutRegions();
             return false;
         }
+        GraphCompiler.Region<K> unresolved = null;
         GraphPlan<K> candidate = repairCandidate;
         repairCandidate = null;
         if (solving != null) {
             if (!solving.step()) return false;
             candidate = solving.result();
+            unresolved = solving.unresolvedRegion();
             solving.close();
             solving = null;
             long spent = Math.max(1, usedWork() - completedWork);
@@ -190,12 +192,16 @@ final class GraphStockViewWork<K> implements AutoCloseable {
             }
         }
         if (candidate != null) {
-            boolean refined = false;
+            // UNKNOWN has no missing-material preview. Keep the failed region
+            // as a local diversification hint instead of retiring this view.
+            // Other selected sources stay intact; the full catalog is unchanged.
+            boolean refined = unresolved != null && changeRegionSource(unresolved);
             for (K key : candidate.missingExact().keySet()) {
                 check();
                 if (!compiler.producers(key).isEmpty()) refined |= leaves.remove(key);
             }
-            if (!refined && candidate.result() == GraphPlan.Result.MISSING_INPUT && (variant < 6 || variant >= 8)) {
+            if (!refined && (candidate.result() == GraphPlan.Result.MISSING_INPUT ||
+                    candidate.result() == GraphPlan.Result.MISSING_SEED) && (variant < 6 || variant >= 8)) {
                 if ((variant == 1 || variant == 2) && !forkTried) {
                     forkTried = true;
                     fork = forkConsumerRepair(candidate);
@@ -311,6 +317,19 @@ final class GraphStockViewWork<K> implements AutoCloseable {
         return changeSources(candidate.missingExact().keySet(), false);
     }
 
+    private boolean changeRegionSource(GraphCompiler.Region<K> region) {
+        for (var recipe : region.recipes()) {
+            for (K output : recipe.executionOutputs().keySet()) {
+                check();
+                if (graph.selected().get(output) == recipe && changeSources(java.util.List.of(output), true)) {
+                    budget.note("stock_view", "repair_unresolved_region; recipes=" + region.recipes().size() + "; variant=" + variant);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private boolean changeSources(Iterable<K> keys, boolean firstOnly) {
         boolean changed = false;
         for (K key : keys) {
@@ -338,7 +357,9 @@ final class GraphStockViewWork<K> implements AutoCloseable {
         // An unfunded producer can be the wrong source, even when its consumers
         // are necessary. These per-key preferences belong only to this view;
         // they neither ban a recipe globally nor justify a catalog conflict.
-        // Missing seed plans retain their existing consumer/order refinement.
+        // A seed can have an alternative producer too. Keep the consumer-repair
+        // fork: changing a producer is a proposal, not a proof against the old
+        // producer or any other source combination.
         return changed;
     }
 

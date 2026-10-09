@@ -108,7 +108,15 @@ final class RecipeCountModel<K> implements AutoCloseable {
             produced.addAll(recipe.outputs().keySet());
             entries += recipe.inputs().size() + recipe.outputs().size();
         }
-        if (keys.size() > 256) return null;
+        // Upstream-only inputs are supplied by the enclosing demand solve and
+        // contribute no rows to this local count problem. Limit its constrained
+        // coordinates, not those boundary ports. They remain in the model and
+        // the original recipes for scheduling and exact demand restoration.
+        int constrained = 0;
+        for (K key : produced) {
+            budget.check();
+            if (!external.contains(key) && ++constrained > 256) return null;
+        }
         long bytes = (512L << 10) + 128L * entries;
         if (!budget.tryReserve(bytes)) return null;
         try {

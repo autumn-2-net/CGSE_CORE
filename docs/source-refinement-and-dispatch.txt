@@ -1,0 +1,138 @@
+Source repair, local count admission and cooperative dispatch
+============================================================
+2026-10-09. Follow-up to effort-and-rational-lp.txt, using the complete captured
+miracle-crystal failure rather than introducing another general-purpose backend.
+This addresses parts of audit B/C and the older review's execution-feedback and
+graph-front-end recommendations. The changes are confined to the portable core.
+
+Changes and semantic boundaries
+-------------------------------
+1. A missing startup seed can have a different producer. GraphStockViewWork now
+   tries producer repair for MISSING_SEED as well as MISSING_INPUT. Previously,
+   reopening an inventory leaf could select a closed A/B cycle, then discard a
+   necessary consumer even though an ore-funded B producer was available. The
+   existing consumer-repair fork remains. Preferences and exclusions belong to
+   this positive candidate view, not a full-catalog impossibility proof.
+
+2. An unresolved local region is retained as a source-repair boundary. The view
+   tries another producer within that region instead of retiring solely because
+   UNKNOWN has no missing-material preview. Unrelated selected sources stay in
+   place. Neither UNKNOWN nor failure of the selected region becomes a global
+   nogood. The existing per-view work/round limits and original search remain.
+
+3. CountBounds proposes its existing exact sparse elimination after repeated
+   propagation passes, before a nearly balanced feedback loop consumes the full
+   local allowance. Original nonnegative row derivations and branch premises
+   are retained; no budget cap or numeric acceptance rule is relaxed.
+
+4. Region count admission limits the constrained coordinates. Upstream-only
+   ports were already external to this local matrix but counted toward its
+   256-row admission cap. They now stay in restoration/scheduling metadata
+   without consuming a constrained-row slot. The 192-recipe and 256-active-row
+   limits, memory reservation and original-recipe verification remain.
+
+5. The scheduled graph coordinator no longer bills a step already charged by
+   its state machine. Generic scheduler clients keep the original charged API;
+   self-charging work uses a cancellation/fairness-only gate. Graph compilation
+   uses one operation within an already admitted coordinator turn. Previously,
+   a one-step quantum could be spent at the outer gate, leaving the inner gate
+   unable to make progress until the compilation account ran out. Standalone
+   graph compilation also keeps its own step charge. Parallel edge batches,
+   waiting, cancellation and ownership remain on the existing scheduler.
+
+The last change corrects dispatch accounting and progress. It is not a claim
+that arithmetic became faster. Parallel kernels can still have different work
+from serial kernels. The serial algorithm comparison below predates this change
+and therefore separates source/propagation gains from dispatch accounting.
+
+Complete-catalog comparison
+--------------------------
+The capture contains 5,903 manual patterns, 62,284 converted JEI recipes and
+2,670 inventory keys. All original slots, configuration/reusable flags, stock,
+force-production and seed-preservation semantics are kept. Compare c67ead23 and
+the preceding uncommitted continuation/LP stage with the source-repair stage:
+
+  Target: gtlcore:miracle_crystal, quantities 1 / 10 / 100 / 1000
+  Limits: 40,000,000 per work account, 256 MiB, one worker, no wall deadline
+  Order                  Before       After
+  Manual                   4/4         4/4
+  Manual first             4/4         4/4
+  All extra recipes first  0/4         0/4
+  Full shuffle, seed 73    0/4         4/4
+
+Baseline and preceding-stage verdicts and work match on all 16 requests.
+The new shuffled witnesses require approximately 12.64M, 35.99M, 35.01M and
+39.43M search work. All returned plans pass original primitive execution,
+inventory and force-production checks. The available manual witness establishes
+that the four remaining SEARCH_LIMIT requests are feasible, not UNSAT. The
+exploratory driver recorded UNKNOWN expected truth; this evidence explicitly
+classifies those limits as unresolved known-SAT cases rather than successes.
+
+The shuffled quantity-1 case also passes at 20M and joins the named captured
+regressions. Quantities 10/100/1000 are pinned separately at the default 40M.
+The named emitter and miracle campaigns contain 15 requests. All pass with one
+worker, four workers at base budgets, and four workers with the production 2x
+budget expansion. Before the dispatch correction, the four-worker 1000 case
+exhausted 40M and needed the expanded budget. Both outcomes are retained in the
+provenance; expansion is never reported as an equal-resource speedup.
+
+Reproduce the passing captured boundary:
+  python tests/datasets/regressions.py --java-home JDK17
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4 --expanded-budget
+
+Reproduce the explicitly unresolved known-SAT boundary:
+  python tests/datasets/run.py --java-home JDK17 --target gtlcore:miracle_crystal
+    --amounts 1,10,100,1000 --modes extra-first --seed 73
+    --milliseconds 0 --work 40000000 --require-feasible
+This command is expected to exit nonzero on a search limit. It is not a passing
+regression and must not be converted into an infeasibility expectation.
+
+Focused oracles and broader checks
+----------------------------------
+SourceRefinementTest checks 168 independently verified plans across catalog
+orders, quantities and seed settings, plus changed stock, excluded alternatives,
+unresolved regions, cancellation and admission refusal. No failed view is cached
+as a permanent rejection of the producer.
+
+PropagationFeedbackTest covers 84 ordered exact feedback closures, including
+large coefficients and essential branch premises, within a 20,000-work cap.
+It also independently enumerates 400 finite boxes and tests all original
+witnesses against propagated bounds, with no invented negative conclusion.
+
+RegionBoundaryProjectionTest checks eight original-recipe schedules with up to
+1,200 upstream ports, exact restored consumption, constrained-row limits,
+memory refusal and cancellation. PlanningDispatchAccountingTest checks 18
+serial/scheduled search-and-compilation work equalities, two larger cold graphs
+and four generic/self-charging scheduler cases, including quantum 1.
+
+The serial 274-model, three-order main-count comparison remains 743 complete
+out of 822, with no lost conclusions or oracle contradictions. It is identical
+in conclusions to the previous continuation/LP stage: this round does not claim
+those earlier eight gains again. There are 20 original-order budget limits
+(13 independently known SAT, seven UNSAT), 21 in shuffle 1, 20 in shuffle 2,
+and six unsupported finite test conversions per order. The 72 parity/neighbor
+conclusions are unchanged. These records are separate from complete plans.
+
+Curated and expanded graph fixtures pass 3,117 validations. Another 80 complete
+catalog random requests pass at 20M. These serial runs used the source-repair
+stage before dispatch-only changes; their source fingerprint is retained.
+The final 58-program standard suite and both four-worker captured campaigns
+exercise the final dispatch implementation. Offline assemble passes, and the
+source JAR is checked against every production Java file.
+
+Remaining work
+--------------
+The extra-first miracle family remains unresolved; coordinated source repair
+and downstream budget consumption need further comparison. Single-boundary
+changes and positive supports are not exhaustive. Full closure
+admission (8,192 resources/recipes), support-pool limits and numeric hard cases
+remain. This stage does not claim completeness comparable to SCIP or CP-SAT.
+Audit J still lacks fully unified preparation/restoration/seed cost attribution.
+Audit H still lacks host-wide heap/RSS and last-reference residency observations.
+No new AE/GTL server or client run was performed for this change; captured
+network replay is offline validation. Ordinary fallback retains its existing role.
+
+Budgets, source/harness/input hashes, before/after outcomes and remaining failures
+are recorded in tests/provenance/source-refinement-20261009.json. Earlier reports
+remain historical observations and are not rewritten to present failures as passes.

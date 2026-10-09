@@ -138,7 +138,9 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
 
     @Override
     public boolean advance(PlanningScheduler.Slice slice) {
-        while (compilationActive() ? slice.nextCompilation() : slice.next()) {
+        // step() owns its search/compilation charge, including synchronous
+        // callers. Scheduling the same operation must not charge it twice.
+        while (slice.nextUncharged()) {
             if (step(slice)) return true;
             if (waitingFor() != null) return false;
         }
@@ -322,7 +324,9 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 }
                 case 1 -> {
                     if (compiling != null) {
-                        if (!(slice == null ? compiling.step() : compiling.advance(slice))) return false;
+                        // The outer coordinator admitted this operation. A
+                        // second slice gate can starve compilation at quantum 1.
+                        if (!compiling.step(slice)) return false;
                         graph = compiling.result();
                         compiling.close();
                         compiler.publish(target, requiredSeeds.keySet(), choices, excluded, graph);
