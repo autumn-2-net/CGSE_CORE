@@ -1,0 +1,588 @@
+{
+  "schema": "cgse-finite-propagation-followup-v1",
+  "date": "2026-10-10",
+  "baseline": "74bb4480c4bdeeac95c52952d4ada89fd3977471",
+  "candidate_source_sha256": "a3374ceb1e91a9acacf4d254f9854acd32daa54d5b031bf5b714e6610d8cc07d",
+  "production_java_files": 199,
+  "reference": "https://github.com/scipopt/scip/blob/master/src/scip/cons_linear.c",
+  "scope": "Exact finite-domain LCG propagation specialization, with original arbitrary-precision fallback and unchanged scan charges.",
+  "budget": {
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1
+  },
+  "account_policy": "Separate shared search and compilation caps; no work discount or larger request cap.",
+  "models": {
+    "cases": 274,
+    "orders": [
+      {
+        "order": 0,
+        "outcomes": {
+          "PASS": 252,
+          "UNRESOLVED": 16,
+          "UNSUPPORTED": 6
+        },
+        "total_recorded_work": 487422953
+      },
+      {
+        "order": 1,
+        "outcomes": {
+          "PASS": 250,
+          "UNRESOLVED": 18,
+          "UNSUPPORTED": 6
+        },
+        "total_recorded_work": 523709699
+      },
+      {
+        "order": 2,
+        "outcomes": {
+          "PASS": 252,
+          "UNRESOLVED": 16,
+          "UNSUPPORTED": 6
+        },
+        "total_recorded_work": 494482968
+      }
+    ],
+    "comparisons": 822,
+    "identical_outcomes_and_work": true,
+    "gained": [],
+    "lost": [],
+    "contradictions": [],
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "a43e6aefdb2b7fc180dc5076a7a65e5b4f986f3bd7be965bcfaebb6ad5eb0c00",
+    "report_sha256": "3e0e6f9cfa65787715ad6f498f40653943b9a3deb688008151666073b96bdfb7"
+  },
+  "parity": {
+    "comparisons": 72,
+    "identical_outcomes_and_work": true
+  },
+  "remaining_original": [
+    {
+      "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "known_truth": "SAT"
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "known_truth": "SAT"
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "known_truth": "SAT"
+    },
+    {
+      "id": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
+      "known_truth": "SAT"
+    },
+    {
+      "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "known_truth": "SAT"
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "known_truth": "SAT"
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+      "known_truth": "SAT"
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "known_truth": "SAT"
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "known_truth": "SAT"
+    }
+  ],
+  "remaining_details": "residue-count-matching-20261010.json; unchanged 16 original UNKNOWN and six conversion exclusions.",
+  "arithmetic_oracle": {
+    "row_boundaries": 630,
+    "finite_models": 256,
+    "enumerated_assignments": 1679616,
+    "local_resumptions": 648,
+    "proofs_independently_replayed": true,
+    "log_sha256": "b21dac19801dc31e5da9ee4070d3460c103f06cb771fb9bd2471bd4f88054ee4",
+    "source_sha256": "0974390ca2df8741432f8fa502a04db09b0289eb18b5ddc1664954d422a2a34b"
+  },
+  "timing": {
+    "baseline": "74bb4480c4bdeeac95c52952d4ada89fd3977471",
+    "candidate_source_sha256": "a3374ceb1e91a9acacf4d254f9854acd32daa54d5b031bf5b714e6610d8cc07d",
+    "harness_sha256": "c69c7de216ee9bcbe9c4d9eda02c30418e57a06acf5af9dfeba1528332998e10",
+    "input_sha256": "33d850a7eb739ae0a6dfd35603647888d7844e358e46cd585b72724f134e78b1",
+    "corpus_ids": [
+      "09f95145563851ebf79bdabb9b6394d08c8621945f6a420a91691534d1abd732",
+      "0f279e19f9057499acb60bbe133aa3eb9ea6041509d46b91b925b9cbca430fc2",
+      "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "20493f36e8dafac78ecddb14deaf37cd09200e9490fa36d0ed884f31ed1e2354",
+      "27a91083642547e03096d5d94fd0aa9bc9bdf30b6a942ed96a3e6e65e8b6074b",
+      "3a409206e8f4baf889b50e01ec74f4c06e8f83e67f1ef1c66df6bf36e0e2a947",
+      "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "46ae9ed4ad62f98ead627cf1f2dfca403156591657be26ed0b421e84a226c5a5",
+      "475ac5d6f788379a67640c23075d88152a8a577e1343ab9b292dcb5350b3ac77",
+      "4eee53cf1181964e7a452ae31359290be2904e48ed5491e6c8fe15bc75f0a8c8",
+      "508dda4ee246aa5e1c08e1921282c387202f0eb1e16e9772792bd0a9221ac9bd",
+      "50de28248fb18fa1db2deb788248bf3fd6bb9f448da299b0f3bd50cd13d3b93b",
+      "55781ef8346df6e8205a7215a1c06cc5926b078dbedaba2e7da60d8ebedac83e",
+      "5642eec3acbd061478c0e8301ebd315375358123fd4eb6d9b5da516036f69dd8",
+      "5b06a4369cfc7b3bb0d4a59250259c974494b7773b19cd64409dee322aaac2d9",
+      "5c4495d3f4ae9e7e23994d85987844f5c1c4b78ad17da23efcb9b5b099f6dada",
+      "63c224fc99c55e151817840c0cc3f4e9e11a012a9ad46fdd4d2376ee390ef218",
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "6cf42b38fe3267989a5dd57e3caec8af25ec76d9d5c5a7694834f4485bb611f2",
+      "706316fb15d8b802ab7cd91656d2c636d9aec07a25a319b1c236dffcd9b0ba96",
+      "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
+      "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "887fe8958869e3b317de28b5d367204223cb0280fb3666c6132567f6ac852aa2",
+      "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "8bbc3f11d28a373c0c8faaa9709e1db8b16172b88213b7f3b24253009fdbacaa",
+      "99d4d95f670d738be185efaebb4a9b6de1546bcd5fcbe18eace725a94d4349f5",
+      "9bf15fe6b0627efc799a2e85e6d6676bfd18b04e69a01c1e5daf758dad8d61fd",
+      "a577aaa2b51eaaaf63b24e7316707fdd819a6ebd3cd40905732e1cb4c68d8fd2",
+      "a71cbc4302e6d8bee1eeb17ca2b9719635151f6e7db9087b2e171b833a9455fb",
+      "b11051990caf77527fce34f0e93c5b73e3bee60cf9814b0c559badbe0aff27d5",
+      "bb461d225f0175459846543284c303c50837b75ca1d3f1dc89b41ca5df001976",
+      "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+      "c3148351cf52052bccf7cbfed8153cd9352a1f17b5b4c76a62f6531b02b0485b",
+      "c3875bfd3b0710636953a0c78b1b1fdf792f1aa183b41de88523c07a4c029e49",
+      "c46311438611a17ca4c4d18cc6d1ee76cb267d8744c40d128c4b7d71ac97b028",
+      "c5b8567fb5cebbab897b7982e15863baf17ebd3f28a8193888b7852a64d04b7d",
+      "cac65d1ec2d9b820956ac2a0b291be44e144578322be30f25338983794f9cea2",
+      "d33528acc66e8347b57b9fea03900871c1da61cd7bf9169ef520be36a7417afd",
+      "d993df58f017ba0d278d43d3e8b9a2983c8356c60602199080dbef3e42a9107a",
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "e1c0678659a0be4363f2ff929731e1d0e6db19f8d4561ef52f905326b45eadb7",
+      "f6a80d29462d7d63b3207e494fffece4c3c451ced8a5d291448576e051d13fb6",
+      "faf183717f8895a3689cc9a9afd561c8a7f7872e9acb188324b282dafe6e1989",
+      "fd258d744b0b9036aa8295fd092f048819effd3c99518205064a4c8d5250c212",
+      "fec30a3add39ebc76a88a911f9addd458f047c4b14a23adf7dd624aeab965e8b"
+    ],
+    "warmup": 2,
+    "slice_work": 262144,
+    "request_work": 8000000,
+    "memory_bytes": 134217728,
+    "java": "openjdk version \"17.0.19\" 2026-04-21\nOpenJDK Runtime Environment Temurin-17.0.19+10 (build 17.0.19+10)\nOpenJDK 64-Bit Server VM Temurin-17.0.19+10 (build 17.0.19+10, mixed mode, sharing)",
+    "samples": {
+      "baseline": [
+        {
+          "sample": 0,
+          "models": 45,
+          "nanoseconds": 689078500,
+          "allocated_bytes": 1397587304,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 1,
+          "models": 45,
+          "nanoseconds": 687824000,
+          "allocated_bytes": 1397587304,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 2,
+          "models": 45,
+          "nanoseconds": 679370100,
+          "allocated_bytes": 1397587304,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 0,
+          "models": 45,
+          "nanoseconds": 695216300,
+          "allocated_bytes": 1397483184,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 1,
+          "models": 45,
+          "nanoseconds": 688886700,
+          "allocated_bytes": 1397483184,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 2,
+          "models": 45,
+          "nanoseconds": 689077600,
+          "allocated_bytes": 1397483184,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        }
+      ],
+      "candidate": [
+        {
+          "sample": 0,
+          "models": 45,
+          "nanoseconds": 605566700,
+          "allocated_bytes": 878234608,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 1,
+          "models": 45,
+          "nanoseconds": 603931100,
+          "allocated_bytes": 878234608,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 2,
+          "models": 45,
+          "nanoseconds": 600288200,
+          "allocated_bytes": 878234608,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 0,
+          "models": 45,
+          "nanoseconds": 613145200,
+          "allocated_bytes": 881145760,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 1,
+          "models": 45,
+          "nanoseconds": 611850400,
+          "allocated_bytes": 881145760,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        },
+        {
+          "sample": 2,
+          "models": 45,
+          "nanoseconds": 601336000,
+          "allocated_bytes": 881145760,
+          "work": 7105509,
+          "signature": -7648590414498417673
+        }
+      ]
+    },
+    "note": "Sequential B/C/C/B processes, warmed original-model LCG slices. Allocation is current-thread allocated bytes, not retained heap or RSS. No whole-planner timing claim.",
+    "medians": {
+      "baseline": {
+        "nanoseconds": 688982150.0,
+        "allocated_bytes": 1397535244.0,
+        "work": 7105509.0
+      },
+      "candidate": {
+        "nanoseconds": 604748900.0,
+        "allocated_bytes": 879690184.0,
+        "work": 7105509.0
+      }
+    },
+    "identical_trajectories": true
+  },
+  "validation": {
+    "standard": {
+      "programs": 62,
+      "passed": 62,
+      "results_sha256": "ce5c967ce948afdbae14f3e44d8dc3a81ddcb557ad062ecd3606fcf74942996e"
+    },
+    "curated_graphs": {
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "3789c623bee575ca91d9f996739b64ae01af48b2c1db5435c3a0dceb3831cbd6",
+      "cases": 239,
+      "orders": 3,
+      "inputs_sha256": [
+        "040d45c8d5728b24a87d9ff5b2dce78100448a28c9140bd89cbd7d4de1c1b728",
+        "86fbd385defe450ab4c84fb1cd4136e263a9e4bd98a8d1fca51f2dd80b9353e5",
+        "b9258985707ebf1dbfa9bd0bc8dbcd108fe0884eea36697d13c178b25a0ea577"
+      ]
+    },
+    "expanded_graphs": {
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "8d79275a1813b1170265e32150cffe01f3deaffdf990cf2287ded2da7dca128f",
+      "cases": 800,
+      "orders": 3,
+      "inputs_sha256": [
+        "a58448b493d224e5e7a65b6cc580745cc27f68ec3bc75fca6ce1cfa64d9e8807",
+        "f5c55a271c03cb36ef1ce5491c87510d33dd8937ea7352435b87524b24e37dbb",
+        "ff654555673f2185e02d42025d5dc2086dd5aa328fd99e9737a92a28d74e91e7"
+      ]
+    },
+    "captured_serial": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "verified": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "1b214ba108d7e49e14e1aab4e5626861aca938029811c55b6065f7dd8d51d2f7",
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "2754be17c9967386433e7cee9136fed6157aa78d0d495bdb9e858ab44c9ff820",
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "445df281822291ece7830f8114cb8a2cc6160b1166da2acb8ad7c322f2d51412",
+        "peak_reserved_bytes": 70584863
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "verified": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "1f01f50a7a0ff30b0637806697c4c6eb1797c1688e0f2e775a82deee4864c642",
+        "peak_reserved_bytes": 72825838
+      }
+    ],
+    "captured_parallel": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "verified": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "91e8af9087dbe1b8c4157effd5fb14a10a5e9f0b522911ddc95eccd4524d6a30",
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "9d22a3220cb120f8352a5f271f34c010da5a17d17452bfe8a5624d5c07665277",
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "1c7823db23b18d4c664e53efdd6779dbd9c6addb2cfb7582a60f8a8552f92930",
+        "peak_reserved_bytes": 70584863
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "verified": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "1bfea3484e06b21bc394485289833efabdc4b69821718d1be229a27dd3efc142",
+        "peak_reserved_bytes": 72825838
+      }
+    ],
+    "captured_expanded": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "verified": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "1226533987bd5973cbe1fadcacbab676cbf703064b72230bc5cebcc0dbbbd6d4",
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "117d6042984e77798dc38a4c66b4945f05900b1b6bddc7a56178e29f8b7e1100",
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "88945b30513e4a0df65f5fe75f718bd0b3fde5ac33dd6c0432cd542348d8c772",
+        "peak_reserved_bytes": 70237289
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "verified": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "ab5e694d687b7a14d441a9f6e07ac1c35aac02118a4fb5dfdaf30e2ee1610c98",
+        "peak_reserved_bytes": 72825838
+      }
+    ]
+  },
+  "build": {
+    "offline_assemble": true,
+    "source_jar_matches_all_production_files": true,
+    "core_jar_sha256": "35ca3b20dadca95eb47d7be32540487d20629def3e451887271115cca973b05f",
+    "sources_jar_sha256": "b8b615658ff254398fd3e80d0876d8927112288886aa84d9ed24b9124ee4461f"
+  },
+  "limits": [
+    "The numerical corpus has no additional conclusion at the unchanged budget.",
+    "Timing measures warmed LCG slices on one machine, not full-planner/server speed.",
+    "Thread allocation is cumulative allocation, not peak live heap or RSS.",
+    "Captured AE/JEI replay is not a new live server/adapter run.",
+    "Large closures, wider numeric reach and H/J audit observability gaps remain."
+  ]
+}

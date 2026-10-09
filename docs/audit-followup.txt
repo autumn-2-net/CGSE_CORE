@@ -205,3 +205,14 @@ original-order UNKNOWN from 18 to 16 (nine independently known SAT, seven UNSAT)
 Signed origins, exact arithmetic admission, work/memory limits, continuation,
 skewed tables and shared budgets have dedicated finite-oracle coverage. This
 does not remove finite-budget order sensitivity or close the H/J gaps above.
+
+2026-10-10 finite propagation follow-up
+-------------------------------------
+finite-integer-propagation.txt records a SCIP-inspired easy-case specialization
+of LCG bound propagation with strictly exact signed-long admission. Independent
+boundary/finite oracles check the original BigInteger path, reasons, certificates
+and resumptions. The full 822-case count comparison plus 72 parity neighbors has
+identical outcomes and work. On 45 warmed LCG models the measured median time is
+12.2% lower and current-thread cumulative allocation is 37.1% lower. This is not
+a whole-planner speed claim or additional solved case; the 16 original limits
+and the numeric reach, large-closure and H/J gaps remain.

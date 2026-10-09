@@ -178,6 +178,7 @@ final class CountLcg implements AutoCloseable {
     private static final class RowActivity {
 
         boolean valid;
+        boolean finiteLong = true;
 
         BigInteger minimum = BigInteger.ZERO;
         BigInteger maximumChange = BigInteger.ZERO;
@@ -789,6 +790,10 @@ final class CountLcg implements AutoCloseable {
                 integerCost(a, width);
                 cached.maximumChange = cached.maximumChange.max(a.abs().multiply(width));
             }
+            if (first && cached.finiteLong)
+                cached.finiteLong = rootHigh[id] != null && a.abs().bitLength() <= 63 &&
+                        rootLow[id].bitLength() <= 63 && rootHigh[id].bitLength() <= 63 &&
+                        rootHigh[id].subtract(rootLow[id]).bitLength() <= 63;
         }
         if (learnedRelaxation && rowId >= originalRows && cached.booleanOrder == null) {
             reserve(64L + 4L * row.terms().size());
@@ -859,6 +864,10 @@ final class CountLcg implements AutoCloseable {
         // Propagate using a frozen set of bounds; new implications are placed
         // on the queue, so none of their explanations can refer to themselves.
         int prefix = trail.size();
+        if (infinities == 0 && cached.finiteLong && residual.bitLength() <= 63) {
+            propagateLong(rowId, residual.longValue(), prefix);
+            return;
+        }
         var candidates = new ArrayList<Literal>();
         var explanations = new ArrayList<LinearReason>();
         for (var term : row.terms().entrySet()) {
@@ -888,6 +897,42 @@ final class CountLcg implements AutoCloseable {
             }
         }
         for (int i = 0; i < candidates.size() && conflict == null; i++) tighten(candidates.get(i), null, explanations.get(i));
+    }
+
+    /** Exact specialization: admission bounds every endpoint and domain width, including after backtracking. */
+    private void propagateLong(int rowId, long residual, int prefix) {
+        var row = rows.get(rowId);
+        List<Literal> candidates = null;
+        List<LinearReason> explanations = null;
+        for (var term : row.terms().entrySet()) {
+            // Keep the same scan charge and implication order as the arbitrary-
+            // precision path. This changes arithmetic cost, not search budget.
+            charge();
+            long coefficient = term.getValue().longValue();
+            if (coefficient == 0) continue;
+            int id = term.getKey();
+            long first = low[id].longValue(), last = high[id].longValue();
+            if (first == last) continue;
+            long magnitude = Math.abs(coefficient);
+            long distance = residual / magnitude;
+            // Comparing the quotient avoids a potentially overflowing product
+            // magnitude * width. A tightened endpoint stays inside this domain.
+            if (distance >= last - first) continue;
+            long endpoint = coefficient > 0 ? first + distance : last - distance;
+            var next = new Literal(id, coefficient < 0, BigInteger.valueOf(endpoint));
+            // a * (floor(r/a) + 1) - r - 1 = a - 1 - (r mod a).
+            // Neither product nor distance + 1 need fit in a signed long.
+            long slack = magnitude - 1 - residual % magnitude;
+            if (candidates == null) {
+                candidates = new ArrayList<>();
+                explanations = new ArrayList<>();
+            }
+            candidates.add(next);
+            explanations.add(new LinearReason(row, id, BigInteger.valueOf(slack), prefix, rowId));
+        }
+        if (candidates != null)
+            for (int i = 0; i < candidates.size() && conflict == null; i++)
+                tighten(candidates.get(i), null, explanations.get(i));
     }
 
     private List<Literal> antecedents(ExactLinearProgram.Constraint row, int except, BigInteger slack, int prefix) {

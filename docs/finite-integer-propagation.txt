@@ -1,0 +1,92 @@
+Exact finite-domain propagation, 2026-10-10
+=========================================
+
+Scope
+-----
+CountLcg specializes a frequently repeated operation: deriving integer bounds
+from a frozen row residual. The existing arbitrary-precision implementation
+remains the path for unbounded or wider arithmetic. No branch ordering, learned
+clause policy, model admission limit or work multiplier changes.
+
+Reference: SCIP's linear constraint handler separates its easy bound-tightening
+case from its general implementation, with activity-delta checks before scanning.
+The CGSE change applies that specialization principle to exact integer arithmetic;
+it does not import SCIP's floating-point tolerances or copy its source.
+
+  https://github.com/scipopt/scip/blob/master/src/scip/cons_linear.c
+  Functions: tightenBounds, tightenVarBoundsEasy (consulted 2026-10-10).
+
+Arithmetic and lifetime
+-----------------------
+A row caches eligibility only when every nonzero coefficient magnitude, both
+original finite endpoints, and their nonnegative difference fit signed long.
+Eligibility uses immutable root domains, so it remains valid after backtracking,
+restarts, suspended searches and bound tightening. Newly added rows are checked
+on their own first activity calculation. The current nonnegative residual must
+also fit; the row activity and bound themselves may be larger than long.
+
+For a coefficient magnitude a and residual r, q = floor(r/a) bounds the distance
+from the contributing endpoint. Comparing q with the domain width avoids the
+overflowing product a * width. If a new bound exists, its endpoint is strictly
+inside the admitted interval. Reason relaxation uses a - 1 - (r mod a), which
+equals a * (q + 1) - r - 1 without either overflowing intermediate expression.
+Long.MIN_VALUE coefficients and widths larger than Long.MAX_VALUE are declined.
+All arithmetic is integral; there is no double conversion or approximate proof.
+
+The original frozen trail prefix, variable order and reason records are retained.
+Each term has the same scan charge. Temporary candidate/reason lists are created
+only if the row actually derives a new bound. The declared memory reservation
+remains conservative; lower allocation is not a claim about lower peak live heap.
+
+Validation and measured effect
+------------------------------
+CountLcgFiniteTest compares the new path with the original BigInteger path and
+independent finite enumeration: 630 arithmetic boundary rows and 256 complete
+models, including 648 local resumptions. Bounds, reasons, charged work and final
+certificates match; certificates are independently replayed. Signed endpoints,
+products wider than long, zero terms, fixed variables, 63/64-bit boundaries and
+larger coefficients/residuals are covered. CountLcgWatchTest additionally covers
+unbounded domains, imported clauses, restarts, cancellation and memory refusal.
+
+Against 74bb4480, the 274 canonical count models in three deterministic orders
+have identical outcomes AND recorded work (822 comparisons). The 72 parity
+neighbors likewise match. The counts remain 754 solved, 50 UNKNOWN and 18
+unsupported conversions across orders. Original order still has 16 UNKNOWN
+models: nine independently known SAT and seven independently known UNSAT. An
+unfinished CGSE proof is not reported as an infeasibility conclusion.
+
+Separate warmed, sequential LCG measurements use 45 sparse/wide integer models.
+Two JVMs per revision run in B/C/C/B order, each with two warmup passes and three
+measured passes. All twelve samples have the same 7,105,509 charged work and
+witness/status/work signature. Median cumulative solver time per 45-model pass:
+
+                       74bb4480        This change
+  Solver time          688,982,150 ns   604,748,900 ns   (-12.2%)
+  Thread allocation  1,397,535,244 B    879,690,184 B    (-37.1%)
+
+This is one machine's LCG-slice measurement, not a whole-planner or server timing
+claim. Allocation counts total bytes allocated by that thread during the solve;
+they do not measure retained memory, all threads or process RSS. Compilation,
+input parsing, JIT warmup and post-solve row checking are outside the timed region.
+
+Reproduce with JDK 17 (run the timing comparison without concurrent tests):
+
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline 74bb4480 --permutations 3 --parity
+    --output build/finite-propagation-comparison --timeout 1800
+  python tests/benchmarks/compare_lcg_propagation.py --java-home JDK17
+    --baseline 74bb4480 --output build/finite-propagation-timing
+  python tests/run.py --java-home JDK17 --suite standard --timeout 600
+
+The provenance record includes raw timing samples, input/source fingerprints,
+the wider graph/capture regressions and the build/source-JAR consistency check.
+Captured networks do not substitute for a new live AE integration test.
+
+What this does not close
+-----------------------
+This change improves the speed of an existing exact primitive. It adds no new
+solved count-model case and does not close the numeric reach, large-closure or
+H/J observability gaps recorded in audit-followup.txt. Trial pair-repair and
+domain-weighted branching variants did not add answers in the selected 45-case
+comparison; neither is enabled by this boundary. Larger sparse equalities and
+the remaining objective-bound proofs still need measured algorithmic advances.
