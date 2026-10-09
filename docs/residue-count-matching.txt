@@ -1,0 +1,115 @@
+Review follow-up: retained four-list count candidates
+====================================================
+2026-10-10, baseline b3059076.
+
+The scalar matcher still declines a full 24-bit half table for 48 binary
+coordinates. Two independently known SAT models, subset-n48-bits24 and
+subset-n48-bits40, remained UNKNOWN at 20M work. Raising the table or request
+limit would hide this boundary rather than add a cheaper way to find a plan.
+
+CountMeetInMiddle can now use CountResidueJoin for an oversized binary model
+with at most 52 compiled choices. Projection must leave exactly one equality;
+the existing BigInteger certificate must bound every primitive sum and
+complement. An original-coordinate check remains mandatory after restoration.
+Other shapes retain their existing strategies and admission limits.
+
+Four lists and bounded matching
+-------------------------------
+Split the choices into four quarters, each with at most 8192 assignments. Build
+their sums once, indexed by the original option mask using Gray enumeration.
+Bucket the first and third lists by low-bit residue. For residue r, enumerate
+only first-plus-second pairs congruent to r, then probe third-plus-fourth pairs
+congruent to target-r. The hash key is the FULL signed sum; modular agreement
+alone never establishes a match. Two matching option masks restore the original
+domains, including signed or arbitrarily large lower-coordinate offsets.
+
+All quarter lists, bucket links, cursors, hash collision positions and partial
+tables survive a local pause. Epoch tags reuse table storage across residues
+without clearing the large arrays. Every generated sum, bucket inspection,
+enumerated pair and hash inspection charges the shared request. Hash work is
+split into small batches; it does not bypass cancellation or worker limits.
+The tables reserve their storage before allocation and release it on close.
+The largest admitted table has 2^21 slots; total child reservation is below
+33 MiB, in addition to the parent's projection/domain workspace. These are
+accounted reservations, not measured JVM heap or process RSS.
+
+The residue width uses the number of choices, coefficient span and table cap
+to estimate pair density. Admission uses that representation's estimated work
+and memory, leaving room for other engines. Actual work remains charged even
+when the estimate is wrong. Small integer ranges retain the earlier priority
+for propagation and merged-state strategies.
+
+A residue may be much denser than predicted. At 75% table load the search
+probes the retained partial table and then advances to another residue. This
+may miss witnesses. Therefore this path supplies POSITIVE CANDIDATES ONLY:
+truncation, memory refusal, budget exhaustion and even complete residue
+traversal never constitute an infeasibility proof. It does not export a new
+negative certificate or change the request's limits. Finite-budget results
+can still depend on order; increasing coverage is not a completeness claim.
+
+The modular four-list idea for integer subset sum is described in the primary
+paper Improved Low-Memory Subset Sum and LPN (2019):
+https://eprint.iacr.org/2019/804.pdf
+This is an independently written bounded candidate implementation, not a copy
+of that paper's complete algorithm or a claim of its asymptotic guarantees.
+
+Validation
+----------
+CountResidueJoinTest compares 240 finite models in three coefficient orders
+against 489600 independently enumerated assignments (160 SAT, 80 UNSAT).
+All returned subsets are checked exactly. All 716 untruncated runs agree with
+the oracle; truncated runs may remain UNKNOWN. The test also checks 41 through
+52 compiled choices with 100/1100-bit signed origins, interrupted versus
+uninterrupted work and witness identity, skewed buckets, unsafe primitive
+arithmetic, additional active rows, reservation refusal, cancellation and four
+workers sharing both sufficient and exhausted budgets.
+
+The two new original-order positive boundaries are maintained separately from
+the historical corpus in tests/regression/count-boundaries.json. Full-corpus
+equal-budget results and source/input hashes are recorded in
+tests/provenance/residue-count-matching-20261010.json. The comparison exercises
+the main integer-count entry, exact original rows/domains and primitive
+execution prefixes; unbounded test-conversion exclusions remain separate.
+
+At the same 20M search/compilation limits, 256 MiB, one worker and no wall limit:
+
+  Order           Baseline conclusions    Current conclusions    Current UNKNOWN
+  Original        250 / 274               252 / 274              16
+  Shuffle 1       248 / 274               250 / 274              18
+  Shuffle 2       250 / 274               252 / 274              16
+
+Each order retains six unbounded-conversion exclusions. The complete 822-check
+comparison gains six conclusions and loses none, with no contradictory answers.
+Both new models produce verified SAT witnesses in these three fixed orders;
+that does not imply success under every permutation. The 40-bit model now uses
+3,214,601 to 5,423,998 recorded work; the 24-bit model uses 97,322 to 97,382.
+Total recorded work falls from 1,612,272,530 to 1,505,615,620 (about 6.6%). The
+largest increase among previously completed cases is below 0.06%, from admission
+checks. These logical counts are not a wall-time performance comparison.
+
+Both revisions pass all 72 parity/neighbor checks. The final production sources
+also pass 61 standard programs, 3117 graph fixture/order checks and 57 complete
+captured-stock requests. The latter retain the 68187-recipe catalog: 19 requests
+each with one worker, four workers at the same cap, and four workers with the
+production 2x allowance. The focused test additionally extends retained-state
+coverage through the maximum admitted 52 choices. Offline assemble succeeds;
+all 199 production Java files match the source JAR byte for byte.
+
+The remaining 16 original-order UNKNOWN models are independently known to be
+nine SAT and seven UNSAT. The new candidate path has not proved those negative
+cases, and the remaining 48-variable/48-bit subset sum still reaches its budget.
+
+Reproduce the fixed-cap comparison and the focused continuation/oracle tests:
+
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline b3059076 --permutations 3 --parity --timeout 1800
+    --output build/residue-frontier-final
+  python tests/run.py --java-home JDK17 --suite core
+    --case CountResidueJoinTest --timeout 600
+  python tests/run.py --java-home JDK17 --suite standard --timeout 600
+
+The full graph/captured-stock commands in scalar-count-matching.txt also apply.
+Captured AE/JEI replay is not a fresh server dispatch/save/reload test. Larger
+sparse/wide equalities, the objective-bound proof family, numeric admission
+limits and the audit's separate H/J observability gaps remain outside this
+candidate-matching change. Ordinary fallback has no new cycle-solving role.

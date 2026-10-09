@@ -92,6 +92,7 @@ final class CountMeetInMiddle implements CountContinuation {
     private BigInteger[] goalLow, goalHigh, sum, counts;
     private Enumeration enumeratingLeft, enumeratingRight;
     private ScalarTable scalar;
+    private CountResidueJoin residueJoin;
     private long entryBytes;
     private Entry[] ranged;
     private BigInteger[] queryLow, queryHigh;
@@ -124,7 +125,7 @@ final class CountMeetInMiddle implements CountContinuation {
                 budget.check();
                 if (left <= right) left *= sizes[i];
                 else right *= sizes[i];
-                if (left > MAX_STATES || right > MAX_STATES) return 0;
+                if ((left > MAX_STATES || right > MAX_STATES) && (count > 52 || sizes[count - 1] != 2)) return 0;
             }
             boolean weighted = false;
             int bits = 1, activeRows = 0;
@@ -161,6 +162,7 @@ final class CountMeetInMiddle implements CountContinuation {
                         // dimension. Counting an equality twice can incorrectly
                         // exclude a small table in favor of a costly LP search.
                         if (!dimensionsSeen.contains(opposite)) activeRows++;
+                        if (activeRows > 1 && (left > MAX_STATES || right > MAX_STATES)) return 0;
                         dimensionsSeen.add(row.terms());
                     } finally {
                         budget.release(temporary);
@@ -172,7 +174,16 @@ final class CountMeetInMiddle implements CountContinuation {
             // cheaper representation than a multidimensional object table.
             // The matcher rechecks this certificate after normalization; this
             // estimate affects admission only, never a feasibility conclusion.
-            if (activeRows == 1 && sizes[count - 1] == 2 && scalarEquality(rows, lower, upper, left + right, budget)) {
+            // Small reachable ranges favor propagation/merged-state strategies.
+            // This controls scout priority only; it never removes domain values.
+            long scalarSpan = activeRows == 1 && sizes[count - 1] == 2 ? scalarSpan(rows, lower, upper, budget) : 0;
+            if (scalarSpan > left + right && (left > MAX_STATES || right > MAX_STATES)) {
+                var shape = CountResidueJoin.Shape.create(count, scalarSpan);
+                if (shape != null && shape.bytes() <= budget.availableBytes() / 4 && shape.work() <= budget.remainingWork() / 2)
+                    return shape.work();
+            }
+            if (left > MAX_STATES || right > MAX_STATES) return 0;
+            if (scalarSpan > left + right) {
                 long scalarBytes = 256 + 24 * left;
                 long scalarWork = Math.max(1024, 4 * (left + right) + 8 * terms);
                 if (scalarBytes <= budget.availableBytes() / 4 && scalarWork <= budget.remainingWork() / 2)
@@ -194,8 +205,8 @@ final class CountMeetInMiddle implements CountContinuation {
         }
     }
 
-    private static boolean scalarEquality(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
-                                          BigInteger[] upper, long states, PlanningBudget budget) {
+    private static long scalarSpan(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
+                                   BigInteger[] upper, PlanningBudget budget) {
         Map<Integer, BigInteger> forward = null;
         BigInteger target = null, span = null;
         boolean reverse = false;
@@ -213,25 +224,21 @@ final class CountMeetInMiddle implements CountContinuation {
                 maximum = maximum.add(value.max(BigInteger.ZERO));
             }
             if (maximum.compareTo(bound) <= 0) continue;
-            if (mass.compareTo(limit) > 0 || bound.abs().compareTo(limit) > 0) return false;
+            if (mass.compareTo(limit) > 0 || bound.abs().compareTo(limit) > 0) return 0;
             if (forward == null) {
                 forward = terms;
                 target = bound;
                 span = mass;
             } else if (!terms.equals(forward) || !bound.equals(target)) {
-                if (!bound.equals(target.negate()) || terms.size() != forward.size()) return false;
+                if (!bound.equals(target.negate()) || terms.size() != forward.size()) return 0;
                 for (var term : terms.entrySet()) {
                     budget.check();
-                    if (!term.getValue().negate().equals(forward.get(term.getKey()))) return false;
+                    if (!term.getValue().negate().equals(forward.get(term.getKey()))) return 0;
                 }
                 reverse = true;
             }
         }
-        // Small coefficients collapse many assignments onto the same reachable
-        // sum. Keep the existing propagation/merged-state strategies ahead of
-        // exponential enumeration when their integer range is already smaller
-        // than the two tables. This is a scheduling choice, not a domain cut.
-        return reverse && span.compareTo(BigInteger.valueOf(states)) > 0;
+        return reverse ? span.longValueExact() : 0;
     }
 
     CountMeetInMiddle(List<ExactLinearProgram.Constraint> original, BigInteger[] lower,
@@ -261,6 +268,21 @@ final class CountMeetInMiddle implements CountContinuation {
         }
         try {
             charge();
+            if (residueJoin != null && phase == 1) {
+                long started = residueJoin.work();
+                boolean done;
+                try { done = residueJoin.step(); }
+                finally { work += residueJoin.work() - started; }
+                if (!done) return false;
+                long candidate = residueJoin.candidate();
+                if (candidate < 0) return finish(false, "residue_candidate_exhausted");
+                counts = lower.clone();
+                decode((int) (candidate & ((1L << split) - 1)), 0, split);
+                decode((int) (candidate >>> split), split, domains.size());
+                rowIndex = 0;
+                phase = 3;
+                return false;
+            }
             if (scalar != null && (phase == 1 || phase == 2)) return scalar.step();
             switch (phase) {
                 case 0 -> {
@@ -439,7 +461,9 @@ final class CountMeetInMiddle implements CountContinuation {
                 trials++;
             }
         }
-        if (!fits()) return finish(false, "state_limit");
+        boolean largeBinary = !fits();
+        if (largeBinary && (domains.size() > 52 || rows.size() != 2 ||
+                domains.stream().anyMatch(domain -> domain.size != 2))) return finish(false, "state_limit");
         List<Domain> a = new ArrayList<>(), b = new ArrayList<>();
         long na = 1, nb = 1;
         domains.sort(Comparator.comparingInt((Domain domain) -> domain.size).reversed());
@@ -557,8 +581,24 @@ final class CountMeetInMiddle implements CountContinuation {
         goalLow = lows.toArray(BigInteger[]::new);
         goalHigh = highs.toArray(BigInteger[]::new);
         equalities = Arrays.equals(goalLow, goalHigh);
+        if (largeBinary && (!equalities || dims != 1)) return finish(false, "residue_requires_scalar_equality");
         if (!equalities) preparePointRange();
         prepareCompact();
+        if (largeBinary) {
+            if (compactCoefficients == null) return finish(false, "residue_arithmetic_limit");
+            long[] values = new long[domains.size()];
+            long span = 0;
+            for (int i = 0; i < values.length; i++) {
+                charge();
+                values[i] = compactCoefficients[i][1][0];
+                span += Math.abs(values[i]);
+            }
+            var shape = CountResidueJoin.Shape.create(values.length, span);
+            if (shape == null) return finish(false, "residue_shape_limit");
+            residueJoin = new CountResidueJoin(values, compactGoalHigh[0], budget, shape);
+            phase = 1;
+            return false;
+        }
         if (equalities && compactCoefficients != null && dims == 1 &&
                 domains.stream().allMatch(domain -> domain.size == 2)) {
             long scalarBytes = 256L + 24L * leftStates;
@@ -1008,12 +1048,14 @@ final class CountMeetInMiddle implements CountContinuation {
 
     /** Setup is paid; bounded hash probes or original-row validation are live. */
     boolean probing() {
+        if (residueJoin != null && !complete && phase == 1) return residueJoin.probing();
         return !complete && phase >= 2 && phase <= 3 && (equalities || pointWidths != null);
     }
 
     /** Scheduling estimate for an admitted equality table, never a proof bound. */
     long continuationWork() {
         if (complete || costProbe || !equalities || phase < 1 || phase > 2) return 0;
+        if (residueJoin != null) return residueJoin.continuationWork();
         // Signature generation and complement lookup both scale with the
         // projected table dimensions. Keep one small turn for prefix overhead.
         long estimate = 4L * ((long) leftStates + rightStates) * goalHigh.length;
@@ -1030,7 +1072,7 @@ final class CountMeetInMiddle implements CountContinuation {
     public boolean paused() { return paused; }
     public long work() { return work; }
     public long progress() {
-        return signatures + probes;
+        return signatures + probes + (residueJoin == null ? 0 : residueJoin.progress());
     }
     public boolean matches(List<ExactLinearProgram.Constraint> rows, BigInteger[] low, BigInteger[] high) {
         return original.equals(rows) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
@@ -1048,6 +1090,8 @@ final class CountMeetInMiddle implements CountContinuation {
         left.clear();
         compactLeft.clear();
         scalar = null;
+        if (residueJoin != null) residueJoin.close();
+        residueJoin = null;
         rows.clear();
         budget.release(memory);
         memory = 0;

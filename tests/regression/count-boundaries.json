@@ -2,6 +2,18 @@
   "work": 20000000,
   "cases": [
     {
+      "id": "a18f16aaf5b7fb63a459988338e58e34ac148d7d73e8c6a30569ee8df4c5f420",
+      "names": ["generated/subset-n48-bits40"],
+      "expected": "SAT",
+      "reason": "Retained four-list residue joining finds a candidate without allocating the full 24-bit half table; b3059076 is unresolved at 20M. Independent native truth is recorded in numeric-oracles-20261009.json."
+    },
+    {
+      "id": "a65596b89e9eb4805fdd1e6d5a77cac08ee58aa636317dc73d8c731542c9b14b",
+      "names": ["generated/subset-n48-bits24"],
+      "expected": "SAT",
+      "reason": "Dense residue buckets let the retained candidate path join a fraction of the exponential pair space; b3059076 is unresolved at 20M. Exhaustion remains UNKNOWN."
+    },
+    {
       "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b",
       "names": ["generated/subset-n40-bits40"],
       "expected": "SAT",
