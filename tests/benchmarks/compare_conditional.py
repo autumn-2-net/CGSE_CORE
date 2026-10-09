@@ -18,15 +18,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--java-home', type=Path, required=True)
     parser.add_argument('--baseline', required=True)
-    parser.add_argument('--campaign', choices=['conditional', 'continuations'], default='conditional')
+    parser.add_argument('--campaign', choices=['conditional', 'continuations', 'residual'], default='conditional')
     parser.add_argument('--output', type=Path, default=ROOT / 'build/conditional-comparison')
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     baseline = subprocess.check_output(['git', 'rev-parse', '--verify', args.baseline + '^{commit}'], cwd=ROOT, text=True).strip()
     conditional = args.campaign == 'conditional'
-    harness = ROOT / ('tests/core/java/org/cgse/core/InterfaceContinuationTest.java' if conditional else
-                      'tests/benchmarks/ContinuationComparison.java')
+    residual = args.campaign == 'residual'
+    harness = ROOT / {'conditional': 'tests/core/java/org/cgse/core/InterfaceContinuationTest.java',
+                      'continuations': 'tests/benchmarks/ContinuationComparison.java',
+                      'residual': 'tests/core/java/org/cgse/core/ResidualFrontierTest.java'}[args.campaign]
     harness_paths = [Path(__file__).resolve(), Path(__file__).with_name('compare_planning.py'), harness]
     source_hash = fingerprint((ROOT / 'src/main/java').rglob('*.java'))
     harness_hash = fingerprint(harness_paths)
@@ -64,19 +66,21 @@ def main():
                            cwd=ROOT, stdout=stream, check=True, timeout=240)
         with log.open(encoding='utf-8') as stream:
             rows = list(csv.DictReader(stream))
-        if len(rows) != (384 if conditional else 256):
+        if len(rows) != {'conditional': 384, 'continuations': 256, 'residual': 48}[args.campaign]:
             raise AssertionError('Incomplete ' + args.campaign + ' comparison')
         results[revision] = {
-            'cases': len(rows), 'verified_witnesses': sum(row['witness'] == 'true' for row in rows),
+            'cases': len(rows), ('verified_selections' if residual else 'verified_witnesses'): sum(row['witness'] == 'true' for row in rows),
             'unresolved': sum(row['witness'] == 'false' for row in rows),
             'total_work': sum(int(row['work']) for row in rows),
             'max_reserved_bytes': max(int(row['peak_bytes']) for row in rows),
             'raw': log.name,
             'engines': {engine: {'cases': sum(row['engine'] == engine for row in rows),
                                 'witnesses': sum(row['engine'] == engine and row['witness'] == 'true' for row in rows)}
-                        for engine in sorted({row['engine'] for row in rows})} if not conditional else {},
+                        for engine in sorted({row['engine'] for row in rows})} if args.campaign == 'continuations' else {},
         }
-        if not conditional:
+        if residual:
+            results[revision]['source_scans'] = sum(int(row['scans']) for row in rows)
+        if args.campaign == 'continuations':
             control = output / (revision + '-whole.csv')
             with control.open('w', encoding='utf-8') as stream:
                 subprocess.run([str(java), '-ea', '-Xmx1g', '-cp', str(classes), 'org.cgse.core.' + harness.stem, '--whole'],
@@ -94,10 +98,15 @@ def main():
     summary = {'baseline': baseline, 'candidate_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                'source_sha256': source_hash, 'harness_sha256': harness_hash,
                'campaign': args.campaign,
-               'limits': {'local_work': 200000 if conditional else 2048, 'request_work': 4000000 if conditional else 2000000,
-                          'memory_bytes': 64 << 20, 'workers': 1},
+               'limits': ({'admissions_per_turn': 4, 'turns': 16, 'request_work': 8000000} if residual else
+                          {'local_work': 200000 if conditional else 2048, 'request_work': 4000000 if conditional else 2000000}) |
+                         {'memory_bytes': 64 << 20, 'workers': 1},
                'results': results,
                'notes': 'Specialist-only comparison, not whole-planner throughput. The continuation campaign allows retained quanta within the same request cap; old one-shot arms leave the remainder unused. UNKNOWN remains unresolved. Peaks are request reservations, not heap/RSS. Raw timing includes JVM warmup; not a wall-time benchmark.'}
+    if residual:
+        summary['notes'] = ('Admission-only comparison with independent full-sort validation after every turn. '
+                            'Verified selections are source rankings, not complete plans or infeasibility proofs. '
+                            'Compare scans/work and reserved bytes; raw timing includes the oracle and JVM warmup.')
     (output / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
     print(json.dumps(results, indent=2))
 

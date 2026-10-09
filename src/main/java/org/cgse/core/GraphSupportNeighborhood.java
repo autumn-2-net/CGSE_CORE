@@ -20,7 +20,7 @@ final class GraphSupportNeighborhood<K> implements AutoCloseable {
     private GraphPlan<K> result;
     private int searchedSize, proposals;
     private long memory, work, until, expansionUntil;
-    private boolean running, expanding, turnDeclined, expandedSupport;
+    private boolean running, expanding, turnDeclined, expandedSupport, retrySearch;
 
     GraphSupportNeighborhood(GraphCompiler<K> compiler, K target, long amount, Map<K, Long> stock, Set<K> external,
                              Map<K, Long> seeds, Set<String> excluded, boolean preserve, boolean force, PlanningBudget budget, long started) {
@@ -82,9 +82,9 @@ final class GraphSupportNeighborhood<K> implements AutoCloseable {
             search.close();
             search = null;
         }
-        if (search == null && pool.size() == searchedSize && !frontier) return false;
+        if (search == null && pool.size() == searchedSize && !frontier && !retrySearch) return false;
         until = work + allowance;
-        expanding = search == null && frontier;
+        expanding = search == null && frontier && !retrySearch;
         if (expanding) {
             residual.begin(Math.min(32, 512 - pool.size()));
             expansionUntil = work + Math.min(65536, allowance / 2);
@@ -121,6 +121,7 @@ final class GraphSupportNeighborhood<K> implements AutoCloseable {
                 if (pool.size() == searchedSize) { running = false; return true; }
             }
             if (search == null) {
+                retrySearch = false;
                 searchedSize = pool.size();
                 var recipes = List.copyOf(pool.values());
                 for (var recipe : recipes) {
@@ -133,6 +134,13 @@ final class GraphSupportNeighborhood<K> implements AutoCloseable {
                 var compiler = new GraphCompiler<>(recipes);
                 search = new IntegerCountSearch<>(compiler, target, amount, stock, seeds, external, Set.of(),
                         preserve, force, budget, started);
+                if (!search.admitted() && residual.releaseRankings() > 0) {
+                    search.close();
+                    search = null;
+                    retrySearch = true;
+                    budget.note("support_neighborhood", "declined_model_retry_without_rankings; recipes=" + pool.size());
+                    return false;
+                }
                 search.scout(Math.max(1, until - work));
                 budget.note("support_neighborhood", "start; recipes=" + searchedSize + "; proposals=" + proposals);
             } else if (search.paused()) search.resume();
@@ -149,6 +157,15 @@ final class GraphSupportNeighborhood<K> implements AutoCloseable {
             if (failure.limit() != PlanningBudget.Limit.MEMORY_LIMIT) throw failure;
             if (search != null) search.close();
             search = null;
+            retrySearch = residual.releaseRankings() > 0;
+            if (retrySearch) {
+                // Retry the SAME admitted support before allocating any new
+                // ranking window. Its previous work still consumes the request
+                // and local quotas, including a handoff at the next step.
+                budget.failureDetail(previousFailure);
+                budget.note("support_neighborhood", "workspace_retry_without_rankings; recipes=" + pool.size());
+                return false;
+            }
             running = false;
             budget.failureDetail(previousFailure);
             budget.note("support_neighborhood", "workspace_declined; full_catalog_retained");
@@ -166,7 +183,7 @@ final class GraphSupportNeighborhood<K> implements AutoCloseable {
         // A catalog cursor is not runnable work when the caller cannot grant
         // even the admission slice. Let the original planner use that budget;
         // repeatedly parking this optional view would otherwise starve it.
-        return !turnDeclined && (search != null || pool.size() < 512 && residual.pending());
+        return !turnDeclined && (search != null || retrySearch || pool.size() < 512 && residual.pending());
     }
 
     @Override
@@ -178,5 +195,6 @@ final class GraphSupportNeighborhood<K> implements AutoCloseable {
         budget.release(memory);
         memory = 0;
         running = false;
+        retrySearch = false;
     }
 }

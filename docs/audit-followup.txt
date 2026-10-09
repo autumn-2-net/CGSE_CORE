@@ -1,0 +1,155 @@
+Audit follow-up: e788d3d3 versus the current portable core
+========================================================
+2026-10-09. Reviewed against 95a17876 plus this residual-frontier change.
+The supplied comprehensive audit describes an older GTL integration snapshot.
+This record distinguishes implemented mechanisms from remaining scope; it is
+not a blanket correctness certification or a new live-server test report.
+
+Already implemented and covered
+-------------------------------
+A: compare_planning.py supports fixed search accounts, aggregate work, wall
+limits and cold/warm/replaced compiler states. Candidate metrics record first
+verified work/time. compare_throughput.py separately checks unchanged work and
+full results; its actual thread-allocation counter is distinct from reservations.
+Recent numeric measurements and limitations are in solver-throughput.txt.
+
+B: CandidateFeedback, GraphStockViewWork and GraphStockViewPortfolio carry final
+accepted/rejected/inconclusive feedback to retained views. Siblings survive a
+rejected candidate; a proof cutoff does not become a global negative result.
+StockViewFeedbackTest covers repeated proposals with identical counts, retained
+repairs, cancellation and outcome accounting.
+
+C: GraphResidualSources expands missing boundaries and their consumers' outputs,
+admitting unoffered producers into GraphSupportNeighborhood. Original recipe
+objects preserve joint outputs, seeds and reusable/configuration inputs. Large
+source, residual-neighborhood and complete catalog replay tests exercise this
+path above the full count-closure limit. It is a positive-candidate neighborhood,
+not a complete replacement for the full catalog.
+
+D: CountInterfaceSearch now fixes a small interface and uses CountConditionalSearch
+for broad internal domains. Conditional frontiers, exact kernel repair and
+specialist continuations are retained with model/domain identity checks. The
+interface, kernel and continuation tests use independent finite-box checks.
+Integer count composition still requires whole-plan execution verification.
+
+E/F/G: Startup boxes, physical-production obligations, original-scope certificates,
+PB imports, LCG cuts, warm LP bases and retained structural search remain present.
+The standard oracle suites test these mechanisms. They are not missing solely
+because an older review did not execute the full production harness.
+
+H/I: GraphCompiler.cacheMetrics aggregates local caches and nested recovery
+compilers once by identity, including active searches and eviction counters.
+CompilerCacheMetricsTest covers snapshot replacement and concurrent requests.
+CountDispatchCancellationTest covers interrupted ownership handoffs; the normal
+suites also check cleanup, retained state and repeated close.
+
+What this change fixes
+----------------------
+The residual selector retained only four ranked choices. Each later page rescanned
+every remaining producer even when its compiler, stock and boundary were unchanged.
+A single boundary with 12,000 alternatives needed 192,000 source visits to admit
+64 recipes. A grant of one could also admit four, and a temporarily declined last
+page could disappear because no omitted fifth choice triggered deferral.
+
+The selector still gives each boundary a four-choice visit. It can retain up to
+32 ranked choices, with at most 32 KiB of optional windows across this request.
+It preserves partially consumed pages and enforces the actual admission grant.
+Unadmitted candidates remain retryable. There is no increase to the 512-recipe
+support limit, request work/memory limit, or the full count-closure limits.
+
+The ranking key includes the current boundary generation. Adding a boundary
+invalidates old coverage scores; recipes already admitted elsewhere are filtered
+before reuse. Stock, exclusions and compiler identity are request-local. Eviction
+discards optional ranking data, not pending boundaries or mathematical proofs.
+
+Recipe admission can reclaim the windows before retrying. A declined count model
+or an explicit downstream memory cutoff also reclaims them and retries the SAME
+support before any further expansion. Already spent work is not refunded, and a
+local handoff retains the retry. Windows and in-progress scans close with balanced
+reservations; no source scoring cache survives into another inventory request.
+
+ResidualFrontierTest compares every turn with an independent full-catalog sort,
+including reordered/co-producing catalogs, eviction, exclusions, zero/one grants,
+temporary admission failure, memory refusal and cancellation. ResidualNeighborhoodTest
+checks exact count admission before/after reclamation and continuation of partial
+scans, in addition to complete plan and force-production verification.
+
+Reproduce the admission-only revision comparison:
+
+  python tests/benchmarks/compare_conditional.py --java-home JDK17
+    --baseline 95a17876 --campaign residual --output build/residual-comparison
+
+The 48 deterministic cases use 256/2,048/12,000 sources, one/four boundaries and
+eight catalog orders. Both revisions matched the independent ranking oracle:
+
+                         Before       After
+  Source visits        2,403,100      385,092
+  Charged search work  1,850,999      305,256
+  Peak reserved bytes      2,048       18,432
+
+These are source-selection results, not 48 complete plans. Timing in that harness
+includes its oracle and JVM startup and must not be used as a wall-time benchmark.
+The gain buys less repeated selection work at the cost of bounded optional memory.
+
+Validation at this boundary
+---------------------------
+47 standard programs passed, including the new residual-frontier oracle and the
+existing complete residual-neighborhood plans. The 239 tracked graph fixtures
+and 800 expanded fixtures each passed three catalog orders (3,117 validations).
+Captured inventory with 5,903 manual and 62,284 exported recipes passed 96 requests;
+the four-worker campaigns passed nine base-budget and nine expanded-budget requests.
+
+A separate whole-planner comparison used six 1,000/9,000-source linear/shared/growth
+fixtures, two catalog orders, cold/warm/replaced compilers and both search-account
+and aggregate-work limits. Each revision verified 72 requests at the same caps;
+result classes and work matched. These fixtures do not demonstrate a whole-planner
+speedup from ranking windows. No timing claim is made from concurrent regression runs.
+
+  python tests/benchmarks/generate_source_cases.py --counts 1000,9000
+    --output build/residual-source-inputs
+  python tests/benchmarks/compare_planning.py --java-home JDK17
+    --baseline 95a17876 --fixture-dir build/residual-source-inputs
+    --permutations 2 --work 20000000 --milliseconds 0 --memory-mib 256
+    --modes accounts total --output build/residual-planning-comparison
+
+Offline assemble passed. The source JAR was checked byte-for-byte against the
+production tree used by the comparisons. Reports and generated inputs stay in
+ignored build directories; the deterministic source-selection harness is tracked.
+
+Remaining gaps, rather than completed checkboxes
+------------------------------------------------
+1. Large closures: the full count model still has 8,192-resource/recipe admission
+   limits; support neighborhoods still admit only bounded supports. Residual
+   expansion improves entry and reuses work but is neither exhaustive pricing
+   over the full catalog nor a proof that a rejected neighborhood is impossible.
+   Larger shared supports need a concrete failure family before changing limits
+   or introducing another boundary representation.
+
+2. General numeric continuation: CountAffineLattice, CountKernelSearch and
+   CountDiophantine still have bounded numeric attempts. Some factorization and
+   projected-model routines can stop during mutation. Safe extension requires
+   explicit arithmetic checkpoints; see continuations.txt. A terminal numeric
+   cutoff must not simply be renamed a resumable pause.
+
+3. End-to-end attribution (J): seven primary graph origins have outer-validation
+   outcome/work counters. RequestPlanningWork's ordinary fallback has its own
+   budget/report, and not every preparation/restoration/seed phase is attributed
+   to the same candidate record. Startup guards have generation/pool statistics,
+   not full per-origin pruning benefit and validation-cost attribution. These are
+   remaining observability gaps, not evidence of a wrong executable plan.
+
+4. Cross-snapshot residency (H): compiler aggregation is an estimate of containers,
+   not a JVM object census. It does not measure process RSS, all live networks or
+   when the last host reference to an obsolete snapshot disappears. No global GC
+   registry or leak claim is justified by these counters alone.
+
+5. Integration and old limits: migration-validation.txt records the previous
+   adapter/server run, not a live run of this change. Source/model oracles and
+   captured-network replay do not establish AE dispatch/save/reload behavior.
+   known-limits.json is explicitly an e788d3d3 observation; its old unresolved
+   model/probe entries require fresh replay before calling them current failures.
+   Passing graph fixtures does not certify every historical integer model.
+
+The next algorithm change should target a retained, reproducible failure in
+items 1 or 2 and compare original-coordinate plans under equal resource caps.
+Ordinary fallback is not assigned a cycle-solving role by this follow-up.

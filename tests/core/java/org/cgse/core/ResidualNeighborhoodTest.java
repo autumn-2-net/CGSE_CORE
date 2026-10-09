@@ -16,6 +16,7 @@ public final class ResidualNeighborhoodTest {
         outerPlanner();
         lowBudgetSplit();
         retainedPages();
+        rankingReclamation();
         excludedAndChangedCatalog();
         cancellationAndMemory();
         System.out.println("Residual admission: 16 large catalog/order/chain witnesses; exclusions, catalog replacement, cancellation and memory passed");
@@ -144,7 +145,7 @@ public final class ResidualNeighborhoodTest {
                 check(frontier.scanned() == 40 && pool.size() == 4 && frontier.pending(), "Partial scan restarted or lost its remaining page");
                 frontier.begin(4);
                 while (!frontier.step()) {}
-                check(frontier.scanned() == 80 && pool.size() == 8 && !pool.containsKey("page1"), "Second page repeated or imported excluded sources");
+                check(frontier.scanned() == 40 && pool.size() == 8 && !pool.containsKey("page1"), "Second page rescanned or imported excluded sources");
                 if (expected == null) expected = Set.copyOf(pool.keySet());
                 else check(expected.equals(pool.keySet()), "Slicing changed retained source selection");
             }
@@ -183,6 +184,51 @@ public final class ResidualNeighborhoodTest {
             }
             check(budget.reservedBytes() == 0, "Memory refusal leaked: " + memory);
         }
+    }
+
+    private static void rankingReclamation() {
+        var catalog = new ArrayList<GraphRecipe<String>>();
+        for (int i = 0; i < 50; i++) catalog.add(recipe("r" + i, Map.of("ore", 1L), Map.of("A", 1L)));
+        var compiler = new GraphCompiler<>(catalog);
+        var stock = Map.of("ore", 1L);
+        var calibration = budget(64L << 20);
+        try (var model = RecipeCountModel.create(new GraphCompiler<>(catalog.subList(0, 4)), "A", 1,
+                stock, Map.of(), Set.of(), Set.of(), true, calibration)) {
+            check(model != null, "Missing count model for memory calibration");
+        }
+        check(calibration.reservedBytes() == 0, "Count calibration leaked");
+        var budget = budget(calibration.peakBytes() + 1280);
+        var pool = new LinkedHashMap<String,GraphRecipe<String>>();
+        try (var f = new GraphResidualSources<>(compiler, stock, Set.of(), Set.of(), pool,
+                r -> pool.putIfAbsent(r.id(), r) == null, budget)) {
+            f.offer("A"); f.begin(4); while (!f.step()) {}
+            try (var denied = RecipeCountModel.create(new GraphCompiler<>(List.copyOf(pool.values())), "A", 1,
+                    stock, Map.of(), Set.of(), Set.of(), true, budget)) {
+                check(denied == null, "Test did not reach count admission under window pressure");
+            }
+            check(f.releaseRankings() > 0, "No optional ranking storage reclaimed");
+            try (var admitted = RecipeCountModel.create(new GraphCompiler<>(List.copyOf(pool.values())), "A", 1,
+                    stock, Map.of(), Set.of(), Set.of(), true, budget)) {
+                check(admitted != null, "Optional rankings permanently denied the same count model");
+            }
+            f.begin(4); while (!f.step()) {}
+            check(List.copyOf(pool.keySet()).equals(List.of("r0","r1","r2","r3","r4","r5","r6","r7")),
+                    "Reclamation lost or reordered the pending catalog page");
+        }
+        check(budget.reservedBytes() == 0, "Downstream admission/reclamation leaked");
+
+        budget = budget(64L << 20);
+        pool.clear();
+        try (var f = new GraphResidualSources<>(compiler, stock, Set.of(), Set.of(), pool,
+                r -> pool.putIfAbsent(r.id(), r) == null, budget)) {
+            f.offer("A"); f.begin(4);
+            for (int i = 0; i < 37; i++) check(!f.step(), "No partial ranking window");
+            check(f.releaseRankings() > 0, "Partial scan did not reclaim its window");
+            while (!f.step()) {}
+            check(f.scanned() == 50 && List.copyOf(pool.keySet()).equals(List.of("r0","r1","r2","r3")),
+                    "Reclamation restarted or corrupted an in-progress scan");
+        }
+        check(budget.reservedBytes() == 0, "Partial-window reclamation leaked");
     }
 
     private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); }

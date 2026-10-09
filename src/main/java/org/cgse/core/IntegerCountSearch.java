@@ -123,6 +123,8 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         return step(null);
     }
 
+    boolean admitted() { return model != null; }
+
     /** Pull original order clauses into an optional program view. No reverse inference is made. */
     void importProgramConflicts(RecipeCountModel<K> original, Map<String, PlanStep> programs, List<CountConflict> conflicts) {
         if (model == null || conflicts.isEmpty() || work != 0) return;

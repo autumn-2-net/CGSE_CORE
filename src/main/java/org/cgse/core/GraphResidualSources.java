@@ -8,6 +8,8 @@ import java.util.function.Predicate;
 
 /** Incremental catalog admission around a failed support. No negative inference leaves this view. */
 final class GraphResidualSources<K> implements AutoCloseable {
+    private static final int PAGE_SIZE = 4, WINDOW_SIZE = 32;
+    private static final long WINDOW_BYTES = 128L * WINDOW_SIZE, MAX_WINDOW_BYTES = 8 * WINDOW_BYTES;
     private final GraphCompiler<K> compiler;
     private final Map<K, Long> stock;
     private final Set<K> external;
@@ -17,14 +19,25 @@ final class GraphResidualSources<K> implements AutoCloseable {
     private final PlanningBudget budget;
     private final Map<K, Boundary> boundaries = new LinkedHashMap<>();
     private final Deque<Boundary> pending = new ArrayDeque<>(), deferred = new ArrayDeque<>();
-    private final List<Choice<K>> best = new ArrayList<>();
+    private final PriorityQueue<Choice<K>> best = new PriorityQueue<>((a, b) -> compare(b, a));
+    private final List<Choice<K>> declined = new ArrayList<>();
+    private final Map<Boundary, Window> windows = new LinkedHashMap<>();
     private Boundary active;
-    private int cursor, candidates, added, maximum;
-    private long memory, scanned;
+    private Window window;
+    private int cursor, candidates, emitted, added, maximum;
+    private long memory, windowBytes, scanned;
+    private boolean scanning;
 
     private final class Boundary {
         final K key;
         Boundary(K key) { this.key = key; }
+    }
+    private final class Window {
+        final List<Choice<K>> choices = new ArrayList<>();
+        final int generation = boundaries.size();
+        long bytes;
+        boolean more;
+        Window(long bytes) { this.bytes = bytes; }
     }
     private record Choice<K>(GraphRecipe<K> recipe, int rawMissing, int unavailable, int covered, double pressure, int ordinal) {}
 
@@ -65,11 +78,24 @@ final class GraphResidualSources<K> implements AutoCloseable {
         if (active == null) {
             if (pending.isEmpty()) return true;
             active = pending.removeFirst();
-            cursor = candidates = 0;
+            cursor = candidates = emitted = 0;
             best.clear();
+            declined.clear();
+            window = windows.remove(active);
+            if (window != null) {
+                // Coverage scores depend on the admitted resource boundary.
+                // Stock, exclusions and compiler identity belong to this request.
+                window.choices.removeIf(choice -> pool.containsKey(choice.recipe().id()));
+                if (window.generation != boundaries.size() || window.more && window.choices.size() < PAGE_SIZE) {
+                    release(window);
+                    window = null;
+                }
+            }
+            scanning = window == null;
+            if (scanning) window = prepareWindow(compiler.producers(active.key).size());
         }
         var sources = compiler.producers(active.key);
-        if (cursor < sources.size()) {
+        if (scanning && cursor < sources.size()) {
             budget.operation(PlanningBudget.Operation.SCAN, 1);
             var recipe = sources.get(cursor++);
             scanned++;
@@ -92,28 +118,110 @@ final class GraphResidualSources<K> implements AutoCloseable {
             }
             var choice = new Choice<>(recipe, rawMissing, unavailable, covered, pressure, cursor);
             candidates++;
-            // A bounded page retains common/co-produced and stock-funded sources
-            // without filling the count model with thousands of alternatives.
-            // Omitted choices remain in the next page, not in a conflict cache.
-            int at = 0;
-            while (at < best.size() && compare(best.get(at), choice) <= 0) at++;
-            if (at < 4) {
-                best.add(at, choice);
-                if (best.size() > 4) best.remove(4);
+            // Retain a few future pages, but still admit only four choices per
+            // boundary visit. A bounded heap avoids a longer insertion scan.
+            int capacity = window.bytes == 0 ? PAGE_SIZE : WINDOW_SIZE;
+            if (best.size() < capacity) best.add(choice);
+            else if (compare(choice, best.peek()) < 0) {
+                best.remove();
+                best.add(choice);
             }
             return false;
         }
-        if (candidates > best.size()) deferred.addLast(active);
-        for (var choice : best) {
+        if (scanning) {
+            window.more = candidates > best.size();
+            window.choices.addAll(best);
+            window.choices.sort(GraphResidualSources::compare);
+            best.clear();
+            scanning = false;
+        }
+        while (emitted < PAGE_SIZE && !window.choices.isEmpty() && added < maximum) {
             budget.operation(PlanningBudget.Operation.SCAN, 1);
-            if (admit.test(choice.recipe())) {
+            var choice = window.choices.remove(0);
+            if (pool.containsKey(choice.recipe().id()) || excluded.contains(choice.recipe().id())) continue;
+            emitted++;
+            boolean accepted = admit.test(choice.recipe());
+            if (!accepted && windowBytes > 0) {
+                // Optional ranking storage must not deny a real recipe's
+                // reservation. Keep only the current four-choice page, release
+                // cached future pages, then retry once without their pressure.
+                releaseRankings();
+                accepted = admit.test(choice.recipe());
+            }
+            if (accepted) {
                 added++;
                 for (K key : choice.recipe().inputs().keySet()) offer(key);
-            }
+            } else declined.add(choice);
         }
+        // A small admission grant can split the page. Preserve its remaining
+        // choices and its place in the fair boundary order until the next turn.
+        if (emitted < PAGE_SIZE && !window.choices.isEmpty() && added >= maximum) return false;
+        window.choices.addAll(declined);
+        window.choices.sort(GraphResidualSources::compare);
+        boolean remaining = window.more || !window.choices.isEmpty();
+        if (remaining) deferred.addLast(active);
+        if (!window.choices.isEmpty() && window.bytes != 0) windows.put(active, window);
+        else release(window);
+        window = null;
         active = null;
-        best.clear();
+        declined.clear();
         return false;
+    }
+
+    private Window prepareWindow(int sources) {
+        if (sources > PAGE_SIZE) {
+            while (windowBytes + WINDOW_BYTES > MAX_WINDOW_BYTES) evictWindow();
+            // Eviction changes only an optional ranking cache, never the pool,
+            // pending boundaries or a count model's proof/continuation scope.
+            while (!budget.tryReserve(WINDOW_BYTES)) {
+                if (windows.isEmpty()) return new Window(0);
+                evictWindow();
+            }
+            windowBytes += WINDOW_BYTES;
+            memory += WINDOW_BYTES;
+            return new Window(WINDOW_BYTES);
+        }
+        return new Window(0);
+    }
+
+    private void evictWindow() {
+        var iterator = windows.entrySet().iterator();
+        var oldest = iterator.next().getValue();
+        iterator.remove();
+        release(oldest);
+    }
+
+    private void dropWindows() {
+        for (var cached : windows.values()) release(cached);
+        windows.clear();
+    }
+
+    /** Reclaim optional pages before letting them deny the downstream count model. */
+    long releaseRankings() {
+        long before = windowBytes;
+        dropWindows();
+        if (window != null) {
+            while (best.size() > PAGE_SIZE) best.remove();
+            int remaining = PAGE_SIZE - emitted;
+            if (window.choices.size() > remaining) {
+                window.choices.subList(remaining, window.choices.size()).clear();
+                window.more = true;
+            }
+            releaseBytes(window);
+        }
+        return before;
+    }
+
+    private void releaseBytes(Window value) {
+        budget.release(value.bytes);
+        memory -= value.bytes;
+        windowBytes -= value.bytes;
+        value.bytes = 0;
+    }
+
+    private void release(Window value) {
+        value.choices.clear();
+        releaseBytes(value);
     }
 
     private static int compare(Choice<?> a, Choice<?> b) {
@@ -132,8 +240,12 @@ final class GraphResidualSources<K> implements AutoCloseable {
         deferred.clear();
         boundaries.clear();
         best.clear();
+        declined.clear();
+        windows.clear();
+        window = null;
         active = null;
         budget.release(memory);
         memory = 0;
+        windowBytes = 0;
     }
 }
