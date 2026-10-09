@@ -78,14 +78,17 @@ CountDiving, CountLatticeRepair, CountFeasibilityPump, CountNeighborhood and the
 soft/core-guided probes retain fields between step() calls, but their configured
 attempt/face/core limits still end that attempt.
 
-CountAffineLattice, CountKernelSearch and CountDiophantine remain bounded numeric
-candidate arms. The conditional wrapper keeps them across its own handoffs, but
-does not extend their numeric hard cap indefinitely. Several arithmetic routines
-can currently stop while changing a factorization or building a projected model;
-catching that stop as a resumable pause would be unsound. A future extension must
-first introduce explicit arithmetic checkpoints, preserve the original scope,
-and justify extra portfolio turns with an equal-budget counterexample. This
-change does not pretend those numeric arms now have general continuation support.
+CountAffineLattice, CountKernelSearch and CountDiophantine now support opt-in
+continuation at complete arithmetic checkpoints. Unimodular column transforms,
+Gram-Schmidt projections, LLL size reductions/swaps and projected rows retain
+their cursors and exact state. The conditional wrapper alternates the retained
+numeric arm with its proving LCG; the main branch transfers paused Diophantine
+work to the same-coordinate view portfolio. These arms export candidates only.
+Precision refusal, failed admission and natural face limits remain terminal;
+hard request cancellation/work limits still interrupt arithmetic and require
+disposal. One atomic checkpoint may overrun a local slice, never the shared
+request cap. See numeric-continuation-and-root-proofs.txt for the paired tests
+and canonical-model comparison; this is not arbitrary-size lattice solving.
 
 Regression and measurement
 --------------------------

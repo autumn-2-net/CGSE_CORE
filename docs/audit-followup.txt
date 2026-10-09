@@ -125,11 +125,12 @@ Remaining gaps, rather than completed checkboxes
    Larger shared supports need a concrete failure family before changing limits
    or introducing another boundary representation.
 
-2. General numeric continuation: CountAffineLattice, CountKernelSearch and
-   CountDiophantine still have bounded numeric attempts. Some factorization and
-   projected-model routines can stop during mutation. Safe extension requires
-   explicit arithmetic checkpoints; see continuations.txt. A terminal numeric
-   cutoff must not simply be renamed a resumable pause.
+2. Numeric reach: CountAffineLattice, CountKernelSearch and CountDiophantine now
+   retain complete arithmetic checkpoints, including projection and verification.
+   The 48-coordinate lattice admission, precision guard and natural face limits
+   remain. A local numeric restriction never proves the original model impossible.
+   Larger sparse equalities and subset sums still need bounded search improvements;
+   see numeric-continuation-and-root-proofs.txt for the equal-budget boundary.
 
 3. End-to-end attribution (J): seven primary graph origins have outer-validation
    outcome/work counters. RequestPlanningWork's ordinary fallback has its own
@@ -152,7 +153,10 @@ Remaining gaps, rather than completed checkboxes
    left 32 main-count limits and six unbounded test-conversion exclusions. The
    subsequent parity-and-root-continuation.txt comparison resolves seven more
    canonical records at the same 20M budget and adds 72 parity/neighbor cases;
-   25 main-count limits and the same six conversion exclusions remain.
+   It left 25 main-count limits and the same six conversion exclusions. The next
+   numeric-continuation-and-root-proofs.txt boundary fixes root-proof aggregation
+   and retains numeric work; its current comparison and independently checked
+   remaining truths supersede that count without rewriting the old evidence.
    Historical probe assertions have not all been freshly replayed. Passing graph
    fixtures does not certify every historical integer model.
 

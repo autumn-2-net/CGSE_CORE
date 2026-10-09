@@ -3,11 +3,13 @@
 # SPDX-License-Identifier: MPL-2.0
 """Compare the main count stage on identical canonical inputs, harness and request limits."""
 import argparse
+import hashlib
 import importlib.util
 import io
 import json
 from pathlib import Path
 import re
+import random
 import subprocess
 import tarfile
 
@@ -22,9 +24,12 @@ def main():
     parser.add_argument('--baseline', required=True)
     parser.add_argument('--case', default='.*')
     parser.add_argument('--parity', action='store_true', help='Also compare the 72 deterministic odd-cycle/neighbor cases')
+    parser.add_argument('--permutations', type=int, default=1, help='Original input plus deterministic row/column/term shuffles')
     parser.add_argument('--timeout', type=int, default=600)
     parser.add_argument('--output', type=Path, default=ROOT / 'build/count-comparison')
     args = parser.parse_args()
+    if args.permutations < 1:
+        parser.error('Require a positive permutation count')
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     baseline = subprocess.check_output(['git', 'rev-parse', '--verify', args.baseline + '^{commit}'], cwd=ROOT, text=True).strip()
@@ -47,7 +52,26 @@ def main():
     selected = [c for c in manifest['cases'] if c['kind'] == 'count-model' and re.search(args.case, c['id'] + ' ' + ' '.join(c['names']))]
     if not selected:
         parser.error('No count models selected')
-    helper.write_models(output / 'models.bin', [json.loads((ROOT / 'tests' / c['path']).read_text(encoding='utf-8')) for c in selected])
+    inputs = []
+    for order in range(args.permutations):
+        rng = random.Random(20261009 + order)
+        for record in selected:
+            case = json.loads((ROOT / 'tests' / record['path']).read_text(encoding='utf-8'))
+            if order:
+                model = case['model']
+                old_ids = list(range(len(model['lower'])))
+                rng.shuffle(old_ids)
+                new_ids = {old: new for new, old in enumerate(old_ids)}
+                for key in ['lower', 'upper']:
+                    model[key] = [model[key][old] for old in old_ids]
+                for row in model['rows']:
+                    terms = [(str(new_ids[int(i)]), a) for i, a in row['terms'].items()]
+                    rng.shuffle(terms)
+                    row['terms'] = dict(terms)
+                rng.shuffle(model['rows'])
+                case['id'] += '/order=' + str(order)
+            inputs.append(case)
+    helper.write_models(output / 'models.bin', inputs)
     harness = [ROOT / path for path in ['tests/regression/java/GraphFixtureRegression.java',
                'tests/corpus/java/CountModelRegression.java', 'tests/corpus/java/CountModelReplay.java',
                'tests/regression/java/ParityPipelineReview.java']]
@@ -56,9 +80,12 @@ def main():
     summary = {'baseline': baseline, 'candidate_source_sha256': fingerprint((ROOT / 'src/main/java').rglob('*.java')),
                'harness_sha256': fingerprint(harness + [Path(__file__), ROOT / 'tests/cases/run.py']),
                'request_work': 20_000_000, 'milliseconds': 0, 'memory_bytes': 256 << 20, 'workers': 1,
-               'corpus_ids': [c['id'] for c in selected], 'models': {}, 'parity': {},
+               'corpus_ids': [c['id'] for c in selected], 'permutations': args.permutations, 'models': {}, 'parity': {},
+               'input_sha256': hashlib.sha256((output / 'models.bin').read_bytes()).hexdigest(),
                'note': 'Main integer-count stage, not GraphPlanner. UNKNOWN and unsupported conversions are not proofs. No wall-time or JVM heap claim.'}
     for name, source in [('baseline', baseline_source), ('candidate', ROOT)]:
+        if name == 'candidate':
+            summary['candidate_source_sha256'] = fingerprint((ROOT / 'src/main/java').rglob('*.java'))
         classes = output / name / 'classes'
         classes.mkdir(parents=True, exist_ok=True)
         paths = sorted((source / 'src/main/java').rglob('*.java')) + harness
@@ -75,16 +102,22 @@ def main():
                 raise RuntimeError(f'{name} {campaign} failed: {log}')
             rows = [line.split('\t') for line in log.read_text(encoding='utf-8').splitlines() if '\t' in line]
             summary[campaign][name] = {row[0]: row[1:] for row in rows}
-            if len(rows) != (len(selected) if campaign == 'models' else 72):
+            if len(rows) != (len(inputs) if campaign == 'models' else 72):
                 raise AssertionError('Incomplete comparison: ' + str(log))
             print(f'{name} {campaign}: {len(rows)} checked', flush=True)
+        if name == 'candidate' and summary['candidate_source_sha256'] != fingerprint((ROOT / 'src/main/java').rglob('*.java')):
+            raise AssertionError('Production sources changed during candidate compilation/replay')
     for campaign in ['models'] + (['parity'] if args.parity else []):
         before, after = summary[campaign]['baseline'], summary[campaign]['candidate']
         conclusive = {'PASS', 'SAT', 'UNSAT'}
         summary[campaign]['gained'] = [key for key in before if before[key][0] not in conclusive and after[key][0] in conclusive]
         summary[campaign]['lost'] = [key for key in before if before[key][0] in conclusive and after[key][0] not in conclusive]
+        def conclusion(value):
+            return value[1] if value[0] == 'PASS' else value[0]
+        summary[campaign]['contradictions'] = [key for key in before
+            if {conclusion(before[key]), conclusion(after[key])} == {'SAT', 'UNSAT'}]
     (output / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
-    if any(summary[c]['lost'] for c in ['models'] + (['parity'] if args.parity else [])):
+    if any(summary[c]['lost'] or summary[c]['contradictions'] for c in ['models'] + (['parity'] if args.parity else [])):
         raise SystemExit('Conclusions regressed; inspect summary.json')
 
 

@@ -56,6 +56,30 @@
       ],
       "reason": "Retain owned root frontiers after a branch split; 842b3eea is unresolved at 20M.",
       "expected": "SAT"
+    },
+    {
+      "id": "20493f36e8dafac78ecddb14deaf37cd09200e9490fa36d0ed884f31ed1e2354",
+      "names": [
+        "generated/sparse-equality-n48-s2"
+      ],
+      "expected": "SAT",
+      "reason": "Retained numeric checkpoints or completed root proof; c8fd075a is unresolved at 20M."
+    },
+    {
+      "id": "46ae9ed4ad62f98ead627cf1f2dfca403156591657be26ed0b421e84a226c5a5",
+      "names": [
+        "generated/sparse-equality-n48-s1"
+      ],
+      "expected": "SAT",
+      "reason": "Retained numeric checkpoints or completed root proof; c8fd075a is unresolved at 20M."
+    },
+    {
+      "id": "af3a59ddc15fad04a622c4627dae4711b4082eaada6a21723e4b0c3276abc78a",
+      "names": [
+        "scip/stein27_inf"
+      ],
+      "expected": "UNSAT",
+      "reason": "Retained numeric checkpoints or completed root proof; c8fd075a is unresolved at 20M."
     }
   ]
 }

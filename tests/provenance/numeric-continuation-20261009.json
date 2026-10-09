@@ -1,0 +1,530 @@
+{
+  "baseline": "c8fd075adb68136473547d5fa48b4e25247ce7b2",
+  "candidate_source_sha256": "1a9ced86fe1c57545c3bb36b81221145ccc8cc87d616e13a9ca3a10f6d04bb4c",
+  "entry": "IntegerCountSearch, not full GraphPlanner",
+  "work": 20000000,
+  "workers": 1,
+  "milliseconds": 0,
+  "memory_bytes": 268435456,
+  "account_policy": "Unchanged separate compilation/search accounts; reported work combines them.",
+  "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+  "permutations": 3,
+  "orders": [
+    {
+      "order": 0,
+      "baseline": {
+        "PASS": 243,
+        "UNRESOLVED": 25,
+        "UNSUPPORTED": 6
+      },
+      "candidate": {
+        "PASS": 246,
+        "UNRESOLVED": 22,
+        "UNSUPPORTED": 6
+      }
+    },
+    {
+      "order": 1,
+      "baseline": {
+        "PASS": 243,
+        "UNRESOLVED": 25,
+        "UNSUPPORTED": 6
+      },
+      "candidate": {
+        "PASS": 244,
+        "UNRESOLVED": 24,
+        "UNSUPPORTED": 6
+      }
+    },
+    {
+      "order": 2,
+      "baseline": {
+        "PASS": 242,
+        "UNRESOLVED": 26,
+        "UNSUPPORTED": 6
+      },
+      "candidate": {
+        "PASS": 245,
+        "UNRESOLVED": 23,
+        "UNSUPPORTED": 6
+      }
+    }
+  ],
+  "gained": [
+    {
+      "id": "20493f36e8dafac78ecddb14deaf37cd09200e9490fa36d0ed884f31ed1e2354",
+      "names": [
+        "generated/sparse-equality-n48-s2"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19992574"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=16347271"
+      ]
+    },
+    {
+      "id": "46ae9ed4ad62f98ead627cf1f2dfca403156591657be26ed0b421e84a226c5a5",
+      "names": [
+        "generated/sparse-equality-n48-s1"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19993535"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=11145222"
+      ]
+    },
+    {
+      "id": "af3a59ddc15fad04a622c4627dae4711b4082eaada6a21723e4b0c3276abc78a",
+      "names": [
+        "scip/stein27_inf"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19823383"
+      ],
+      "after": [
+        "PASS",
+        "UNSAT",
+        "work=19823385"
+      ]
+    },
+    {
+      "id": "20493f36e8dafac78ecddb14deaf37cd09200e9490fa36d0ed884f31ed1e2354/order=1",
+      "names": [
+        "generated/sparse-equality-n48-s2"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19992622"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=16289589"
+      ]
+    },
+    {
+      "id": "20493f36e8dafac78ecddb14deaf37cd09200e9490fa36d0ed884f31ed1e2354/order=2",
+      "names": [
+        "generated/sparse-equality-n48-s2"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19992567"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=14724596"
+      ]
+    },
+    {
+      "id": "46ae9ed4ad62f98ead627cf1f2dfca403156591657be26ed0b421e84a226c5a5/order=2",
+      "names": [
+        "generated/sparse-equality-n48-s1"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19993383"
+      ],
+      "after": [
+        "PASS",
+        "SAT",
+        "work=10661470"
+      ]
+    },
+    {
+      "id": "af3a59ddc15fad04a622c4627dae4711b4082eaada6a21723e4b0c3276abc78a/order=2",
+      "names": [
+        "scip/stein27_inf"
+      ],
+      "before": [
+        "UNRESOLVED",
+        "work=19828150"
+      ],
+      "after": [
+        "PASS",
+        "UNSAT",
+        "work=19828150"
+      ]
+    }
+  ],
+  "lost": [],
+  "contradictions": [],
+  "remaining_original": [
+    {
+      "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "names": [
+        "generated/sparse-equality-n144-s2"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19996355"
+      ]
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "names": [
+        "scip/lseu-objective-1119"
+      ],
+      "source_truth": "UNSAT",
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19995989"
+      ]
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "names": [
+        "scip/lseu-objective-1119/embedded/normalized"
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19995720"
+      ]
+    },
+    {
+      "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "names": [
+        "generated/sparse-equality-n257-s2"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997988"
+      ]
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "names": [
+        "scip/lseu-objective-1119/raw/original"
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19993504"
+      ]
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "names": [
+        "generated/sparse-equality-n96-s2"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994541"
+      ]
+    },
+    {
+      "id": "64a889df4156fb9c7754c554b9a32c31c59f64ff378ad907f4048e8e7fcdd6a3",
+      "names": [
+        "scip/lseu-objective-1120/embedded/normalized"
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997183"
+      ]
+    },
+    {
+      "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b",
+      "names": [
+        "generated/subset-n40-bits40"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19998112"
+      ]
+    },
+    {
+      "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f",
+      "names": [
+        "generated/subset-n40-bits48"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19998481"
+      ]
+    },
+    {
+      "id": "7cd7e27a366c3b15a6a7abb690941acc1849e2adffd4e7a72f1ad037848f7ad9",
+      "names": [
+        "scip/lseu-objective-1120/raw/normalized"
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994364"
+      ]
+    },
+    {
+      "id": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
+      "names": [
+        "generated/wide-equality-n64-w1000000"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19992391"
+      ]
+    },
+    {
+      "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "names": [
+        "generated/sparse-equality-n257-s1"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997670"
+      ]
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": [
+        "generated/sparse-equality-n144-s1"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19995231"
+      ]
+    },
+    {
+      "id": "a18f16aaf5b7fb63a459988338e58e34ac148d7d73e8c6a30569ee8df4c5f420",
+      "names": [
+        "generated/subset-n48-bits40"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19999704"
+      ]
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "names": [
+        "scip/lseu-objective-1119/embedded/original"
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997429"
+      ]
+    },
+    {
+      "id": "a65596b89e9eb4805fdd1e6d5a77cac08ee58aa636317dc73d8c731542c9b14b",
+      "names": [
+        "generated/subset-n48-bits24"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19997159"
+      ]
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "names": [
+        "scip/lseu-objective-1119/embedded/reduced"
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19993377"
+      ]
+    },
+    {
+      "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+      "names": [
+        "wide-79"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19995439"
+      ]
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "names": [
+        "scip/lseu-objective-1119/raw/reduced"
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19992516"
+      ]
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994390"
+      ]
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "names": [
+        "scip/lseu-objective-1119/raw/normalized"
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19994268"
+      ]
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNRESOLVED",
+        "work=19993311"
+      ]
+    }
+  ],
+  "unsupported_original": [
+    {
+      "id": "1d98538b025aa97f015ba610d09fe1fe3f9b44cd227f9ccb9f2e8147917c19fc",
+      "names": [
+        ""
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "634987e49633e9f7285515251456ff25414b58880996b00e1080090e552467a1",
+      "names": [
+        "miracle24-observed-branch"
+      ],
+      "source_truth": "UNSAT",
+      "current_truth": "UNSAT",
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "a9d83be7942de93a30e8c43c99a8e6f7393cdd036b414413169c853ed8479b40",
+      "names": [
+        ""
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "b77762acc50f972b25a48d41f110182955c3146f78bc6c14bac078a458d24529",
+      "names": [
+        ""
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "UNKNOWN",
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "d938bd8a7fd480f9a59eb8753befd825491ab0de9eacce267d3e978051150c64",
+      "names": [
+        "z3/t83"
+      ],
+      "source_truth": "SAT",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    },
+    {
+      "id": "e4eb46e62f7d8fb80848cdd1d49fecfee32019e1e75815c272a284d93f04de50",
+      "names": [
+        ""
+      ],
+      "source_truth": "UNKNOWN",
+      "current_truth": "SAT",
+      "outcome": [
+        "UNSUPPORTED",
+        "main-counts conversion requires finite upper bounds"
+      ]
+    }
+  ],
+  "native_oracles": "numeric-oracles-20261009.json",
+  "parity": {
+    "baseline": {
+      "UNSAT": 36,
+      "SAT": 36
+    },
+    "candidate": {
+      "UNSAT": 36,
+      "SAT": 36
+    }
+  },
+  "validation": {
+    "numeric_paired": 80,
+    "numeric_pauses": 288,
+    "numeric_witnesses": 80,
+    "numeric_parallel_tasks": 32,
+    "finite_box_oracle": 480,
+    "curated_graphs": 239,
+    "expanded_graphs": 800,
+    "graph_orders": 3,
+    "capture_requests": 96,
+    "four_worker_base_requests": 9,
+    "four_worker_expanded_requests": 9,
+    "pinned_models": 10,
+    "standard_programs": 53,
+    "scope": "Offline captures and standalone Java tests. No fresh live-server or wall-time/heap performance claim."
+  },
+  "reproduce": "python tests/benchmarks/compare_count_models.py --java-home JDK17 --baseline c8fd075a --permutations 3 --parity --timeout 1500"
+}

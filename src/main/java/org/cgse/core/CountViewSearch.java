@@ -179,7 +179,8 @@ final class CountViewSearch implements AutoCloseable {
         MITM,
         DOMAIN,
         DIAGRAM,
-        BOOLEAN;
+        BOOLEAN,
+        DIOPHANTINE;
 
         boolean provesInfeasibility() {
             return this == LCG || this == PB || this == LOCKS;
@@ -225,6 +226,7 @@ final class CountViewSearch implements AutoCloseable {
                 frontier instanceof CountMeetInMiddle ? Engine.MITM :
                 frontier instanceof CountDomainSearch ? Engine.DOMAIN :
                 frontier instanceof CountDecisionDiagram ? Engine.DIAGRAM :
+                frontier instanceof CountDiophantine ? Engine.DIOPHANTINE :
                 frontier instanceof CountBoolean ? Engine.BOOLEAN : null;
         if (engine == null) throw new IllegalArgumentException("Unknown count continuation");
         for (Search search : searches) if (search.view == view && search.engine == engine) return false;

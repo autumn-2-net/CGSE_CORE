@@ -16,7 +16,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Suite | Command / location | Coverage |
 | --- | --- | --- |
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
-| Stable oracles | `--suite oracles` | 23 independent oracle programs plus seven pinned count-model boundaries |
+| Stable oracles | `--suite oracles` | 23 independent oracle programs plus ten pinned count-model boundaries |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
 | Fixed counterexamples | `--suite fixtures --keep-going` | All 239 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
@@ -362,3 +362,14 @@ GTL tests are explicitly listed as retained in their original repository. Origin
 local reports, logs, obsolete production snapshots, environments and worlds remain
 in the local preservation archive or their original location; they are not test
 sources shipped in this repository.
+
+
+The numeric continuation/root-proof follow-up is documented in
+`../docs/numeric-continuation-and-root-proofs.txt`. `NumericContinuationTest`
+checks exact arithmetic handoffs and four-worker shared caps. The canonical
+comparison accepts `--permutations 3` to vary rows, coordinates and term order.
+Optional `oracles/verify_count_models.py` cross-checks the recorded residuals
+using test-only Z3, CP-SAT and SCIP installations, preserving unbounded domains
+and exactly checking every returned integer witness. Recorded oracle versions,
+input hashes and witnesses are in `provenance/numeric-oracles-20261009.json`;
+these native packages are not needed by the stable suite or production core.

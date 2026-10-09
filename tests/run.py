@@ -112,8 +112,8 @@ def main():
             paths = {c['id']: c['path'] for c in manifest['cases'] if c['kind'] == 'count-model'}
             cases = [json.loads((BASE / paths[c['id']]).read_text(encoding='utf-8')) for c in boundary['cases']]
             for case, oracle in zip(cases, boundary['cases']):
-                # A verified witness establishes SAT for this maintained check;
-                # keep the historical corpus record unchanged.
+                # Maintained witnesses / independent oracle verdicts override
+                # this check only; keep historical corpus records unchanged.
                 case['expected'] = oracle['expected']
             path = output / 'count-boundaries.bin'
             boundaries_helper.write_models(path, cases)

@@ -1,0 +1,115 @@
+Root proof aggregation and numeric continuations (2026-10-09)
+============================================================
+
+Root conclusions
+----------------
+The stein27_inf finite recipe replay did not merely need a larger search budget.
+CountCardinalitySearch exhausted its full root domain after a retained structural
+search. IntegerCountBranch learned the empty conflict, but did not identify this
+as a completed root proof. An earlier unresolved child kept IntegerCountSearch's
+unresolved flag set, so the final answer was UNKNOWN despite that contradiction.
+
+Completed structural and LP root contradictions now use the same root-proof
+handoff as equivalent-view proofs. The coordinator checks the original model,
+DEAD state and empty branch assumptions before accepting it. A guarded child,
+local heuristic failure or exhausted allowance does not become a root proof.
+The existing earlier scan of completed workers still protects a finished proof
+from optional cache publication encountering the shared budget limit.
+
+Arithmetic ownership
+--------------------
+CountAffineLattice checkpoints complete unimodular column transforms, individual
+Gram-Schmidt projections, complete LLL size reductions and swaps. Intermediate
+LLL reduction after coefficient growth now also retains its pivot and return
+phase. A local handoff cannot resume a partly updated matrix. Nearest-plane
+trials and low-dimensional interval checks finish their bounded atomic step.
+
+CountKernelSearch prepares lazily. It retains orthogonal/dual coefficients,
+coordinate bounds, projected rows, the inner JUMP search and restoration and
+original-row verification cursors. A resumed projection never starts from an
+empty matrix. A candidate is published only after every original bound and row
+has been checked, including signed and larger-than-long coordinates.
+
+CountDiophantine retains its affine child or low-dimensional face enumerator and
+charges nested work to its local clock. Its paused original-coordinate search
+can transfer to CountViewSearch under exactly matching rows and bounds. The
+conditional LCG wrapper alternates with the retained affine arm instead of
+discarding a paid factorization or monopolizing the proving frontier.
+
+Continuation is opt-in. Precision refusal, admission failure and natural trial
+face limits remain terminal candidate failures. None proves infeasibility.
+The shared request budget/cancellation is checked inside arithmetic; only local
+time slices yield at coherent checkpoints. A bounded atomic step may cross its
+local quota, but does not refund, reset or extend the request allowance. Deadline
+extension is saturating. Paused polling allocates and charges nothing. The
+48-coordinate lattice admission and existing precision limits are unchanged.
+
+Controlled results
+------------------
+Baseline: c8fd075adb68136473547d5fa48b4e25247ce7b2. Each model receives the same
+20M search/compilation accounts, 256 MiB reservation cap, one worker, no wall
+deadline. Reported work combines the existing two accounts, not a new aggregate
+20M cap. This is IntegerCountSearch, not the entire GraphPlanner.
+
+                                  Baseline             Candidate
+  Original 274 records            243 conclusions      246 conclusions
+  Original unresolved              25                   22
+  Original unsupported              6                    6
+  Three orders / 822 replays       728 conclusions      735 conclusions
+  Three orders unresolved          76                   69
+  Three orders unsupported         18                   18
+  Lost / contradictory answers      0                    0
+  Parity / neighbor checks         72/72                72/72
+
+The three new original-order conclusions are stein27_inf (UNSAT) and the n48-s1
+and n48-s2 sparse equality models (checked SAT witnesses). All three are pinned
+alongside the prior seven boundaries in tests/regression/count-boundaries.json.
+The two shuffled orders conclude 244 and 245 cases respectively: this does NOT
+claim order-independent completeness at a finite budget. stein27_inf still runs
+out of budget in one shuffle; only an actually completed proof is promoted.
+
+Reproduction:
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline c8fd075a --permutations 3 --parity --timeout 1500
+    --output build/numeric-comparison
+
+Independent remaining-case truth
+-------------------------------
+tests/oracles/verify_count_models.py uses optional test-only CP-SAT, SCIP and Z3.
+No native solver is a production dependency. Witnesses are independently checked
+with Python integers against the original model. Unbounded variables are not
+clipped; CP-SAT and inexact double representations explicitly decline them.
+
+The eight previously UNKNOWN finite records are two SAT lseu-1120 normalized
+views and six UNSAT lseu-1119 views. CP-SAT and SCIP agree on all eight; Z3 reaches
+its 15-second allowance on these. These are oracle cross-checks, not exported
+CGSE proof certificates. Historical source truth labels remain unchanged.
+
+The six unbounded conversion exclusions have four exact-checked SAT witnesses,
+one Z3 UNSAT result and one still UNKNOWN. The existing raw-view CGSE entry
+handles them without conversion: two conclude, four remain unresolved. They are
+not silently removed from the finite recipe embedding's exclusion count.
+
+Versions, original input hashes and integer witnesses are preserved in
+tests/provenance/numeric-oracles-20261009.json. Optional replay:
+  python tests/oracles/verify_count_models.py --seconds 15
+
+Validation scope
+----------------
+NumericContinuationTest compares 80 paired interrupted/uninterrupted numeric
+runs, including signed/80-bit offsets; all return the same valid witness. It
+exercises 288 local pauses, projected-kernel interruption, scope mismatch,
+cancelled/exhausted/overflow-sized resume requests, memory refusal, idempotent
+disposal and 32 numerical tasks on four workers with base/expanded budgets.
+CountKernelTest continues checking 480 finite boxes against exhaustive truth.
+
+The stable suite, 239 curated and 800 expanded weighted graph fixtures (three
+orders each), full captured catalog replay and four-worker budget campaigns are
+recorded in tests/provenance/numeric-continuation-20261009.json. Captures are
+offline replay, not a fresh live Minecraft run. No wall-time speedup, measured
+heap/RSS or general SCIP/CP-SAT equivalence is asserted by logical-work counts.
+
+22 original-order count limits remain: after the independent truth checks,
+15 are known SAT and seven known UNSAT. The next gains require stronger bounded
+search for the larger sparse/wide equalities, subset sums and lseu bound family;
+these cases were not relabeled as solved by improving continuation infrastructure.

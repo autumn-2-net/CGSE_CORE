@@ -18,7 +18,7 @@ final class CountAffineLattice implements AutoCloseable {
     private final List<ExactLinearProgram.Constraint> rows;
     private final BigInteger[] lower, upper;
     private final PlanningBudget budget;
-    private final long allowance;
+    private long allowance;
     private final boolean lowerFirst;
     private final List<ExactLinearProgram.Constraint> equations = new ArrayList<>();
     private final Map<ExactLinearProgram.Constraint, ExactLinearProgram.Constraint> oppositeFaces = new HashMap<>();
@@ -28,7 +28,14 @@ final class CountAffineLattice implements AutoCloseable {
     private ExactRational[] norms;
     private int equation, phase, pivot = 1, attempt, trialFaces, equationLimit, exactEquations, faceAttempt;
     private long work, memory;
-    private boolean complete;
+    private boolean complete, retaining, paused;
+    private ExactLinearProgram.Constraint intersectRow;
+    private BigInteger intersectRhs;
+    private BigInteger[] intersectValues;
+    private int intersectColumn, gramRow, gramColumn, gramReturn, reductionColumn = -1;
+    private boolean intersectTrial, intersectExpanded;
+    private ExactRational[] gramOriginal;
+    private long checkpoints;
     private CountKernelSearch kernel;
 
     CountAffineLattice(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
@@ -55,24 +62,30 @@ final class CountAffineLattice implements AutoCloseable {
     }
 
     boolean step() {
-        if (complete) return true;
+        if (complete || paused) return true;
+        budget.checkpoint();
+        if (work >= allowance) {
+            if (retaining) return paused = true;
+            return complete = true;
+        }
         try {
             charge();
             if (phase == 0) {
                 prepare();
             } else if (phase == 1) {
                 if (equation < equationLimit) {
-                    int index = equation++;
-                    if (index >= exactEquations) index = exactEquations + Math.floorMod(index - exactEquations + faceAttempt, trialFaces);
-                    var row = equations.get(index);
-                    if (faceAttempt % 2 != 0) row = oppositeFaces.getOrDefault(row, row);
-                    intersect(row, index >= exactEquations);
+                    if (intersectRow == null) {
+                        int index = equation;
+                        if (index >= exactEquations) index = exactEquations + Math.floorMod(index - exactEquations + faceAttempt, trialFaces);
+                        var row = equations.get(index);
+                        if (faceAttempt % 2 != 0) row = oppositeFaces.getOrDefault(row, row);
+                        beginIntersection(row, index >= exactEquations);
+                    } else intersectStep();
                 } else if (basis.size() <= 1) {
                     interval();
                     return finish();
                 } else {
-                    gramSchmidt();
-                    phase = 2;
+                    beginGram(2);
                 }
             } else if (phase == 2) {
                 if (pivot < basis.size()) reduce();
@@ -85,9 +98,23 @@ final class CountAffineLattice implements AutoCloseable {
                 if (++attempt == (lowerFirst ? 1 : 9)) {
                     long started = budget.threadWork();
                     try {
-                        kernel = new CountKernelSearch(rows, lower, upper, repairPoint, basis, mu, norms, budget, allowance - work);
+                        kernel = new CountKernelSearch(rows, lower, upper, repairPoint, basis, mu, norms, budget,
+                                retaining ? Math.max(2048, allowance - work) : allowance - work);
+                        if (retaining) kernel.retained();
                     } finally { work += budget.threadWork() - started; }
                     phase = 4;
+                }
+            } else if (phase == 5) {
+                gramStep();
+            } else if (phase == 6) {
+                if (pivot < basis.size()) reduce();
+                else {
+                    point = nearestPoint();
+                    pivot = 1;
+                    reductionColumn = -1;
+                    orthogonal = mu = null;
+                    norms = null;
+                    phase = 1;
                 }
             } else {
                 long started = budget.threadWork();
@@ -95,6 +122,7 @@ final class CountAffineLattice implements AutoCloseable {
                 try { done = kernel.step(); }
                 finally { work += budget.threadWork() - started; }
                 if (done) {
+                    if (kernel.paused()) return paused = true;
                     counts = kernel.counts();
                     kernel.close();
                     kernel = null;
@@ -103,7 +131,9 @@ final class CountAffineLattice implements AutoCloseable {
             }
             return complete;
         } catch (LocalLimit | ExactRational.PrecisionLimit limit) {
-            return finish();
+            // Arithmetic/precision refusal is terminal, never a resumable
+            // partially changed factorization or an infeasibility proof.
+            return complete = true;
         }
     }
 
@@ -186,6 +216,10 @@ final class CountAffineLattice implements AutoCloseable {
         orthogonal = mu = null;
         norms = null;
         equation = attempt = 0;
+        intersectRow = null;
+        intersectValues = null;
+        gramOriginal = null;
+        reductionColumn = -1;
         repairPoint = null;
         pivot = 1;
         point = lower.clone();
@@ -198,24 +232,36 @@ final class CountAffineLattice implements AutoCloseable {
         phase = 1;
     }
 
-    private void intersect(ExactLinearProgram.Constraint row, boolean trial) {
-        boolean expanded = false;
-        BigInteger rhs = row.upper().subtract(dot(row, point));
+    private void beginIntersection(ExactLinearProgram.Constraint row, boolean trial) {
+        intersectRow = row;
+        intersectTrial = trial;
+        intersectExpanded = false;
+        intersectRhs = row.upper().subtract(dot(row, point));
         var values = new BigInteger[basis.size()];
         for (int j = 0; j < values.length; j++) values[j] = dot(row, basis.get(j));
         int first = -1;
         for (int j = 0; j < values.length; j++)
             if (values[j].signum() != 0 && (first < 0 || values[j].abs().compareTo(values[first].abs()) < 0)) first = j;
         if (first < 0) {
-            if (trial ? rhs.signum() < 0 : rhs.signum() != 0) finish();
+            intersectRow = null;
+            equation++;
+            checkpoints++;
+            if (trial ? intersectRhs.signum() < 0 : intersectRhs.signum() != 0) finish();
             return;
         }
         Collections.swap(basis, first, 0);
         var old = values[0];
         values[0] = values[first];
         values[first] = old;
-        for (int j = 1; j < values.length; j++) {
-            if (values[j].signum() == 0) continue;
+        intersectValues = values;
+        intersectColumn = 1;
+    }
+
+    private void intersectStep() {
+        var values = intersectValues;
+        if (intersectColumn < values.length) {
+            int j = intersectColumn++;
+            if (values[j].signum() == 0) return;
             // A unimodular two-column transformation: [a b] U = [gcd(a,b) 0].
             var a = values[0];
             var b = values[j];
@@ -233,14 +279,16 @@ final class CountAffineLattice implements AutoCloseable {
                 charge();
                 left[i] = bounded(u[i].multiply(bezout[1]).add(v[i].multiply(bezout[2])));
                 right[i] = bounded(v[i].multiply(reducedA).subtract(u[i].multiply(reducedB)));
-                expanded |= right[i].bitLength() > 128;
+                intersectExpanded |= right[i].bitLength() > 128;
             }
             basis.set(0, left);
             basis.set(j, right);
             values[0] = g;
             values[j] = BigInteger.ZERO;
+            return;
         }
-        if (trial) {
+        BigInteger rhs = intersectRhs;
+        if (intersectTrial) {
             // Only values congruent to this prefix's integer lattice are
             // reachable. Use the nearest such value inside the inequality,
             // allowing surplus instead of requiring a possibly impossible face.
@@ -257,17 +305,17 @@ final class CountAffineLattice implements AutoCloseable {
             charge();
             point[i] = bounded(point[i].add(fixed[i].multiply(qr[0])));
         }
+        intersectRow = null;
+        intersectValues = null;
+        equation++;
+        checkpoints++;
         // Exact Bezout substitutions can inflate an otherwise small integer
         // lattice before the final LLL stage. Reduce the intermediate basis
         // before these representatives exhaust the local precision allowance.
-        if (expanded && basis.size() > 1) {
-            gramSchmidt();
+        if (intersectExpanded && basis.size() > 1) {
             pivot = 1;
-            while (pivot < basis.size()) reduce();
-            point = nearestPoint();
-            pivot = 1;
-            orthogonal = mu = null;
-            norms = null;
+            reductionColumn = -1;
+            beginGram(6);
         }
     }
 
@@ -289,45 +337,68 @@ final class CountAffineLattice implements AutoCloseable {
         return new BigInteger[] { r, a.signum() < 0 ? s.negate() : s, b.signum() < 0 ? t.negate() : t };
     }
 
-    private void gramSchmidt() {
+    private void beginGram(int continuation) {
         int d = basis.size(), n = point.length;
         orthogonal = new ExactRational[d][n];
         mu = new ExactRational[d][d];
         norms = new ExactRational[d];
         // One row of immutable integer wrappers fits in the reserved lattice
         // workspace. Orthogonalization changes the destination, not this row.
-        var original = new ExactRational[n];
-        for (int i = 0; i < d; i++) {
+        gramOriginal = new ExactRational[n];
+        gramRow = gramColumn = 0;
+        gramReturn = continuation;
+        phase = 5;
+    }
+
+    /** One complete projection is a checkpoint: the next turn never repeats it. */
+    private void gramStep() {
+        int n = point.length, i = gramRow;
+        if (i == basis.size()) {
+            gramOriginal = null;
+            phase = gramReturn;
+            return;
+        }
+        if (gramColumn == 0) {
             Arrays.fill(mu[i], ExactRational.ZERO);
-            for (int k = 0; k < n; k++) original[k] = orthogonal[i][k] = ExactRational.of(basis.get(i)[k]);
-            for (int j = 0; j < i; j++) {
-                ExactRational value = ExactRational.ZERO;
-                for (int k = 0; k < n; k++) {
-                    charge();
-                    value = value.add(original[k].multiply(orthogonal[j][k]));
-                }
-                mu[i][j] = value.divide(norms[j]);
-                for (int k = 0; k < n; k++) {
-                    charge();
-                    orthogonal[i][k] = orthogonal[i][k].subtract(mu[i][j].multiply(orthogonal[j][k]));
-                }
-            }
-            ExactRational norm = ExactRational.ZERO;
+            for (int k = 0; k < n; k++) gramOriginal[k] = orthogonal[i][k] = ExactRational.of(basis.get(i)[k]);
+        }
+        if (gramColumn < i) {
+            int j = gramColumn++;
+            ExactRational value = ExactRational.ZERO;
             for (int k = 0; k < n; k++) {
                 charge();
-                norm = norm.add(orthogonal[i][k].multiply(orthogonal[i][k]));
+                value = value.add(gramOriginal[k].multiply(orthogonal[j][k]));
             }
-            if (norm.signum() <= 0) throw new LocalLimit();
-            norms[i] = norm;
+            mu[i][j] = value.divide(norms[j]);
+            for (int k = 0; k < n; k++) {
+                charge();
+                orthogonal[i][k] = orthogonal[i][k].subtract(mu[i][j].multiply(orthogonal[j][k]));
+            }
+            return;
         }
+        ExactRational norm = ExactRational.ZERO;
+        for (int k = 0; k < n; k++) {
+            charge();
+            norm = norm.add(orthogonal[i][k].multiply(orthogonal[i][k]));
+        }
+        if (norm.signum() <= 0) throw new LocalLimit();
+        norms[i] = norm;
+        gramRow++;
+        gramColumn = 0;
+        checkpoints++;
     }
 
     private void reduce() {
         int k = pivot;
-        for (int j = k - 1; j >= 0; j--) {
+        if (reductionColumn == -1) reductionColumn = k - 1;
+        if (reductionColumn >= 0) {
+            int j = reductionColumn--;
             charge();
             BigInteger q = nearestInteger(mu[k][j]);
-            if (q.signum() == 0) continue;
+            if (q.signum() == 0) {
+                if (reductionColumn < 0) reductionColumn = -2;
+                return;
+            }
             for (int i = 0; i < point.length; i++) {
                 charge();
                 basis.get(k)[i] = bounded(basis.get(k)[i].subtract(q.multiply(basis.get(j)[i])));
@@ -339,7 +410,10 @@ final class CountAffineLattice implements AutoCloseable {
                 mu[k][i] = mu[k][i].subtract(multiple.multiply(mu[j][i]));
             }
             mu[k][j] = mu[k][j].subtract(multiple == null ? ExactRational.of(q) : multiple);
+            if (reductionColumn < 0) reductionColumn = -2;
+            return;
         }
+        reductionColumn = -1;
         ExactRational m = mu[k][k - 1];
         ExactRational square = m.multiply(m);
         if (norms[k].compareTo(LOVASZ.subtract(square).multiply(norms[k - 1])) >= 0) {
@@ -478,16 +552,16 @@ final class CountAffineLattice implements AutoCloseable {
 
     private void charge() {
         budget.check();
-        if (++work > allowance) throw new LocalLimit();
+        if (++work > allowance && !retaining) throw new LocalLimit();
     }
 
     private boolean finish() {
-        if (counts == null && equationLimit < equations.size() && memory > 0 && work < allowance) {
+        if (counts == null && equationLimit < equations.size() && memory > 0 && (retaining || work < allowance)) {
             equationLimit = equations.size();
             reset();
             return false;
         }
-        if (counts == null && trialFaces > 0 && memory > 0 && work < allowance && ++faceAttempt < Math.min(4, trialFaces + 1)) {
+        if (counts == null && trialFaces > 0 && memory > 0 && (retaining || work < allowance) && ++faceAttempt < Math.min(4, trialFaces + 1)) {
             reset();
             return false;
         }
@@ -501,12 +575,24 @@ final class CountAffineLattice implements AutoCloseable {
         return counts;
     }
 
+    CountAffineLattice retained() { retaining = true; return this; }
+    boolean paused() { return paused; }
+    long progress() { return checkpoints + (kernel == null ? 0 : kernel.progress()); }
+    void resume(long quantum) {
+        if (!retaining || !paused || complete) throw new IllegalStateException("Affine search is not paused");
+        allowance = CountContinuation.deadline(work, quantum, budget);
+        if (kernel != null && kernel.paused()) kernel.resume(allowance - work);
+        paused = false;
+    }
+
     @Override
     public void close() {
         if (kernel != null) kernel.close();
         kernel = null;
         budget.release(memory);
         memory = 0;
+        complete = true;
+        paused = false;
     }
 
     private static final class LocalLimit extends RuntimeException {}

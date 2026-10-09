@@ -447,6 +447,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 beginScheduling();
             } else if (impossible) {
                 learnedChoices.add(new CountConflict(current));
+                proofContradiction = current.isEmpty();
                 state = State.DEAD;
             } else afterViewSearch(continuation);
             return;
@@ -463,7 +464,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 beginScheduling();
             } else if (viewSearch.infeasible()) {
                 learnedChoices.add(new CountConflict(current));
-                proofContradiction = (proofTask || splitWitness) && current.isEmpty();
+                proofContradiction = current.isEmpty();
                 state = State.DEAD;
             } else afterViewSearch(continuation);
             return;
@@ -476,13 +477,13 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             if (impossible) {
                 learnedChoices.add(new CountConflict(current));
                 state = State.DEAD;
-            } else diophantine = new CountDiophantine(reduction.rows(), reduction.lower(), reduction.upper(), budget);
+            } else diophantine = new CountDiophantine(reduction.rows(), reduction.lower(), reduction.upper(), budget).retained();
             return;
         }
         if (diophantine != null) {
             if (!diophantine.step()) return;
             counts = reduction.expand(diophantine.counts());
-            diophantine.close();
+            if (viewSearch == null || !viewSearch.retain(reduction, diophantine)) diophantine.close();
             diophantine = null;
             if (counts != null) beginScheduling();
             else if (current.isEmpty() && !structureScouted) structural = new CountStructureSearch(reduction.rows(), reduction.lower(), reduction.upper(), budget, 4_500_000);
@@ -505,6 +506,10 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 beginScheduling();
             } else if (impossible) {
                 learnedChoices.add(new CountConflict(current));
+                // The retained structural frontier still covers this entire
+                // count domain. Earlier unresolved children cannot invalidate
+                // its completed root proof; guarded branches stay local.
+                proofContradiction = current.isEmpty();
                 state = State.DEAD;
             } else if (structureEarly) {
                 // Retaining the early structural frontier must not skip the

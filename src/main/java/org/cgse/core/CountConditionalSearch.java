@@ -50,6 +50,14 @@ final class CountConditionalSearch implements AutoCloseable {
         try {
             if (phase == 1) {
                 if (!lattice.step()) return false;
+                if (lattice.paused()) {
+                    // Give the proving frontier a turn before continuing the
+                    // same numeric factorization. Both consume this scope's
+                    // unchanged parent allowance.
+                    phase = 2;
+                    if (lcg.paused()) lcg.resume(Math.max(1, Math.min(32768, allowance - work)));
+                    return false;
+                }
                 counts = lattice.counts();
                 lattice.close();
                 lattice = null;
@@ -65,7 +73,12 @@ final class CountConditionalSearch implements AutoCloseable {
                     // Admission is structural, not a consequence of the first
                     // interface quantum. The wrapper yields between steps and
                     // retains this factorization across later local turns.
-                    lattice = new CountAffineLattice(rows, lower, upper, budget, 32768, true);
+                    lattice = new CountAffineLattice(rows, lower, upper, budget, 32768, true).retained();
+                    phase = 1;
+                    return false;
+                }
+                if (lattice != null && lattice.paused()) {
+                    lattice.resume(Math.max(1, Math.min(32768, remaining)));
                     phase = 1;
                     return false;
                 }
