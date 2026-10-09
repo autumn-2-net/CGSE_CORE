@@ -253,7 +253,7 @@ final class CountDecisionDiagram implements CountContinuation {
     // Reward completed layers rather than exponential state accumulation.
     public long progress() { return layer; }
     public boolean matches(List<ExactLinearProgram.Constraint> rows, BigInteger[] low, BigInteger[] high) {
-        return rows.equals(rows) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
+        return this.rows.equals(rows) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
     }
     public void resume(long quantum) {
         if (!paused || complete) throw new IllegalStateException("CountDecisionDiagram is not paused");

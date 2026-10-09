@@ -282,6 +282,31 @@ public final class CountContinuationTest {
     }
 
     private static void scopeAndOwnership() {
+        for (Engine engine : Engine.values()) {
+            Model input = model(5, engine == Engine.BOOLEAN);
+            var owner = new PlanningBudget(0, 16_000_000, 64L << 20, () -> false, System::nanoTime);
+            try (var frontier = search(engine, input, owner, 2048)) {
+                check(frontier.matches(new ArrayList<>(input.rows), input.low.clone(), input.high.clone()),
+                        engine + " rejected equivalent immutable constraints");
+                var changed = new ArrayList<>(input.rows);
+                var row = changed.get(0);
+                changed.set(0, new ExactLinearProgram.Constraint(row.terms(), row.upper().add(BigInteger.ONE)));
+                check(!frontier.matches(changed, input.low, input.high), engine + " reused a changed RHS");
+                var terms = new LinkedHashMap<>(row.terms());
+                terms.merge(0, BigInteger.ONE, BigInteger::add);
+                changed.set(0, new ExactLinearProgram.Constraint(terms, row.upper()));
+                check(!frontier.matches(changed, input.low, input.high), engine + " reused changed coefficients");
+                changed.remove(0);
+                check(!frontier.matches(changed, input.low, input.high), engine + " reused a different row set");
+                var low = input.low.clone();
+                low[0] = low[0].add(BigInteger.ONE);
+                check(!frontier.matches(input.rows, low, input.high), engine + " reused a different lower bound");
+                var high = input.high.clone();
+                high[0] = high[0].add(BigInteger.ONE);
+                check(!frontier.matches(input.rows, input.low, high), engine + " reused a different upper bound");
+            }
+            check(owner.reservedBytes() == 0, "Scope check leaked " + engine);
+        }
         Model model = chain(40);
         var budget = new PlanningBudget(0, 16_000_000, 64L << 20, () -> false, System::nanoTime);
         try (var reduction = new CountReduction(model.rows, model.low, model.high, budget)) {
