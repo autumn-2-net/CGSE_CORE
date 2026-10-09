@@ -27,7 +27,7 @@
       "milliseconds": 0,
       "memory_mib": 256,
       "expected": "SAT",
-      "reason": "Seed producer repair and unresolved-region diversification must retain the full captured witness. The larger mixed catalog cannot make the independently verified manual plan infeasible. Extra-first remains a separate unresolved boundary, not an accepted pass."
+      "reason": "Seed producer repair and unresolved-region diversification must retain the full captured witness. The larger mixed catalog cannot make the independently verified manual plan infeasible. The harder extra-first boundary is pinned separately at 40M."
     },
     {
       "name": "miracle-quantity-source",
@@ -42,6 +42,20 @@
       "memory_mib": 256,
       "expected": "SAT",
       "reason": "Pinned default-budget quantity boundaries from the complete 68187-recipe catalog. Every accepted plan must pass exact primitive execution and captured-stock checks."
+    },
+    {
+      "name": "miracle-funded-cycle-entry",
+      "source": "mixed-jei-stress-20261007/manual.json",
+      "extra": "extra-virtual.json",
+      "target": "gtlcore:miracle_crystal",
+      "modes": ["extra-first"],
+      "amounts": [1, 10, 100, 1000],
+      "seed": 73,
+      "work": 40000000,
+      "milliseconds": 0,
+      "memory_mib": 256,
+      "expected": "SAT",
+      "reason": "Funded entry repair must consider another material in a selected cycle. UNKNOWN source views must not keep stale deficit priority. All 68187 recipes and captured stock are retained; one funded batch is not proof of a full plan."
     }
   ]
 }

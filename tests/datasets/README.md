@@ -61,6 +61,13 @@ results record the effective cap and peak active workers. Search and compilation
 keep separate accounts and share each account across the workers. This does not
 multiply the allowance independently for each worker.
 
+The three miracle campaigns cover measured seed repair, shuffled quantity
+boundaries and funded entry into another material of a selected cycle.
+`miracle-funded-cycle-entry` puts all JEI recipes first and requires requests
+1, 10, 100 and 1000 to pass at 40M, without removing alternatives or increasing
+stock. These four known-feasible limits are resolved by the follow-up in
+`../../docs/funded-cycle-entries.txt`. The complete named suite has 19 requests.
+
 Run complete hand-authored and deterministically shuffled mixed catalogs using
 Python 3 and JDK 17, without Minecraft, Gradle or third-party libraries:
 

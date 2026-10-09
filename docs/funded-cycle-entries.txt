@@ -1,0 +1,120 @@
+Funded cycle entries and unresolved source feedback
+==================================================
+2026-10-10. Follow-up to source-refinement-and-dispatch.txt and audit B/C/J.
+Baseline: beb23be34f80e96bd196bfda017ac1f48a54229e.
+
+Observed failure
+----------------
+The complete 68,187-recipe capture still exhausted 40M search work for miracle
+crystals when the 62,284 converted JEI recipes preceded the 5,903 manual
+patterns. The unchanged manual catalog already supplied independently verified
+witnesses for requests 1, 10, 100 and 1000, so these were known-SAT limits.
+
+Two mechanisms contributed. First, a selected chromium conversion region kept
+rotating between ingots and other metal forms. The immediate missing material
+was an ingot, while the useful funded entry was dust into fluid at another
+material of that region. Repairing only the missing key did not find that entry
+quickly. Stock-based relaxed costs can favor a recycling source even when the
+finite captured stock cannot fund the requested quantity.
+
+Second, UNKNOWN contains no valid missing-material preview. Initially it looked
+like zero missing keys; merely preserving an older nonempty preview was also
+insufficient. On the 1000 request a view spent over 12M work across 58 rounds,
+most unresolved, while retaining priority from an earlier small deficit. That
+old preview did not describe the graph that had just failed to finish solving.
+
+Changes
+-------
+GraphSeedEntries scans cyclic regions intersecting a measured missing boundary.
+It proposes an alternative producer at any selected material in such a region,
+provided none of its inputs comes from that region and captured stock/external
+supply funds one original batch. It prefers a smaller consumed stock fraction
+per physical output, so a plentiful ore input outranks single-lot scrap. This
+floating-point value ranks proposals only; exact quantities, stock availability,
+execution and physical production still pass the existing original-plan checks.
+
+The scan is enabled in the quantitative producer-repair view. It retains its
+region, provider and input cursors between turns, bills each bounded step, and
+uses a maximum 16,384-work local allowance within the shared request cap. An
+unfinished region never publishes an entry. Optional memory refusal leaves the
+other source repairs available. Region hash tables are dropped when their
+reservations are released, and cancellation/close releases retained workspace.
+
+Source hints and tried-source preferences belong to the request-local view.
+They do not change provider order, compiler cache identity, global conflicts or
+negative proofs. The chosen hint avoids reranking the same material on the next
+construction; it still resolves its ordinal in the current allowed source list.
+One funded batch is not assumed to fund the complete request.
+
+UNKNOWN now counts as an observed inconclusive round. Its last measured deficit
+is retained only for the next measured trend, not used as the current repair
+score or paused-frontier deficit. Such a view still receives fair exploration
+turns; it is not discarded or marked impossible. No portfolio share, hard work
+cap, round cap, full-model admission limit or final acceptance rule was raised.
+
+Equal-budget result
+-------------------
+All quantities use the same complete captures, preserve-seeds/force-craft
+settings, 256 MiB reservation budget, one worker and no wall deadline. Both
+revisions receive 40,000,000 per search and compilation account. A fresh compiler
+is created per catalog ordering and reused for 1 / 10 / 100 / 1000 in that order.
+Baseline sources are exported directly from the pinned Git commit.
+
+  Ordering                 Baseline     Candidate
+  Manual                     4/4          4/4
+  Manual first               4/4          4/4
+  All JEI recipes first      0/4          4/4
+  Complete shuffle, seed 73  4/4          4/4
+
+New JEI-first search work is 20.70M / 24.86M / 14.40M / 33.22M. Shuffled work
+falls from 12.64M / 35.99M / 35.01M / 39.43M to 9.21M / 9.70M / 15.05M / 10.73M.
+Manual/manual-first work is unchanged. Every positive result passes primitive
+plan replay, runtime inventory and captured-stock checks; the production main
+planner also applies its final force/seed proof. This is a work-budget and
+coverage comparison, not a wall-time speedup claim.
+
+Isolated experiments retained under the ignored build directory distinguished
+the changes. Entry repair without corrected UNKNOWN feedback solved only two
+of the four JEI-first requests. Retaining the last deficit but still scoring an
+unresolved round solved three. Treating unresolved feedback as unmeasured plus
+entry repair solves all four. Earlier admission of quantitative views alone did
+not resolve the last request and was not included in production.
+
+Regression and build boundary
+-----------------------------
+SeedEntryRepairTest verifies 72 complete plans with abundant but insufficient
+initial A, a closed A/B route, and a funded entry into B. Twelve catalog orders,
+three deficits and both preservation policies must exercise the entry repair.
+The test independently checks exact execution, captured stock and force craft.
+It also covers source removal, exclusions, tried sources, external supply,
+insufficient batches, unrelated/multiple regions, bounded steps, thread handoff,
+optional admission, local cutoffs, cancellation and repeated close.
+SourceRefinementTest now verifies that UNKNOWN never gets zero/stale-deficit
+priority; StockViewFeedbackTest continues to cover rejection and final proof.
+
+The 59-program standard suite passes. The strengthened 72-witness entry fixture
+also passes separately after its initial standard-suite run. Curated 239 and
+expanded 800 graph cases are checked in three catalog orders. Eighty randomized
+full-catalog requests pass at 20M. The named captured regressions now contain
+19 requests, including the four formerly unresolved JEI-first cases; they pass
+serially, with four workers at the base budget, and with four workers at the
+production 2x expanded budget. Expansion is reported separately from equal-cap
+results. Offline assemble and a source-JAR byte comparison verify the product.
+
+Reproduce:
+  python tests/run.py --java-home JDK17 --suite standard --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4 --expanded-budget
+  python tests/datasets/run.py --java-home JDK17 --target gtlcore:miracle_crystal
+    --amounts 1,10,100,1000 --modes manual,manual-first,extra-first,random
+    --seed 73 --milliseconds 0 --work 40000000 --require-feasible
+
+The capture regression is offline replay, not a new live AE/GTL server test.
+Only the independent core and its tests are changed. These source improvements
+do not settle the remaining 20 canonical count-model budget cases recorded in
+the preceding stage, remove full-closure admission limits, or complete audit
+J's end-to-end cost attribution and H's host-wide heap/residency observation.
+Source, harness and input hashes and outcomes are retained in
+tests/provenance/funded-cycle-entries-20261010.json. Earlier reports remain dated
+historical evidence; the four extra-first limits in them are superseded here.

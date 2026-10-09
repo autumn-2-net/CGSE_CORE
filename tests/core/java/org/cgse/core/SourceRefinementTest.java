@@ -95,7 +95,20 @@ public final class SourceRefinementTest {
         var stock = Map.of("ore", 1000L);
         var budget = budget();
         try (var view = view(compiler, stock, Set.of(), preserve, budget)) {
-            while (!view.step()) {}
+            boolean observedUnknown = false;
+            boolean complete;
+            do {
+                String before = budget.diagnostics();
+                complete = view.step();
+                String after = budget.diagnostics();
+                if (!after.equals(before) && after.contains("result=UNKNOWN") && !observedUnknown) {
+                    check(view.sampled(), "An inconclusive round was treated as unsampled");
+                    check(Double.isInfinite(view.estimatedRepairCost()) && view.missingKeys() == Integer.MAX_VALUE,
+                            "An unmeasured round received zero-deficit/stale-deficit priority");
+                    observedUnknown = true;
+                }
+            } while (!complete);
+            check(observedUnknown, "Fixture missed the UNKNOWN feedback boundary");
             check(budget.diagnostics().contains("repair_unresolved_region"), "Fixture did not retain the unresolved region");
             verify(view.result(), stock, budget);
             check(view.result().patternTimesExact().containsKey("independent"), "Unrelated branch lost during local repair");

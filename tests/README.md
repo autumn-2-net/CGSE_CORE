@@ -385,3 +385,10 @@ using test-only Z3, CP-SAT and SCIP installations, preserving unbounded domains
 and exactly checking every returned integer witness. Recorded oracle versions,
 input hashes and witnesses are in `provenance/numeric-oracles-20261009.json`;
 these native packages are not needed by the stable suite or production core.
+
+`SeedEntryRepairTest` checks a closed conversion cycle whose cheap initial
+stock cannot fund the goal. It requires entry repair at another material,
+then verifies the original executable plan. Its bounded scan is also checked
+across coordinator-thread handoff, cancellation and memory/local-work limits.
+The full captured JEI-first boundary is pinned in `datasets/regressions.json`;
+the equal-budget comparison is in `../docs/funded-cycle-entries.txt`.

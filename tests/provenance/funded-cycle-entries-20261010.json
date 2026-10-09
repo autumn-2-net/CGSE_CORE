@@ -1,0 +1,996 @@
+{
+  "schema": "cgse-funded-cycle-entry-followup-v1",
+  "date": "2026-10-10",
+  "baseline": "beb23be34f80e96bd196bfda017ac1f48a54229e",
+  "baseline_export_source_sha256": "d10925ce8172ec04398de4422d90c9ff7520076969dd6f795d5abd999d940bb9",
+  "candidate_source_sha256": "1d4c275d2702630b7f18875cac19edbde5754711e7daa34740220e7d8d7f0c72",
+  "production_java_files": 198,
+  "test_source_sha256": "3cd396c6fbf3a75df8b3f396959cdb511f45e8c43e55ed8fc97ba4642c3d28c8",
+  "harness_sha256": "933382f32d8a8ba1653a8161028027d8e26fc8fe10abdefe171275708059ae7b",
+  "review_bases": [
+    "15a473de",
+    "e788d3d3"
+  ],
+  "scope": "Portable main graph source views and feedback; no fallback/adapter changes or live server run.",
+  "input": {
+    "sources": [
+      {
+        "source": "core-ae-cycle/.local/mixed-jei-stress-20261007/manual.json",
+        "sha256": "d093b95c224e6d9d29284b7cf4b75406f96f23644f08e0e8fa8090078c64df46",
+        "bytes": 5363853,
+        "path": "captures/mixed-jei-stress-20261007/manual.json.gz",
+        "gzip_sha256": "d99698001b18ecd8cc25f7f3c75681189ac4895d49676b40b2a49ebf58cc3931",
+        "gzip_bytes": 1143392
+      },
+      {
+        "source": "core-ae-cycle/.local/mixed-jei-stress-20261007/extra-virtual.json",
+        "sha256": "ba3107e2ee35fc772d880b49f321bd331d63ab93503c6354d8f5d6ab634e52d6",
+        "bytes": 44180215,
+        "path": "captures/mixed-jei-stress-20261007/extra-virtual.json.gz",
+        "gzip_sha256": "3fa7217b79f895cc1d524943183637def44dd551016a46400431420f3d0d054b",
+        "gzip_bytes": 1538448
+      }
+    ],
+    "manual": {
+      "recipes": 5903,
+      "stock_keys": 2670,
+      "slots": 18994,
+      "configuration_slots": 424,
+      "reusable_slots": 423
+    },
+    "extra": {
+      "recipes": 62284,
+      "stock_keys": 0,
+      "slots": 177927,
+      "configuration_slots": 21644,
+      "reusable_slots": 21644
+    },
+    "modes": [
+      "manual",
+      "manual-first",
+      "extra-first",
+      "random"
+    ],
+    "seed": 73,
+    "requests": [
+      {
+        "target": "{\"#c\":\"ae2:i\",id:\"gtlcore:miracle_crystal\"}",
+        "amount": 1,
+        "expected": "SAT"
+      },
+      {
+        "target": "{\"#c\":\"ae2:i\",id:\"gtlcore:miracle_crystal\"}",
+        "amount": 10,
+        "expected": "SAT"
+      },
+      {
+        "target": "{\"#c\":\"ae2:i\",id:\"gtlcore:miracle_crystal\"}",
+        "amount": 100,
+        "expected": "SAT"
+      },
+      {
+        "target": "{\"#c\":\"ae2:i\",id:\"gtlcore:miracle_crystal\"}",
+        "amount": 1000,
+        "expected": "SAT"
+      }
+    ],
+    "preserve_seeds": true,
+    "force_craft": true,
+    "budget": {
+      "milliseconds": 0,
+      "work": 40000000,
+      "memory_bytes": 268435456,
+      "workers": 1,
+      "expanded": false
+    }
+  },
+  "comparison_input_sha256": "4e75fa2baed9db0a3b66c0e230bba5654a8973dc76777b56f1eade8d2ec30c8e",
+  "cache_policy": "One fresh compiler per mode; 1,10,100,1000 replayed in order for both versions. Identical binary input.",
+  "truth": "All 16 are SAT; unchanged manual witnesses remain available in the complete superset catalogs. Exploratory comparison records expected UNKNOWN, and the separate regression asserts SAT.",
+  "verified_before": 12,
+  "verified_after": 16,
+  "paired_results": [
+    {
+      "mode": "manual",
+      "amount": 1,
+      "before": {
+        "mode": "manual",
+        "amount": 1,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 145593,
+        "compilation_work": 63808,
+        "peak_bytes": 881384
+      },
+      "after": {
+        "mode": "manual",
+        "amount": 1,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 145593,
+        "compilation_work": 63808,
+        "peak_bytes": 881384
+      }
+    },
+    {
+      "mode": "manual",
+      "amount": 10,
+      "before": {
+        "mode": "manual",
+        "amount": 10,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 182149,
+        "compilation_work": 5902,
+        "peak_bytes": 1359064
+      },
+      "after": {
+        "mode": "manual",
+        "amount": 10,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 182149,
+        "compilation_work": 5902,
+        "peak_bytes": 1359064
+      }
+    },
+    {
+      "mode": "manual",
+      "amount": 100,
+      "before": {
+        "mode": "manual",
+        "amount": 100,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 183851,
+        "compilation_work": 0,
+        "peak_bytes": 714360
+      },
+      "after": {
+        "mode": "manual",
+        "amount": 100,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 183851,
+        "compilation_work": 0,
+        "peak_bytes": 714360
+      }
+    },
+    {
+      "mode": "manual",
+      "amount": 1000,
+      "before": {
+        "mode": "manual",
+        "amount": 1000,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 199499,
+        "compilation_work": 0,
+        "peak_bytes": 752856
+      },
+      "after": {
+        "mode": "manual",
+        "amount": 1000,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 199499,
+        "compilation_work": 0,
+        "peak_bytes": 752856
+      }
+    },
+    {
+      "mode": "manual-first",
+      "amount": 1,
+      "before": {
+        "mode": "manual-first",
+        "amount": 1,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 2440680,
+        "compilation_work": 766212,
+        "peak_bytes": 9694880
+      },
+      "after": {
+        "mode": "manual-first",
+        "amount": 1,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 2440680,
+        "compilation_work": 766212,
+        "peak_bytes": 9694880
+      }
+    },
+    {
+      "mode": "manual-first",
+      "amount": 10,
+      "before": {
+        "mode": "manual-first",
+        "amount": 10,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 2552921,
+        "compilation_work": 606053,
+        "peak_bytes": 9926632
+      },
+      "after": {
+        "mode": "manual-first",
+        "amount": 10,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 2552921,
+        "compilation_work": 606053,
+        "peak_bytes": 9926632
+      }
+    },
+    {
+      "mode": "manual-first",
+      "amount": 100,
+      "before": {
+        "mode": "manual-first",
+        "amount": 100,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 2515341,
+        "compilation_work": 596646,
+        "peak_bytes": 9926632
+      },
+      "after": {
+        "mode": "manual-first",
+        "amount": 100,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 2515341,
+        "compilation_work": 596646,
+        "peak_bytes": 9926632
+      }
+    },
+    {
+      "mode": "manual-first",
+      "amount": 1000,
+      "before": {
+        "mode": "manual-first",
+        "amount": 1000,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 2267987,
+        "compilation_work": 562923,
+        "peak_bytes": 9564416
+      },
+      "after": {
+        "mode": "manual-first",
+        "amount": 1000,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 2267987,
+        "compilation_work": 562923,
+        "peak_bytes": 9564416
+      }
+    },
+    {
+      "mode": "extra-first",
+      "amount": 1,
+      "before": {
+        "mode": "extra-first",
+        "amount": 1,
+        "result": "SEARCH_LIMIT",
+        "assessment": "INCONCLUSIVE",
+        "verified": false,
+        "search_work": 40000001,
+        "compilation_work": 6808642,
+        "peak_bytes": 71467515
+      },
+      "after": {
+        "mode": "extra-first",
+        "amount": 1,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 20701726,
+        "compilation_work": 2888015,
+        "peak_bytes": 72584146
+      }
+    },
+    {
+      "mode": "extra-first",
+      "amount": 10,
+      "before": {
+        "mode": "extra-first",
+        "amount": 10,
+        "result": "SEARCH_LIMIT",
+        "assessment": "INCONCLUSIVE",
+        "verified": false,
+        "search_work": 40000001,
+        "compilation_work": 5915674,
+        "peak_bytes": 70590126
+      },
+      "after": {
+        "mode": "extra-first",
+        "amount": 10,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 24859123,
+        "compilation_work": 2990099,
+        "peak_bytes": 72825838
+      }
+    },
+    {
+      "mode": "extra-first",
+      "amount": 100,
+      "before": {
+        "mode": "extra-first",
+        "amount": 100,
+        "result": "SEARCH_LIMIT",
+        "assessment": "INCONCLUSIVE",
+        "verified": false,
+        "search_work": 40000001,
+        "compilation_work": 7997425,
+        "peak_bytes": 116736607
+      },
+      "after": {
+        "mode": "extra-first",
+        "amount": 100,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 14395423,
+        "compilation_work": 1541173,
+        "peak_bytes": 70363106
+      }
+    },
+    {
+      "mode": "extra-first",
+      "amount": 1000,
+      "before": {
+        "mode": "extra-first",
+        "amount": 1000,
+        "result": "SEARCH_LIMIT",
+        "assessment": "INCONCLUSIVE",
+        "verified": false,
+        "search_work": 40000001,
+        "compilation_work": 8243033,
+        "peak_bytes": 113952726
+      },
+      "after": {
+        "mode": "extra-first",
+        "amount": 1000,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 33217928,
+        "compilation_work": 4156054,
+        "peak_bytes": 70443013
+      }
+    },
+    {
+      "mode": "random",
+      "amount": 1,
+      "before": {
+        "mode": "random",
+        "amount": 1,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 12639170,
+        "compilation_work": 1608646,
+        "peak_bytes": 68699935
+      },
+      "after": {
+        "mode": "random",
+        "amount": 1,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 9205608,
+        "compilation_work": 1011252,
+        "peak_bytes": 69485518
+      }
+    },
+    {
+      "mode": "random",
+      "amount": 10,
+      "before": {
+        "mode": "random",
+        "amount": 10,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 35993995,
+        "compilation_work": 6553150,
+        "peak_bytes": 71744652
+      },
+      "after": {
+        "mode": "random",
+        "amount": 10,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 9702767,
+        "compilation_work": 794159,
+        "peak_bytes": 70222865
+      }
+    },
+    {
+      "mode": "random",
+      "amount": 100,
+      "before": {
+        "mode": "random",
+        "amount": 100,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 35006035,
+        "compilation_work": 6690475,
+        "peak_bytes": 70389351
+      },
+      "after": {
+        "mode": "random",
+        "amount": 100,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 15046220,
+        "compilation_work": 1615789,
+        "peak_bytes": 69953008
+      }
+    },
+    {
+      "mode": "random",
+      "amount": 1000,
+      "before": {
+        "mode": "random",
+        "amount": 1000,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 39434512,
+        "compilation_work": 7908436,
+        "peak_bytes": 70548914
+      },
+      "after": {
+        "mode": "random",
+        "amount": 1000,
+        "result": "FEASIBLE",
+        "assessment": "VERIFIED_FEASIBLE",
+        "verified": true,
+        "search_work": 10732799,
+        "compilation_work": 882994,
+        "peak_bytes": 70237289
+      }
+    }
+  ],
+  "before_results_sha256": "62466bba949f0a9b9559e9874707172593198bce27fbb1bc1928b2f28b144427",
+  "after_results_sha256": "36c89326e4d8cbaff00f63b6e3ce99f9afcd61621fca3652da8bcbca0f52a1f3",
+  "ablations": [
+    {
+      "experiment": "Synchronous entry prototype; original UNKNOWN=zero-deficit feedback",
+      "production": false,
+      "extra_first_verified": 2,
+      "extra_first_results": [
+        "FEASIBLE",
+        "FEASIBLE",
+        "SEARCH_LIMIT",
+        "SEARCH_LIMIT"
+      ],
+      "source_sha256": "a287c42d09f7c00fdddfbcf707a2088adafaec8dce5b023b52ed8f8370515e97",
+      "results_sha256": "95ad19d984d5c07c6aa2ceef8ef0dc1bd2ba1744bb1819fe9e3edf3677ec5e16"
+    },
+    {
+      "experiment": "Retain the previous measured deficit on UNKNOWN; no entry repair",
+      "production": false,
+      "extra_first_verified": 0,
+      "extra_first_results": [
+        "SEARCH_LIMIT",
+        "SEARCH_LIMIT",
+        "SEARCH_LIMIT",
+        "SEARCH_LIMIT"
+      ],
+      "source_sha256": "44eddcf8c0115580fb190451dd2d54e302941bac06c3ed5e7a7dadc9b661b082",
+      "results_sha256": "bc17841243df67c2587d4125777d4014be222d288f2ed377a0a713f6e47aacd6"
+    },
+    {
+      "experiment": "Entry prototype and retain the previous measured deficit, still used for scoring",
+      "production": false,
+      "extra_first_verified": 3,
+      "extra_first_results": [
+        "FEASIBLE",
+        "FEASIBLE",
+        "FEASIBLE",
+        "SEARCH_LIMIT"
+      ],
+      "source_sha256": "a5af7ff661f2417012b9225de637158657a9ddb1385093c540db119b0a86a837",
+      "results_sha256": "c0302433d7e6f393e70eea0c1d01eff99b268f53cc1050710195af415610c4f3"
+    },
+    {
+      "experiment": "Retained entry scan and old-deficit scoring, earlier quantitative admission",
+      "production": false,
+      "extra_first_verified": 3,
+      "extra_first_results": [
+        "FEASIBLE",
+        "FEASIBLE",
+        "FEASIBLE",
+        "SEARCH_LIMIT"
+      ],
+      "source_sha256": "c6bb041a00d5a2825a22d04b93bdfec8f57f05ae4fb01bd4189f27a831c7ad49",
+      "results_sha256": "ab1a2774c8cc85bfbf6d14083f6aef2e57969f9351434b41eb5260c20750345d"
+    }
+  ],
+  "validation": {
+    "standard": {
+      "programs": 59,
+      "passed": 59,
+      "results_sha256": "fad7670c1a9c2068d4af0dca3206d929eba7da19b976adb6cf2824cc112e16d8"
+    },
+    "strengthened_entry_boundary": {
+      "suite": {
+        "programs": 1,
+        "passed": 1,
+        "results_sha256": "b290e8cfa03ad5a470e59ee23769c1bdcc25b4380ed46034be118c4bef9743fc"
+      },
+      "verified_plans": 72,
+      "note": "Test-only strengthening after standard run requires funded_seed_entries on every full-plan fixture; production source unchanged."
+    },
+    "curated": {
+      "cases": 239,
+      "permutations": 3,
+      "work_per_account": 20000000,
+      "milliseconds": 0,
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "4e0f3bee02b3507aadca0ecb3dc72add73992ad94196af40de5373abc73a1994"
+    },
+    "expanded": {
+      "cases": 800,
+      "permutations": 3,
+      "work_per_account": 20000000,
+      "milliseconds": 0,
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "02ae7676747a4e7b1eb315369077a239a1889d5453d5f3414b13d047127d6ab7"
+    },
+    "random_captures": {
+      "requests": 80,
+      "verified": 80,
+      "work_per_account": 20000000,
+      "seed": 73,
+      "modes": [
+        "manual",
+        "manual-first",
+        "extra-first",
+        "random"
+      ],
+      "input_sha256": "db20be2ff66d97760f930509075f989e6a57f29af3fbe71dfb27696401a13db8",
+      "results_sha256": "a70a6c0be2eb2d8afaf39ab75c60b9b4d8e78fda2d92c930974df60adce4238c"
+    },
+    "named_serial": [
+      {
+        "name": "emitter-residual-progress",
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "requests": 9,
+        "verified": 9,
+        "effective_work_limit": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "d4e7b61369ba6e57957b43eaaa4d6ba62dd4fe7746d1a01656158c7aa83b5ddd",
+        "search_work": [
+          124482,
+          155353,
+          156160,
+          458784,
+          8025851,
+          8840168,
+          112502,
+          9758992,
+          9588723
+        ],
+        "compilation_work": [
+          60088,
+          5632,
+          0,
+          161385,
+          465649,
+          393643,
+          14708,
+          948718,
+          851282
+        ],
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "requests": 3,
+        "verified": 3,
+        "effective_work_limit": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "8c3ef924697550a5eda77a4f20d20086968b5ce5e15de1701b99f30afe6fd24c",
+        "search_work": [
+          145593,
+          2440680,
+          9205647
+        ],
+        "compilation_work": [
+          63808,
+          766212,
+          1011252
+        ],
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "requests": 3,
+        "verified": 3,
+        "effective_work_limit": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "799550f0d8f4880a681618269e6dedf0600155ac78361ff279dfada4760e8ec6",
+        "search_work": [
+          9702759,
+          15095223,
+          10732798
+        ],
+        "compilation_work": [
+          1042750,
+          1616917,
+          882994
+        ],
+        "peak_reserved_bytes": 70584863
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "requests": 4,
+        "verified": 4,
+        "effective_work_limit": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "bc55761a433a960f8b92870a42f4a64d696f2af32a39d048b8f56a6bb11c1cff",
+        "search_work": [
+          20701638,
+          24859116,
+          14395420,
+          33217936
+        ],
+        "compilation_work": [
+          2888015,
+          2990099,
+          1541173,
+          4156054
+        ],
+        "peak_reserved_bytes": 72825838
+      }
+    ],
+    "named_four_base": [
+      {
+        "name": "emitter-residual-progress",
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "requests": 9,
+        "verified": 9,
+        "effective_work_limit": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "9336031fb2dfd3e86c389c953fe4b77d2d47e03f6e50274f1091a905baef4309",
+        "search_work": [
+          124482,
+          155353,
+          156160,
+          458784,
+          8025874,
+          8840162,
+          112502,
+          9759077,
+          9588742
+        ],
+        "compilation_work": [
+          59118,
+          5632,
+          0,
+          161581,
+          465649,
+          393643,
+          14708,
+          948718,
+          851282
+        ],
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "requests": 3,
+        "verified": 3,
+        "effective_work_limit": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "e73c5d03dba52eec0ae07ff4edcdaf4754d1ee1007bff700b8753c1338f84032",
+        "search_work": [
+          145593,
+          2440692,
+          9205635
+        ],
+        "compilation_work": [
+          62807,
+          766258,
+          1011827
+        ],
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "requests": 3,
+        "verified": 3,
+        "effective_work_limit": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "8c0fe7df7508c83c8b1199ade4023c6310b528a162f0606aa992cb3638ceb4a3",
+        "search_work": [
+          9702764,
+          15046217,
+          10732795
+        ],
+        "compilation_work": [
+          1043325,
+          1617499,
+          882994
+        ],
+        "peak_reserved_bytes": 70237289
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "requests": 4,
+        "verified": 4,
+        "effective_work_limit": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "b40308754db28ec6f3f94ba62bc17719a8a06418d1649ef14c8980b53b8d279e",
+        "search_work": [
+          20765373,
+          24811230,
+          14339522,
+          33170868
+        ],
+        "compilation_work": [
+          2998452,
+          3164823,
+          1541680,
+          4336531
+        ],
+        "peak_reserved_bytes": 72825838
+      }
+    ],
+    "named_four_expanded": [
+      {
+        "name": "emitter-residual-progress",
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "requests": 9,
+        "verified": 9,
+        "effective_work_limit": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "4b31e3e58fe861369a24fecc1e4c081c3ae48486d3825975bed007c4641589ab",
+        "search_work": [
+          124482,
+          155353,
+          156160,
+          458784,
+          8025856,
+          8840167,
+          112502,
+          9758976,
+          9588704
+        ],
+        "compilation_work": [
+          59118,
+          5632,
+          0,
+          161581,
+          465649,
+          393643,
+          14708,
+          948718,
+          851282
+        ],
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "requests": 3,
+        "verified": 3,
+        "effective_work_limit": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "17c8e0e4af6030cbb64a61d4546fb1bedcb17f59473cfead2b9d62dd57204425",
+        "search_work": [
+          145593,
+          2440680,
+          9205638
+        ],
+        "compilation_work": [
+          62807,
+          766258,
+          1011827
+        ],
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "requests": 3,
+        "verified": 3,
+        "effective_work_limit": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "84e52902c52571d2f6cc9ccacbd357439834d456bcab9a7d5256f3cb048d337f",
+        "search_work": [
+          9702763,
+          15095210,
+          10732795
+        ],
+        "compilation_work": [
+          1043325,
+          1618627,
+          882994
+        ],
+        "peak_reserved_bytes": 70584863
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "requests": 4,
+        "verified": 4,
+        "effective_work_limit": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "f687b42f9d500faaf02f75779411429037b5bdf315b4b9b02fba6a56d1f80137",
+        "search_work": [
+          20765356,
+          24811244,
+          14339535,
+          33170823
+        ],
+        "compilation_work": [
+          2998452,
+          3164823,
+          1541680,
+          4336531
+        ],
+        "peak_reserved_bytes": 72825838
+      }
+    ],
+    "assemble": {
+      "command": "gradlew.bat --offline assemble --console=plain",
+      "passed": true,
+      "source_java_byte_matches": 198,
+      "source_jar_sha256": "30b98c8f4d92c0e81cf89a9c6b1abecd091658b3e1a7dc9ed2573198c44202ba",
+      "jar_sha256": "bd351a4da0ac51b902351073d8048df6d2b459cf1597fbdaa49fe6e13c61c75e"
+    }
+  },
+  "measurement_limits": [
+    "No wall-time speedup inferred from runs overlapping other regression processes.",
+    "Reservation peaks are request accounting, not JVM heap/RSS or host-wide retained snapshots.",
+    "Expanded four-worker budgets are 2x and never compared as equal-resource speedups."
+  ],
+  "remaining": [
+    "20 original-order count-model limits are carried forward from source-refinement-20261009.json; the full 822 count comparison was not rerun for this source-view change.",
+    "Full closure/support/numeric admission remains bounded; positive repairs do not prove catalog infeasibility.",
+    "Audit J full candidate/phase attribution and audit H host-wide heap/residency remain incomplete.",
+    "No new AE/GTL live integration run in this stage."
+  ]
+}
