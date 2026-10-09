@@ -943,6 +943,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             }
             linearConstraints.addAll(tightened);
             reduction = new CountReduction(linearConstraints, lower, upper, budget, auxiliaryMode == 3);
+            if (current.isEmpty()) reduction.strengthenCapacities();
             if (proofTask) reduction.retainStrideView();
             if (current.isEmpty() && auxiliaryMode == 0) {
                 modelViews = CountModelViews.create(linearConstraints, lower, upper, budget);

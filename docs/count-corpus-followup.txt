@@ -1,0 +1,111 @@
+Count corpus follow-up: 2026-10-09
+================================
+
+The migration's known-limits.json records e788d3d3, not the current solver.
+Its 87 unresolved count models were tested through one CountLcg local allowance,
+not through the whole integer-count portfolio. That allowance can end well before
+the request's 20M work cap. Replaying the same entry at 9585a142 gives 194
+conclusions and 80 unresolved cases out of 274, with no oracle disagreement.
+Seven of the old unresolved cases already conclude before this change.
+
+The historical entry remains the default. Explicit additional entries now compare
+retained LCG, retained equivalent views, and the main integer-count stage. The last
+entry embeds each finite model in recipes, invokes IntegerCountSearch, and checks
+every positive result against the original bounds, rows and primitive plan prefix.
+It is not the complete GraphPlanner, tree fallback, or runtime executor.
+
+All comparisons below use 20,000,000 request work, no wall deadline, 256 MiB of
+request reservations and one worker. No budget limit or multiplier was increased.
+
+                         9585a142       This change
+  Main count conclusions      229               236
+  Main count unresolved        39                32
+  Conversion unsupported        6                 6
+  Wrong conclusions             0                 0
+  Lost conclusions              -                 0
+
+All six unsupported conversions have an unbounded variable. This finite recipe
+embedding cannot represent them. They are neither solver failures nor UNSAT;
+the raw LCG/view entries remain available. Of the 236 candidate conclusions, 220
+are original-row-checked SAT witnesses and 16 agree with known UNSAT oracles.
+
+What changed
+------------
+An exact-one group can choose one resource, with unit resource capacity expressed
+only as pairwise conflicts. The earlier Hall relaxation greedily consumed these
+pairs as separate resources, missing the complete conflict group and its capacity.
+It could fail to prove even k groups competing for k-1 resources at the full cap.
+
+CountHall now finds disjoint complete components of those pairwise conflicts.
+Every endpoint must have the actual integer domain [0,1] and belong to different
+exact-one groups. Every pair must exist. An independently checked CountProof.Clique
+derives sum(x) <= 1; the ordinary Hall matching and row-sum proof then use it.
+An incomplete component remains a relaxation; it never becomes a capacity merely
+because it is connected. The serialized proof includes the pair and domain premises.
+
+The ordinary root CountReduction requests this bounded capacity strengthening
+before branching. It does not enable Hermite or repeat Hall at every child.
+The existing 32,768 Hall allowance and admission bounds stay unchanged. Optional
+adjacency and proof workspaces are reserved and released; stored cuts account for
+their terms. Cut construction and independent verification are charged to the
+request, with work left for the original matching certificate.
+
+The k=4..13 clique-coloring family now all concludes UNSAT. Seven cases previously
+ran out of 20M work; those now take 53,523..269,677 aggregate charged work. The
+236 conclusions include those seven, with no conclusion regression in the corpus.
+Raw work comparisons are not a wall-time speedup measurement: the runs overlapped
+other regression processes and do not measure steady-state CPU or process RSS.
+
+Regression evidence and reproduction
+------------------------------------
+HallCapacityTest checks 30 deficits, 30 feasible single-missing-edge neighbors and
+240 independently enumerated finite models (122,880 assignments). It also verifies
+all returned cuts from established original premises, serializes/reloads proof
+archives, and interrupts adjacency/certificate work with cancellation or a shared
+request cutoff. Partial work releases all reservations.
+
+CapacityPipelineReview passes 30 main-count deficits and nine feasible neighbors
+with row order, column order, term insertion order and signed domain offsets varied.
+The finite embedding is tested to decline an unbounded domain explicitly.
+
+At this boundary, all 49 standard programs passed. The 239 curated fixtures and
+800 expanded weighted-choice fixtures each passed three catalog orders (3,117
+original-arc validations). Full captured inventory with 5,903 manual and 62,284
+exported recipes passed 96 requests. The four-worker campaigns passed nine base-
+budget and nine expanded-budget requests. Offline assemble passed and its source
+JAR was compared byte-for-byte to the tested production tree. Captured replay is
+offline evidence, not a live-server test.
+
+  python tests/run.py --java-home JDK17 --suite standard
+  python tests/run.py --java-home JDK17 --suite models --model-engine main-counts
+    --case clique-coloring --milliseconds 0 --work 20000000
+  python tests/run.py --java-home JDK17 --suite models --model-engine main-counts
+    --milliseconds 0 --work 20000000 --keep-going --model-trace
+
+The full count command still exits 2: unresolved and unsupported cases remain.
+Use --model-engine lcg-first, lcg-retained, or views to preserve the distinction
+between the historical initial slice and later continuation. Exact model IDs,
+expected truths, source/harness fingerprints and residual classifications live in
+tests/provenance/count-replay-20261009.json; inputs remain in the existing corpus.
+
+Still unresolved
+----------------
+The 32 main-count cases comprise 18 known SAT, two known UNSAT and 12 models whose
+truth was not independently established in their source record. Most belong to
+sparse/wide equalities, subset sums and the lseu bound family. UNKNOWN never changes
+their expected truth or becomes an infeasibility proof.
+
+Retaining LCG to the same full cap resolves nine of its 80 initial-slice failures;
+71 remain unresolved. This measures only that selected group, not a retained replay
+of every model already solved by the historical entry.
+
+Two residuals expose a useful next comparison: original-coordinate views prove
+stein27_inf in 13,116,328 work, and original LCG solves wide-equality-n64-w10000 in
+6,505,335 (views: 8,168,409), while the embedded main-count portfolio reaches 20M
+without a conclusion. These are equivalent feasibility problems, but embedding,
+normalization, ordering and budget distribution differ. The observations alone do
+not isolate scheduling as the cause or justify forcing a single arm for all models.
+
+Historical probe assertions were not all rerun here. This count-stage evidence
+also does not close the large-closure, numeric-continuation, attribution or live
+integration gaps listed in audit-followup.txt.

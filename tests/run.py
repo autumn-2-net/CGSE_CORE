@@ -24,6 +24,9 @@ def main():
     parser.add_argument('--permutations', type=int, default=3)
     parser.add_argument('--milliseconds', type=int, default=3000)
     parser.add_argument('--work', type=int, default=20_000_000)
+    parser.add_argument('--model-engine', choices=['lcg-first', 'lcg-retained', 'views', 'main-counts'], default='lcg-first',
+                        help='Count models only: original first LCG slice, retained LCG, views, or main integer-count stage')
+    parser.add_argument('--model-trace', action='store_true', help='Include count-model diagnostics, also on budget exits')
     parser.add_argument('--timeout', type=int, default=180, help='Process wall limit in seconds')
     parser.add_argument('--output', type=Path, default=ROOT / 'build/tests')
     parser.add_argument('--shard', default='0/1', help='Deterministic zero-based shard, e.g. 0/4')
@@ -63,7 +66,9 @@ def main():
         subprocess.run([java('javac'), '-J-Duser.language=en', '-J-Dfile.encoding=UTF-8', '--release', '17', '-encoding', 'UTF-8', '-d', str(classes), '@' + str(source_list)], check=True)
     results = []
     def save():
-        (output / 'results.json').write_text(json.dumps({'suite': args.suite, 'results': results}, indent=2), encoding='utf-8')
+        (output / 'results.json').write_text(json.dumps({'suite': args.suite, 'model_engine': args.model_engine,
+                                                       'work': args.work, 'milliseconds': args.milliseconds,
+                                                       'results': results}, indent=2), encoding='utf-8')
     def run(name, main_class, arguments=(), extra_classpath=''):
         log_path = output / (re.sub(r'[^a-zA-Z0-9_.-]', '_', name) + '.log')
         started = time.monotonic()

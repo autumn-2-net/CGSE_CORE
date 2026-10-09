@@ -13,7 +13,11 @@ public final class CountModelRegression {
     }
 
     public static void main(String[] args) throws Exception {
-        int solved = 0, unresolved = 0, failed = 0;
+        String engine = args.length > 3 ? args[3] : "lcg-first";
+        if (!Set.of("lcg-first", "lcg-retained", "views", "main-counts").contains(engine))
+            throw new IllegalArgumentException("Unknown model engine: " + engine);
+        System.out.println("ENGINE " + engine + " milliseconds=" + args[1] + " work=" + args[2] + " memory_bytes=" + (256L << 20));
+        int solved = 0, unresolved = 0, unsupported = 0, failed = 0;
         try (var input = new DataInputStream(new BufferedInputStream(Files.newInputStream(Path.of(args[0]))))) {
             for (int left = input.readInt(); left > 0; left--) {
                 String id = GraphFixtureRegression.string(input), expected = GraphFixtureRegression.string(input);
@@ -29,13 +33,9 @@ public final class CountModelRegression {
                 }
                 var budget = new PlanningBudget(Long.parseLong(args[1]), Long.parseLong(args[2]), 256L << 20, () -> false, System::nanoTime);
                 try {
-                    BigInteger[] witness;
-                    boolean infeasible;
-                    try (var search = new CountLcg(rows, lower, upper, budget, Long.parseLong(args[2]))) {
-                        while (!search.step()) {}
-                        witness = search.counts();
-                        infeasible = search.infeasible();
-                    }
+                    var result = CountModelReplay.solve(engine, rows, lower, upper, budget, Long.parseLong(args[2]));
+                    BigInteger[] witness = result.counts();
+                    boolean infeasible = result.infeasible();
                     if (budget.reservedBytes() != 0) throw new AssertionError("Unreleased solver memory: " + budget.reservedBytes());
                     if (witness != null) {
                         for (int i = 0; i < size; i++)
@@ -52,15 +52,20 @@ public final class CountModelRegression {
                     if (witness == null && !infeasible) { unresolved++; System.out.println(id + "\tUNRESOLVED\twork=" + budget.nodes()); }
                     else { solved++; System.out.println(id + "\tPASS\t" + (witness != null ? "SAT" : "UNSAT") + "\twork=" + budget.nodes()); }
                 } catch (PlanningBudget.Exhausted limit) {
-                    unresolved++; System.out.println(id + "\tUNRESOLVED\t" + limit);
+                    unresolved++; System.out.println(id + "\tUNRESOLVED\twork=" + budget.nodes() + "\t" + limit);
+                } catch (CountModelReplay.Unsupported limitation) {
+                    unsupported++; System.out.println(id + "\tUNSUPPORTED\t" + limitation.getMessage());
                 } catch (Throwable failure) {
                     failed++; System.out.println(id + "\tFAIL\t" + failure); failure.printStackTrace(System.err);
+                } finally {
+                    if (args.length > 4 && Boolean.parseBoolean(args[4])) System.out.println("DIAGNOSTICS " + id + " " + budget.diagnostics());
+                    if (budget.reservedBytes() != 0) throw new AssertionError("Unreleased solver memory after exit: " + budget.reservedBytes());
                 }
             }
             if (input.read() != -1) throw new AssertionError("Trailing count-model bytes");
         }
-        System.out.println("SUMMARY solved=" + solved + " unresolved=" + unresolved + " failed=" + failed);
+        System.out.println("SUMMARY solved=" + solved + " unresolved=" + unresolved + " unsupported=" + unsupported + " failed=" + failed);
         if (failed != 0) System.exit(1);
-        if (unresolved != 0) System.exit(2);
+        if (unresolved != 0 || unsupported != 0) System.exit(2);
     }
 }

@@ -16,11 +16,11 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Suite | Command / location | Coverage |
 | --- | --- | --- |
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
-| Stable oracles | `--suite oracles` | 21 independent exhaustive/integer/BFS/seed/proof oracle programs |
+| Stable oracles | `--suite oracles` | 22 independent exhaustive/integer/BFS/seed/proof oracle programs |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
 | Fixed counterexamples | `--suite fixtures --keep-going` | All 239 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
-| Count models | `--suite models --keep-going` | 274 exact integer models, independent bounds/constraint witness verification |
+| Count models | `--suite models --keep-going` | 274 exact integer models; historical first LCG allowance by default, explicit retained/view/main-count entries |
 | Planner/runtime benchmark | `--suite benchmarks --timeout 600` | Original `GraphBenchmark`: chain, shared diamond, coproducts, growth/cycles and runtime batch dispatch |
 | Portable probes | `--suite probes --keep-going` | Self-contained historical programs with compatible current APIs; test-only external dependencies require `--classpath` |
 | Complete captured datasets | `python tests/datasets/run.py --java-home <jdk17>` | Full AE inventory/manual patterns, original JEI exports, complete converted catalogs, and recorded request scenarios |
@@ -262,6 +262,33 @@ The count corpus produced 187 independently verified conclusions and 87 unresolv
 budget limits. The fixed fixtures produced 657 verified results and 36 unresolved
 results across 693 deterministic executions. These limits are recorded in
 `known-limits.json`; their oracle truth has not been changed.
+
+The 2026-10-09 replay distinguishes the default `lcg-first` entry (one local
+allowance) from `lcg-retained`, `views`, and `main-counts`. Select an entry with
+`--model-engine`; add `--model-trace` for bounded diagnostics, including on cutoffs.
+The new default entry preserves the previous behavior. With 20M work and no wall
+deadline, the pre-change first-slice replay concludes 194 of 274; 80 are unresolved.
+Retained LCG resolves nine of those 80 at the same request cap.
+
+`main-counts` embeds finite original models as recipes and invokes
+`IntegerCountSearch`. It is the main count stage, not the complete graph planner.
+It checks original bounds/rows and independently replays primitive plan prefixes.
+The capacity follow-up improves its corpus result from 229 to 236 conclusions,
+leaving 32 unresolved and six unsupported finite conversions. Unsupported input
+also exits 2; no model's truth is changed. Detailed scope, equal-budget results and
+remaining IDs are in `../docs/count-corpus-followup.txt` and
+`provenance/count-replay-20261009.json`.
+
+```text
+python tests/run.py --java-home <jdk17> --suite models --model-engine main-counts --case clique-coloring --milliseconds 0 --work 20000000
+python tests/run.py --java-home <jdk17> --suite models --model-engine main-counts --milliseconds 0 --work 20000000 --keep-going
+```
+
+`HallCapacityTest` covers complete pairwise capacities, missing-edge feasible
+neighbors, exhaustive finite assignments, independent proof chains/serialization,
+and interruption inside nested workspace reservations. `CapacityPipelineReview`
+exercises the same models through the count-stage corpus entry with row/column
+permutations and signed domain shifts.
 
 Historical programs are compiled in separate directories because several campaigns
 used different implementations with the same Java class name. `probes/manifest.json`

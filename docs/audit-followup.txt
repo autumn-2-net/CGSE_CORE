@@ -147,8 +147,11 @@ Remaining gaps, rather than completed checkboxes
    adapter/server run, not a live run of this change. Source/model oracles and
    captured-network replay do not establish AE dispatch/save/reload behavior.
    known-limits.json is explicitly an e788d3d3 observation; its old unresolved
-   model/probe entries require fresh replay before calling them current failures.
-   Passing graph fixtures does not certify every historical integer model.
+   entries must not all be called current failures. The 2026-10-09 count-model
+   replay and capacity fix are in count-corpus-followup.txt. That follow-up still
+   leaves 32 main-count limits and six unbounded test-conversion exclusions.
+   Historical probe assertions have not all been freshly replayed. Passing graph
+   fixtures does not certify every historical integer model.
 
 The next algorithm change should target a retained, reproducible failure in
 items 1 or 2 and compare original-coordinate plans under equal resource caps.

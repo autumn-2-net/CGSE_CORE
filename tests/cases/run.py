@@ -65,7 +65,9 @@ def run(args,output,execute):
                 entry='CorpusRegression'
             else:
                 write_models(path,cases);entry='CountModelRegression'
-            execute(kind+'-'+str(offset),'org.cgse.core.'+entry,[path,args.milliseconds,args.work])
+            arguments=[path,args.milliseconds,args.work]
+            if kind=='count-model':arguments.extend([args.model_engine,str(args.model_trace).lower()])
+            execute(kind+'-'+str(offset),'org.cgse.core.'+entry,arguments)
 
 
 if __name__=='__main__':
