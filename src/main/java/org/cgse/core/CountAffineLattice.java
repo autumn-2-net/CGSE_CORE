@@ -12,6 +12,9 @@ import java.util.*;
  */
 final class CountAffineLattice implements AutoCloseable {
 
+    private static final ExactRational HALF = new ExactRational(BigInteger.ONE, BigInteger.TWO);
+    private static final ExactRational LOVASZ = new ExactRational(BigInteger.valueOf(3), BigInteger.valueOf(4));
+
     private final List<ExactLinearProgram.Constraint> rows;
     private final BigInteger[] lower, upper;
     private final PlanningBudget budget;
@@ -218,6 +221,10 @@ final class CountAffineLattice implements AutoCloseable {
             var b = values[j];
             var bezout = bezout(a, b);
             var g = bezout[0];
+            // These exact quotients are shared by every coordinate of the
+            // same unimodular column transformation.
+            var reducedA = a.divide(g);
+            var reducedB = b.divide(g);
             var u = basis.get(0);
             var v = basis.get(j);
             var left = new BigInteger[point.length];
@@ -225,7 +232,7 @@ final class CountAffineLattice implements AutoCloseable {
             for (int i = 0; i < point.length; i++) {
                 charge();
                 left[i] = bounded(u[i].multiply(bezout[1]).add(v[i].multiply(bezout[2])));
-                right[i] = bounded(v[i].multiply(a.divide(g)).subtract(u[i].multiply(b.divide(g))));
+                right[i] = bounded(v[i].multiply(reducedA).subtract(u[i].multiply(reducedB)));
                 expanded |= right[i].bitLength() > 128;
             }
             basis.set(0, left);
@@ -287,14 +294,17 @@ final class CountAffineLattice implements AutoCloseable {
         orthogonal = new ExactRational[d][n];
         mu = new ExactRational[d][d];
         norms = new ExactRational[d];
+        // One row of immutable integer wrappers fits in the reserved lattice
+        // workspace. Orthogonalization changes the destination, not this row.
+        var original = new ExactRational[n];
         for (int i = 0; i < d; i++) {
             Arrays.fill(mu[i], ExactRational.ZERO);
-            for (int k = 0; k < n; k++) orthogonal[i][k] = ExactRational.of(basis.get(i)[k]);
+            for (int k = 0; k < n; k++) original[k] = orthogonal[i][k] = ExactRational.of(basis.get(i)[k]);
             for (int j = 0; j < i; j++) {
                 ExactRational value = ExactRational.ZERO;
                 for (int k = 0; k < n; k++) {
                     charge();
-                    value = value.add(ExactRational.of(basis.get(i)[k]).multiply(orthogonal[j][k]));
+                    value = value.add(original[k].multiply(orthogonal[j][k]));
                 }
                 mu[i][j] = value.divide(norms[j]);
                 for (int k = 0; k < n; k++) {
@@ -322,15 +332,17 @@ final class CountAffineLattice implements AutoCloseable {
                 charge();
                 basis.get(k)[i] = bounded(basis.get(k)[i].subtract(q.multiply(basis.get(j)[i])));
             }
+            ExactRational multiple = null;
             for (int i = 0; i < j; i++) {
                 charge();
-                mu[k][i] = mu[k][i].subtract(ExactRational.of(q).multiply(mu[j][i]));
+                if (multiple == null) multiple = ExactRational.of(q);
+                mu[k][i] = mu[k][i].subtract(multiple.multiply(mu[j][i]));
             }
-            mu[k][j] = mu[k][j].subtract(ExactRational.of(q));
+            mu[k][j] = mu[k][j].subtract(multiple == null ? ExactRational.of(q) : multiple);
         }
         ExactRational m = mu[k][k - 1];
         ExactRational square = m.multiply(m);
-        if (norms[k].compareTo(new ExactRational(BigInteger.valueOf(3), BigInteger.valueOf(4)).subtract(square).multiply(norms[k - 1])) >= 0) {
+        if (norms[k].compareTo(LOVASZ.subtract(square).multiply(norms[k - 1])) >= 0) {
             pivot++;
             return;
         }
@@ -395,9 +407,11 @@ final class CountAffineLattice implements AutoCloseable {
                 var change = basis.get(j)[i].multiply(q);
                 candidate[i] = bounded(candidate[i].add(change));
             }
+            ExactRational multiple = null;
             for (int i = 0; i < j; i++) {
                 charge();
-                projection[i] = projection[i].subtract(ExactRational.of(q).multiply(mu[j][i]).multiply(norms[i]));
+                if (multiple == null) multiple = ExactRational.of(q);
+                projection[i] = projection[i].subtract(multiple.multiply(mu[j][i]).multiply(norms[i]));
             }
         }
         return candidate;
@@ -454,7 +468,7 @@ final class CountAffineLattice implements AutoCloseable {
     }
 
     private static BigInteger nearestInteger(ExactRational value) {
-        return value.add(new ExactRational(BigInteger.ONE, BigInteger.TWO)).floor();
+        return value.add(HALF).floor();
     }
 
     private static BigInteger bounded(BigInteger value) {

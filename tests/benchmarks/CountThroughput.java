@@ -52,6 +52,12 @@ public final class CountThroughput {
                 point = search.point();
                 result = search.result().name();
             }
+        } else if (engine.startsWith("lattice")) {
+            try (var search = new CountAffineLattice(model.rows, model.low, model.high, budget)) {
+                while (!search.step()) {}
+                counts = search.counts();
+                result = counts != null ? "WITNESS" : "UNKNOWN";
+            }
         } else {
             try (var search = new CountLcg(model.rows, model.low, model.high, budget, 200_000)) {
                 while (!search.step()) {}
@@ -92,14 +98,14 @@ public final class CountThroughput {
 
     private static Model model(String engine, int seed) {
         boolean binary = engine.equals("lcg-binary"), lp = engine.startsWith("lp-");
-        int n = binary ? 64 : lp ? 12 : 8;
+        int n = binary ? 64 : lp || engine.equals("lattice-offset") ? 12 : engine.equals("lattice-dense") ? 16 : 8;
         var low = new BigInteger[n];
         var high = new BigInteger[n];
         var witness = new BigInteger[n];
         var objective = new BigInteger[n];
         var rows = new ArrayList<ExactLinearProgram.Constraint>();
         Random random = new Random(31997 + seed);
-        BigInteger offset = engine.equals("lcg-offset") ? BigInteger.ONE.shiftLeft(80).negate() : BigInteger.ZERO;
+        BigInteger offset = engine.endsWith("-offset") ? BigInteger.ONE.shiftLeft(80).negate() : BigInteger.ZERO;
         int width = binary ? 1 : lp ? 31 : 15;
         for (int i = 0; i < n; i++) {
             low[i] = offset;
@@ -124,7 +130,7 @@ public final class CountThroughput {
                 rows.add(new ExactLinearProgram.Constraint(terms, BigInteger.valueOf(positives - 1)));
             }
         } else {
-            for (int r = 0; r < (lp ? 18 : 3); r++) {
+            for (int r = 0; r < (lp ? 18 : engine.equals("lattice-dense") ? 4 : 3); r++) {
                 var terms = new LinkedHashMap<Integer, BigInteger>();
                 var reverse = new LinkedHashMap<Integer, BigInteger>();
                 BigInteger rhs = BigInteger.ZERO;

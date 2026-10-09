@@ -24,7 +24,7 @@ def main():
     parser.add_argument('--warmup', type=int, default=3)
     parser.add_argument('--samples', type=int, default=5)
     parser.add_argument('--cases', type=int, default=12)
-    parser.add_argument('--engines', default='lcg-binary,lcg-finite,lcg-offset,lp-unit,lp-dense')
+    parser.add_argument('--engines', default='lcg-binary,lcg-finite,lcg-offset,lp-unit,lp-dense,lattice,lattice-dense,lattice-offset')
     args = parser.parse_args()
     if min(args.forks, args.warmup, args.samples, args.cases) <= 0:
         parser.error('Require positive forks, warmup, samples and cases')

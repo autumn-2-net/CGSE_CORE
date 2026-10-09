@@ -53,6 +53,7 @@ these arithmetic changes; every script records source/harness identities.
 
   python tests/benchmarks/compare_throughput.py --java-home JDK17
     --baseline cae59245 --forks 3 --warmup 5 --samples 5 --cases 16
+    --engines lcg-binary,lcg-finite,lcg-offset,lp-unit,lp-dense
     --output build/throughput-comparison
 
 Five deterministic groups cover Boolean, finite-integer and >64-bit shifted LCG
@@ -104,3 +105,92 @@ cold/warm/replaced states, with two warmups and three measured repetitions in
 each of two JVMs per revision. Both revisions validated all 90 measured requests
 with identical compilation/search and first-witness work. The median total time
 per 15-request campaign was 9.365 s before and 8.803 s after (ratio 0.940).
+
+Dense pivot and affine lattice reuse
+-----------------------------------
+The next comparison uses 390630fd as its baseline. Dense simplex updates contain
+many expressions a*b/c with a varying across columns but b and c fixed for the
+row. ProductQuotient prepares b/c once, retaining it across 256-cell handoffs.
+The optional fraction has a 768-byte workspace reservation; declining it uses
+the old arithmetic and does not reject an otherwise admissible tableau. The
+factor is local to this tableau and is released on close, termination or basis
+transfer. No cached factor travels to another model or a warm child tableau.
+
+Changing arithmetic order must preserve the precision contract. A conservative
+bit-length guard proves that the OLD intermediate a*b fits before using the
+prepared factor. Otherwise the original multiply-then-divide order runs. If
+b/c itself is too wide, preparation is discarded: it must not reject a valid
+a*b/c whose multiplication cancels the large denominator. Work charges still
+use the original operands, so this reuse does not buy a larger search allowance.
+
+Affine lattice elimination computes the exact quotients a/gcd(a,b) and
+b/gcd(a,b) once per column transformation. Gram-Schmidt reuses one immutable
+source row instead of reconstructing the same integer fractions at every
+projection. LLL and nearest-plane updates also reuse their fixed integer
+multiplier. These are local arithmetic substitutions with unchanged equations,
+rounding, search order, precision limits and work charges. The single temporary
+row fits in the already reserved bounded lattice workspace.
+
+ExactPivotTest independently enumerates vertices of 160 bounded planar LPs and
+checks their primal, dual and negative certificates with full-product fractions.
+It also exercises handoffs within 257-variable pivot rows, repeated hot children,
+scratch admission/refusal, cancellation and the 1023/1024-bit precision boundary.
+ExactRationalRegressionTest adds 1,203 prepared-factor contexts checked against
+an independent multiply-then-divide oracle, including signed 2048-bit edges and
+the two different intermediate-overflow cases. CountKernelTest independently
+checks 480 signed/large-offset finite boxes and conditional proof conclusions.
+
+The throughput harness now also includes 8- and 16-variable lattice models and
+12-variable models with an 80-bit domain offset. Complete returned witnesses
+are independently checked against the original domains and all rows. A bounded
+lattice miss remains UNKNOWN; the strategy cannot prove these planted models
+infeasible. Compare all eight groups with the same frozen harness:
+
+  python tests/benchmarks/compare_throughput.py --java-home JDK17
+    --baseline 390630fd --forks 3 --warmup 5 --samples 5 --cases 16
+    --output build/pivot-throughput
+
+Use the planning command above with --baseline 390630fd for the corresponding
+complete-request comparison, still requiring identical first/final work.
+
+Follow-up local measurements (same JDK and heap)
+-----------------------------------------------
+Three independent forks, five warmup and five measured rounds, 16 cases/group:
+
+  Group             Time ratio    Allocation ratio    Outcome per 16 cases
+  LCG Boolean          1.001              1.000          16 witnesses
+  LCG finite           1.016              1.000           7 witnesses, 9 UNKNOWN
+  LCG shifted          0.996              1.000           4 witnesses, 12 UNKNOWN
+  LP unit              0.708              0.687          16 optimal
+  LP dense             0.623              0.727          16 optimal
+
+The unchanged LCG groups provide controls. The short mixed campaign's lattice
+timings were unstable: the dense group's ratio was 1.565, with candidate fork
+medians ranging from 61.9 to 114.9 ms. Do not use that campaign to claim a lattice
+speedup. A separate, longer warmed comparison checks whether this persists:
+
+  python tests/benchmarks/compare_throughput.py --java-home JDK17
+    --baseline 390630fd --forks 3 --warmup 20 --samples 10 --cases 32
+    --engines lattice,lattice-dense,lattice-offset
+    --output build/pivot-lattice-warmed
+
+  Group             Time ratio    Allocation ratio    Outcome per 32 cases
+  Lattice              0.999              0.927          32 witnesses
+  Lattice dense        0.982              0.945          31 witnesses, 1 UNKNOWN
+  Lattice shifted      0.977              0.935          32 witnesses
+
+These timings support a reduction in allocation, not a substantial lattice
+speedup. The dense candidate fork medians in the longer comparison were
+103.5/106.1/105.0 ms, versus 105.6/106.9/108.5 ms before. Each revision still
+produced the identical complete witnesses, UNKNOWN cases and work per case.
+
+The complete retained-prefix campaign validated 90 measured requests per
+revision with identical first/final compilation and search work. Median time
+per 15-request campaign was 8.285 s before and 8.194 s after (ratio 0.989).
+Treat this as essentially unchanged overall planning time; the clear timing
+gain in this batch is in the dense LP specialist, not a universal planner gain.
+
+Final correctness checks passed 46 standard programs, 3,117 shuffled planning
+cases, 96 captured-inventory/full-catalog requests, and nine four-worker requests
+at each of the base and expanded work budgets. Assembly succeeded, and the
+source JAR was checked byte-for-byte against the frozen tested production tree.

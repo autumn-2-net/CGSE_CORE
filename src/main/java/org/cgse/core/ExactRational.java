@@ -8,6 +8,7 @@ import java.math.BigInteger;
 /** Reduced rationals for bounded analyses; never round a long-sized deficit. */
 final class ExactRational implements Comparable<ExactRational> {
 
+    private static final int MAX_BITS = 2048;
     private final BigInteger numerator, denominator;
 
     static final ExactRational ZERO = new ExactRational(BigInteger.ZERO, BigInteger.ONE);
@@ -32,7 +33,7 @@ final class ExactRational implements Comparable<ExactRational> {
                 denominator = denominator.divide(common);
             }
         }
-        if (numerator.bitLength() > 2048 || denominator.bitLength() > 2048) throw new PrecisionLimit();
+        if (numerator.bitLength() > MAX_BITS || denominator.bitLength() > MAX_BITS) throw new PrecisionLimit();
         this.numerator = numerator;
         this.denominator = denominator;
     }
@@ -107,6 +108,33 @@ final class ExactRational implements Comparable<ExactRational> {
         // GCD of the products repeats the expensive part of every LP pivot.
         return new ExactRational(quotient(numerator, a).multiply(quotient(other.numerator, b)),
                 quotient(denominator, b).multiply(quotient(other.denominator, a)), true);
+    }
+
+    /** Sufficient bound before cancellation; false means use the original operation order. */
+    private boolean productFitsPrecision(ExactRational other) {
+        // The extra sign bits conservatively cover BigInteger's negative powers
+        // of two without allocating absolute-value wrappers in the pivot loop.
+        return numerator.bitLength() + other.numerator.bitLength() + 2 <= MAX_BITS &&
+                denominator.bitLength() + other.denominator.bitLength() <= MAX_BITS;
+    }
+
+    /** Reuse b/c across many a*b/c operations without changing their precision cutoffs. */
+    static final class ProductQuotient {
+        private final ExactRational multiplier, divisor, factor;
+
+        ProductQuotient(ExactRational multiplier, ExactRational divisor) {
+            this.multiplier = multiplier;
+            this.divisor = divisor;
+            ExactRational prepared;
+            try { prepared = multiplier.divide(divisor); }
+            catch (PrecisionLimit optionalFactorTooWide) { prepared = null; }
+            factor = prepared;
+        }
+
+        ExactRational apply(ExactRational value) {
+            return factor != null && value.productFitsPrecision(multiplier) ?
+                    value.multiply(factor) : value.multiply(multiplier).divide(divisor);
+        }
     }
 
     ExactRational divide(ExactRational other) {

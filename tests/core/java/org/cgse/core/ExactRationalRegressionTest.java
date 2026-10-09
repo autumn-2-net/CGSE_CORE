@@ -72,7 +72,46 @@ public final class ExactRationalRegressionTest {
         zeroDivision(() -> new ExactRational(BigInteger.ZERO, BigInteger.ZERO));
         zeroDivision(() -> ExactRational.ZERO.divide(ExactRational.ZERO));
         zeroDivision(() -> ExactRational.ONE.divide(ExactRational.ZERO));
+        preparedProducts();
         System.out.println("Exact rationals: " + cases + " independent pairs, signs, cancellation and precision boundaries passed");
+    }
+
+    private static void preparedProducts() {
+        BigInteger power = BigInteger.ONE.shiftLeft(1400);
+        Fraction huge = new Fraction(power, BigInteger.ONE), tiny = new Fraction(BigInteger.ONE, power);
+        // Reassociation must preserve an oversized OLD intermediate product,
+        // while a too-wide optional b/c must not reject a valid a*b/c.
+        products(huge, huge, huge);
+        products(tiny, huge, tiny);
+        Fraction edge = new Fraction(BigInteger.ONE.shiftLeft(2048).negate(), BigInteger.ONE);
+        products(edge, new Fraction(BigInteger.ONE.negate(), BigInteger.ONE), new Fraction(BigInteger.ONE.negate(), BigInteger.ONE));
+        Random random = new Random(792_437);
+        int[] widths = { 1, 31, 63, 127, 511, 1023, 1024, 1400, 2047 };
+        for (int i = 0; i < 1200; i++) {
+            int bits = widths[i % widths.length];
+            Fraction a = new Fraction(signed(random, bits), signed(random, bits).abs().add(BigInteger.ONE));
+            Fraction b = new Fraction(signed(random, bits), i % 3 == 0 ? BigInteger.ONE : signed(random, bits).abs().add(BigInteger.ONE));
+            Fraction c = i % 5 == 0 ? b : new Fraction(signed(random, bits), signed(random, bits).abs().add(BigInteger.ONE));
+            if (c.n.signum() == 0) c = new Fraction(BigInteger.ONE, BigInteger.ONE);
+            products(a, b, c);
+        }
+        System.out.println("Prepared products: 1203 shared-factor contexts, including old-intermediate and optional-factor precision cutoffs passed");
+    }
+
+    private static void products(Fraction first, Fraction b, Fraction c) {
+        var prepared = new ExactRational.ProductQuotient(new ExactRational(b.n, b.d), new ExactRational(c.n, c.d));
+        // Reuse after a failed application as well as after a successful one.
+        for (Fraction a : new Fraction[]{first, new Fraction(BigInteger.ZERO, BigInteger.ONE), new Fraction(BigInteger.ONE, BigInteger.ONE)}) {
+            Fraction product = a.multiply(b), result = product.divide(c);
+            boolean fits = product.fits() && result.fits();
+            try {
+                var actual = prepared.apply(new ExactRational(a.n, a.d));
+                require(fits, "prepared ratio bypassed an original precision cutoff");
+                require(actual.numerator().equals(result.n) && actual.denominator().equals(result.d), "incorrect prepared ratio");
+            } catch (ExactRational.PrecisionLimit limited) {
+                require(!fits, "optional prepared ratio narrowed valid arithmetic");
+            }
+        }
     }
 
     private static BigInteger signed(Random random, int bits) {
