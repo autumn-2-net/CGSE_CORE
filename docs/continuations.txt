@@ -1,0 +1,104 @@
+CGSE continuation audit (2026-10-09)
+==================================
+
+There are two different boundaries. A caller yielding between step() calls
+already retains the object's fields. Exhausting an algorithm's own local quota
+used to finish several of those objects as UNKNOWN, after which their caller
+closed them. Keeping the outer planner alive did not keep these inner searches.
+
+Frontiers retained across local quotas
+-------------------------------------
+The existing LCG, PB/CDCL, JUMP, weighted LP/LCG, cardinality and bin-packing
+frontiers retain their queues, clauses, bases, walk state or branch stacks.
+IntegerCountSearch, CountScale, CountViewSearch, CountSchedule and the stock-view
+portfolio already preserve owned work between scheduler turns.
+
+This change adds opt-in local-quota continuation for:
+
+* CountMeetInMiddle: projected coordinates, prefix enumerators, the left table,
+  right-table cursor and original-row verification cursor.
+* CountSeparator: incremental preparation, completed bucket tables, current
+  tuple and reconstruction state. Its CountInterfaceSearch child also retains
+  interface memo entries and active/paused conditional solvers at a parent cap.
+* CountDecisionDiagram: current and next frontiers, parent/value cursor, prefix
+  witnesses and proof layers. Preparation now occurs in step(), so a short
+  constructor quota cannot destroy the object before retention is selected.
+* CountDomainSearch: the encoded PB frontier or the wide-domain LCG frontier.
+  In particular, the learning-rate root worker no longer closes a paused child.
+* CountBoolean: the unit-weight search's trail, propagation queue, explanations
+  and learned conflicts.
+
+The main branch transfers unfinished specialists to CountViewSearch under the
+same rows, bounds and reduced coordinates. It still visits the next existing
+strategy first. The usual policy later resumes an owned specialist; no second
+table or encoding is constructed. An adopted specialist cannot suppress the
+initial visits of the proving engines. Duplicate ownership is refused. Closing
+or replacing the branch's views closes the transferred objects before their
+coordinate inverse is discarded.
+
+These adopted arms export revalidated positive candidates only. Their local
+infeasibility, trial restriction or interrupted proof is not reinterpreted as a
+global impossibility. Direct exhaustive results still retain the existing
+original-scope proof and verification rules.
+
+Accounting and fairness
+-----------------------
+Continuation does not reset or refund the request's work budget. Local deadlines
+use saturating arithmetic, reject nonpositive quanta and check cancellation and
+an exhausted shared budget before restarting. Work done by interface children
+also belongs to the parent's local allowance. Paused polling does not perform
+new search or allocate another workspace.
+
+Pause only at coherent step boundaries. The hard request budget and cancellation
+remain checked inside arithmetic and enumeration. Memory refusal, precision
+failure, unsupported structure and exhausted finite domains are terminal for
+that attempt; they are different from a resumable time slice.
+
+Decision-diagram growth required an additional guard: its retained node payload
+may use at most one eighth of the bytes available when it is constructed. The
+initial admitted workspace remains separately charged. This optional search
+cannot grow to occupy all remaining request memory. Scheduler progress counts
+completed layers, not raw node creation; exponential frontier growth is cost,
+not evidence that a witness is close. Reservations are logical estimates, not
+measurements of JVM heap or RSS.
+
+Bounded attempts that deliberately remain terminal
+--------------------------------------------------
+Not every local limit is a lost scheduler continuation. CountQuickSolve and its
+component/conditioning/source-face users make bounded attempts before trying
+other representations or restrictions. CountNetwork, CountPartition, CountPacking
+and CountComponents still finish their particular local attempt at their cap.
+CountDiving, CountLatticeRepair, CountFeasibilityPump, CountNeighborhood and the
+soft/core-guided probes retain fields between step() calls, but their configured
+attempt/face/core limits still end that attempt.
+
+CountAffineLattice, CountKernelSearch and CountDiophantine remain bounded numeric
+candidate arms. The conditional wrapper keeps them across its own handoffs, but
+does not extend their numeric hard cap indefinitely. Several arithmetic routines
+can currently stop while changing a factorization or building a projected model;
+catching that stop as a resumable pause would be unsound. A future extension must
+first introduce explicit arithmetic checkpoints, preserve the original scope,
+and justify extra portfolio turns with an equal-budget counterexample. This
+change does not pretend those numeric arms now have general continuation support.
+
+Regression and measurement
+--------------------------
+CountContinuationTest compares 960 engine/order cases with exhaustive finite
+boxes, including signed and >64-bit coordinates. Interrupted and uninterrupted
+searches must agree, and proof journals are replayed independently. Additional
+cases cover five planted Boolean instances beyond the old quota (three orders
+each), the lazy integer wrapper, nested interfaces, ownership/scope rejection,
+cancelled/exhausted/overflowing resumes, memory limits and four-worker budgets
+with and without expansion.
+
+tests/benchmarks/compare_conditional.py --campaign continuations runs the same
+256-case harness against two revisions. It is a specialist-only comparison:
+old one-shot arms leave the remaining request budget unused, whereas retained
+arms receive further small turns within that same request cap. Its witness
+count is not a measurement of whole-planner speed. compare_planning.py separately
+checks complete plans and costs under both search and aggregate work caps, with
+cold/warm/replaced catalogs. Both scripts record source/harness/input identities.
+
+Captured inventory plus full-recipe-library replay and expanded shuffled graph
+fixtures exercise the production entry points. Those are offline replays, not
+live Minecraft or GT-machine validation.

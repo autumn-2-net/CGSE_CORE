@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /** Exact finite-domain matching. Every signature includes every remaining constraint. */
-final class CountMeetInMiddle implements AutoCloseable {
+final class CountMeetInMiddle implements CountContinuation {
 
     private static final int MAX_STATES = 1_048_576;
 
@@ -96,7 +96,7 @@ final class CountMeetInMiddle implements AutoCloseable {
     private BigInteger[] queryLow, queryHigh;
     private int[] pointWidths;
     private int pointStates, pointCursor;
-    private long memory, work;
+    private long memory, work, signatures, probes;
     private int phase, rowIndex, split, leftStates, rightStates, trials, rangeCursor = -1;
     private boolean complete, infeasible, equalities;
 
@@ -201,8 +201,13 @@ final class CountMeetInMiddle implements AutoCloseable {
         else memory = bytes;
     }
 
-    boolean step() {
-        if (complete) return true;
+    public boolean step() {
+        if (complete || paused) return true;
+        budget.checkpoint();
+        if (retaining && work >= allowance) {
+            if (costProbe) return finish(false, "estimated_cost_probe_limit");
+            return paused = true;
+        }
         try {
             charge();
             switch (phase) {
@@ -249,6 +254,7 @@ final class CountMeetInMiddle implements AutoCloseable {
                                 if (!budget.tryReserve(entryBytes)) return finish(false, "memory_limit");
                                 memory += entryBytes;
                                 compactLeft.put(new LongSignature(query.values.clone()), enumeratingLeft.code);
+                                signatures++;
                             }
                         } else {
                             List<BigInteger> signature = List.of(enumeratingLeft.values.clone());
@@ -256,6 +262,7 @@ final class CountMeetInMiddle implements AutoCloseable {
                                 if (!budget.tryReserve(entryBytes)) return finish(false, "memory_limit");
                                 memory += entryBytes;
                                 left.put(signature, enumeratingLeft.code);
+                                signatures++;
                             }
                         }
                         enumeratingLeft.consume();
@@ -310,6 +317,7 @@ final class CountMeetInMiddle implements AutoCloseable {
                     } else {
                         rangeCursor = -1;
                         enumeratingRight.consume();
+                        probes++;
                     }
                 }
                 case 3 -> {
@@ -847,7 +855,7 @@ final class CountMeetInMiddle implements AutoCloseable {
 
     private void charge() {
         budget.check();
-        if (++work > allowance) throw new LocalLimit();
+        if (++work > allowance && !retaining) throw new LocalLimit();
     }
 
     private boolean finish(boolean impossible, String detail) {
@@ -859,7 +867,7 @@ final class CountMeetInMiddle implements AutoCloseable {
         return true;
     }
 
-    BigInteger[] counts() {
+    public BigInteger[] counts() {
         return complete && counts != null ? counts.clone() : null;
     }
 
@@ -881,8 +889,27 @@ final class CountMeetInMiddle implements AutoCloseable {
         return complete && infeasible;
     }
 
+    private boolean retaining, paused;
+
+    CountMeetInMiddle retained() { retaining = true; return this; }
+    public boolean paused() { return paused; }
+    public long work() { return work; }
+    public long progress() {
+        return signatures + probes;
+    }
+    public boolean matches(List<ExactLinearProgram.Constraint> rows, BigInteger[] low, BigInteger[] high) {
+        return original.equals(rows) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
+    }
+    public void resume(long quantum) {
+        if (!paused || complete) throw new IllegalStateException("CountMeetInMiddle is not paused");
+        allowance = CountContinuation.deadline(work, quantum, budget);
+        paused = false;
+    }
+
     @Override
     public void close() {
+        complete = true;
+        paused = false;
         left.clear();
         compactLeft.clear();
         rows.clear();

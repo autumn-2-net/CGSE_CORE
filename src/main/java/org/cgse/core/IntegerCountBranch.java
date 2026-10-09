@@ -701,7 +701,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 state = State.DEAD;
             } else {
                 separatorPartial = partial;
-                separator = new CountSeparator(reduction.rows(), reduction.lower(), reduction.upper(), budget);
+                separator = new CountSeparator(reduction.rows(), reduction.lower(), reduction.upper(), budget).retained();
             }
             return;
         }
@@ -709,7 +709,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             if (!separator.step()) return;
             counts = reduction.expand(separator.counts());
             boolean impossible = separator.infeasible();
-            separator.close();
+            if (viewSearch == null || !viewSearch.retain(reduction, separator)) separator.close();
             separator = null;
             if (counts != null) {
                 separatorCandidate = true;
@@ -758,7 +758,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             if (counts != null) {
                 if (!preprocessingOnly && refineSupport()) state = State.SPLIT;
                 else beginScheduling();
-            } else if (weightedChoices()) matching = new CountMeetInMiddle(reduction.rows(), reduction.lower(), reduction.upper(), budget);
+            } else if (weightedChoices()) matching = new CountMeetInMiddle(reduction.rows(), reduction.lower(), reduction.upper(), budget).retained();
             else beginBoolean();
             return;
         }
@@ -766,7 +766,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             if (!matching.step()) return;
             counts = reduction.expand(matching.counts());
             boolean impossible = matching.infeasible();
-            matching.close();
+            if (viewSearch == null || !viewSearch.retain(reduction, matching)) matching.close();
             matching = null;
             boolean scout = matchingScout;
             matchingScout = false;
@@ -788,7 +788,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             counts = reduction.expand(binary.counts());
             boolean impossible = binary.infeasible();
             importReducedConflicts(binary.learnedConflicts());
-            binary.close();
+            if (viewSearch == null || !viewSearch.retain(reduction, binary)) binary.close();
             binary = null;
             if (counts != null) {
                 if (!preprocessingOnly && refineSupport()) state = State.SPLIT;
@@ -801,7 +801,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 if (viewSearch != null && viewSearch.retained()) {
                     viewSearch.resume(1_048_576);
                     viewStage = 3;
-                } else cdcl = new CountDomainSearch(reduction.rows(), reduction.lower(), reduction.upper(), budget, 1_048_576);
+                } else cdcl = new CountDomainSearch(reduction.rows(), reduction.lower(), reduction.upper(), budget, 1_048_576).retained();
             } else afterBoolean();
             return;
         }
@@ -836,10 +836,14 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         }
         if (cdcl != null) {
             if (!cdcl.step()) return;
+            if (auxiliaryMode == 1 && cdcl.paused()) {
+                state = State.UNRESOLVED;
+                return;
+            }
             counts = reduction.expand(cdcl.counts());
             boolean impossible = cdcl.infeasible();
             importReducedConflicts(cdcl.learnedConflicts());
-            cdcl.close();
+            if (viewSearch == null || !viewSearch.retain(reduction, cdcl)) cdcl.close();
             cdcl = null;
             if (counts != null) {
                 domainCandidate = true;
@@ -848,7 +852,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 learnedChoices.add(new CountConflict(current));
                 state = State.DEAD;
             } else if (auxiliaryMode != 0) state = State.UNRESOLVED;
-            else diagram = new CountDecisionDiagram(reduction.rows(), reduction.lower(), reduction.upper(), budget, 65536);
+            else diagram = new CountDecisionDiagram(reduction.rows(), reduction.lower(), reduction.upper(), budget, 65536).retained();
             return;
         }
         if (obbt != null) {
@@ -879,7 +883,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             if (!diagram.step()) return;
             counts = reduction.expand(diagram.counts());
             boolean impossible = diagram.infeasible();
-            diagram.close();
+            if (viewSearch == null || !viewSearch.retain(reduction, diagram)) diagram.close();
             diagram = null;
             if (counts != null) {
                 domainCandidate = true;
@@ -979,7 +983,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 viewSearch.commonWork(observedWork + budget.threadWork() - runStarted);
                 viewSearch.resume(Math.max(1, auxiliaryUntil - auxiliaryWork - (budget.threadWork() - runStarted)));
                 viewStage = 6;
-            } else if (auxiliaryMode == 1) cdcl = new CountDomainSearch(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072, CountCdcl.Branching.LEARNING_RATE);
+            } else if (auxiliaryMode == 1) cdcl = new CountDomainSearch(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072, CountCdcl.Branching.LEARNING_RATE).retained();
             else if (auxiliaryMode >= 2) auxiliaryLcg = new CountLcg(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072);
             else {
                 if (!matchingScouted && current.isEmpty()) {
@@ -987,7 +991,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                     long allowance = CountMeetInMiddle.scoutWork(reduction.rows(), reduction.lower(), reduction.upper(), budget);
                     if (allowance > 0) {
                         matchingScout = true;
-                        matching = new CountMeetInMiddle(reduction.rows(), reduction.lower(), reduction.upper(), budget, allowance);
+                        matching = new CountMeetInMiddle(reduction.rows(), reduction.lower(), reduction.upper(), budget, allowance).retained();
                         return;
                     }
                 }
@@ -1255,7 +1259,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             else beginLinear();
         } else {
             triedBinary = true;
-            binary = new CountBoolean(reduction.rows(), reduction.lower(), reduction.upper(), budget);
+            binary = new CountBoolean(reduction.rows(), reduction.lower(), reduction.upper(), budget).retained();
         }
     }
 
@@ -1571,8 +1575,14 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             return true;
         }
         if (auxiliaryMode != 0) {
-            if (limit != null || auxiliaryMode < 2 || auxiliaryLcg == null) return false;
-            if (auxiliaryLcg.paused()) auxiliaryLcg.resume(131072);
+            if (limit != null) return false;
+            if (auxiliaryMode == 1) {
+                if (cdcl == null) return false;
+                if (cdcl.paused()) cdcl.resume(131072);
+            } else {
+                if (auxiliaryLcg == null) return false;
+                if (auxiliaryLcg.paused()) auxiliaryLcg.resume(131072);
+            }
             auxiliaryUntil = auxiliaryWork + Math.min(262144, budget.remainingWork());
             state = State.OPEN;
             return true;
@@ -1915,7 +1925,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
 
     private void afterViewSearch(int continuation) {
         if (continuation == 2) congruence = new CountCongruence(reduction.rows(), reduction.variables(), budget);
-        else if (continuation == 3) diagram = new CountDecisionDiagram(reduction.rows(), reduction.lower(), reduction.upper(), budget, 65536);
+        else if (continuation == 3) diagram = new CountDecisionDiagram(reduction.rows(), reduction.lower(), reduction.upper(), budget, 65536).retained();
         else if (continuation == 4 || continuation == 6) state = State.UNRESOLVED;
         else if (continuation == 5) beginCompiledPortfolio();
         else if (continuation == 7) groups = new CountGroups(reduction.rows(), reduction.lower(), reduction.upper(), budget);

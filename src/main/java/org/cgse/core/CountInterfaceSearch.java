@@ -39,7 +39,8 @@ final class CountInterfaceSearch implements AutoCloseable {
     private final List<ExactLinearProgram.Constraint> original;
     private final BigInteger[] lower, upper;
     private final PlanningBudget budget;
-    private final long allowance;
+    private long allowance;
+    private boolean retaining, paused;
     private final List<Block> blocks = new ArrayList<>();
     private final List<ExactLinearProgram.Constraint> interfaceRows = new ArrayList<>();
     private final Deque<Local> suspended = new ArrayDeque<>();
@@ -66,7 +67,9 @@ final class CountInterfaceSearch implements AutoCloseable {
     }
 
     boolean step() {
-        if (complete) return true;
+        if (complete || paused) return true;
+        budget.checkpoint();
+        if (retaining && work >= allowance) return paused = true;
         stepStarted = budget.threadSearchWork();
         try {
             charge();
@@ -301,7 +304,7 @@ final class CountInterfaceSearch implements AutoCloseable {
     }
 
     private void begin(Block block, Local local) {
-        long remaining = allowance - used();
+        long remaining = retaining ? Math.max(1024, allowance - used()) : allowance - used();
         long fair = Math.max(4096, remaining / Math.max(1, blocks.size() + pending.cardinality()));
         long doubled = local.quantum > remaining / 2 ? remaining : local.quantum * 2;
         // A retained frontier needs another fair slice, not an exponentially
@@ -344,7 +347,7 @@ final class CountInterfaceSearch implements AutoCloseable {
             }
             rows.add(new ExactLinearProgram.Constraint(terms, bound));
         }
-        quantum = Math.min(quantum, allowance - used());
+        quantum = Math.min(quantum, retaining ? Math.max(1024, allowance - used()) : allowance - used());
         if (quantum < 1024) throw new Stop();
         local.search = new CountConditionalSearch(rows, low, high, budget, quantum);
         solving = local;
@@ -417,7 +420,7 @@ final class CountInterfaceSearch implements AutoCloseable {
     private long used() { return work + budget.threadSearchWork() - stepStarted; }
     private void charge() {
         budget.checkpoint();
-        if (used() >= allowance) throw new Stop();
+        if (!retaining && used() >= allowance) throw new Stop();
         budget.check();
     }
     private void integerCost(BigInteger a, BigInteger b) {
@@ -430,12 +433,20 @@ final class CountInterfaceSearch implements AutoCloseable {
                 "; work=" + used() + "; positive_only");
         return true;
     }
+    CountInterfaceSearch retained() { retaining = true; return this; }
+    boolean paused() { return paused; }
+    void resume(long quantum) {
+        if (!paused || complete) throw new IllegalStateException("Interface search is not paused");
+        allowance = CountContinuation.deadline(work, quantum, budget);
+        paused = false;
+    }
     BigInteger[] counts() { return counts == null ? null : counts.clone(); }
     long cacheHits() { return hits; }
     long resumptions() { return resumed; }
     long evictions() { return evicted; }
     @Override public void close() {
         complete = true;
+        paused = false;
         for (var block : blocks) for (var local : block.answers.values()) if (local.search != null) local.search.close();
         solving = null;
         suspended.clear();
