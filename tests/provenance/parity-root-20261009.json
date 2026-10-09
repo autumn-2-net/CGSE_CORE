@@ -1,0 +1,542 @@
+{
+  "baseline": "842b3eea5a52cb136400fb4afb44c90a5b0263bc",
+  "candidate_source_sha256": "8129232a03777534ebd7d0ff96c1d9956dd2f9e389bbf726264972d581b4c424",
+  "harness_sha256": "4f7b4214bd6ef080b320863eda6d9f69a5fee0ecf807ed11d8908aefd23d6bd2",
+  "scope": "IntegerCountSearch through finite recipe embedding; not the complete GraphPlanner or a live host",
+  "limits": {
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "account_policy": "Unchanged separate search/compilation accounts; logged work combines both via PlanningBudget.nodes()."
+  },
+  "reproduce": "python tests/benchmarks/compare_count_models.py --java-home JDK17 --baseline 842b3eea --parity",
+  "canonical_models": {
+    "count": 274,
+    "baseline": {
+      "PASS": 236,
+      "UNRESOLVED": 32,
+      "UNSUPPORTED": 6
+    },
+    "candidate": {
+      "PASS": 243,
+      "UNRESOLVED": 25,
+      "UNSUPPORTED": 6
+    },
+    "lost_conclusions": [],
+    "gained": [
+      {
+        "id": "1e847e3e6948c110be3126736a32201831fef53ead4d6990dcb89c836abfb8a2",
+        "names": [
+          "scip/lseu-objective-1120/embedded/reduced"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "PASS",
+          "SAT",
+          "work=6399452"
+        ],
+        "baseline_outcome": [
+          "UNRESOLVED",
+          "work=19994514"
+        ]
+      },
+      {
+        "id": "79a7fa505b5c851d90bb6cd3178dc7ef7c13f2590d91e22fbdf415dd00562645",
+        "names": [
+          "scip/lseu-objective-1120/embedded/original"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "PASS",
+          "SAT",
+          "work=6066227"
+        ],
+        "baseline_outcome": [
+          "UNRESOLVED",
+          "work=19994479"
+        ]
+      },
+      {
+        "id": "88d1f6dbdce22f308b8e6c01a90c28e18b1ebf865f53640d5dc23c99e14384ff",
+        "names": [
+          "scip/lseu-objective-1120/raw/original"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "PASS",
+          "SAT",
+          "work=6172447"
+        ],
+        "baseline_outcome": [
+          "UNRESOLVED",
+          "work=19994773"
+        ]
+      },
+      {
+        "id": "9f8910cb27a91655af9eada4922f80c257b1ec44e2841e58f6ef770336cfccbb",
+        "names": [
+          "scip/lseu-objective-1120/raw/reduced"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "PASS",
+          "SAT",
+          "work=6505309"
+        ],
+        "baseline_outcome": [
+          "UNRESOLVED",
+          "work=19996976"
+        ]
+      },
+      {
+        "id": "cb849169bd27d03247611c0603bb00bf20b64e2abf19b288e2c800935f1bf6d9",
+        "names": [
+          "scip/lseu-objective-1120"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "PASS",
+          "SAT",
+          "work=6172447"
+        ],
+        "baseline_outcome": [
+          "UNRESOLVED",
+          "work=19994773"
+        ]
+      },
+      {
+        "id": "f6a80d29462d7d63b3207e494fffece4c3c451ced8a5d291448576e051d13fb6",
+        "names": [
+          "generated/wide-equality-n64-w10000"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "PASS",
+          "SAT",
+          "work=5697749"
+        ],
+        "baseline_outcome": [
+          "UNRESOLVED",
+          "work=19994500"
+        ]
+      },
+      {
+        "id": "fec30a3add39ebc76a88a911f9addd458f047c4b14a23adf7dd624aeab965e8b",
+        "names": [
+          "generated/wide-equality-n64-w31"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "PASS",
+          "SAT",
+          "work=11887906"
+        ],
+        "baseline_outcome": [
+          "UNRESOLVED",
+          "work=19994079"
+        ]
+      }
+    ],
+    "remaining": [
+      {
+        "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+        "names": [
+          "generated/sparse-equality-n144-s2"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19996354"
+        ]
+      },
+      {
+        "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+        "names": [
+          "scip/lseu-objective-1119"
+        ],
+        "expected": "UNSAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19995885"
+        ]
+      },
+      {
+        "id": "20493f36e8dafac78ecddb14deaf37cd09200e9490fa36d0ed884f31ed1e2354",
+        "names": [
+          "generated/sparse-equality-n48-s2"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19992574"
+        ]
+      },
+      {
+        "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+        "names": [
+          "scip/lseu-objective-1119/embedded/normalized"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19995045"
+        ]
+      },
+      {
+        "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+        "names": [
+          "generated/sparse-equality-n257-s2"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19997988"
+        ]
+      },
+      {
+        "id": "46ae9ed4ad62f98ead627cf1f2dfca403156591657be26ed0b421e84a226c5a5",
+        "names": [
+          "generated/sparse-equality-n48-s1"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19993535"
+        ]
+      },
+      {
+        "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+        "names": [
+          "scip/lseu-objective-1119/raw/original"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19992856"
+        ]
+      },
+      {
+        "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+        "names": [
+          "generated/sparse-equality-n96-s2"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19994540"
+        ]
+      },
+      {
+        "id": "64a889df4156fb9c7754c554b9a32c31c59f64ff378ad907f4048e8e7fcdd6a3",
+        "names": [
+          "scip/lseu-objective-1120/embedded/normalized"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19994823"
+        ]
+      },
+      {
+        "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b",
+        "names": [
+          "generated/subset-n40-bits40"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19997154"
+        ]
+      },
+      {
+        "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f",
+        "names": [
+          "generated/subset-n40-bits48"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19997156"
+        ]
+      },
+      {
+        "id": "7cd7e27a366c3b15a6a7abb690941acc1849e2adffd4e7a72f1ad037848f7ad9",
+        "names": [
+          "scip/lseu-objective-1120/raw/normalized"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19995664"
+        ]
+      },
+      {
+        "id": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
+        "names": [
+          "generated/wide-equality-n64-w1000000"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19992385"
+        ]
+      },
+      {
+        "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+        "names": [
+          "generated/sparse-equality-n257-s1"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19997670"
+        ]
+      },
+      {
+        "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+        "names": [
+          "generated/sparse-equality-n144-s1"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19995225"
+        ]
+      },
+      {
+        "id": "a18f16aaf5b7fb63a459988338e58e34ac148d7d73e8c6a30569ee8df4c5f420",
+        "names": [
+          "generated/subset-n48-bits40"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19999688"
+        ]
+      },
+      {
+        "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+        "names": [
+          "scip/lseu-objective-1119/embedded/original"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19997307"
+        ]
+      },
+      {
+        "id": "a65596b89e9eb4805fdd1e6d5a77cac08ee58aa636317dc73d8c731542c9b14b",
+        "names": [
+          "generated/subset-n48-bits24"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19997129"
+        ]
+      },
+      {
+        "id": "af3a59ddc15fad04a622c4627dae4711b4082eaada6a21723e4b0c3276abc78a",
+        "names": [
+          "scip/stein27_inf"
+        ],
+        "expected": "UNSAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19823383"
+        ]
+      },
+      {
+        "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+        "names": [
+          "scip/lseu-objective-1119/embedded/reduced"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19993444"
+        ]
+      },
+      {
+        "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+        "names": [
+          "wide-79"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19994635"
+        ]
+      },
+      {
+        "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+        "names": [
+          "scip/lseu-objective-1119/raw/reduced"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19992465"
+        ]
+      },
+      {
+        "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+        "names": [
+          "generated/sparse-equality-n96-s1"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19994388"
+        ]
+      },
+      {
+        "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+        "names": [
+          "scip/lseu-objective-1119/raw/normalized"
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19994279"
+        ]
+      },
+      {
+        "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+        "names": [
+          "generated/subset-n48-bits48"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNRESOLVED",
+          "work=19993111"
+        ]
+      }
+    ],
+    "unsupported": [
+      {
+        "id": "1d98538b025aa97f015ba610d09fe1fe3f9b44cd227f9ccb9f2e8147917c19fc",
+        "names": [
+          ""
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNSUPPORTED",
+          "main-counts conversion requires finite upper bounds"
+        ]
+      },
+      {
+        "id": "634987e49633e9f7285515251456ff25414b58880996b00e1080090e552467a1",
+        "names": [
+          "miracle24-observed-branch"
+        ],
+        "expected": "UNSAT",
+        "outcome": [
+          "UNSUPPORTED",
+          "main-counts conversion requires finite upper bounds"
+        ]
+      },
+      {
+        "id": "a9d83be7942de93a30e8c43c99a8e6f7393cdd036b414413169c853ed8479b40",
+        "names": [
+          ""
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNSUPPORTED",
+          "main-counts conversion requires finite upper bounds"
+        ]
+      },
+      {
+        "id": "b77762acc50f972b25a48d41f110182955c3146f78bc6c14bac078a458d24529",
+        "names": [
+          ""
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNSUPPORTED",
+          "main-counts conversion requires finite upper bounds"
+        ]
+      },
+      {
+        "id": "d938bd8a7fd480f9a59eb8753befd825491ab0de9eacce267d3e978051150c64",
+        "names": [
+          "z3/t83"
+        ],
+        "expected": "SAT",
+        "outcome": [
+          "UNSUPPORTED",
+          "main-counts conversion requires finite upper bounds"
+        ]
+      },
+      {
+        "id": "e4eb46e62f7d8fb80848cdd1d49fecfee32019e1e75815c272a284d93f04de50",
+        "names": [
+          ""
+        ],
+        "expected": "UNKNOWN",
+        "outcome": [
+          "UNSUPPORTED",
+          "main-counts conversion requires finite upper bounds"
+        ]
+      }
+    ]
+  },
+  "parity_campaign": {
+    "count": 72,
+    "baseline": {
+      "UNSAT": 21,
+      "SAT": 35,
+      "UNKNOWN": 16
+    },
+    "candidate": {
+      "UNSAT": 36,
+      "SAT": 36
+    },
+    "gained": [
+      "25/5/0/false",
+      "25/5/1/false",
+      "25/5/2/false",
+      "33/3/0/false",
+      "33/3/1/false",
+      "33/3/2/false",
+      "33/5/0/false",
+      "33/5/1/false",
+      "33/5/2/false",
+      "41/3/0/false",
+      "41/3/1/false",
+      "41/3/2/false",
+      "41/3/2/true",
+      "41/5/0/false",
+      "41/5/1/false",
+      "41/5/2/false"
+    ],
+    "lost": [],
+    "baseline_work_sum": 418386268,
+    "candidate_work_sum": 40445782,
+    "candidate_unsat_work_range": [
+      5492,
+      58822
+    ]
+  },
+  "validation": {
+    "standard_programs_passed": 52,
+    "curated_graphs": 239,
+    "expanded_graphs": 800,
+    "orders_each": 3,
+    "captured_requests_passed": 96,
+    "four_worker_base_passed": 9,
+    "four_worker_expanded_passed": 9,
+    "offline_assemble": "passed",
+    "source_jar_matches_java_files": 197
+  },
+  "limitations": [
+    "No work cap or parallel budget multiplier changed.",
+    "The five lseu records are representation variants of one family, not five unrelated families.",
+    "Six unbounded conversions remain unsupported; they are not UNSAT or solver failures.",
+    "Work/reservations are logical accounts, not CPU time/JVM heap/RSS.",
+    "Captured data replay is offline, not a fresh live-server test."
+  ]
+}

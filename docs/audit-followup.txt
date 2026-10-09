@@ -149,7 +149,10 @@ Remaining gaps, rather than completed checkboxes
    known-limits.json is explicitly an e788d3d3 observation; its old unresolved
    entries must not all be called current failures. The 2026-10-09 count-model
    replay and capacity fix are in count-corpus-followup.txt. That follow-up still
-   leaves 32 main-count limits and six unbounded test-conversion exclusions.
+   left 32 main-count limits and six unbounded test-conversion exclusions. The
+   subsequent parity-and-root-continuation.txt comparison resolves seven more
+   canonical records at the same 20M budget and adds 72 parity/neighbor cases;
+   25 main-count limits and the same six conversion exclusions remain.
    Historical probe assertions have not all been freshly replayed. Passing graph
    fixtures does not certify every historical integer model.
 

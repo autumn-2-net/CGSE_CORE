@@ -16,7 +16,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Suite | Command / location | Coverage |
 | --- | --- | --- |
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
-| Stable oracles | `--suite oracles` | 22 independent exhaustive/integer/BFS/seed/proof oracle programs |
+| Stable oracles | `--suite oracles` | 23 independent oracle programs plus seven pinned count-model boundaries |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
 | Fixed counterexamples | `--suite fixtures --keep-going` | All 239 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
@@ -28,7 +28,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | AEDUMP | `python tests/ae-dump/check_migration.py --java-home <jdk17>` | Archive format/validation plus extracted request-service handoff |
 | Live adapter | `adapter/live/` | Forge/server probes requiring the actual host installation |
 
-`standard` runs core, view and the 21 stable oracles. `all` also selects every fixed
+`standard` runs core, view, the 23 stable oracles and the pinned count-model boundaries. `all` also selects every fixed
 fixture, portable probe and corpus case; it can take substantially longer and includes
 known hard inputs. Benchmark/dataset/AE/live suites are explicit separate entries because their
 resource requirements differ. Use `--case <regex>`, `--shard 0/4`, `--milliseconds`,
@@ -43,6 +43,19 @@ are recorded in `provenance/duplicates.json`; original archive members are liste
 and compressed SHA-256 checksums in `datasets/index.json`.
 
 ## Controlled planning comparison
+
+The main count stage has a separate reproducible comparison:
+
+```text
+python tests/benchmarks/compare_count_models.py --java-home <jdk17> --baseline 842b3eea --parity
+```
+
+It archives baseline sources without changing the checkout, then runs the same
+canonical count inputs and the same harness at 20M work, 256 MiB, one worker and
+no wall deadline. `--parity` adds 72 odd-cycle/feasible-neighbor cases. Every model
+outcome, work value, gained/lost conclusion and source/harness fingerprint is saved.
+Remaining UNKNOWN and unsupported conversions stay explicit; benchmark completion
+does not mean every model is solved. See `../docs/parity-and-root-continuation.txt`.
 
 ```text
 python tests/benchmarks/compare_planning.py --java-home <jdk17> --baseline <commit> --case <regex> --work 20000000 --milliseconds 3000

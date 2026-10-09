@@ -1,6 +1,10 @@
 Count corpus follow-up: 2026-10-09
 ================================
 
+This document records the 842b3eea capacity boundary. The subsequent parity and
+root-continuation comparison is in parity-and-root-continuation.txt; it raises
+main-count conclusions from 236 to 243 and reduces the remaining limits to 25.
+
 The migration's known-limits.json records e788d3d3, not the current solver.
 Its 87 unresolved count models were tested through one CountLcg local allowance,
 not through the whole integer-count portfolio. That allowance can end well before

@@ -68,6 +68,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     CountCliques cliques;
     CountRoundingCuts rounding;
     boolean roundingTried;
+    CountZeroHalfCuts zeroHalf;
     ExactRational[] coverPoint, coverFallback;
     final List<ExactLinearProgram.Constraint> relaxationCuts = new ArrayList<>();
     int coverRounds;
@@ -462,7 +463,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 beginScheduling();
             } else if (viewSearch.infeasible()) {
                 learnedChoices.add(new CountConflict(current));
-                proofContradiction = proofTask && current.isEmpty();
+                proofContradiction = (proofTask || splitWitness) && current.isEmpty();
                 state = State.DEAD;
             } else afterViewSearch(continuation);
             return;
@@ -578,6 +579,20 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             rounding.close();
             rounding = null;
             acceptCuts(cuts);
+            return;
+        }
+        if (zeroHalf != null) {
+            if (!zeroHalf.step()) return;
+            var cuts = zeroHalf.cuts();
+            zeroHalf.close();
+            zeroHalf = null;
+            long bytes = cuts.stream().mapToLong(row -> 192L + 128L * row.terms().size()).sum();
+            if (!cuts.isEmpty() && budget.tryReserve(bytes)) {
+                workspace += bytes;
+                linearConstraints.addAll(cuts);
+                learnedMaterials.addAll(cuts);
+            }
+            beginReduction();
             return;
         }
         if (neighborhood != null) {
@@ -942,22 +957,9 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 return;
             }
             linearConstraints.addAll(tightened);
-            reduction = new CountReduction(linearConstraints, lower, upper, budget, auxiliaryMode == 3);
-            if (current.isEmpty()) reduction.strengthenCapacities();
-            if (proofTask) reduction.retainStrideView();
-            if (current.isEmpty() && auxiliaryMode == 0) {
-                modelViews = CountModelViews.create(linearConstraints, lower, upper, budget);
-                if (modelViews != null) {
-                    reduction.retainStrideView();
-                    viewSearch = new CountViewSearch(modelViews, budget);
-                    viewSearch.mode(portfolioMode);
-                    viewSearch.commonWork(commonCompilationWork);
-                    if (!CountBoolean.preferred(linearConstraints, lower, upper, budget)) {
-                        viewSearch.resume(32768);
-                        viewStage = 1;
-                    }
-                }
-            }
+            if (current.isEmpty() && auxiliaryMode == 0)
+                zeroHalf = CountZeroHalfCuts.pairs(linearConstraints, lower, upper, budget);
+            if (zeroHalf == null) beginReduction();
             return;
         }
         if (!compiled) {
@@ -1047,7 +1049,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         if (propagating != null) return "count_bounds";
         if (separator != null) return "count_separator";
         if (network != null) return "count_network";
-        if (covering != null || cliques != null || rounding != null) return "count_cuts";
+        if (covering != null || cliques != null || rounding != null || zeroHalf != null) return "count_cuts";
         if (probing != null || branchProbe != null) return "count_probing";
         if (neighborhood != null || repair != null || jumping != null) return "count_heuristics";
         if (recovery != null || scaling != null) return "count_recovery";
@@ -1174,6 +1176,25 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         ExactRational[] alternative = uncutRepairPoint == null ? null : Arrays.stream(reduction.representatives()).mapToObj(i -> uncutRepairPoint[i]).toArray(ExactRational[]::new);
         repair = new CountRepairPortfolio(reduction.rows(), reduction.lower(), reduction.upper(), reduced, alternative, budget);
         uncutRepairPoint = null;
+    }
+
+    private void beginReduction() {
+        reduction = new CountReduction(linearConstraints, lower, upper, budget, auxiliaryMode == 3);
+        if (current.isEmpty()) reduction.strengthenCapacities();
+        if (proofTask) reduction.retainStrideView();
+        if (current.isEmpty() && auxiliaryMode == 0) {
+            modelViews = CountModelViews.create(linearConstraints, lower, upper, budget);
+            if (modelViews != null) {
+                reduction.retainStrideView();
+                viewSearch = new CountViewSearch(modelViews, budget);
+                viewSearch.mode(portfolioMode);
+                viewSearch.commonWork(commonCompilationWork);
+                if (!CountBoolean.preferred(linearConstraints, lower, upper, budget)) {
+                    viewSearch.resume(32768);
+                    viewStage = 1;
+                }
+            }
+        }
     }
 
     private void beginCompiledStrategies() {
@@ -1561,10 +1582,9 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     }
 
     boolean resume() {
-        // These children already cover the parent's whole integer domain.
-        // Only finish the parked positive witness; never branch the parent a
-        // second time or treat this optional task's cutoff as an open domain.
-        if (splitWitness) return limit == null && parkedScaling != null && resumeScaling();
+        // A split root keeps its already-paid searches. Its children cover the
+        // full domain; this continuation must never create the same children
+        // again or make a local cutoff invalidate their coverage.
         if (proofTask) {
             if (limit != null || auxiliaryWork >= auxiliaryUntil || viewSearch == null || !viewSearch.retained()) return false;
             clearCandidate();
@@ -1637,7 +1657,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             state = State.OPEN;
             return true;
         }
-        if (retried || counts == null || memory == 0 || limit != null) return false;
+        if (splitWitness || retried || counts == null || memory == 0 || limit != null) return false;
         releaseWorkspace();
         initialized = true;
         retried = rescue = true;
@@ -1646,9 +1666,14 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     }
 
     boolean retainSplitWitness() {
-        if (state != State.SPLIT || proofTask || auxiliaryMode != 0 || limit != null || parkedScaling == null) return false;
+        if (state != State.SPLIT || proofTask || auxiliaryMode != 0 || limit != null) return false;
+        boolean rootSearch = current.isEmpty() && (parkedStructural != null ||
+                lpSearch != null && lpSearch.retained() || viewSearch != null && viewSearch.retained());
+        if (parkedScaling == null && !rootSearch) return false;
         splitWitness = true;
-        return resumeScaling();
+        partitioned = true;
+        budget.note("count_split_continuation", "owned_frontiers_retained; children_cover_domain");
+        return resume();
     }
 
     boolean finiteProbing() {
@@ -1760,6 +1785,8 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         covering = null;
         if (rounding != null) rounding.close();
         rounding = null;
+        if (zeroHalf != null) zeroHalf.close();
+        zeroHalf = null;
         if (neighborhood != null) neighborhood.close();
         neighborhood = null;
         if (failureNeighborhood != null) failureNeighborhood.close();

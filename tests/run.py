@@ -103,6 +103,22 @@ def main():
         for p in selected(sorted((BASE / 'regression/java').glob('*.java'))):
             if p.stem != 'GraphFixtureRegression' and re.search(args.case, p.stem):
                 run(p.stem, 'org.cgse.core.' + p.stem)
+        if shard == 0 and re.search(args.case, 'CountModelBoundaries'):
+            spec = importlib.util.spec_from_file_location('count_boundaries', BASE / 'cases/run.py')
+            boundaries_helper = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(boundaries_helper)
+            boundary = json.loads((BASE / 'regression/count-boundaries.json').read_text(encoding='utf-8'))
+            manifest = json.loads((BASE / 'cases/manifest.json').read_text(encoding='utf-8'))
+            paths = {c['id']: c['path'] for c in manifest['cases'] if c['kind'] == 'count-model'}
+            cases = [json.loads((BASE / paths[c['id']]).read_text(encoding='utf-8')) for c in boundary['cases']]
+            for case, oracle in zip(cases, boundary['cases']):
+                # A verified witness establishes SAT for this maintained check;
+                # keep the historical corpus record unchanged.
+                case['expected'] = oracle['expected']
+            path = output / 'count-boundaries.bin'
+            boundaries_helper.write_models(path, cases)
+            run('CountModelBoundaries', 'org.cgse.core.CountModelRegression',
+                [path, 0, boundary['work'], 'main-counts', 'true'])
     if args.suite == 'benchmarks' and re.search(args.case, 'GraphBenchmark'):
         run('GraphBenchmark', 'org.cgse.core.GraphBenchmark')
     if args.suite in ('fixtures', 'all'):

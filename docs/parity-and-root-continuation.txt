@@ -1,0 +1,126 @@
+Certified parity closure and retained root searches (2026-10-09)
+==============================================================
+
+This boundary follows 842b3eea and the remaining cases recorded in
+count-corpus-followup.txt. It changes the main count solver and its constraint
+preparation, not the ordinary tree fallback, host adapters or machine execution.
+
+Algorithm references and implementation
+---------------------------------------
+SCIP's zero-half separator searches for row combinations with weights 0 or 1/2,
+using the parity structure of an integer matrix. CGSE now has a bounded independent
+implementation of that idea; this is not a translation of the SCIP plugin:
+https://github.com/scipopt/scip/blob/master/src/scip/sepa_zerohalf.c
+
+CountZeroHalfCuts finds a set of original rows whose odd coefficients cancel over
+GF(2). It then sums those rows with NONNEGATIVE integer multipliers, divides by two
+and rounds the bound exactly. XOR is only the proposal mechanism. No signed row
+subtraction or floating-point tolerance is used to justify an inequality. The
+existing independent CountProof rounding checker must accept every published cut.
+
+The production entry is a single root attempt on Boolean pair structure, before
+CountReduction and its alternative representations are built. A half-valued probe
+finds tight pair rows without an LP. Other coordinates remain at their actual lower
+bounds; their bound rows are explicit premises, not assumed equalities. For example,
+x+y+finish<=2 together with finish>=1 can expose the pair structure. Arbitrary
+fractional LP points and partial parity combinations are not added as another
+unconditional portfolio arm.
+
+The previous rounding separator samples at most three rows per combination. Long
+odd cycles require more. Several disjoint cycles also need their derived capacities
+combined with the total demand; just adding capacity cuts still left the branch
+search doing exponential work. The new bounded closure combines them using exact
+positive scaling, accepts only strictly smaller supports, and exports independently
+checked single-variable or empty-row consequences. Original demand rows, proved
+capacities and all multipliers remain in the serialized derivation.
+
+SCIP's sparsify presolver is a useful reference for controlling cancellation versus
+fill-in and coefficient growth. Its equality transformations are broader than this
+CGSE closure, which uses only nonnegative inequality combinations:
+https://github.com/scipopt/scip/blob/master/src/scip/presol_sparsify.c
+
+Admission remains bounded: at most 256 variables, 1,024 input rows, 256 selected
+parity rows and eight parity cuts, followed by at most 32 demand attempts. The local
+separation allowance is at most 65,536 work and one thirty-second of remaining
+request work. Pair selection, arithmetic and proof verification charge the shared
+budget too. Sparse aggregation requires decreasing support and bounded coefficient
+growth. Memory refusal, precision limits and cutoffs leave an optional incomplete
+attempt, never an impossibility claim. This separator retains its fields between
+step calls but deliberately has a terminal local quota; it is not a new general
+numeric continuation engine.
+
+Continuation boundary
+---------------------
+Splitting an ordinary root branch previously closed its retained view/LP/structural
+frontiers; only a scaled witness frontier survived. The root now retains the work
+already paid for while its children cover the partitioned domain. The existing
+deferred-branch scheduling share is unchanged. No duplicate child partition is
+created, and abandoning the optional parent does not mark the covered domain open.
+
+Candidates still pass original-recipe scheduling and final verification. Only a
+completed proof for the full original root can close the request; a view-local or
+budget-limited result cannot. Child branches do not acquire arbitrary additional
+root portfolios. This change does not extend CountAffineLattice, CountKernelSearch
+or CountDiophantine through unsafe mid-factorization interruption points.
+
+Equal-budget evidence
+---------------------
+Baseline: 842b3eea5a52cb136400fb4afb44c90a5b0263bc. The same harness and input order
+run against freshly archived baseline sources and the candidate. Both receive
+20,000,000 work, 256 MiB of request reservations, one worker and no wall deadline.
+This is the existing separate search/compilation-account policy, not a newly
+imposed aggregate cap; reported work is PlanningBudget.nodes(), which combines
+charged work from both accounts.
+
+                                        Baseline      Candidate
+  Canonical count models: conclusions        236            243
+  Canonical count models: unresolved          32             25
+  Finite recipe conversion unsupported         6              6
+  Wrong conclusions / lost conclusions         0            0 / 0
+  Odd-cycle campaign: conclusions          56/72          72/72
+
+The seven additional canonical witnesses comprise two wide-equality instances and
+five original/reduced/embedded records of the lseu-1120 family. They are seven
+distinct corpus records, not seven unrelated mathematical families. Their IDs are
+pinned in tests/regression/count-boundaries.json and run in the standard suite.
+
+The parity campaign contains 36 impossible odd-cycle packings and 36 feasible
+single-edge-deletion neighbors, including row/column shuffles and signed offsets.
+The baseline leaves 15 impossible cases and one feasible case unresolved. The new
+root closure proves all 36 impossible cases in roughly 5,500..59,000 work each.
+Returned feasible plans are independently checked against the original integer
+rows, domains and primitive execution prefixes. This is an IntegerCountSearch
+comparison, not a complete GraphPlanner or a general SCIP performance comparison.
+
+Reproduce both campaigns without changing the checkout:
+
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline 842b3eea --parity --output build/count-comparison
+
+The report preserves every UNKNOWN, unsupported conversion, source/harness
+fingerprint, gained/lost case and work value. Work is the logical account, not
+elapsed time; these results do not establish a steady-state CPU speedup or RSS.
+The compact tracked result and remaining-case ledger are in
+tests/provenance/parity-root-20261009.json; full logs stay below ignored build/.
+
+Validation and remaining limits
+-------------------------------
+52 standard programs passed. ZeroHalfCutsTest adds 24 odd cycles, 24 open neighbors,
+240 exhaustive signed/large-offset models (122,880 assignments), original-premise
+certificate replay through serialization, sparse-demand closure and cancellation,
+memory and shared-work boundaries. ParityPipelineReview adds the 72 main-count
+cases above. Seven prior unresolved corpus records now have pinned standard checks.
+
+239 curated graph fixtures and 800 expanded weighted fixtures passed three catalog
+orders each (3,117 validations). Captured inventory with 5,903 handwritten and
+62,284 exported recipes passed 96 requests. Four-worker replay passed nine requests
+with the base budget and nine with the production budget multiplier. These are
+offline captures, not a fresh live-server test. Offline assemble also passed.
+
+The 25 remaining count limits contain 15 known SAT, two known UNSAT and eight whose
+source truth is UNKNOWN. stein27_inf still reaches the main-count budget, although
+the raw-view entry can prove its original representation. The six unsupported
+conversions still have unbounded coordinates; they are not solver UNSAT results.
+Large closures, general numeric continuation, full cost attribution and live-host
+coverage remain separate gaps described in audit-followup.txt. No request budget
+was increased to obtain this boundary's gains.

@@ -353,7 +353,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         // Inspect every completed sibling before optional conflict caches or
         // resumed workspaces can encounter the shared limit. An earlier sibling
         // exhausting during merge must not hide a later closed root proof.
-        for (var branch : wave) if (branch.proofTask && branch.proofContradiction &&
+        for (var branch : wave) if (branch.proofContradiction &&
                 branch.state == IntegerCountBranch.State.DEAD && branch.current.isEmpty() && branch.model == model) {
                     rootProved = true;
                     budget.note("count_proof_task", "scope=full_root; outcome=PROVEN_INFEASIBLE; work=" + branch.auxiliaryWork);
@@ -413,9 +413,9 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                     branch.close();
                 }
                 case SPLIT -> {
-                    // Splitting the full domain does not invalidate an owned
-                    // scaled witness table. Children keep complete coverage;
-                    // the parent now contributes positive candidates only.
+                    // Keep owned root searches across the split. Children keep
+                    // complete coverage; local cutoffs of this optional parent
+                    // neither remove children nor open another domain.
                     if (branch.retainSplitWitness()) {
                         suspensions++;
                         deferred.addLast(branch);

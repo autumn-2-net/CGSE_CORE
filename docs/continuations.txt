@@ -13,6 +13,12 @@ frontiers retain their queues, clauses, bases, walk state or branch stacks.
 IntegerCountSearch, CountScale, CountViewSearch, CountSchedule and the stock-view
 portfolio already preserve owned work between scheduler turns.
 
+A later boundary also retains owned root view/LP/structural frontiers when the
+ordinary branch splits, instead of preserving only CountScale. Children keep
+domain coverage and the optional parent cannot repartition it. The existing fair
+deferred share is unchanged. See parity-and-root-continuation.txt for the seven
+additional canonical witnesses and the equal-budget comparison with 842b3eea.
+
 This change adds opt-in local-quota continuation for:
 
 * CountMeetInMiddle: projected coordinates, prefix enumerators, the left table,

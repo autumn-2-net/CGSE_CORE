@@ -1,0 +1,61 @@
+{
+  "work": 20000000,
+  "cases": [
+    {
+      "id": "1e847e3e6948c110be3126736a32201831fef53ead4d6990dcb89c836abfb8a2",
+      "names": [
+        "scip/lseu-objective-1120/embedded/reduced"
+      ],
+      "reason": "Retain owned root frontiers after a branch split; 842b3eea is unresolved at 20M.",
+      "expected": "SAT"
+    },
+    {
+      "id": "88d1f6dbdce22f308b8e6c01a90c28e18b1ebf865f53640d5dc23c99e14384ff",
+      "names": [
+        "scip/lseu-objective-1120/raw/original"
+      ],
+      "reason": "Retain owned root frontiers after a branch split; 842b3eea is unresolved at 20M.",
+      "expected": "SAT"
+    },
+    {
+      "id": "9f8910cb27a91655af9eada4922f80c257b1ec44e2841e58f6ef770336cfccbb",
+      "names": [
+        "scip/lseu-objective-1120/raw/reduced"
+      ],
+      "reason": "Retain owned root frontiers after a branch split; 842b3eea is unresolved at 20M.",
+      "expected": "SAT"
+    },
+    {
+      "id": "cb849169bd27d03247611c0603bb00bf20b64e2abf19b288e2c800935f1bf6d9",
+      "names": [
+        "scip/lseu-objective-1120"
+      ],
+      "reason": "Retain owned root frontiers after a branch split; 842b3eea is unresolved at 20M.",
+      "expected": "SAT"
+    },
+    {
+      "id": "f6a80d29462d7d63b3207e494fffece4c3c451ced8a5d291448576e051d13fb6",
+      "names": [
+        "generated/wide-equality-n64-w10000"
+      ],
+      "reason": "Retain owned root frontiers after a branch split; 842b3eea is unresolved at 20M.",
+      "expected": "SAT"
+    },
+    {
+      "id": "fec30a3add39ebc76a88a911f9addd458f047c4b14a23adf7dd624aeab965e8b",
+      "names": [
+        "generated/wide-equality-n64-w31"
+      ],
+      "reason": "Retain owned root frontiers after a branch split; 842b3eea is unresolved at 20M.",
+      "expected": "SAT"
+    },
+    {
+      "id": "79a7fa505b5c851d90bb6cd3178dc7ef7c13f2590d91e22fbdf415dd00562645",
+      "names": [
+        "scip/lseu-objective-1120/embedded/original"
+      ],
+      "reason": "Retain owned root frontiers after a branch split; 842b3eea is unresolved at 20M.",
+      "expected": "SAT"
+    }
+  ]
+}
