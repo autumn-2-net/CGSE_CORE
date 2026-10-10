@@ -1,0 +1,12 @@
+{
+  "name": "forced-selfcopy-32",
+  "target": "A",
+  "amount": 32,
+  "stock": { "A": 1, "F": 31 },
+  "recipes": [ { "id": "copy", "inputs": { "A": 1, "F": 1 }, "outputs": { "A": 2 } } ],
+  "expected": "SAT",
+  "provenance": {
+    "corpus_id": "5ede5266414523ee3e584b0c7ad3b868660be0837229a03285e51e07d9db262a",
+    "witness": "31 copy runs: gross A output 62, final A stock 32"
+  }
+}

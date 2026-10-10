@@ -1,0 +1,133 @@
+Full regression, 2026-10-11
+===========================
+
+Baseline: 66f22b5ba12365ae225f68edcb5c83f618b0ae83.
+Validated production source fingerprint (205 files):
+ab4c8273a16023a4470a59a8f946bd35cc961b71c35a89dae3f0bc24f98b804a
+
+Fixes found by the campaign
+---------------------------
+1. CountJump could select the integer immediately below a feasible breakpoint
+   when two large negative gains rounded to the same double. Compare tied moves
+   by subtracting their exact residual violations before conversion. This only
+   changes candidate ranking, never proof arithmetic. The original JumpSweep
+   reproducer and 643 maintained boundary/continuation cases pass.
+
+2. Sparse certified cuts inherited the dense bound-sharing dimension limit.
+   Separate sparse publication/import admission from dense bound admission;
+   preserve view ownership, covering semantics, certification and the existing
+   term/byte/work limits. Dense bounds still retain the 1024-variable cap.
+   Proof logging still declines transfers outside independent replay admission.
+   The original 1699-variable WideCut reproducer and maintained scope, proof,
+   cancellation and memory-refusal checks through 8192 variables pass.
+
+3. A forced target already present in stock admitted neutral turnover in the
+   count model even though final candidate verification requires positive net
+   target gain. This could enumerate invalid counts until the 20M search cap.
+   Add the necessary gain >= 1 condition where the material balance does not
+   already imply it. Preserve the per-push configuration-input relaxation and
+   gross-production semantics; do not require net gain to equal the request.
+   The original CycleReview reproducer now passes. Sixty ring/order/seed cases
+   pass at 1M, with separate productive-startup, configuration, warm-scope and
+   Long.MAX_VALUE checks. Model memory and work include the additional row.
+
+The three targeted solver regressions each reject the corresponding pre-fix
+implementation or restored defective admission rule in a local negative control.
+
+Two test defects were also corrected. The independent fixture/corpus checker
+used net gain >= request, incorrectly rejecting valid self-copying witnesses
+that consume their target seed. It now separately counts primitive gross
+production, positive net gain and final delivery; returned read-arc tokens are
+not production. Five curated fixtures and FixtureProductionTest pin this.
+Runtime unit tests assumed two provider dispatches always fit a real 2 ms tick
+under concurrent load. They now use a controlled clock plus explicit deadline,
+continuation and nanoTime-wrap checks. The public runtime clock and 2 ms limit
+are unchanged.
+
+Final validation
+----------------
+JDK: Temurin 17.0.19. No production edits followed the validated fingerprint.
+Standard: 83 programs/batches PASS, including the pinned 20M/80M boundaries.
+Curated fixtures: 244 inputs x three orders = 732 PASS, zero unresolved.
+Full graph corpus: all 20653 manifest IDs exactly once, with no omissions or
+duplicates: 19642 PASS, 1011 UNRESOLVED (1010 SEARCH_LIMIT and one UNKNOWN),
+zero FAIL.
+Full exact-count corpus: all 274 manifest IDs in the original order and two
+deterministic permutations = 822 rows: 790 PASS, 14 UNRESOLVED, 18 UNSUPPORTED.
+The unsupported count inputs remain unsupported; they are not counted as solved.
+GraphBenchmark and offline assembly pass. All 205 source-jar entries match the
+production source bytes. AE dump migration/static checks, seven archive checks
+and RequestStateTest pass; this is not a fresh Minecraft server integration run.
+
+Compared with the baseline, no graph or exact-count case loses a solved verdict.
+The two graph FAIL -> PASS changes are the corrected self-copy oracle, not new
+solver successes. The original-order count totals remain 264 PASS, four
+UNRESOLVED and six UNSUPPORTED; each additional order is 263/5/6. Budget-limited
+results remain explicitly unresolved, not infeasibility proofs.
+
+Full-catalog replays: 19 registered requests in each of serial, four-worker and
+four-worker expanded-budget modes = 57 independently verified feasible results.
+The replay loads 5903 captured manual recipes, 62284 additional recipes and 2670
+stock keys. These are offline captured-data replays, not live AE tests.
+Concurrent campaign timings are not used to claim throughput improvements.
+
+Frozen historical probes
+------------------------
+All 256 standalone probes selected with the available external test jars were
+attempted unchanged: 221 PASS, 34 FAIL, one COMPILE_FAILED. These raw results are
+not presented as a green suite. Original sources and provenance remain intact.
+
+Thirteen local compatibility replays pass without changing production to match
+obsolete test internals:
+- BudgetMemoryProbe: invalid release must leave the ledger unchanged.
+- CacheStateSafety and both LazyLcgProbe versions: read the current primitive
+  minimum-cache accessor and valid current rows; retain independent truth checks.
+- LpStructureProbe: independently certify learned rows without requiring the
+  same pivot/cut-parent sequence as the old LP implementation.
+- CompilerFusionProbe: supply the current compiler/exclusion constructor inputs.
+- QuantityStagingChecks: retain semantic checks, remove a required old trace path.
+- CountCounterReview: accept and independently verify a newly found trial witness;
+  still reject a false global negative conclusion.
+- RetainedViewBatchProbe: distinguish a completed batch from the same object's
+  unfinished continuation; retain lifecycle and accounting checks.
+- AuxiliaryRetainedSafety: supply completed-work fairness credits used by the
+  current scheduler instead of advancing only its obsolete round counter.
+- BranchSchedulingChecks: the competing-input example is now exactly proven
+  dead; retain repaired-sibling, concurrency, incumbent and cleanup checks.
+- OrderRegression: account for the new positive-gain row. All 1130 cases pass,
+  including 594 independently executed witnesses and no feasible oracle misses.
+- NestedCompilerChecks: only initial reservations must fit physical long storage;
+  runtime streams surplus between batches. All 64 nested/runtime checks pass.
+
+The other raw failures are frozen path/instrumentation/API assumptions: three
+older AuxiliaryRetainedSafety copies; four branch/portfolio probes taking max()
+of an obsolete, now-empty branch trace; two removed gramSchmidt reflection hooks;
+BatchQuantumSafety's absent test-only production callback; two required deferred
+hint paths; two phase-activation minimum counts; AdmissionLifecycleChecks and
+FinalPolicyParity's old scheduling path/quantum; ViewProbe resuming a terminal
+search; CycleStressDetail's reflected constructor index; NeighborhoodIndependentSafety
+constructing an invalid zero-byte budget; RestartSafety expecting the now-faster
+250-link closure to remain unfinished; and two explicit old-bug baselines
+(SemanticGoalBefore and GraphPatchAudit). They were not relabelled as PASS.
+
+Reproduction and retained evidence
+----------------------------------
+python tests/run.py --suite standard --timeout 900 --keep-going
+python tests/run.py --suite fixtures --milliseconds 0 --timeout 900 --keep-going
+python tests/run.py --suite corpus --milliseconds 0 --work 20000000
+  --model-engine main-counts --shard I/16 --timeout 1800 --keep-going
+python tests/run.py --suite probes --classpath <local test jars>
+  --shard I/4 --timeout 900 --keep-going
+python tests/run.py --suite benchmarks --timeout 900
+python tests/datasets/regressions.py [--workers 4 [--expanded-budget]]
+python tests/ae-dump/check_migration.py
+gradlew.bat --offline assemble
+
+Pass the local --java-home and --output paths as appropriate. Shards cover all
+indices. Corpus workers used ActiveProcessorCount=1 and SerialGC to avoid JVM
+oversubscription; algorithm work caps and solver outcomes are unchanged. Count
+permutations use the same count_model_order helper and seed as the maintained
+boundary campaign. The local build/full-regression-66f22b5b directory retains
+complete-* logs, fingerprints, baseline comparisons and compatibility replays.
+Raw captures, generated logs and private local-only test inputs are not added
+to the repository by this change.

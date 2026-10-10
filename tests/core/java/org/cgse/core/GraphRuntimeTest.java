@@ -17,6 +17,7 @@ public final class GraphRuntimeTest {
         independentDag();
         partialDagPipeline();
         cyclicBatchParallelism();
+        dispatchDeadline();
         delayedWaterByproduct();
         fullCatalystAccount();
         handoffSnapshot();
@@ -37,7 +38,7 @@ public final class GraphRuntimeTest {
         var plan = plan(List.of(recipe), "P", 100, Map.of("R", 100L));
         Fake fake = new Fake(plan);
         fake.limit = 5;
-        fake.runtime.tick(fake, 0, 1);
+        fake.tick(0, 1);
         eq(5L, fake.accepted, "E02 actual accepted batch");
         eq(95L, fake.runtime.pendingRuns().get("p"), "E02 remaining");
         eq(5L, fake.runtime.waiting("P"), "E02 expected");
@@ -46,7 +47,7 @@ public final class GraphRuntimeTest {
         eq(state, fake.runtime.snapshot(), "R07 simulation has no changes");
         fake.runtime = new GraphJobRuntime<>(state);
         fake.limit = 0;
-        fake.runtime.tick(fake, 10, 100);
+        fake.tick(10, 100);
         eq(5L, fake.accepted, "R02 no double dispatch after reload");
         fake.returnAll();
         fake.limit = Long.MAX_VALUE;
@@ -60,22 +61,22 @@ public final class GraphRuntimeTest {
         var p = plan(List.of(recipe("p", Map.of("R", 1L), Map.of("P", 1L))), "P", 100, Map.of("R", 100L));
         Fake fake = new Fake(p);
         fake.outcome = GraphJobRuntime.Outcome.REJECTED;
-        fake.runtime.tick(fake, 0, 1);
+        fake.tick(0, 1);
         eq(Map.of("R", 100L), fake.runtime.owned(), "E03 rejected escrow restored");
         eq(100L, fake.runtime.pendingRuns().get("p"), "E03 not dispatched");
         eq(Map.of(), fake.runtime.expected(), "E03 no fake production");
-        fake.runtime.tick(fake, 1, 10);
+        fake.tick(1, 10);
         eq(1L, fake.pushes, "E11 bounded retry");
         fake.outcome = GraphJobRuntime.Outcome.ACCEPTED;
-        fake.runtime.tick(fake, 5, 10);
+        fake.tick(5, 10);
         eq(2L, fake.pushes, "E11 idle eventually retried");
         Fake unknown = new Fake(p);
         unknown.throwAfterTaking = true;
-        unknown.runtime.tick(unknown, 0, 1);
+        unknown.tick(0, 1);
         eq(GraphJobRuntime.State.NEEDS_ATTENTION, unknown.runtime.state(), "R08 exception pauses");
         eq(Map.of(), unknown.runtime.owned(), "R08 no phantom refund");
         unknown.runtime = new GraphJobRuntime<>(unknown.runtime.snapshot());
-        unknown.runtime.tick(unknown, 1000, 1000);
+        unknown.tick(1000, 1000);
         eq(1L, unknown.pushes, "R08 unknown dispatch not repeated after reload");
     }
 
@@ -93,7 +94,7 @@ public final class GraphRuntimeTest {
         Fake inconsistent = new Fake(p);
         inconsistent.synchronous = true;
         inconsistent.outcome = GraphJobRuntime.Outcome.REJECTED;
-        inconsistent.runtime.tick(inconsistent, 0, 1);
+        inconsistent.tick(0, 1);
         eq(GraphJobRuntime.State.NEEDS_ATTENTION, inconsistent.runtime.state(), "false with callback is ambiguous");
         eq(2L, inconsistent.runtime.owned().get("A"), "actual callback owned, spent seed not restored");
     }
@@ -102,21 +103,21 @@ public final class GraphRuntimeTest {
         var p = plan(List.of(recipe("c", Map.of("C", 1L, "R", 1L), Map.of("C", 1L, "P", 1L))),
                 "P", 100, Map.of("C", 8L, "R", 100L));
         Fake fake = new Fake(p);
-        fake.runtime.tick(fake, 0, 1);
+        fake.tick(0, 1);
         eq(8L, fake.batches.get(0), "C07 eight real catalysts bound the batch");
         eq(1L, fake.runtime.accept("P", 1, false), "E09 partial primary return");
-        fake.runtime.tick(fake, 10, 1);
+        fake.tick(10, 1);
         eq(1L, fake.pushes, "E09 must wait for catalyst");
         eq(Map.of(), fake.delivered, "no early external delivery");
         fake.runtime = new GraphJobRuntime<>(fake.runtime.snapshot());
         fake.runtime.cancel();
         fake.refundLimit = 0;
-        fake.runtime.tick(fake, 11, 64);
+        fake.tick(11, 64);
         eq(GraphJobRuntime.State.CANCELLING, fake.runtime.state(), "E14 retains full-network refund");
         eq(0L, fake.runtime.accept("C", 1, false), "late output bypasses cancelled task");
         fake.runtime = new GraphJobRuntime<>(fake.runtime.snapshot());
         fake.refundLimit = Long.MAX_VALUE;
-        fake.runtime.tick(fake, 12, 64);
+        fake.tick(12, 64);
         eq(92L, fake.refunded.get("R"), "only actually held unspent R refunded");
         eq(null, fake.refunded.get("C"), "no refund of in-flight catalyst");
         eq(1L, fake.refunded.get("P"), "actual partial output refunded");
@@ -131,7 +132,7 @@ public final class GraphRuntimeTest {
         Fake fake = new Fake(p);
         fake.limit = 1;
         for (int tick = 0; tick < 100 && !fake.runtime.finished(); tick++) {
-            fake.runtime.tick(fake, tick, 1);
+            fake.tick(tick, 1);
             fake.runtime = new GraphJobRuntime<>(fake.runtime.snapshot());
             fake.returnAll();
         }
@@ -144,11 +145,11 @@ public final class GraphRuntimeTest {
                 recipe("b", Map.of("S", 1L), Map.of("B", 1L)),
                 recipe("p", Map.of("A", 1L, "B", 1L), Map.of("P", 1L))), "P", 100, Map.of("R", 100L, "S", 100L));
         Fake fake = new Fake(p);
-        fake.runtime.tick(fake, 0, 100);
+        fake.tick(0, 100);
         eq(2L, fake.pushes, "independent DAG branches dispatch together before outputs arrive");
         fake.runtime = new GraphJobRuntime<>(fake.runtime.snapshot());
         fake.runtime.accept("A", 100, false);
-        fake.runtime.tick(fake, 5, 100);
+        fake.tick(5, 100);
         eq(2L, fake.pushes, "DAG cannot spend predicted B");
         fake.runtime.accept("B", 100, false);
         fake.complete();
@@ -161,7 +162,7 @@ public final class GraphRuntimeTest {
         var p = new GraphPlan<>("P", 1, true, new PlanStep.Sequence(List.of(new PlanStep.Batch("c", 1))),
                 Map.of("c", recipe), Map.of("C", Long.MAX_VALUE, "R", 1L), Map.of("C", 1L), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
         Fake fake = new Fake(p);
-        fake.runtime.tick(fake, 0, 1);
+        fake.tick(0, 1);
         eq(1L, fake.pushes, "returning catalyst at full long ledger can still dispatch");
         fake.returnAll();
         eq(Long.MAX_VALUE, fake.runtime.held("C"), "catalyst debit precedes credit without overflow");
@@ -171,10 +172,10 @@ public final class GraphRuntimeTest {
         var p = plan(List.of(recipe("upstream", Map.of("R", 1L), Map.of("A", 1L, "X", 1L)),
                 recipe("downstream", Map.of("A", 1L), Map.of("P", 1L))), "P", 100, Map.of("R", 100L));
         Fake fake = new Fake(p);
-        fake.runtime.tick(fake, 0, 100);
+        fake.tick(0, 100);
         eq(1L, fake.pushes, "Only upstream can dispatch before its actual outputs arrive");
         eq(10L, fake.runtime.accept("A", 10, false), "First partial upstream output arrives");
-        fake.runtime.tick(fake, 5, 100);
+        fake.tick(5, 100);
         eq(List.of(100L, 10L), fake.batches, "DAG downstream starts with partial upstream production");
         eq(Map.of("A", 90L, "X", 100L, "P", 10L), fake.runtime.expected(),
                 "Both stages remain in flight and the delayed side output remains owed");
@@ -182,12 +183,27 @@ public final class GraphRuntimeTest {
         eq(90L, fake.runtime.pendingRuns().get("downstream"), "Downstream retains exactly its unstarted work");
         fake.runtime = new GraphJobRuntime<>(fake.runtime.snapshot());
         eq(5L, fake.runtime.accept("A", 5, false), "Another partial return after reload");
-        fake.runtime.tick(fake, 10, 100);
+        fake.tick(10, 100);
         eq(List.of(100L, 10L, 5L), fake.batches, "Reload keeps partial pipeline progress without resending upstream");
         eq(100L, fake.runtime.waiting("X"), "Unrelated side output is still owed while downstream runs");
         fake.complete();
         eq(100L, fake.delivered.get("P"), "Partial pipeline delivers the exact target");
         eq(100L, fake.refunded.get("X"), "Side outputs remain accounted for through final settlement");
+    }
+
+    private static void dispatchDeadline() {
+        var p = plan(List.of(recipe("p", Map.of("R", 1L), Map.of("P", 1L))), "P", 4, Map.of("R", 4L));
+        for (long start : new long[]{0, Long.MAX_VALUE - 1_000_000L}) {
+            Fake fake = new Fake(p);
+            fake.limit = 1;
+            int[] reads = {0};
+            fake.runtime.tick(fake, 0, 4, () -> reads[0]++ == 0 ? start : start + 2_000_000L);
+            eq(1L, fake.pushes, "Dispatch yields at the wall deadline, including nanoTime wraparound");
+            fake.tick(1, 2);
+            eq(3L, fake.pushes, "Next tick resumes with the exact remaining work allowance");
+            fake.complete();
+            eq(4L, fake.delivered.get("P"), "Deadline preserves eventual delivery");
+        }
     }
 
     private static void cyclicBatchParallelism() {
@@ -200,21 +216,21 @@ public final class GraphRuntimeTest {
                 Map.of("C", 4L), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
         Fake fake = new Fake(p);
         fake.limit = 1;
-        fake.runtime.tick(fake, 0, 2);
+        fake.tick(0, 2);
         eq(2L, fake.pushes, "cyclic plan ordinary prefix uses CPU work allowance before returns");
         fake.runtime = new GraphJobRuntime<>(fake.runtime.snapshot());
-        fake.runtime.tick(fake, 1, 8);
+        fake.tick(1, 8);
         eq(4L, fake.pushes, "partial serial batch keeps parallel window after reload");
         fake.runtime.accept("D", 9, false);
-        fake.runtime.tick(fake, 2, 8);
+        fake.tick(2, 8);
         eq(8L, fake.pushes, "partial previous stage return releases four funded downstream machines");
         eq(27L, fake.runtime.waiting("D"), "unfinished upstream batches remain in flight during downstream work");
         eq(0L, fake.runtime.held("C"), "in-flight catalysts cannot be reused");
         fake.runtime = new GraphJobRuntime<>(fake.runtime.snapshot());
-        fake.runtime.tick(fake, 10, 8);
+        fake.tick(10, 8);
         eq(8L, fake.pushes, "reload cannot turn expected catalysts into inventory");
         fake.runtime.accept("C", 2, false);
-        fake.runtime.tick(fake, 11, 8);
+        fake.tick(11, 8);
         eq(10L, fake.pushes, "partial real return immediately permits two new copies");
         fake.complete();
         eq(8L, fake.delivered.get("C"), "parallel cyclic batches preserve delivery");
@@ -222,9 +238,9 @@ public final class GraphRuntimeTest {
 
         var cancelled = new Fake(p);
         cancelled.limit = 1;
-        cancelled.runtime.tick(cancelled, 0, 4);
+        cancelled.tick(0, 4);
         cancelled.runtime.cancel();
-        cancelled.runtime.tick(cancelled, 1, 64);
+        cancelled.tick(1, 64);
         eq(4L, cancelled.refunded.get("C"), "cancel refunds only unspent catalysts");
         eq(null, cancelled.refunded.get("block"), "cancel cannot duplicate four dispatched inputs");
     }
@@ -239,16 +255,16 @@ public final class GraphRuntimeTest {
         eq(true, work.result().feasible(), "Partial parallel water batch remains feasible");
         var fake = new Fake(work.result());
         fake.limit = 1;
-        fake.runtime.tick(fake, 0, 2);
+        fake.tick(0, 2);
         // The executor yields on its wall-clock slice; class loading on a cold
         // JVM may consume that slice before both funded machines are started.
-        for (int i = 0; i < 10 && fake.pushes < 2; i++) fake.runtime.tick(fake, 0, 2 - (int) fake.pushes);
+        for (int i = 0; i < 10 && fake.pushes < 2; i++) fake.tick(0, 2 - (int) fake.pushes);
         eq(2L, fake.runtime.accept("I", 2, false), "Two wet intermediates actually return");
-        fake.runtime.tick(fake, 1, 2);
-        for (int i = 0; i < 10 && fake.pushes < 4; i++) fake.runtime.tick(fake, 1, 4 - (int) fake.pushes);
+        fake.tick(1, 2);
+        for (int i = 0; i < 10 && fake.pushes < 4; i++) fake.tick(1, 4 - (int) fake.pushes);
         eq(2L, fake.runtime.accept("P", 2, false), "Products may return before their advertised water");
         long pushes = fake.pushes;
-        for (int tick = 2; tick < 100; tick++) fake.runtime.tick(fake, tick, 8);
+        for (int tick = 2; tick < 100; tick++) fake.tick(tick, 8);
         eq(pushes, fake.pushes, "Network availability cannot stand in for a missing physical byproduct return");
         eq(4000L, fake.runtime.expected().get("W"), "Delayed water remains a real finite output obligation");
         eq(false, fake.runtime.finished(), "A missing advertised output is waiting, not a completed order");
@@ -263,20 +279,20 @@ public final class GraphRuntimeTest {
         Fake fake = new Fake(p);
         fake.saveDuringPush = true;
         fake.synchronous = true;
-        fake.runtime.tick(fake, 0, 1);
+        fake.tick(0, 1);
         eq(GraphJobRuntime.State.NEEDS_ATTENTION, fake.duringPush.state(), "R09 save in handoff is ambiguous");
         eq(Map.of("R", 10L), fake.duringPush.uncertainInputs(), "R09 escrow is not owned");
         eq(Map.of("P", 10L), fake.duringPush.owned(), "R09 synchronous returns are actual inventory");
         fake.runtime = new GraphJobRuntime<>(fake.duringPush);
-        fake.runtime.tick(fake, 100, 100);
+        fake.tick(100, 100);
         eq(1L, fake.pushes, "R09 never automatically replay interrupted handoff");
         fake.runtime.cancel();
         fake.refundLimit = 0;
-        fake.runtime.tick(fake, 101, 100);
+        fake.tick(101, 100);
         fake.runtime = new GraphJobRuntime<>(fake.runtime.snapshot());
         eq(GraphJobRuntime.State.CANCELLING, fake.runtime.state(), "R04 cancelled ambiguous batch can settle after reload");
         fake.refundLimit = Long.MAX_VALUE;
-        fake.runtime.tick(fake, 102, 100);
+        fake.tick(102, 100);
         eq(Map.of("P", 10L), fake.refunded, "R09 refund real returned output only");
         eq(GraphJobRuntime.State.CANCELLED, fake.runtime.state(), "R09 cancelled ambiguous task completes cleanup");
     }
@@ -286,11 +302,11 @@ public final class GraphRuntimeTest {
                 recipe("b", Map.of("S", 1L), Map.of("B", 1L)),
                 recipe("p", Map.of("A", 1L, "B", 1L), Map.of("P", 1L))), "P", 10, Map.of("R", 10L, "S", 10L));
         Fake fake = new Fake(p);
-        fake.runtime.tick(fake, 0, 1);
+        fake.tick(0, 1);
         Map<String, Long> old = fake.runtime.expected();
         fake.beforeReturn = () -> old.forEach((key, amount) -> fake.runtime.accept(key, amount, false));
         fake.outcome = GraphJobRuntime.Outcome.REJECTED;
-        fake.runtime.tick(fake, 1, 1);
+        fake.tick(1, 1);
         eq(GraphJobRuntime.State.RUNNING, fake.runtime.state(), "E08 old DAG return during rejected new push is unambiguous");
         eq(Map.of(), fake.runtime.expected(), "E08 old obligations cleared");
         old.forEach((key, amount) -> eq(amount, fake.runtime.held(key), "E08 old return retained"));
@@ -304,10 +320,10 @@ public final class GraphRuntimeTest {
         var p = plan(List.of(recipe("p", Map.of("R", 1L), Map.of("P", 1L))), "P", 10, Map.of("R", 10L));
         Fake fake = new Fake(p);
         fake.runtime = new GraphJobRuntime<>(p, Map.of(), Map.of("R", 10L));
-        fake.runtime.tick(fake, 0, 100);
+        fake.tick(0, 100);
         eq(0L, fake.pushes, "E16 predicted emission is not owned input");
         long checksBefore = fake.runtime.checks();
-        for (int tick = 1; tick < 100; tick++) fake.runtime.tick(fake, tick, 100);
+        for (int tick = 1; tick < 100; tick++) fake.tick(tick, 100);
         eq(checksBefore + 99, fake.runtime.checks(), "input-blocked DAG only polls its empty queue, not every blocked recipe");
         fake.runtime.accept("R", 10, false);
         fake.complete();
@@ -319,22 +335,22 @@ public final class GraphRuntimeTest {
         Fake fake = new Fake(p);
         fake.synchronous = true;
         fake.saveDuringDelivery = true;
-        fake.runtime.tick(fake, 0, 100);
-        fake.runtime.tick(fake, 1, 100);
+        fake.tick(0, 100);
+        fake.tick(1, 100);
         eq(Map.of(), fake.duringDelivery.owned(), "delivery handoff is not simultaneously CPU-owned");
         eq(Map.of("P", 10L), fake.duringDelivery.uncertainInputs(), "delivery snapshot retains transfer evidence");
         fake.runtime = new GraphJobRuntime<>(fake.duringDelivery);
-        fake.runtime.tick(fake, 100, 100);
+        fake.tick(100, 100);
         eq(1L, fake.deliveries, "no duplicate delivery after interrupted handoff");
         Fake thrown = new Fake(p);
         thrown.synchronous = true;
         thrown.throwDuringDelivery = true;
-        thrown.runtime.tick(thrown, 0, 100);
-        thrown.runtime.tick(thrown, 1, 100);
+        thrown.tick(0, 100);
+        thrown.tick(1, 100);
         eq(GraphJobRuntime.State.NEEDS_ATTENTION, thrown.runtime.state(), "throwing requester pauses settlement");
         eq(Map.of(), thrown.runtime.owned(), "throwing requester cannot duplicate ambiguous output");
         thrown.runtime = new GraphJobRuntime<>(thrown.runtime.snapshot());
-        thrown.runtime.tick(thrown, 100, 100);
+        thrown.tick(100, 100);
         eq(1L, thrown.deliveries, "throwing requester not retried automatically");
     }
 
@@ -349,7 +365,7 @@ public final class GraphRuntimeTest {
         fake.runtime.cancel();
         for (int tick = 0; tick < 5; tick++) {
             fake.runtime.cancel(); // cancelled link is checked again on every CPU tick
-            fake.runtime.tick(fake, tick, 32);
+            fake.tick(tick, 32);
         }
         eq(31, fake.refunded.size(), "full storage for earlier keys cannot starve later refunds");
         eq(70, fake.runtime.owned().size(), "blocked keys stay physically owned");
@@ -366,28 +382,28 @@ public final class GraphRuntimeTest {
                 "P", 2, Map.of("C", 1L, "X", 2L, "Y", 2L, "Z", 2L));
         Fake f = new Fake(p);
         String owner = f.runtime.recovery().owner();
-        f.runtime.tick(f, 0, 1);
+        f.tick(0, 1);
         eq(Map.of("I", 1L), f.runtime.inFlight(), "T57 only r1 outputs are in flight");
         eq(Map.of(), f.runtime.externalWaiting(), "T57 no external seed request was invented");
         eq(Map.of("C", 1L), f.runtime.recovery().seeds(), "T57 future C is a restoration obligation");
         eq(RecoveryObligation.Status.IN_FLIGHT, f.runtime.recovery().status(), "T57 current recovery stage");
         eq(1L, f.runtime.recovery().stage(), "T53 one accepted phase transition");
-        for (long tick : new long[] { 1, 100, 100_000 }) f.runtime.tick(f, tick, 100);
+        for (long tick : new long[] { 1, 100, 100_000 }) f.tick(tick, 100);
         eq(1L, f.pushes, "T23 long wait never proves a deadlock or grants another dispatch");
         f.runtime.accept("I", 1, false);
         eq(RecoveryObligation.Status.INTERMEDIATE, f.runtime.recovery().status(), "T15 intermediate ownership");
         f.runtime.suspend(true);
         f.runtime = new GraphJobRuntime<>(f.runtime.snapshot());
         eq(owner, f.runtime.recovery().owner(), "T15 recovery owner survives save and pause");
-        f.runtime.tick(f, 100_001, 100);
+        f.tick(100_001, 100);
         eq(1L, f.pushes, "T15 pause prevents the next recovery phase");
         f.runtime.suspend(false);
-        f.runtime.tick(f, 100_002, 1);
+        f.tick(100_002, 1);
         f.returnAll();
-        f.runtime.tick(f, 100_003, 1);
+        f.tick(100_003, 1);
         f.runtime.accept("P", 1, false);
         eq(Map.of("C", 1L), f.runtime.inFlight(), "T05 early P does not erase missing recovery output");
-        f.runtime.tick(f, 100_004, 100);
+        f.tick(100_004, 100);
         eq(Map.of(), f.delivered, "T05 cannot complete before catalyst return");
         f.runtime = new GraphJobRuntime<>(f.runtime.snapshot());
         f.runtime.cancel();
@@ -412,7 +428,7 @@ public final class GraphRuntimeTest {
         var p = plan(List.of(recipe), "P", 100, Map.of("circuit", 100L, "R", 100L));
         Fake f = new Fake(p);
         f.limit = 5;
-        f.runtime.tick(f, 0, 1);
+        f.tick(0, 1);
         eq(5L, f.accepted, "T12 circuits do not force one-operation batches");
         eq(Map.of("circuit", 1L, "R", 5L), f.lastInputs, "T12 one configuration per physical push");
         eq(99L, f.runtime.held("circuit"), "T12 no multiplied circuit debit");
@@ -444,20 +460,20 @@ public final class GraphRuntimeTest {
         var original = plan(List.of(recipe("accepted-r1", Map.of("R", 1L), Map.of("I", 1L)),
                 recipe("removed-r2", Map.of("I", 1L), Map.of("P", 1L))), "P", 1, Map.of("R", 1L));
         Fake f = new Fake(original);
-        f.runtime.tick(f, 0, 1);
+        f.tick(0, 1);
         var boundary = f.runtime.beginReplan();
         eq(Map.of("I", 1L), boundary.forecast(), "T32 accepted output belongs to prefix, not current physical stock");
         var replacement = new GraphPlanner<>(new GraphCompiler<>(List.of(
                 recipe("new-r2", Map.of("I", 1L), Map.of("Q", 1L)),
                 recipe("new-r3", Map.of("Q", 1L), Map.of("P", 1L)))))
                 .plan("P", 1, boundary.forecast(), true, false, new PlanningBudget(0, 10000, () -> false));
-        f.runtime.tick(f, 100, 100);
+        f.tick(100, 100);
         eq(1L, f.pushes, "T32 planning freezes uncommitted dispatch");
         eq(true, f.runtime.replaceSuffix(boundary.epoch(), replacement, Map.of(), Map.of()), "T32 suffix replaced");
         eq(Map.of("I", 1L), f.runtime.inFlight(), "T32 accepted batch survives replacement");
         eq(Map.of("accepted-r1", 1L), f.runtime.committedRuns(), "T32 accepted authorization is not reset");
         f.runtime = new GraphJobRuntime<>(f.runtime.snapshot());
-        f.runtime.tick(f, 101, 100);
+        f.tick(101, 100);
         eq(1L, f.pushes, "T32 replacement cannot consume predicted output");
         f.returnAll();
         f.complete();
@@ -466,7 +482,7 @@ public final class GraphRuntimeTest {
         eq(Map.of("accepted-r1", 1L, "new-r2", 1L, "new-r3", 1L), f.runtime.committedRuns(), "T32 complete accepted history across save");
 
         f = new Fake(original);
-        f.runtime.tick(f, 0, 1);
+        f.tick(0, 1);
         boundary = f.runtime.beginReplan();
         f.runtime.accept("I", 1, false);
         eq(Map.of("I", 1L), f.runtime.owned(), "T32 existing returns are accepted during planning");
@@ -481,7 +497,7 @@ public final class GraphRuntimeTest {
                 "Book", 1, Map.of("R", 1L, "C", 1L));
         Fake f = new Fake(p);
         eq(false, f.runtime.completePlaceholder(), "undispatched marker cannot finish");
-        f.runtime.tick(f, 0, 1);
+        f.tick(0, 1);
         eq(false, f.runtime.completePlaceholder(), "marker waits for actual seed and byproduct");
         f.runtime = new GraphJobRuntime<>(f.runtime.snapshot());
         f.runtime.accept("C", 1, false);
@@ -497,7 +513,7 @@ public final class GraphRuntimeTest {
         eq(Map.of("C", 1L, "B", 2L), f.runtime.owned(), "no physical book invented");
         f.runtime = new GraphJobRuntime<>(f.runtime.snapshot());
         f.refundLimit = 0;
-        f.runtime.tick(f, 1, 10);
+        f.tick(1, 10);
         eq(GraphJobRuntime.State.SETTLING, f.runtime.state(), "full network retains real refunds");
         f.refundLimit = Long.MAX_VALUE;
         f.complete();
@@ -506,18 +522,18 @@ public final class GraphRuntimeTest {
 
         f = new Fake(p);
         f.runtime = new GraphJobRuntime<>(p, Map.of("C", 1L), Map.of("R", 1L));
-        f.runtime.tick(f, 0, 10);
+        f.tick(0, 10);
         eq(false, f.runtime.completePlaceholder(), "missing emitted input is not a completion marker");
         f = new Fake(p);
         f.outcome = GraphJobRuntime.Outcome.REJECTED;
-        f.runtime.tick(f, 0, 1);
+        f.tick(0, 1);
         eq(false, f.runtime.completePlaceholder(), "rejected batch is not completion");
         f = new Fake(p);
         f.outcome = GraphJobRuntime.Outcome.IN_DOUBT;
-        f.runtime.tick(f, 0, 1);
+        f.tick(0, 1);
         eq(false, f.runtime.completePlaceholder(), "ambiguous handoff is not completion");
         f = new Fake(p);
-        f.runtime.tick(f, 0, 1);
+        f.tick(0, 1);
         f.runtime.cancel();
         eq(false, f.runtime.completePlaceholder(), "cancellation never becomes completion");
     }
@@ -585,9 +601,13 @@ public final class GraphRuntimeTest {
             runtime.expected().forEach((key, amount) -> runtime.accept(key, amount, false));
         }
 
+        int tick(long tick, int workBudget) {
+            return runtime.tick(this, tick, workBudget, () -> 0L);
+        }
+
         void complete() {
             for (int tick = 0; tick < 1000 && !runtime.finished(); tick++) {
-                runtime.tick(this, tick, 100);
+                tick(tick, 100);
                 returnAll();
             }
             eq(true, runtime.finished(), "runtime completes");

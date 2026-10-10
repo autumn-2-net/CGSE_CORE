@@ -18,7 +18,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
 | Stable oracles | `--suite oracles` | 23 independent oracle programs plus 21 pinned count-model boundaries at explicit 20M/80M caps |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
-| Fixed counterexamples | `--suite fixtures --keep-going` | All 239 curated fixtures, three deterministic order permutations by default |
+| Fixed counterexamples | `--suite fixtures --keep-going` | All 244 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
 | Count models | `--suite models --keep-going` | 274 exact integer models; historical first LCG allowance by default, explicit retained/view/main-count entries |
 | Planner/runtime benchmark | `--suite benchmarks --timeout 600` | Original `GraphBenchmark`: chain, shared diamond, coproducts, growth/cycles and runtime batch dispatch |
@@ -53,6 +53,31 @@ pointer, original names, oracle truth, seed and budget. Byte-identical source al
 are recorded in `provenance/duplicates.json`; original archive members are listed in
 `provenance/archive-entries.json`. Complete captures are gzip compressed with original
 and compressed SHA-256 checksums in `datasets/index.json`.
+
+`CountJumpBoundaryTest` exercises 643 exact integer-boundary cases through the
+hinge sweep, its low-memory alternative and retained continuations. Gains of
+roughly `-1e30` can round to the same double while the candidate one unit below
+the breakpoint is still infeasible; tied gains are compared by subtracting the
+candidate violations before conversion. This is candidate ranking, not a proof.
+`CountSparseCutTest` checks sparse certified consequences in 32..8192-coordinate
+models, including foreign scopes, invalid combinations, optional memory refusal,
+cancellation and the independent proof-transfer admission boundary. Dense bound
+sharing retains its separate dimension cap.
+
+The primitive witness checker counts actual target production separately from
+net inventory change. Forced production requires positive net gain, enough output
+and enough final inventory for delivery; target inputs may serve as cycle seeds. Returning a
+reusable configuration token is not production. `FixtureProductionTest` and the
+`forced-production` fixtures cover self-copying, nested/shared repetitions beyond
+long, read arcs and a stocked target with no fuel. Runtime unit checks use a
+controlled clock; a separate deadline check preserves the real two-millisecond
+yield condition, continuation and nanoTime wraparound.
+`CountForcedGainTest` checks that the count model includes the same strictly
+positive gain required by final witness verification. It retains the safe
+relaxation for consumed configuration inputs charged per physical push and the
+productive startup cases whose net gain is smaller than the requested amount.
+Cold/warm request scopes, target stock at Long.MAX_VALUE, unforced stock delivery
+and 60 ring/order/preservation cases are covered under a one-million-work cap.
 
 ## Controlled planning comparison
 

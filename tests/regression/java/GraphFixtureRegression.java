@@ -42,6 +42,31 @@ public final class GraphFixtureRegression {
         return result;
     }
 
+    /** Gross output is distinct from net change when the target is also a seed/input. */
+    static BigInteger production(PlanStep step, String target, Map<String, GraphRecipe<String>> recipes,
+                                 Map<PlanStep, BigInteger> memo) {
+        BigInteger cached = memo.get(step);
+        if (cached != null) return cached;
+        BigInteger produced;
+        if (step instanceof PlanStep.Batch batch) {
+            var recipe = Objects.requireNonNull(recipes.get(batch.recipe()));
+            produced = BigInteger.valueOf(recipe.outputs().getOrDefault(target, 0L));
+            // Read-arc tokens are represented as logical outputs, but returning
+            // one does not manufacture a requested item.
+            for (var slot : recipe.slots()) if (slot.reusable() && slot.key().equals(target))
+                produced = produced.subtract(BigInteger.valueOf(slot.amount()));
+            produced = produced.multiply(BigInteger.valueOf(batch.runs()));
+        } else if (step instanceof PlanStep.Repeat repeat) {
+            produced = production(repeat.body(), target, recipes, memo).multiply(BigInteger.valueOf(repeat.times()));
+        } else {
+            produced = BigInteger.ZERO;
+            for (PlanStep child : ((PlanStep.Sequence) step).children())
+                produced = produced.add(production(child, target, recipes, memo));
+        }
+        memo.put(step, produced);
+        return produced;
+    }
+
     static String string(DataInputStream input) throws IOException {
         int length = input.readInt();
         if (length < 0 || length > 1_000_000) throw new IOException("Invalid fixture string");
@@ -96,7 +121,8 @@ public final class GraphFixtureRegression {
                         throw new AssertionError(name + ": unfunded prefix " + e);
                     for (var e : s.need.entrySet()) if (plan.initialExact().getOrDefault(e.getKey(), BigInteger.ZERO).compareTo(e.getValue()) < 0)
                         throw new AssertionError(name + ": initial reservation smaller than primitive prefix " + e);
-                    if (s.delta.getOrDefault(target, BigInteger.ZERO).compareTo(BigInteger.valueOf(amount)) < 0)
+                    if (s.delta.getOrDefault(target, BigInteger.ZERO).signum() <= 0 ||
+                            production(plan.steps(), target, primitives, new IdentityHashMap<>()).compareTo(BigInteger.valueOf(amount)) < 0)
                         throw new AssertionError(name + ": force order reused existing goal inventory");
                     if (funded.getOrDefault(target, BigInteger.ZERO).add(s.delta.getOrDefault(target, BigInteger.ZERO)).compareTo(BigInteger.valueOf(amount)) < 0)
                         throw new AssertionError(name + ": missing goal");

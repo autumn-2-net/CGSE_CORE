@@ -110,7 +110,7 @@ final class CountViewSearch implements AutoCloseable {
             } else {
                 if (solver == null) {
                     solver = new CountLcg(view.rows(), domains.lower(), domains.upper(), budget, quantum);
-                    if (models.sharesBounds(view)) solver.shareRows();
+                    if (models.sharesCuts(view)) solver.shareRows();
                     if (engine == Engine.LOCKS) solver.lockBranching();
                 } else solver.resume(quantum);
                 int bounds = models.importProofBounds(view, importedBounds, solver);

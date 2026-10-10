@@ -1,0 +1,12 @@
+{
+  "name": "forced-selfcopy-billion",
+  "target": "A",
+  "amount": 1000000000,
+  "stock": { "A": 1, "F": 999999999 },
+  "recipes": [ { "id": "copy", "inputs": { "A": 1, "F": 1 }, "outputs": { "A": 2 } } ],
+  "expected": "SAT",
+  "provenance": {
+    "corpus_id": "75f8e93383b9c020820c67fb5f861bfefa2795bfc62d288563dbd6d810854d75",
+    "witness": "999999999 copy runs: gross A output 1999999998, final A stock 1000000000"
+  }
+}

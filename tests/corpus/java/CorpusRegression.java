@@ -61,7 +61,9 @@ public final class CorpusRegression {
                             if (plan.initialExact().getOrDefault(entry.getKey(), BigInteger.ZERO).compareTo(entry.getValue()) < 0)
                                 throw new AssertionError("Reservation below primitive prefix " + entry);
                         }
-                        if (plan.feasible() && force && !external.contains(target) && summary.delta().getOrDefault(target, BigInteger.ZERO).compareTo(BigInteger.valueOf(amount)) < 0)
+                        if (plan.feasible() && force && !external.contains(target) &&
+                                (summary.delta().getOrDefault(target, BigInteger.ZERO).signum() <= 0 ||
+                                        GraphFixtureRegression.production(plan.steps(), target, primitives, new IdentityHashMap<>()).compareTo(BigInteger.valueOf(amount)) < 0))
                             throw new AssertionError("Order reused existing target inventory");
                         if (!external.contains(target) && funded.getOrDefault(target, BigInteger.ZERO)
                                 .add(summary.delta().getOrDefault(target, BigInteger.ZERO)).compareTo(BigInteger.valueOf(amount)) < 0)

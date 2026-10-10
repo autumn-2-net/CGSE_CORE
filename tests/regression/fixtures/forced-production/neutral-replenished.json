@@ -1,0 +1,16 @@
+{
+  "name": "forced-neutral-replenished",
+  "target": "A",
+  "amount": 1,
+  "stock": { "A": 1, "R": 1 },
+  "recipes": [
+    { "id": "ab", "inputs": { "A": 1 }, "outputs": { "B": 1 } },
+    { "id": "bc", "inputs": { "B": 1 }, "outputs": { "C": 1 } },
+    { "id": "ca", "inputs": { "C": 1 }, "outputs": { "A": 1 } },
+    { "id": "refill", "inputs": { "R": 1 }, "outputs": { "B": 1 } }
+  ],
+  "expected": "SAT",
+  "provenance": {
+    "witness": "refill, bc, ca: one new A while retaining the original A"
+  }
+}

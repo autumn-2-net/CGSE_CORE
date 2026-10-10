@@ -1,0 +1,15 @@
+{
+  "name": "forced-neutral-stock",
+  "target": "A",
+  "amount": 1,
+  "stock": { "A": 1 },
+  "recipes": [
+    { "id": "ab", "inputs": { "A": 1 }, "outputs": { "B": 1 } },
+    { "id": "bc", "inputs": { "B": 1 }, "outputs": { "C": 1 } },
+    { "id": "ca", "inputs": { "C": 1 }, "outputs": { "A": 1 } }
+  ],
+  "expected": "UNSAT",
+  "provenance": {
+    "oracle": "A+B+C is conserved. With no initial B/C, positive net A gain is impossible; forced crafting rejects pure turnover."
+  }
+}

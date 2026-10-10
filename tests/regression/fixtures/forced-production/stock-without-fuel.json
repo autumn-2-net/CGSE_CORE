@@ -1,0 +1,11 @@
+{
+  "name": "forced-stock-without-fuel",
+  "target": "A",
+  "amount": 32,
+  "stock": { "A": 100 },
+  "recipes": [ { "id": "copy", "inputs": { "A": 1, "F": 1 }, "outputs": { "A": 2 } } ],
+  "expected": "UNSAT",
+  "provenance": {
+    "oracle": "Existing target stock cannot satisfy forced production; every copy run requires unavailable F."
+  }
+}

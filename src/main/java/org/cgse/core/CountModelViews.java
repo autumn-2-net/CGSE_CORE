@@ -196,8 +196,15 @@ final class CountModelViews implements AutoCloseable {
     }
 
     boolean sharesBounds(View view) {
-        return view.semantics.transfersProof() && original.lower.length <= 1024 &&
-                budget.remainingWork() >= 8L * original.lower.length + 1024 &&
+        return original.lower.length <= 1024 && budget.remainingWork() >= 8L * original.lower.length + 1024 &&
+                sharesCuts(view);
+    }
+
+    boolean sharesCuts(View view) {
+        // Sparse certified rows have their own term, byte and work caps. The
+        // dense-domain sharing limit must not discard a small consequence in
+        // a large model. Ownership and covering semantics are still required.
+        return view != null && view.semantics.transfersProof() &&
                 (views.stream().anyMatch(value -> value == view) || auxiliaryViews.stream().anyMatch(value -> value == view));
     }
 
@@ -218,7 +225,7 @@ final class CountModelViews implements AutoCloseable {
     }
 
     void publishCuts(View view, List<CountLpLearning.Cut> learned, int from, Object origin) {
-        if (view == null || from >= learned.size() || !sharesBounds(view)) return;
+        if (from >= learned.size() || !sharesCuts(view)) return;
         if (cuts == null) cuts = CountViewCuts.create(budget, original);
         if (cuts == null) return;
         int before = cuts.version();
@@ -232,7 +239,7 @@ final class CountModelViews implements AutoCloseable {
     }
 
     int importCuts(View view, int after, Object origin, CountLcg solver) {
-        if (cuts == null || after >= cuts.version() || !sharesBounds(view)) return 0;
+        if (cuts == null || after >= cuts.version() || !sharesCuts(view)) return 0;
         return cuts.transfer(view, after, origin, solver::learn);
     }
 
