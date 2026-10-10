@@ -415,6 +415,12 @@ final class CountModelViews implements AutoCloseable {
     }
 
     BigInteger[] restoreAndCheck(View view, BigInteger[] counts) {
+        try (var costs = budget.trace(PlanningCostTrace.Stage.RESTORE)) {
+            return restoreAndCheckMeasured(view, counts);
+        }
+    }
+
+    private BigInteger[] restoreAndCheckMeasured(View view, BigInteger[] counts) {
         if (counts == null) return null;
         BigInteger[] result = view.restore(counts);
         if (result == null || result.length != original.lower.length) return invalidCandidate(view, "Unmapped count model");

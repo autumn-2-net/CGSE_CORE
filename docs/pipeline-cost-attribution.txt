@@ -1,0 +1,122 @@
+Pipeline cost attribution and terminal publication (2026-10-11)
+=============================================================
+
+Scope relative to the reviews
+-----------------------------
+This increment addresses the older 15a473de review's section 8 / section 14
+cost observations, and part of comprehensive audit e788d3d3 items I and J.
+Existing stride mappings, retained Hall/LP/count tools, support neighborhoods,
+candidate feedback and scheduling policies are not replaced. No new solver arm,
+default budget change, fallback cycle search or host adapter is included.
+
+Enable PlanningBudget.enableMetrics() before starting an observed request.
+PlanningBudget.pipelineMetrics() then reports a bounded origin/stage matrix:
+preparation, search, coordinate/program restoration, scheduling, assembly,
+verification, physical-production checks and synchronous cleanup. The seven
+primary proposal origins have separate entries; the coordinator and optional
+seed optimization also have their own entries. Existing candidates() retains
+proposal/outcome and first-verified-plan counters. Preparation spent before any
+proposal exists is retained even if that origin never produces a witness.
+
+The matrix records exclusive search and compilation ticks, sixteen per existing
+work unit, plus active elapsed nanoseconds. Child scopes replace their parent's
+attribution while active; rounding each substep would double-count fractions.
+Charges belong to the budget actually charged, not a global thread-work delta.
+Scopes end on every yield, including exceptions. A resumed state machine can
+move to another worker; forked partitions inherit only immutable origin/stage
+labels. A completed partition publishes its costs before publishing its future.
+Active intervals sum across workers; they are not request wall latency. The
+legacy worker-phase timing can encompass a request's fallback call, so do not
+add it to the exclusive pipeline matrix as if they were disjoint measurements.
+Overflow saturation and the last charge that exceeds a work cap are included;
+cancellation before a charge is not billed. Enabling metrics twice preserves
+the accumulated trace. Disabled metrics allocate no trace or cost scopes.
+
+There are at most 11 origins x 9 stages, with no retained plan, inventory key,
+per-candidate history, source graph or worker reference in the public snapshots.
+UNATTRIBUTED/OTHER explicitly records charged calls made outside an instrumented
+scope. Snapshots include flushed scopes, not an atomic census of active workers.
+Thus their conservation check is made after work completes or yields. Request
+reservations do not include this small optional telemetry object; neither they
+nor these counters measure total JVM allocation, heap or process RSS.
+
+The existing outer candidate observer now includes verifier construction time.
+RequestPlanningWork.costs() exposes the primary account/pipeline alongside a
+separate ordinary-fallback account/pipeline, including unsuccessful exits. It
+does not add fallback's allowance to the primary budget or claim the fallback
+produced a primary solver witness. Existing fallback report behavior is kept.
+
+Lifecycle bug found during validation
+------------------------------------
+RootPortfolioTest exposed a completion-before-cleanup race: Job.run completed
+its future inside advance/result handling, and only then called Work.close().
+A caller observing completion could still see live reservations/search owners.
+PlanningCompletionTest uses a latch inside close(), and deterministically fails
+against 7e14f580 before releasing that latch. The corrected scheduler collects
+the outcome, closes its synchronous owner, then publishes success/failure. It
+also settles a cleanup exception instead of leaving it on the worker thread.
+Rejected dispatch similarly closes before publishing its exceptional result.
+
+The same test now chains a new request from a completion callback with exactly
+one admission slot. Releasing admission only in an earlier whenComplete handler
+is insufficient: dependent handlers can run first, see the stale slot, and
+spuriously receive QUEUE_LIMIT. This failed deterministically on the initial
+cleanup fix as well. Admission release is now idempotent and occurs before
+terminal publication; the cancellation handler shares the same release guard.
+
+External cancellation still completes immediately. Independently running child
+tasks retain their cooperative cancellation/release contract; this change does
+not turn close() into a blocking join or promise immediate reclamation of all
+children on cancellation. This is a scheduler lifecycle fix, not evidence that
+it caused a particular AE machine/player failure.
+
+Validation and reproduction
+---------------------------
+tests/provenance/pipeline-cost-attribution-20261011.json records the exact source,
+inputs, comparison totals and command lines. PlanningComparison and
+compare_planning.py now export the matrix for each request and independently
+check that its two accounts sum to the budget's charged work. Older revisions
+are recorded as unavailable, not zero. Existing primitive-prefix verification
+and cold/warm/replaced catalog comparisons remain active.
+
+Seventy-five standard programs pass. At both 20M and 1,000 units per account,
+239 fixtures x three orders x three cache states give 2,151 paired requests
+per cap (4,302 pairs total), with identical outcomes and charged work against
+7e14f580. All charges are assigned in these observed graph requests, with no
+UNATTRIBUTED ticks. Another 800 fixtures x three orders retain the preceding
+2,400 results and work counts. Fifty-seven captured requests pass: nineteen
+each at one worker, four workers with the same cap, and four with expanded caps.
+Offline assembly passes; all 203 main Java sources match the sources JAR bytes.
+
+The optional observation is not free. Four representative fixtures, three cache
+states, two source orders, three warmups and seven measured campaigns per JVM
+were run sequentially in baseline/candidate/candidate/baseline order. Median
+whole-campaign elapsed time rises from 798,619,900 to 859,695,700 ns (+7.65%)
+with metrics enabled. Results and work remain identical. This is not a claimed
+speedup, a universal overhead bound, or a measurement of disabled instrumentation.
+The full correctness campaign overlapped other regression work; its raw timing
+values are not used as isolated performance evidence.
+
+PlanningCostTraceTest covers fractional nested charges, two budgets on the same
+thread, inherited work-stealing partitions, migration between workers, metrics
+on/off graph equivalence, hard-cap exits, both saturation paths, cancellation,
+and separate successful/cancelled fallback accounts. StockViewFeedbackTest also
+checks conservation for large-catalog validation, memory-pressure handoff and
+32 concurrent requests. Negative controls lose a worker label, bill a parent
+twice, or drop the exhausting charge; each fails the new assertions.
+
+Remaining boundaries
+--------------------
+This is aggregate origin/stage attribution, not an event archive assigning every
+cost to a persistent candidate ID. Shared preprocessing still belongs to its
+responsible origin/coordinator; startup-cut pruning benefit is not priced per
+candidate. Existing internal CountViewSearch feedback is finer than the public
+origin matrix. Global candidate lineage across seed alternatives, complete
+PlanPreference improvement attribution, and host snapshot/plan-installation
+costs remain separate work. The new observations do not retune the scheduler.
+
+The general full-model/support admission limits and five original-order 20M
+known-SAT budget residuals remain. This increment does not establish new solver
+reach, SCIP/CP-SAT parity, process-wide snapshot residency, or fresh live-server
+integration. Captured inventory + JEI replay is a core regression, not an AE
+save/reload/dispatch test. Keep these gaps separate from this completed increment.

@@ -93,6 +93,12 @@ final class GraphStockViewWork<K> implements AutoCloseable {
     }
 
     boolean step() {
+        try (var costs = budget.trace(compilationActive() ? PlanningCostTrace.Stage.PREPARE : PlanningCostTrace.Stage.SEARCH)) {
+            return stepMeasured();
+        }
+    }
+
+    private boolean stepMeasured() {
         String previousFailure = budget.failureDetail();
         stepStarted = budget.threadSearchWork();
         try {

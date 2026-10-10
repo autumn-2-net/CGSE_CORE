@@ -17,7 +17,7 @@ public final class PlanningComparison {
         int warmup = args.length > 5 ? Integer.parseInt(args[5]) : 0;
         int repetitions = args.length > 6 ? Integer.parseInt(args[6]) : 1;
         if (warmup < 0 || repetitions < 1) throw new IllegalArgumentException("Invalid repetitions");
-        System.out.println("name\tcache\tmode\tresult\tsearch\tcompilation\ttotal\tprepare_ns\tsolve_ns\tpeak_reserved_bytes\tfirst_verified_search\tfirst_verified_compilation\tfirst_verified_ns\torigins\tlimit_detail\tcache_estimated_bytes\tcompiler_count\tactive_searches\tcache_stats");
+        System.out.println("name\tcache\tmode\tresult\tsearch\tcompilation\ttotal\tprepare_ns\tsolve_ns\tpeak_reserved_bytes\tfirst_verified_search\tfirst_verified_compilation\tfirst_verified_ns\torigins\tlimit_detail\tcache_estimated_bytes\tcompiler_count\tactive_searches\tcache_stats\tpipeline_search_ticks\tpipeline_compilation_ticks\tpipeline_active_ns\tpipeline_costs");
         for (int repetition = -warmup; repetition < repetitions; repetition++)
             run(args[0], millis, work, bytes, mode, repetition >= 0);
     }
@@ -91,11 +91,13 @@ public final class PlanningComparison {
                     } catch (NoSuchMethodException olderRevision) {
                         // Older revisions did not expose persistent cache estimates.
                     }
+                    var pipeline = pipeline(budget);
                     if (report) System.out.println(String.join("\t", name, cache, mode, capped ? "HARNESS_TOTAL_LIMIT" : plan.result().name(),
                             Long.toString(budget.searchWork()), Long.toString(budget.compilationWork()), Long.toString(budget.nodes()),
                             Long.toString(prepare), Long.toString(elapsed), Long.toString(budget.peakBytes()),
                             Long.toString(firstSearch), Long.toString(firstCompile), Long.toString(firstNanos), clean(origins), clean(budget.failureDetail()),
-                            Long.toString(cacheBytes), Long.toString(compilers), Long.toString(active), clean(cacheStats)));
+                            Long.toString(cacheBytes), Long.toString(compilers), Long.toString(active), clean(cacheStats),
+                            Long.toString(pipeline.search), Long.toString(pipeline.compilation), Long.toString(pipeline.nanos), pipeline.detail));
                 }
             }
             if (input.read() != -1) throw new AssertionError("Trailing fixture bytes");
@@ -103,6 +105,36 @@ public final class PlanningComparison {
     }
 
     private static String clean(String text) { return text.replace('\t', ' ').replace('\r', ' ').replace('\n', ' '); }
+
+    private record Pipeline(long search, long compilation, long nanos, String detail) {}
+
+    private static Pipeline pipeline(PlanningBudget budget) throws Exception {
+        try {
+            Object snapshot = PlanningBudget.class.getMethod("pipelineMetrics").invoke(budget);
+            Map<?, ?> costs = (Map<?, ?>) snapshot.getClass().getMethod("costs").invoke(snapshot);
+            Map<String, String> detail = new TreeMap<>();
+            long search = 0, compilation = 0, nanos = 0;
+            for (var entry : costs.entrySet()) {
+                Object context = entry.getKey(), cost = entry.getValue();
+                var type = cost.getClass();
+                long s = (long) type.getMethod("searchTicks").invoke(cost);
+                long c = (long) type.getMethod("compilationTicks").invoke(cost);
+                long n = (long) type.getMethod("activeNanos").invoke(cost);
+                String origin = context.getClass().getMethod("origin").invoke(context).toString();
+                String stage = context.getClass().getMethod("stage").invoke(context).toString();
+                detail.put(origin + "/" + stage, s + "," + c + "," + n);
+                search += s;
+                compilation += c;
+                nanos += n;
+            }
+            if ((search + 15) / 16 != budget.searchWork() || (compilation + 15) / 16 != budget.compilationWork())
+                throw new AssertionError("Pipeline attribution lost/doubled charged work");
+            return new Pipeline(search, compilation, nanos, String.join(";", detail.entrySet().stream()
+                    .map(e -> e.getKey() + "=" + e.getValue()).toList()));
+        } catch (NoSuchMethodException olderRevision) {
+            return new Pipeline(-1, -1, -1, "unavailable");
+        }
+    }
 
     private static void validate(String name, String truth, GraphPlan<String> plan, Map<String, Long> stock, List<GraphRecipe<String>> recipes) {
         boolean negative = Set.of(GraphPlan.Result.MISSING_INPUT, GraphPlan.Result.MISSING_SEED, GraphPlan.Result.INFEASIBLE).contains(plan.result());

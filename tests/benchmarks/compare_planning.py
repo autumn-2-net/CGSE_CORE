@@ -127,8 +127,14 @@ def main():
                     row.update(revision=revision, permutation=permutation, repetition=i // (len(cases) * 3))
                     for field in ('search', 'compilation', 'total', 'prepare_ns', 'solve_ns', 'peak_reserved_bytes',
                                   'first_verified_search', 'first_verified_compilation', 'first_verified_ns',
-                                  'cache_estimated_bytes', 'compiler_count', 'active_searches'):
+                                  'cache_estimated_bytes', 'compiler_count', 'active_searches',
+                                  'pipeline_search_ticks', 'pipeline_compilation_ticks', 'pipeline_active_ns'):
                         row[field] = int(row[field])
+                    if row['pipeline_costs'] != 'unavailable':
+                        row['pipeline_costs'] = {
+                            key: dict(zip(('search_ticks', 'compilation_ticks', 'active_ns'), map(int, values.split(','))))
+                            for field in row['pipeline_costs'].split(';') if field
+                            for key, values in [field.split('=', 1)]}
                 rows.extend(batch)
                 (output / 'rows.json').write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding='utf-8')
                 print(f'{revision} {mode} permutation={permutation}: {len(batch)} checked', flush=True)

@@ -153,6 +153,12 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     }
 
     private boolean step(PlanningScheduler.Slice slice) {
+        try (var costs = budget.trace(nesting == 0 ? PlanningCostTrace.Origin.COORDINATOR : null, PlanningCostTrace.Stage.OTHER)) {
+            return step(slice, costs);
+        }
+    }
+
+    private boolean step(PlanningScheduler.Slice slice, PlanningCostTrace.Scope costs) {
         var observation = phase == 4 ? candidateObservation : null;
         long validationWork = observation == null ? 0 : budget.threadWork();
         long validationNanos = observation == null ? 0 : System.nanoTime();
@@ -240,6 +246,8 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     countSearch.scout(524_288);
                 } else resumeQuantityAnalysis(phase);
             }
+            if (costs != null) costs.select(nesting == 0 ? costOrigin() : null,
+                    phase == 0 || phase == 1 ? PlanningCostTrace.Stage.PREPARE : PlanningCostTrace.Stage.SEARCH);
             switch (phase) {
                 case 0 -> {
                     if (stockViewDelayed && pending.isEmpty()) {
@@ -285,8 +293,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     if (!allocationAttempted && best != null &&
                             (pending.isEmpty() || sourceAttempts >= allocationAfterSources) && !provenMissing(best)) {
                         allocationAttempted = true;
-                        allocating = new AllocationSearch<>(compiler, target, amount, stock, external, requiredSeeds,
-                                preserve, forceCraft, excluded, budget, started).proofs(proofs);
+                        allocating = newAllocation(false).proofs(proofs);
                         beginAllocationTurn();
                         return false;
                     }
@@ -708,7 +715,27 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         // A recursively manufactured seed is not the requested final witness.
         candidateObservation = nesting == 0 ? budget.observeCandidate(origin) : null;
         budget.note("candidate", "proposed; origin=" + origin);
-        verifying = new PlanVerification<>(candidate, budget);
+        long work = candidateObservation == null ? 0 : budget.threadWork();
+        long nanos = candidateObservation == null ? 0 : System.nanoTime();
+        try (var costs = budget.trace(nesting == 0 ? PlanningCostTrace.Origin.valueOf(origin.name()) : null,
+                PlanningCostTrace.Stage.VERIFY)) {
+            verifying = new PlanVerification<>(candidate, budget);
+        } finally {
+            if (candidateObservation != null) candidateObservation.step(work, nanos);
+        }
+    }
+
+    private PlanningCostTrace.Origin costOrigin() {
+        return switch (phase) {
+            case 0, 1, 2, 5, 16 -> PlanningCostTrace.Origin.SOURCE_GRAPH;
+            case 3 -> bootstrap == null ? PlanningCostTrace.Origin.SOURCE_GRAPH : PlanningCostTrace.Origin.BOOTSTRAP;
+            case 4 -> PlanningCostTrace.Origin.valueOf(candidateOrigin.name());
+            case 6, 13, 18 -> PlanningCostTrace.Origin.ALLOCATION;
+            case 14 -> PlanningCostTrace.Origin.INTEGER_COUNTS;
+            case 17 -> PlanningCostTrace.Origin.SEED_OPTIMIZATION;
+            case 19 -> PlanningCostTrace.Origin.STOCK_VIEW;
+            default -> PlanningCostTrace.Origin.COORDINATOR;
+        };
     }
 
     private void retireStockFrontier() {
@@ -766,8 +793,10 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         if (proofs == null) proofs = new OrderProofs<>(null, budget);
         if (allocating != null) allocating.proofs(proofs);
         budget.note("integer_counts", "start");
-        countSearch = new IntegerCountSearch<>(compiler, target, amount, stock, requiredSeeds, external,
-                excluded, preserve, forceCraft, budget, started, proofs);
+        try (var costs = budget.trace(nesting == 0 ? PlanningCostTrace.Origin.INTEGER_COUNTS : null, PlanningCostTrace.Stage.PREPARE)) {
+            countSearch = new IntegerCountSearch<>(compiler, target, amount, stock, requiredSeeds, external,
+                    excluded, preserve, forceCraft, budget, started, proofs);
+        }
         phase = 14;
     }
 
@@ -776,8 +805,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         // before inventory search has explored its own executable prefixes.
         // Keep both frontiers; all work remains charged to the same order.
         allocationAttempted = true;
-        allocating = new AllocationSearch<>(compiler, target, amount, stock, external, requiredSeeds,
-                preserve, forceCraft, excluded, budget, started).proofs(proofs);
+        allocating = newAllocation(false).proofs(proofs);
         allocationResumePhase = phase;
         allocationScoutStarted = budget.searchWork();
         allocationScoutAllowance = Math.min(1_048_576, budget.remainingWork() / 8);
@@ -791,8 +819,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         if (allocating != null) allocating.discard();
         previewStarted = budget.searchWork();
         previewAllowance = Math.min(262_144, budget.remainingWork() / 8);
-        allocating = new AllocationSearch<>(compiler, target, amount, stock, external, requiredSeeds,
-                preserve, forceCraft, excluded, budget, started, true);
+        allocating = newAllocation(true);
         budget.note("missing_preview", "order_proven_infeasible; allowance=" + previewAllowance);
         phase = 13;
     }
@@ -800,6 +827,13 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     private GraphPlan<K> withoutMissingPreview(String detail) {
         budget.failureDetail("PROVEN_INFEASIBLE: captured inventory cannot fulfill order; MISSING_PREVIEW_UNAVAILABLE: " + detail);
         return failure(GraphPlan.Result.INFEASIBLE);
+    }
+
+    private AllocationSearch<K> newAllocation(boolean preview) {
+        try (var costs = budget.trace(nesting == 0 ? PlanningCostTrace.Origin.ALLOCATION : null, PlanningCostTrace.Stage.PREPARE)) {
+            return new AllocationSearch<>(compiler, target, amount, stock, external, requiredSeeds,
+                    preserve, forceCraft, excluded, budget, started, preview);
+        }
     }
 
     private void ensureProofs() {
@@ -942,8 +976,11 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         stockWitnessTried = true;
         long allowance = Math.min(32768, budget.remainingWork() / 8);
         if (allowance < 8192) return false;
-        var proposal = GraphFallback.witnessByCost(compiler, target, amount, stock, external, requiredSeeds,
-                preserve, forceCraft, budget, allowance);
+        GraphPlan<K> proposal;
+        try (var costs = budget.trace(nesting == 0 ? PlanningCostTrace.Origin.STOCK_WITNESS : null, PlanningCostTrace.Stage.SEARCH)) {
+            proposal = GraphFallback.witnessByCost(compiler, target, amount, stock, external, requiredSeeds,
+                    preserve, forceCraft, budget, allowance);
+        }
         budget.note("source_witness", "stock_cost; verified=" + (proposal != null) + "; original_frontier_retained");
         if (proposal == null) return false;
         candidate = proposal;
@@ -1064,8 +1101,10 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         stockViewDelayed = false;
         stockViewTried = true;
         stockSpareMemory = Math.min(33_554_432, budget.availableBytes() / 4);
-        stockView = new GraphStockViewPortfolio<>(compiler, target, amount, stock, external, requiredSeeds,
-                excluded, preserve, forceCraft, catalystPolicy, budget, started);
+        try (var costs = budget.trace(nesting == 0 ? PlanningCostTrace.Origin.STOCK_VIEW : null, PlanningCostTrace.Stage.PREPARE)) {
+            stockView = new GraphStockViewPortfolio<>(compiler, target, amount, stock, external, requiredSeeds,
+                    excluded, preserve, forceCraft, catalystPolicy, budget, started);
+        }
         phase = 19;
         return true;
     }
@@ -1147,6 +1186,12 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
 
     @Override
     public void close() {
+        try (var costs = budget.trace(nesting == 0 ? PlanningCostTrace.Origin.COORDINATOR : null, PlanningCostTrace.Stage.CLEANUP)) {
+            closeMeasured();
+        }
+    }
+
+    private void closeMeasured() {
         if (registeredSearch.compareAndSet(true, false)) compiler.searchClosed();
         finishObservation(PlanningBudget.CandidateOutcome.ABANDONED);
         budget.release(graphMemory);

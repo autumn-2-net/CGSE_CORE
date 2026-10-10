@@ -102,6 +102,12 @@ public final class GraphCompilation<K> implements PlanningScheduler.Work<GraphCo
 
     /** One operation inside the coordinator's already admitted slice. */
     boolean step(PlanningScheduler.Slice slice) {
+        try (var costs = budget.trace(PlanningCostTrace.Stage.PREPARE)) {
+            return stepMeasured(slice);
+        }
+    }
+
+    private boolean stepMeasured(PlanningScheduler.Slice slice) {
         if (slice != null && phase == 2 && nodes.size() >= 512 && slice.parallelism() > 1 &&
                 edgeInputs == null && edgeProducers == null && packedEdges == null && packedInput == 0 && merging == null) {
             if (parallelEdges == null && cursor < nodes.size()) {

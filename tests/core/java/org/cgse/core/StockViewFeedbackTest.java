@@ -192,6 +192,7 @@ public final class StockViewFeedbackTest {
                 check(counts.validationWork() > 0 && counts.validationNanos() > 0 && metrics.firstVerifiedSearchWork() > 0 &&
                         metrics.firstVerifiedCompilationWork() > 0 && metrics.firstVerifiedElapsedNanos() >= 0, "Missing verified-work observation");
             } else check(metrics.origins().isEmpty() && metrics.firstVerifiedSearchWork() == -1, "Disabled telemetry retained candidates");
+            if (enabled) PlanningCostTraceTest.conserved(budget);
             check(budget.reservedBytes() == 0, "Metrics test leaked");
         }
     }
@@ -225,6 +226,10 @@ public final class StockViewFeedbackTest {
             check(budget.failureDetail().isEmpty(), "Recovered optional-memory failure left a terminal cause");
         } finally { work.close(); budget.release(occupied); }
         check(budget.reservedBytes() == 0, "Large stock-view validation leaked");
+        PlanningCostTraceTest.conserved(budget);
+        var stages = budget.pipelineMetrics().costs();
+        check(stages.entrySet().stream().anyMatch(e -> e.getKey().origin() == PlanningCostTrace.Origin.STOCK_VIEW &&
+                e.getKey().stage() == PlanningCostTrace.Stage.VERIFY && e.getValue().searchTicks() > 0), "Stock verification cost lost its origin");
     }
 
     private static void verify(GraphPlan<String> plan, PlanningBudget budget) {
@@ -257,6 +262,7 @@ public final class StockViewFeedbackTest {
         check(counts.proposed() == 32 && counts.accepted() == 32 && counts.abandoned() == 0,
                 "Parallel candidate settlements were lost/doubled: " + counts);
         check(budget.reservedBytes() == 0, "Concurrent candidate verification leaked");
+        PlanningCostTraceTest.conserved(budget);
     }
 
     private static void check(boolean value, String reason) {

@@ -143,12 +143,14 @@ Remaining gaps, rather than completed checkboxes
    Larger sparse equalities and subset sums still need bounded search improvements;
    see numeric-continuation-and-root-proofs.txt for the equal-budget boundary.
 
-3. End-to-end attribution (J): seven primary graph origins have outer-validation
-   outcome/work counters. RequestPlanningWork's ordinary fallback has its own
-   budget/report, and not every preparation/restoration/seed phase is attributed
-   to the same candidate record. Startup guards have generation/pool statistics,
-   not full per-origin pruning benefit and validation-cost attribution. These are
-   remaining observability gaps, not evidence of a wrong executable plan.
+3. End-to-end attribution (J): pipeline-cost-attribution.txt adds exclusive
+   preparation/search/restoration/scheduling/assembly/verification costs by core
+   origin, and exposes the ordinary fallback's separate account. It does not yet
+   assign every shared cost to a persistent candidate record or cover all outer
+   seed-alternative improvements. Startup guards have generation/pool statistics,
+   not complete per-origin pruning benefit and candidate lineage. Host capture
+   and installation costs remain external. These are remaining observability
+   gaps, not evidence of a wrong executable plan.
 
 4. Cross-snapshot residency (H): compiler aggregation is an estimate of containers,
    not a JVM object census. It does not measure process RSS, all live networks or
@@ -335,3 +337,22 @@ These are direct slice measurements, not whole-planner or RSS claims. The
 isolated finite-support fixpoint experiment reaches 18/32 direct cases but
 does not solve any remaining main-stage limit, and stays outside production.
 Five original 20M UNKNOWN cases and broader numeric/closure and H/J gaps remain.
+
+2026-10-11 pipeline cost attribution and terminal publication
+------------------------------------------------------------
+pipeline-cost-attribution.txt addresses part of I/J and the older 15a473de
+review's end-to-end cost guidance. Optional, bounded, exclusive origin/stage
+costs follow worker migration and forked partitions, including constructor,
+restoration, seed and outer-validation work. Ordinary fallback is reported as
+a separate account. Observations do not alter budget units or scheduler scores.
+Validation also exposed a real completion-before-cleanup race, reproduced with
+a latch against 7e14f580; terminal publication now follows synchronous cleanup.
+Admission is also released before publication: a one-slot chained request test
+reproduced a spurious QUEUE_LIMIT when release depended on callback ordering.
+Seventy-five standard programs, 4,302 normal/low-cap paired graph comparisons,
+2,400 expanded graph records, 57 captured requests and offline assembly pass.
+All paired graph results and charged work are unchanged. Detailed metrics add
+7.65% median elapsed time in the isolated four-case campaign and remain optional.
+Per-candidate lineage/benefit, startup-cut contribution, host capture/install
+costs and snapshot residency remain open; this does not solve the five numeric
+budget residuals or justify claiming the entire I/J scope complete.

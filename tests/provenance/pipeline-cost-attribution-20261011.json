@@ -1,0 +1,165 @@
+{
+  "date": "2026-10-11",
+  "baseline": "7e14f580267b6b5902015499a73ee915cfd56612",
+  "candidate_source_sha256": "fd06c560355c4caaacabfd4ab699df37e4c3926346eb5be3f81150efd1f07d28",
+  "java_release": 17,
+  "review_scope": [
+    "15a473de sections 8 and 14",
+    "e788d3d3 I/J"
+  ],
+  "normal_budget": {
+    "summary_sha256": "ee90b88fb30de04d59667a69019dc2958fcf1f6d3fd1b7f7e64083426628e1fc",
+    "paired_requests": 2151,
+    "work_limit_per_account": 20000000,
+    "source_sha256": "fd06c560355c4caaacabfd4ab699df37e4c3926346eb5be3f81150efd1f07d28",
+    "harness_sha256": "4e8a08d7cee91e37920137cf353e7e17059483fdc23440ca248e749f65b8e2dc",
+    "fixture_sha256": "4f4f66ab40bc43f18da4bf33225e764abb083c965a88fae01d313cb6089859bd",
+    "outcomes": {
+      "FEASIBLE_NOT_PROVEN_OPTIMAL": 1728,
+      "MISSING_INPUT": 315,
+      "FEASIBLE": 108
+    },
+    "search_work": 1321239793,
+    "compilation_work": 58838565,
+    "identical_results_and_work": true,
+    "exclusive_ticks_by_origin": {
+      "ALLOCATION": 1020871488,
+      "BOOTSTRAP": 17261512,
+      "COORDINATOR": 2005062508,
+      "INTEGER_COUNTS": 15740489692,
+      "SOURCE_GRAPH": 869652220,
+      "STOCK_VIEW": 2086211232,
+      "STOCK_WITNESS": 4743360,
+      "SUPPORT_NEIGHBORHOOD": 336939672
+    },
+    "exclusive_ticks_by_stage": {
+      "ASSEMBLE": 619263600,
+      "CLEANUP": 0,
+      "FORCE_CHECK": 0,
+      "OTHER": 996265968,
+      "PREPARE": 789386572,
+      "RESTORE": 5231040,
+      "SCHEDULE": 82166976,
+      "SEARCH": 19501142664,
+      "VERIFY": 87774864
+    },
+    "artifact": "build/pipeline-final-comparison"
+  },
+  "low_budget": {
+    "summary_sha256": "8fe36764db1312c5492987393c2efd202d2d6dc91b3b9b31ddfcf989289b52f0",
+    "paired_requests": 2151,
+    "work_limit_per_account": 1000,
+    "source_sha256": "fd06c560355c4caaacabfd4ab699df37e4c3926346eb5be3f81150efd1f07d28",
+    "harness_sha256": "4e8a08d7cee91e37920137cf353e7e17059483fdc23440ca248e749f65b8e2dc",
+    "fixture_sha256": "4f4f66ab40bc43f18da4bf33225e764abb083c965a88fae01d313cb6089859bd",
+    "outcomes": {
+      "SEARCH_LIMIT": 2142,
+      "MISSING_INPUT": 9
+    },
+    "search_work": 1287797,
+    "compilation_work": 1379314,
+    "identical_results_and_work": true,
+    "exclusive_ticks_by_origin": {
+      "ALLOCATION": 2880,
+      "COORDINATOR": 20989708,
+      "INTEGER_COUNTS": 1456,
+      "SOURCE_GRAPH": 21666856
+    },
+    "exclusive_ticks_by_stage": {
+      "ASSEMBLE": 2961472,
+      "CLEANUP": 0,
+      "OTHER": 12508864,
+      "PREPARE": 10772612,
+      "SEARCH": 16412480,
+      "VERIFY": 5472
+    },
+    "artifact": "build/pipeline-final-low-budget"
+  },
+  "standard_programs": 75,
+  "final_terminal_programs": 2,
+  "expanded_graphs": {
+    "records": 2400,
+    "same_result_and_work_as_prior_regression": true,
+    "source_sha256": "e17429e87f9380d4a4a3be8e1fc9fbff1aaa7d4879cf19a69b7e5a3c9b1d051c"
+  },
+  "captured_replay": {
+    "serial": {
+      "verified": 19,
+      "workers": 1,
+      "expanded_budget": false,
+      "source_sha256": "e17429e87f9380d4a4a3be8e1fc9fbff1aaa7d4879cf19a69b7e5a3c9b1d051c",
+      "artifact": "build/pipeline-captures-serial"
+    },
+    "parallel": {
+      "verified": 19,
+      "workers": 4,
+      "expanded_budget": false,
+      "source_sha256": "e17429e87f9380d4a4a3be8e1fc9fbff1aaa7d4879cf19a69b7e5a3c9b1d051c",
+      "artifact": "build/pipeline-captures-parallel"
+    },
+    "expanded": {
+      "verified": 19,
+      "workers": 4,
+      "expanded_budget": true,
+      "source_sha256": "fd06c560355c4caaacabfd4ab699df37e4c3926346eb5be3f81150efd1f07d28",
+      "artifact": "build/pipeline-final-captures-expanded"
+    }
+  },
+  "timing": {
+    "metrics_enabled": true,
+    "cases": 4,
+    "cache_states": [
+      "cold",
+      "warm",
+      "replaced"
+    ],
+    "orders": 2,
+    "warmup_campaigns_per_jvm": 3,
+    "measured_campaigns_per_jvm": 7,
+    "sequential_jvm_order": [
+      "baseline",
+      "candidate",
+      "candidate",
+      "baseline"
+    ],
+    "batches_per_revision": 14,
+    "baseline_median_ns": 798619900.0,
+    "candidate_median_ns": 859695700.0,
+    "change_percent": 7.647668183575185,
+    "scope": "Optional telemetry overhead on four representative graphs; not a throughput gain or disabled-mode estimate.",
+    "source_sha256": "e17429e87f9380d4a4a3be8e1fc9fbff1aaa7d4879cf19a69b7e5a3c9b1d051c",
+    "artifact": "build/pipeline-timing",
+    "note": "Measured before the final admission-release ordering fix; the synchronous graph comparison does not call PlanningScheduler."
+  },
+  "negative_controls": [
+    "old scheduler publishes before latch-blocked cleanup",
+    "lost fork origin",
+    "double-billed parent",
+    "dropped exhausting charge",
+    "completion callback sees stale one-request admission slot after initial cleanup fix"
+  ],
+  "offline_assemble": {
+    "passed": true,
+    "source_jar_verified_files": 203,
+    "source_jar_sha256": "7117a0b44203d7f8efc08071cb1ff8aa954111651388e2fe671531ff6a7b04a3"
+  },
+  "commands": [
+    "python tests/run.py --java-home <jdk17> --suite standard --output build/pipeline-final-standard --timeout 600",
+    "python tests/benchmarks/compare_planning.py --java-home <jdk17> --baseline 7e14f580 --permutations 3 --milliseconds 0 --work 20000000 --modes accounts --require-same-work --output build/pipeline-final-comparison",
+    "Repeat comparison with --work 1000 --output build/pipeline-final-low-budget",
+    "python tests/run.py --java-home <jdk17> --suite fixtures --fixture-dir build/gram-choice-inputs --permutations 3 --milliseconds 0 --work 20000000 --output build/pipeline-expanded --timeout 600",
+    "python tests/datasets/regressions.py --java-home <jdk17> --workers 1 --timeout 600 --output build/pipeline-captures-serial; repeat with workers 4 and workers 4 --expanded-budget",
+    "python tests/benchmarks/compare_planning.py --java-home <jdk17> --baseline 7e14f580 --case '^(counter_b14_choice|recycle_mix0|recycle_mix2|choice_n20_c4_d2_slack0_s103_q1)$' --permutations 2 --warmup 3 --repetitions 7 --milliseconds 0 --work 20000000 --modes accounts --require-same-work --output build/pipeline-timing",
+    "gradlew.bat --offline assemble"
+  ],
+  "limits": [
+    "Five original 20M numeric limits not solved by this change",
+    "No complete per-candidate identity/benefit archive",
+    "No process RSS or host snapshot residency census",
+    "Capture replay is not live AE integration"
+  ],
+  "standard_artifact": "build/pipeline-final-standard/results.json",
+  "standard_sha256": "1c2661421f046717b4f6d27ddf5a5a305ce7a7a28a1f58b5b11da3b7ecdcc14a",
+  "final_scheduler_programs": 7,
+  "validation_stages": "The final admission-ordering change was followed by all 75 standard programs, both full paired graph campaigns, seven focused scheduler programs, four-worker expanded capture replay and offline assembly. Earlier expanded-fixture, serial/equal-cap capture and timing evidence retains its own source fingerprint."
+}

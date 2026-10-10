@@ -73,50 +73,52 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     IntegerCountSearch(GraphCompiler<K> compiler, K target, long amount, Map<K, Long> stock,
                        Map<K, Long> seeds, Set<K> external, Set<String> excluded, boolean preserve, boolean force,
                        PlanningBudget budget, long started, OrderProofs<K> proofs, boolean compileRecovery) {
-        this.compileRecovery = compileRecovery;
-        this.compiler = compiler;
-        this.target = target;
-        this.amount = amount;
-        this.stock = Map.copyOf(stock);
-        this.seeds = Map.copyOf(seeds);
-        this.external = Set.copyOf(external);
-        this.preserve = preserve;
-        this.force = force;
-        this.budget = budget;
-        propagationCacheLimit = Math.min(16L << 20, Math.max(0, budget.availableBytes()) / 8);
-        this.proofs = proofs;
-        choiceConflicts = new CountConflictPool(budget);
-        materialConflicts = new CountCutPool(budget);
-        this.started = started;
-        allowance = Math.min(2_000_000, budget.remainingWork() / 4);
-        preprocessingAllowance = Math.min(16_000_000, budget.remainingWork() / 5 * 4);
-        long compilationStarted = budget.threadWork();
-        model = RecipeCountModel.create(compiler, target, amount, this.stock, this.seeds, this.external, excluded, force, budget);
-        try {
-            execution = model == null ? null : new CountExecution<>(model, budget);
-            compilationWork = budget.threadWork() - compilationStarted;
-        } catch (RuntimeException | Error failure) {
-            if (model != null) model.close();
-            choiceConflicts.close();
-            throw failure;
-        }
-        if (model == null) {
-            complete = true;
-            close();
-            return;
-        }
-        if (proofs != null) {
-            proofs.adopt(model);
-            choiceConflicts.add(proofs.forModel(model));
-        }
-        try {
-            branchHistory = new CountBranchHistory(model.recipes.size(), budget);
-            scheduleContinuations = new CountScheduleContinuations<>(model, budget);
-            choiceConflicts.add(compiler.countSessions.reuse(model, budget));
-            enqueue(List.of());
-        } catch (RuntimeException | Error failure) {
-            close();
-            throw failure;
+        try (var costs = budget.trace(budget.traceContext() == null ? PlanningCostTrace.Origin.INTEGER_COUNTS : null, PlanningCostTrace.Stage.PREPARE)) {
+            this.compileRecovery = compileRecovery;
+            this.compiler = compiler;
+            this.target = target;
+            this.amount = amount;
+            this.stock = Map.copyOf(stock);
+            this.seeds = Map.copyOf(seeds);
+            this.external = Set.copyOf(external);
+            this.preserve = preserve;
+            this.force = force;
+            this.budget = budget;
+            propagationCacheLimit = Math.min(16L << 20, Math.max(0, budget.availableBytes()) / 8);
+            this.proofs = proofs;
+            choiceConflicts = new CountConflictPool(budget);
+            materialConflicts = new CountCutPool(budget);
+            this.started = started;
+            allowance = Math.min(2_000_000, budget.remainingWork() / 4);
+            preprocessingAllowance = Math.min(16_000_000, budget.remainingWork() / 5 * 4);
+            long compilationStarted = budget.threadWork();
+            model = RecipeCountModel.create(compiler, target, amount, this.stock, this.seeds, this.external, excluded, force, budget);
+            try {
+                execution = model == null ? null : new CountExecution<>(model, budget);
+                compilationWork = budget.threadWork() - compilationStarted;
+            } catch (RuntimeException | Error failure) {
+                if (model != null) model.close();
+                choiceConflicts.close();
+                throw failure;
+            }
+            if (model == null) {
+                complete = true;
+                close();
+                return;
+            }
+            if (proofs != null) {
+                proofs.adopt(model);
+                choiceConflicts.add(proofs.forModel(model));
+            }
+            try {
+                branchHistory = new CountBranchHistory(model.recipes.size(), budget);
+                scheduleContinuations = new CountScheduleContinuations<>(model, budget);
+                choiceConflicts.add(compiler.countSessions.reuse(model, budget));
+                enqueue(List.of());
+            } catch (RuntimeException | Error failure) {
+                close();
+                throw failure;
+            }
         }
     }
 
@@ -149,6 +151,12 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     }
 
     boolean step(PlanningScheduler.Slice slice) {
+        try (var costs = budget.trace(budget.traceContext() == null ? PlanningCostTrace.Origin.INTEGER_COUNTS : null, PlanningCostTrace.Stage.SEARCH)) {
+            return stepMeasured(slice);
+        }
+    }
+
+    private boolean stepMeasured(PlanningScheduler.Slice slice) {
         if (complete || paused) return true;
         if (running != null) {
             if (!running.isDone()) return false;

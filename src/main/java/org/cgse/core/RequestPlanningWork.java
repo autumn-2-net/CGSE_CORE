@@ -18,6 +18,10 @@ public final class RequestPlanningWork<K> implements PlanningScheduler.Work<Grap
     public record FallbackReport<K>(K target, long amount, GraphPlan.Result trigger,
                                     GraphPlan.Result result, long nodes, long elapsedNanos) {}
 
+    /** Both accounts remain explicit: fallback spends a separate allowance after primary search stops. */
+    public record CostReport(PlanningBudget.Metrics primary, PlanningCostTrace.Snapshot primaryPipeline,
+                             PlanningBudget.Metrics fallback, PlanningCostTrace.Snapshot fallbackPipeline) {}
+
     private final GraphCompiler<K> compiler;
     private final K target;
     private final long amount;
@@ -39,6 +43,8 @@ public final class RequestPlanningWork<K> implements PlanningScheduler.Work<Grap
     private GraphPlan<K> selected;
     private boolean partialSearch, tryEstimate, tryNeighbor;
     private boolean fallbackAttempted, fallbackMode;
+    private PlanningBudget.Metrics fallbackMetrics;
+    private PlanningCostTrace.Snapshot fallbackPipeline;
     private long low, high, middle, estimatedAmount;
 
     public RequestPlanningWork(GraphCompiler<K> compiler, K target, long amount, Map<K, Long> stock,
@@ -72,6 +78,11 @@ public final class RequestPlanningWork<K> implements PlanningScheduler.Work<Grap
 
     public boolean fallbackMode() {
         return fallbackMode;
+    }
+
+    /** Fallback fields are null until an attempted fallback finishes (including a budget exit). */
+    public CostReport costs() {
+        return new CostReport(budget.metrics(), budget.pipelineMetrics(), fallbackMetrics, fallbackPipeline);
     }
 
     @Override
@@ -177,9 +188,12 @@ public final class RequestPlanningWork<K> implements PlanningScheduler.Work<Grap
             current = null;
         }
         PlanningBudget quick = new PlanningBudget(250, 131_072, 16L << 20, cancelled, System::nanoTime);
+        if (budget.metricsEnabled()) quick.enableMetrics();
         try {
-            selected = GraphFallback.plan(compiler, target, amount, available, emitable,
-                    checkpoint == null ? Map.of() : checkpoint.recoverySeeds(), preserve, checkpoint == null && !directEmission, quick);
+            try (var costs = quick.trace(PlanningCostTrace.Origin.FALLBACK, PlanningCostTrace.Stage.SEARCH)) {
+                selected = GraphFallback.plan(compiler, target, amount, available, emitable,
+                        checkpoint == null ? Map.of() : checkpoint.recoverySeeds(), preserve, checkpoint == null && !directEmission, quick);
+            }
             fallbackMode = true;
             budget.note("fallback", "cycle_solving=false; reason=" + reason + "; work=" + quick.nodes() + "; result=" + selected.result());
             fallbackReporter.accept(new FallbackReport<>(target, amount, reason, selected.result(), quick.nodes(), quick.elapsedNanos()));
@@ -187,6 +201,9 @@ public final class RequestPlanningWork<K> implements PlanningScheduler.Work<Grap
         } catch (PlanningBudget.Exhausted exhausted) {
             budget.note("fallback", "cycle_solving=false; trigger=" + reason + "; stopped=" + exhausted.limit() + "; work=" + quick.nodes());
             return false;
+        } finally {
+            fallbackMetrics = quick.metrics();
+            fallbackPipeline = quick.pipelineMetrics();
         }
     }
 
