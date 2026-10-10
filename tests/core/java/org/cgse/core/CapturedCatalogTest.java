@@ -125,8 +125,15 @@ public final class CapturedCatalogTest {
         var laterStock = Map.of("a298", 1L, "a299", 1L);
         var later = catalog.plan("out", 2, laterStock, false, true, budget());
         feasible(later, laterStock);
-        check(later.coverage().complete() && later.coverage().domains().get(0).additional().isEmpty(),
-                "sparse repair not absorbed when the full prefix catches up");
+        check(!later.coverage().complete() && later.coverage().domains().get(0).additional().size() == 2,
+                "joint sparse allocation unnecessarily enumerated the remaining prefix");
+        var produced = new CapturedCatalog<>(List.of(entry("r", captured(List.of(input("a", 300, 1)), "out")),
+                entry("supply", captured(List.of(single("raw", 1)), "a298"))));
+        var upstreamStock = Map.of("raw", 1L, "a299", 1L);
+        var caughtUp = produced.plan("out", 2, upstreamStock, false, true, budget());
+        feasible(caughtUp, upstreamStock);
+        check(caughtUp.coverage().complete() && caughtUp.coverage().domains().stream().allMatch(d -> d.additional().isEmpty()),
+                "sparse repair not absorbed when upstream supply needs the full prefix");
         for (long amount : new long[]{1, 1000, Long.MAX_VALUE}) {
             var stocked = Map.of("a299", amount);
             var large = catalog.plan("out", amount, stocked, false, true, budget());

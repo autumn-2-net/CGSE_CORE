@@ -63,28 +63,41 @@ An explicitly incomplete provider catalog also prevents a global negative claim.
 Existing proof archives certify concrete count models, not captured domains.
 Using a restricted captured view marks the archive incomplete. Individual
 certificates remain independently replayable, but this archive cannot be used
-as a complete full-catalog proof. Domain-aware archive serialization is not
-implemented by this change. Revision numbers are local diagnostics, not global
-cache identities. A changed capture must create a new CapturedCatalog.
+as a complete full-catalog proof. CapturedProof now exports the captured domain
+and concrete execution separately (see below); it does not promote those local
+count certificates into full-order negative proofs. Revision numbers are local
+diagnostics, not global cache identities. A changed capture must create a new
+CapturedCatalog.
 
 Factorized stock allocation
 ---------------------------
-After the unchanged first turn fails, an optional auxiliary model can find one
-stock-funded concrete firing directly. It does not replace the canonical graph.
+After the unchanged first turn fails, an optional auxiliary model finds a
+stock-funded set of concrete firings. For a pattern directly producing the
+requested target, it first allocates enough firings to meet the order. A failed
+whole-order attempt retains the one-firing recovery for upstream or recycled
+supply. It does not replace the canonical graph.
 For a slot allowing mixed copies, integer variables count candidate copies and
-sum to the slot multiplier. For an indivisible slot, Boolean variables select
-one candidate for the whole firing. Each physical resource has ONE upper-bound
+sum to multiplier * firings. For an indivisible slot, integer variables count
+whole firings selecting each candidate and sum to firings. Each physical resource has ONE upper-bound
 row shared by every slot, including repeated/tag-overlapping candidates with the
 same key. Exact candidate stack amounts multiply those variables. External
 supply omits only the corresponding stock bound.
 
 The existing LCG engine solves this bounded model. Its state is retained between
-slices; an allocation is restored to its canonical ordinal and real GraphRecipe.
-Container returns come from that exact selection. The next refined compiler
-tries the funded repair first within its pattern, preserving inter-pattern host
-priority and the relative order of the previous variants. Simply appending the
-repair behind all known-unfunded variants caused repeated restricted turns to
-starve it in the wide-domain regression.
+slices. Integral per-slot counts are swept into run-length groups; each group
+restores a canonical ordinal and real GraphRecipe. The number of groups depends
+on nonzero candidate counts, not the request magnitude. Mixed slots fill exactly
+one slot multiplier per firing, while indivisible slots never mix candidates
+within a firing. Container returns follow those exact selections.
+
+The restored support receives one bounded main-planner turn before the full
+refined catalog. This matters even after recovering all the necessary variants:
+the full catalog can spend its short turn rechecking hundreds of unfunded
+alternatives instead of joining two funded variants. Support trials use the
+same PlanVerification and ForceCraftProof as ordinary main planning. Their
+negative conclusions, caches and seed optimum claims never escape into the
+full view. Failure resumes that immutable full view; later pages remain eligible.
+The full view also tries sparse repairs first within their original pattern.
 
 Only positive proposals escape this auxiliary search. Missing initial stock for
 one firing does not rule out upstream production, recycling, or a combination
@@ -94,13 +107,52 @@ Read/configuration slots are excluded from this auxiliary model and retain the
 concrete path. Likewise, a host with coupled input semantics must supply concrete
 variants; CapturedRecipe's Cartesian representation assumes independent slots.
 
-This is a single-firing stock repair, not a full factorized multi-recipe count
-model with a variable for every recipe's firing count. It cannot by itself discover
+This is a fixed-firing stock repair per pattern, not a full factorized
+multi-recipe count model with a variable for every recipe's firing count. It cannot by itself discover
 allocations needing resources first produced elsewhere. Pages and the ordinary
 main solver handle those cases. The auxiliary search has at most 256 slots,
 1024 eligible variables and min(32768, remaining search work / 8) work. Admission
-refusal or a local cutoff never means infeasible. There is one attempt per
-reached domain; it does not repeatedly spend work on the same failed stock view.
+refusal or a local cutoff never means infeasible. Each reached domain gets at
+most one whole-order attempt and its smaller one-firing recovery; it does not
+repeatedly spend work on the same failed stock view.
+
+Portable coverage and execution replay
+--------------------------------------
+After a CapturedCatalog.Work has a result (including after close()), call:
+
+  var proof = work.certificate(20_000_000, 128L << 20);
+  CapturedProof.write(Path.of("request.cgd"), proof);
+
+The export explicitly bounds work and cumulative retained allocations. Refusal
+throws CapturedProof.Limit without modifying the computed plan or its budget.
+Normal planning allocates no archive. Resource identity is interned using the
+original key equality, never its display string. Patterns, all captured input
+alternatives, returns, request stock, external supply, required seeds, domain
+coverage and the optional serial witness are included. This is a mathematical
+snapshot, not a live AE key codec or a claim that the host captured every provider.
+
+The versioned CGD1 codec bounds file size, collections, integer lengths and
+decoded allocations; it rejects duplicate map keys, truncation and trailing data.
+The witness is a flat backward-referencing DAG. Shared steps, deeply nested
+programs and Long.MAX_VALUE repetitions never expand into individual firings.
+
+  java -cp cgse-core-0.1.0-SNAPSHOT.jar org.cgse.core.CapturedProof request.cgd
+
+The checker independently recomputes domain cardinalities, unpacks weak
+composition ordinals, checks concrete slots/returns against the capture and
+checks exact serial prefix requirements against the archived inventory. A
+complete coverage claim additionally checks provider closure through every
+candidate and physical return. It calls no candidate expander, graph compiler,
+planner or integer solver. Public verify() reports coverage and execution
+separately; no witness means execution INCOMPLETE, not UNSAT. A verified witness
+certifies delivery and explicit seed goals, not automatic seed optimality.
+
+Proof limits remain explicit. Orders that consume target seeds and have positive
+net gain below the requested amount require the planner's stronger turnover
+minimality proof; the independent execution checker returns INCOMPLETE for that
+case. CGD1 does not serialize that extra proof, whole-order infeasibility, or
+assumption-transfer links from arbitrary earlier CGP count journals. Restricted
+count archives consequently retain their existing incomplete marker.
 
 Validation
 ----------
@@ -129,7 +181,7 @@ patterns, Long.MAX_VALUE orders, 120 candidate/catalog order permutations,
 stock replenishment, changed captures, forced production, incomplete proof
 archives, budget limits, cancellation and one/four-worker scheduling.
 
-Final JDK 17 validation: all 87 standard programs/batches pass, including the
+Initial domain implementation validation: all 87 standard programs/batches pass, including the
 20M/80M pinned count boundaries. All 244 curated graph fixtures pass in three
 orders (732 cases). Offline Gradle assembly passes; all 209 production sources
 in the source jar match the validated working-tree files. Final production
@@ -140,3 +192,34 @@ build/candidate-fixtures-20261011; build/candidate-final-20261011 is the initial
 standard pass before the final ownership refinement. Player captures and temporary reports are not
 part of the production change. These are core regressions, not a new live-server
 integration test of the unchanged AE adapter.
+
+Batch recovery and replay follow-up
+----------------------------------
+The split-stock counterexample has 12 slots x 300 alternatives, with 1000 units
+of each slot's last TWO candidates and an order for 2000 outputs. At identical
+200k search / 200k compilation caps and 64 MiB logical memory, ded8a215 returns
+SEARCH_LIMIT after 337465 combined work and 17082773 peak logical bytes. Recovering
+two variants without a support trial still exhausts the allowance. With the
+multi-firing allocation and positive-only support trial, it returns a verified
+FEASIBLE_NOT_PROVEN_OPTIMAL after 59218 combined work and 2171433 peak logical
+bytes, instantiating 258 of 531441000000000000000000000000 combinations. These are
+work/reservation comparisons, not a claim about stable wall-clock speedup.
+
+CapturedBatchAllocationTest includes 600 independent exhaustive multi-firing
+comparisons, shared resources, mixed/indivisible slots, external supply and
+24 wide-domain candidate permutations under one/four-worker scheduling and
+optional expanded budgets. It checks Long.MAX_VALUE aggregate counts, memory
+refusal and cancellation. Every wide result also passes independent CGD replay.
+CapturedCatalogTest retains the sparse-to-contiguous absorption case using a
+variant needing upstream production, so the new stock recovery cannot mask it.
+CapturedProofTest checks independent weak-composition enumeration, archived
+coverage and witness tampering, display-name collisions, returns, required seeds,
+unfunded prefixes, 10000-deep programs, shared DAGs, file bounds and replay limits.
+
+Follow-up validation: all 89 standard programs/batches and all 732 fixed
+fixture/order cases pass on JDK 17. Offline Gradle assembly passes. The 211
+production files in the source jar match the tested tree, with fingerprint
+0f4c8b272d88a72a755cfce6f468c4b6d868da79c36f93c046420e4849cfeb19.
+Local results are in build/captured-batch-20261011 and
+build/captured-batch-fixtures-20261011. This remains a standalone-core change;
+the GTL adapter has not adopted CapturedCatalog or CGD export in this boundary.

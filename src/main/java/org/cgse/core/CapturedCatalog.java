@@ -97,6 +97,9 @@ public final class CapturedCatalog<K> {
         private final Deque<DomainState> pendingAllocations = new ArrayDeque<>();
         private DomainState allocating;
         private CapturedInputAllocation<K> allocation;
+        private long allocationFirings;
+        private List<BigInteger> allocated = List.of();
+        private int allocatedIndex;
         private boolean addedAllocation;
         private DomainState expanding;
         private List<Integer> providers = List.of();
@@ -105,6 +108,8 @@ public final class CapturedCatalog<K> {
         private int phase; // 0 index producers, 1 expand/discover, 2 freeze, 3 solve, 4 factorized stock view
         private int flattenEntry, flattenVariant;
         private List<GraphRecipe<K>> concrete = new ArrayList<>();
+        private List<GraphRecipe<K>> allocationRecipes = new ArrayList<>();
+        private boolean allocationView;
         private CatalogIndex<K> indexing;
         private GraphPlanningWork<K> solving;
         private CatalystPolicy catalystPolicy = CatalystPolicy.STOCK;
@@ -133,6 +138,17 @@ public final class CapturedCatalog<K> {
         }
 
         public Coverage coverage() { return coverage; }
+
+        /**
+         * Export this request's final candidate scope and optional concrete witness.
+         * May be called after close(); no live keys or solver state enter the archive.
+         * Export has separate explicit limits and cannot consume the solve allowance.
+         * Scoped CountProof journals remain separate, with their original assumptions.
+         */
+        public CapturedProof.Certificate certificate(long maximumWork, long maximumBytes) {
+            return CapturedProof.capture(entries, captureComplete, target, amount, stock, external, requiredSeeds,
+                    preserve, forceCraft, result(), maximumWork, maximumBytes);
+        }
 
         @Override
         public boolean advance(PlanningScheduler.Slice slice) {
@@ -272,7 +288,14 @@ public final class CapturedCatalog<K> {
         private void freeze() {
             budget.compilationCheck();
             if (indexing == null) {
-                if (flattenEntry < entries.size()) {
+                if (!allocationRecipes.isEmpty()) {
+                    // The recovered support is a positive-only trial. Even with
+                    // all its variants present, the full catalog can spend its
+                    // short turn revisiting hundreds of unfunded alternatives.
+                    indexing = new CatalogIndex<>(allocationRecipes);
+                    allocationRecipes = new ArrayList<>();
+                    allocationView = true;
+                } else if (flattenEntry < entries.size()) {
                     var state = active.get(flattenEntry);
                     if (state != null && flattenVariant < state.recipes.size()) concrete.add(state.recipes.get(flattenVariant++));
                     else {
@@ -299,7 +322,12 @@ public final class CapturedCatalog<K> {
             solving.close();
             solving = null;
             if (plan.feasible()) {
-                finish(plan, coverage.complete() ? plan.result() : GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL);
+                finish(plan, coverage.complete() && !allocationView ? plan.result() : GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL);
+            } else if (allocationView) {
+                // No negative conclusion, source learning or count session is
+                // imported from the reduced support into the canonical view.
+                allocationView = false;
+                phase = 2;
             } else if (remaining && budget.remainingWork() > 0 && expandable(plan.result())) {
                 for (var state : active.values()) {
                     budget.compilationCheck();
@@ -318,29 +346,47 @@ public final class CapturedCatalog<K> {
         }
 
         private void allocateInput() {
-            if (allocation != null) {
-                if (!allocation.step()) return;
-                BigInteger ordinal = allocation.result();
-                allocation.close();
-                allocation = null;
-                if (ordinal != null && ordinal.compareTo(allocating.domain.coveredPrefix()) >= 0 && allocating.additional.add(ordinal)) {
-                    var value = allocating.domain.resolve(ordinal);
-                    var source = entries.get(allocating.index);
-                    // Only after the unchanged first window has failed, give the
-                    // stock-funded repair the next source turn within its pattern.
-                    // Appending it behind every known-unfunded choice can starve
-                    // it again before the bounded refined turn reaches that far.
-                    allocating.recipes.add(0, new GraphRecipe<>(source.id() + "#" + ordinal, source.binding(), value.slots(), value.outputs()));
+            if (allocatedIndex < allocated.size()) {
+                BigInteger ordinal = allocated.get(allocatedIndex++);
+                var value = allocating.domain.resolve(ordinal);
+                var source = entries.get(allocating.index);
+                var concreteRecipe = new GraphRecipe<>(source.id() + "#" + ordinal, source.binding(), value.slots(), value.outputs());
+                allocationRecipes.add(concreteRecipe);
+                if (ordinal.compareTo(allocating.domain.coveredPrefix()) >= 0 && allocating.additional.add(ordinal)) {
+                    allocating.recipes.add(0, concreteRecipe);
                     for (var slot : value.slots()) discover(slot.key());
                     addedAllocation = true;
-                    budget.note("candidate_allocation", "domain=" + source.id() + "; ordinal=" + ordinal);
+                    budget.note("candidate_allocation", "domain=" + source.id() + "; ordinal=" + ordinal + "; firings=" + allocationFirings);
                 }
-                allocating = null;
+                if (allocatedIndex == allocated.size()) { allocated = List.of(); allocatedIndex = 0; allocating = null; }
+            } else if (allocation != null) {
+                if (!allocation.step()) return;
+                allocated = allocation.results();
+                allocation.close();
+                allocation = null;
+                if (allocated.isEmpty()) {
+                    // A whole-order stock view can fail even though one firing
+                    // enables upstream returns. Preserve the smaller recovery.
+                    if (allocationFirings > 1) {
+                        allocationFirings = 1;
+                        allocation = new CapturedInputAllocation<>(entries.get(allocating.index).recipe(), allocating.domain, stock, external, budget);
+                    } else allocating = null;
+                }
             } else if (!pendingAllocations.isEmpty()) {
                 allocating = pendingAllocations.removeFirst();
-                allocation = new CapturedInputAllocation<>(entries.get(allocating.index).recipe(), allocating.domain, stock, external, budget);
+                var recipe = entries.get(allocating.index).recipe();
+                BigInteger output = BigInteger.ZERO;
+                for (var value : recipe.outputs()) {
+                    budget.compilationCheck();
+                    if (value.what().equals(target)) output = output.add(BigInteger.valueOf(value.amount()));
+                }
+                BigInteger needed = BigInteger.valueOf(amount);
+                if (!forceCraft) needed = needed.add(BigInteger.valueOf(requiredSeeds.getOrDefault(target, 0L)))
+                        .subtract(BigInteger.valueOf(stock.getOrDefault(target, 0L))).max(BigInteger.ONE);
+                allocationFirings = output.signum() > 0 ? needed.subtract(BigInteger.ONE).divide(output).add(BigInteger.ONE).min(BigInteger.valueOf(Long.MAX_VALUE)).longValueExact() : 1;
+                allocation = new CapturedInputAllocation<>(recipe, allocating.domain, stock, external, allocationFirings, budget);
             } else {
-                if (!addedAllocation) for (var state : active.values()) {
+                if (!addedAllocation && allocationRecipes.isEmpty()) for (var state : active.values()) {
                     budget.compilationCheck();
                     if (!state.domain.hasNext()) continue;
                     state.through = state.domain.coveredPrefix().max(BigInteger.valueOf(CapturedRecipe.MAX_VARIANTS))
@@ -367,7 +413,7 @@ public final class CapturedCatalog<K> {
                     preview ? plan.steps() : new PlanStep.Sequence(List.of()), preview ? plan.recipes() : Map.of(),
                     preview ? plan.initialExact() : Map.of(), preview ? plan.seeds() : Map.of(),
                     preview ? plan.missingExact() : Map.of(), reason, budget.nodes(), System.nanoTime() - started);
-            if (coverage.complete()) answer = answer.withSeedOptimality(plan.seedOptimality()).withAlternatives(plan.alternatives());
+            if (coverage.complete() && !allocationView) answer = answer.withSeedOptimality(plan.seedOptimality()).withAlternatives(plan.alternatives());
             result = new Result<>(answer, coverage);
             budget.phase(PlanningBudget.Phase.COMPLETE);
         }
@@ -410,6 +456,7 @@ public final class CapturedCatalog<K> {
             if (allocation != null) allocation.close();
             allocation = null;
             allocating = null;
+            allocated = List.of();
             expanding = null;
             for (var state : active.values()) state.domain.close();
             active.clear();
@@ -420,6 +467,7 @@ public final class CapturedCatalog<K> {
             producers.clear();
             providers = List.of();
             concrete.clear();
+            allocationRecipes.clear();
             budget.release(memory);
             memory = 0;
         }

@@ -474,3 +474,12 @@ The model runner now also accepts `lp-retained`, `pb-retained`,
 original-row entries separate tool capacity from portfolio dispatch. Returned
 witnesses still pass the independent row/domain oracle. An admission refusal
 or an incomplete retained search stays UNKNOWN; it is never an UNSAT result.
+
+`CapturedBatchAllocationTest` adds 600 exhaustive multi-firing stock comparisons
+and 24 permutations of a 12-slot, 300-alternative domain under one/four-worker
+scheduling, including expanded budgets. `CapturedProofTest` independently checks
+candidate ordinals, archived coverage and compressed serial witnesses, including
+tampering, overlapping inventory, physical returns and large/deep programs.
+Both are in the standard suite. Reproduce the focused boundary with
+`--suite standard --case Captured`; implementation scope and the equal-budget
+split-stock counterexample are in `../docs/captured-candidate-domains.txt`.
