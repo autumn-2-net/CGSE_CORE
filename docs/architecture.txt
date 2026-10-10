@@ -19,6 +19,12 @@ pattern callbacks. GraphCompiler and PreparedCatalog expose immutable recipes
 and reusable topology. GraphPlanner / GraphPlanningWork provide
 synchronous and resumable planning using the same continuation.
 
+CapturedCatalog retains complete captured candidate domains and can refine the
+initial 256-variant window after failure. Its results carry coverage; incomplete
+views cannot certify missing material for the full capture. Hosts must preserve
+all captured providers and candidates to use this entry point. See
+captured-candidate-domains.txt for restoration, budget and adapter boundaries.
+
 PlanningBudget is one cumulative request budget. Workers share it; compilation
 and search accounting remain separate, while memory/time/cancellation apply to
 the request. Closing a continuation releases its resources.

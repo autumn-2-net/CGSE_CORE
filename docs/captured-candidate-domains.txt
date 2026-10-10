@@ -1,0 +1,142 @@
+Captured candidate domains, 2026-10-11
+=====================================
+
+Problem
+-------
+CapturedRecipe.expand() and dependencies() describe the same first 256 concrete
+variants. This is useful as a fast view, but is not a complete recipe domain.
+For two slots with 20 candidates each, the stock-funded a19/b19 combination has
+ordinal 399 and is absent from that view, as are providers reached only through
+the omitted alternatives. Raising the cap cannot handle a product of many slots.
+
+New entry point
+---------------
+CapturedCatalog<K> retains immutable CapturedRecipe entries, their stable IDs and
+original binding IDs. Its plan()/begin() methods run the existing main graph
+planner behind resumable candidate discovery. Entry order is the host's priority
+order. begin() also accepts external supply, required seeds and catalyst policy.
+Both synchronous and PlanningScheduler callers use the same continuation and one
+cumulative PlanningBudget. Concrete GraphRecipe/GraphCompiler callers are intact.
+
+The host must supply the complete captured provider catalog, including providers
+for candidate inputs beyond the initial window. No worker reads live inventories
+or pattern callbacks. A host snapshot that already discarded those providers or
+alternatives cannot recover them by changing only the core jar. Mark such a
+capture incomplete. Existing GTL CapturedPatternCatalog still flattens captures
+before planning; adopting this entry point requires an adapter update in GTLCore.
+This change does not silently change that host's capture or integration APIs.
+
+Expansion and scope
+-------------------
+CapturedRecipeDomain keeps exact BigInteger cardinalities and stable mixed-radix
+ordinals, without materializing the Cartesian product. Its first window has the
+existing order: singles, then descending-copy mixed selections; the last slot
+advances fastest. Exact composition ranking/unranking handles domains larger
+than Long.MAX_VALUE. Random access does not claim that skipped ordinals exist
+in the current concrete view. Emitted values and domain metadata belong to the
+domain's logical reservation until close().
+
+The first planning turn keeps the old 256-window order. A restricted turn gets
+min(32768, remaining search work / 4), with a 256-work minimum; its individual
+operations still charge the global budget. Failure or a bounded inconclusive
+turn opens the next recovery channel, not a global missing-material conclusion.
+Later contiguous pages double the covered prefix. Positive early results need
+not enumerate the rest of the domain.
+
+Potential base outputs and physical container returns are indexed without
+enumerating variants. Only reachable domains are expanded. Emitting a new
+variant discovers its input dependencies and their providers, including recipes
+not reached by the initial window. Virtual reusable self-returns are not treated
+as physical producers. Expanded domains are compiled into a new immutable
+GraphCompiler; no restricted negative cache, count session, source closure or
+proof is imported into a larger domain.
+
+Result.coverage() records the request-local revision and, per reached pattern,
+the covered prefix, exact total, explicitly instantiated additional ordinals,
+and capture completeness. A complete relevant closure is required before a
+negative result or a seed optimality certificate can escape. Otherwise the
+answer is UNKNOWN (or the actual work/memory/time limit); misleading restricted
+missing-material previews are removed. A verified positive witness is valid
+even with incomplete coverage, but is labelled FEASIBLE_NOT_PROVEN_OPTIMAL.
+An explicitly incomplete provider catalog also prevents a global negative claim.
+
+Existing proof archives certify concrete count models, not captured domains.
+Using a restricted captured view marks the archive incomplete. Individual
+certificates remain independently replayable, but this archive cannot be used
+as a complete full-catalog proof. Domain-aware archive serialization is not
+implemented by this change. Revision numbers are local diagnostics, not global
+cache identities. A changed capture must create a new CapturedCatalog.
+
+Factorized stock allocation
+---------------------------
+After the unchanged first turn fails, an optional auxiliary model can find one
+stock-funded concrete firing directly. It does not replace the canonical graph.
+For a slot allowing mixed copies, integer variables count candidate copies and
+sum to the slot multiplier. For an indivisible slot, Boolean variables select
+one candidate for the whole firing. Each physical resource has ONE upper-bound
+row shared by every slot, including repeated/tag-overlapping candidates with the
+same key. Exact candidate stack amounts multiply those variables. External
+supply omits only the corresponding stock bound.
+
+The existing LCG engine solves this bounded model. Its state is retained between
+slices; an allocation is restored to its canonical ordinal and real GraphRecipe.
+Container returns come from that exact selection. The next refined compiler
+tries the funded repair first within its pattern, preserving inter-pattern host
+priority and the relative order of the previous variants. Simply appending the
+repair behind all known-unfunded variants caused repeated restricted turns to
+starve it in the wide-domain regression.
+
+Only positive proposals escape this auxiliary search. Missing initial stock for
+one firing does not rule out upstream production, recycling, or a combination
+of several variants, so failure falls back to paged discovery. Every final plan
+goes through the normal original-recipe verification and shared inventory checks.
+Read/configuration slots are excluded from this auxiliary model and retain the
+concrete path. Likewise, a host with coupled input semantics must supply concrete
+variants; CapturedRecipe's Cartesian representation assumes independent slots.
+
+This is a single-firing stock repair, not a full factorized multi-recipe count
+model with a variable for every recipe's firing count. It cannot by itself discover
+allocations needing resources first produced elsewhere. Pages and the ordinary
+main solver handle those cases. The auxiliary search has at most 256 slots,
+1024 eligible variables and min(32768, remaining search work / 8) work. Admission
+refusal or a local cutoff never means infeasible. There is one attempt per
+reached domain; it does not repeatedly spend work on the same failed stock view.
+
+Validation
+----------
+CapturedRecipeTest keeps the legacy expansion/dependency order and exact budget
+checks. A >256-candidate mixed slot previously built more singles than its capped
+selection count and threw; the first-window path now stops singles at that count.
+Saturated products use long intermediates instead of overflowing int arithmetic.
+
+CapturedRecipeDomainTest compares 90 prefix configurations, exact full weak
+compositions from an independent vector enumerator, and rank/unrank round trips.
+It checks huge domains, empty inputs, capture truncation, arithmetic overflow,
+cancellation and reservation cleanup.
+
+CapturedInputAllocationTest compares 600 factorized assignments with independent
+exhaustive slot assignments, including overlapping resources, unequal stack
+sizes, physical returns, indivisible slots, mixed copies and external supply.
+Its 12 slots x 300 alternatives case has 531441000000000000000000000000 possible
+combinations. The funded last combination is found after only 257 instantiations
+(the initial 256 plus one sparse repair), with 47601 total work and about 1.79 MiB
+peak logical reservation in the local JDK 17 run.
+
+CapturedCatalogTest reproduces the missing 400th combination, later dependency
+providers and later return producers. It covers joint supply across several
+variants, sparse ordinals later absorbed by full coverage, shared stock across
+patterns, Long.MAX_VALUE orders, 120 candidate/catalog order permutations,
+stock replenishment, changed captures, forced production, incomplete proof
+archives, budget limits, cancellation and one/four-worker scheduling.
+
+Final JDK 17 validation: all 87 standard programs/batches pass, including the
+20M/80M pinned count boundaries. All 244 curated graph fixtures pass in three
+orders (732 cases). Offline Gradle assembly passes; all 209 production sources
+in the source jar match the validated working-tree files. Final production
+fingerprint: d6616fc352fb8b4fff1ffb5c32e8f87e0f711a8d879aeccde241719a2554ace4.
+
+Final local artifacts stay under build/candidate-focused-final-20261011 and
+build/candidate-fixtures-20261011; build/candidate-final-20261011 is the initial
+standard pass before the final ownership refinement. Player captures and temporary reports are not
+part of the production change. These are core regressions, not a new live-server
+integration test of the unchanged AE adapter.
