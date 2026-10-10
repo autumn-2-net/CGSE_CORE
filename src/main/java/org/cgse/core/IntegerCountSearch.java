@@ -393,6 +393,11 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             // after the same original-recipe execution verification as before.
             if (branch.auxiliaryMode == 0) choiceConflicts.add(branch.learnedChoices);
             else choiceConflicts.add(branch.learnedChoices.stream().filter(c -> c.assumptions().isEmpty()).toList());
+            // This is a publication outbox, like learnedMaterials above.
+            // Replaying an oversized batch on every yield makes its evicted
+            // entries evict one another again, without new proof or usage.
+            // Optional cache refusal/eviction loses pruning, never coverage.
+            branch.learnedChoices.clear();
             choiceConflicts.used(branch.usedChoices);
             branch.usedChoices.clear();
             // A proof scout may discover a useful count vector whose execution

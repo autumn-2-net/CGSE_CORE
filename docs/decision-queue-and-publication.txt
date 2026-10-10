@@ -1,0 +1,97 @@
+Retained Boolean selection and conflict publication, 2026-10-11
+==============================================================
+
+Changes
+-------
+CountCdcl now retains an indexed maximum queue after two linear selections
+on models with at least 64 coordinates. The activity/learning-rate formula,
+polarity and ascending variable-id tie break remain unchanged. Propagated
+assignments are removed lazily; undo reinserts/rekeys them. Newly compiled
+weighted rows update free variables, and activity rescaling refreshes all
+free priorities. Assigned entries may keep old keys only until undo.
+
+This uses the same general priority-maintenance idea as OR-Tools' SAT decision
+policy, implemented independently with CGSE's deterministic tie ordering:
+https://github.com/google/or-tools/blob/stable/ortools/sat/sat_decision.cc
+InitializeVariableOrdering, BumpVariableActivities and NextBranch consulted
+2026-10-10. No solver source is copied or added as a runtime dependency.
+
+Each queue insertion/update, removal and ordering comparison is charged.
+The optional reservation is 128 + 16*n bytes. Refusal keeps the original
+linear selector; cancellation/global work exhaustion still aborts the owned
+search. Local slices yield between complete operations and retain the queue.
+Closing releases the reservation and queue reference. No work multiplier,
+request cap, learned-clause semantics or proof rules change.
+
+The equal-cap comparison also exposed an existing publication problem.
+IntegerCountSearch merged a branch's entire learnedChoices set at every yield.
+Once a batch exceeded the shared cache, evicted old clauses were reinserted
+on the next yield and evicted one another again. With queue selection enabled,
+two p0548 cases reported 61,864 and 69,016 admissions, with no recorded usage.
+This is not that many distinct learned facts.
+
+learnedChoices is now a publication outbox, cleared after the coordinator
+successfully processes the batch, like learnedMaterials. In the same direct
+diagnostic replay the two cases each admit 48 facts and evict 10. A new
+publication can still offer an evicted fact; there is no permanent rejection
+cache. Optional refusal/eviction only loses pruning. Existing branch guards,
+inventory/model scope and auxiliary-root-proof filtering remain intact.
+Cancellation during publication does not mark the unfinished batch delivered.
+
+Validation
+----------
+CountDecisionQueueTest checks 50,000 priority operations against a map/linear
+oracle and every actual decision in 452 Boolean model/branching runs. The
+18,290 decisions agree with the original selector, including finite weighted
+models, large offsets, fixed variables, 36 derived weighted cuts, 54 forced
+activity rescalings, 82 clause imports, 240 resumptions and a restart. Small
+models are independently enumerated, larger SAT cases have planted witnesses,
+and generated proof archives are independently replayed. Optional allocation
+refusal and global work/cancellation boundaries release their reservations.
+
+CountConflictPublicationTest uses certified stock-bound conflicts exceeding
+the shared cache, then 400 unchanged coordinator yields. Neither publications
+nor charged containment work repeat; later proofs are admitted. Auxiliary
+scope, memory refusal and interrupted publication are covered. Deliberately
+reversing the queue tie break, removing undo reinsertion or restoring repeated
+publication makes the corresponding oracle fail.
+
+The complete comparison against 915b6c0e uses the same 20M cap and 274 models
+in three orders. Both revisions conclude 787/822 cases, with 17 UNKNOWN and
+18 unsupported conversions. Recorded work falls from 953,776,600 to
+950,980,421 (0.29%). The 72 parity neighbors retain 36 SAT and 36 UNSAT;
+work falls from 40,479,474 to 36,591,590 (9.60%). Some individual cases cost
+more; these totals are not a uniform improvement or a wall-time measurement.
+
+All 71 standard programs pass, followed by the extended weighted queue oracle.
+The 3,117 graph fixture/order checks retain every result. Their aggregate work
+falls 0.58% on the curated fixtures and is almost unchanged on the generated
+choice fixtures; some individual trajectories cost more. All 57 captured-stock
+requests verify with one worker, four workers at the same cap, and four workers
+with the explicit production 2x allowance. Offline assembly passes and all 202
+Java sources in the source JAR match the working tree byte-for-byte. Captured
+network replay is not a fresh live AE server test. Detailed hashes/results:
+tests/provenance/decision-publication-20261011.json.
+
+Remaining work
+--------------
+The five original-order 20M limits remain: four larger sparse equalities and
+the 48-bit subset join. An isolated finite-support/CDCL experiment derived
+explicit value-exclusion explanations but solved only 17/32 sparse models at
+20M, leaving all four large residuals unfinished. It is not admitted to the
+production portfolio and exports no production proof. It does not demonstrate
+that general finite-domain learning is ineffective; stronger explanations,
+branching and propagation efficiency still need measured gains. Broader numeric
+reach and the audit's separate host-residency/end-to-end attribution gaps remain.
+
+Reproduce
+---------
+python tests/benchmarks/compare_count_models.py --java-home JDK17
+  --baseline 915b6c0e --permutations 3 --parity --timeout 1800
+  --output build/decision-publication-comparison
+python tests/run.py --java-home JDK17 --suite standard --timeout 600
+python tests/run.py --java-home JDK17 --suite core
+  --case 'CountDecisionQueueTest|CountConflictPublicationTest' --timeout 300
+
+The graph/capture commands in scalar-count-matching.txt still apply. The local
+finite-support prototype and raw logs stay in ignored build directories.

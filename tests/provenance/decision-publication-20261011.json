@@ -1,0 +1,432 @@
+{
+  "schema": "cgse-decision-publication-v1",
+  "date": "2026-10-11",
+  "baseline": "915b6c0e41c1a555129e617d4fcb67ed543db763",
+  "candidate_source_sha256": "28a8dfb0b61d2278d2c93a6892c5a3cc0e872ea35066548aaa440ad50f5e0245",
+  "production_java_files": 202,
+  "scope": "Retained Boolean variable selection with unchanged score/ties; one-shot coordinator conflict publication. No new portfolio engine, work weighting or host integration.",
+  "models": {
+    "baseline": {
+      "outcomes": {
+        "PASS": 787,
+        "UNRESOLVED": 17,
+        "UNSUPPORTED": 18
+      },
+      "total_recorded_work": 953776600
+    },
+    "candidate": {
+      "outcomes": {
+        "PASS": 787,
+        "UNRESOLVED": 17,
+        "UNSUPPORTED": 18
+      },
+      "total_recorded_work": 950980421
+    },
+    "gained": [],
+    "lost": [],
+    "contradictions": [],
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "a144f6e2269fad4c62ca5f86a0e185380d954f0feba4a9d8282462ecec887f10",
+    "permutations": 3,
+    "orders": [
+      {
+        "order": 0,
+        "baseline": {
+          "outcomes": {
+            "PASS": 263,
+            "UNRESOLVED": 5,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 306048011
+        },
+        "candidate": {
+          "outcomes": {
+            "PASS": 263,
+            "UNRESOLVED": 5,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 305710176
+        }
+      },
+      {
+        "order": 1,
+        "baseline": {
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 330005832
+        },
+        "candidate": {
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 327789505
+        }
+      },
+      {
+        "order": 2,
+        "baseline": {
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 317722757
+        },
+        "candidate": {
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 317480740
+        }
+      }
+    ]
+  },
+  "parity": {
+    "baseline": {
+      "outcomes": {
+        "UNSAT": 36,
+        "SAT": 36
+      },
+      "total_recorded_work": 40479474
+    },
+    "candidate": {
+      "outcomes": {
+        "UNSAT": 36,
+        "SAT": 36
+      },
+      "total_recorded_work": 36591590
+    },
+    "gained": [],
+    "lost": [],
+    "contradictions": []
+  },
+  "graphs": {
+    "curated": {
+      "cases": 717,
+      "baseline_work": 463944401,
+      "candidate_work": 461254461,
+      "result_changes": [],
+      "work_changed_cases": 137,
+      "largest_increases": [
+        {
+          "id": "0/recycle_mix3",
+          "increase": 491789,
+          "baseline_work": 11754583,
+          "candidate_work": 12246372
+        },
+        {
+          "id": "2/recycle_mix3",
+          "increase": 111256,
+          "baseline_work": 8431946,
+          "candidate_work": 8543202
+        },
+        {
+          "id": "0/independent_mix5",
+          "increase": 8624,
+          "baseline_work": 91388,
+          "candidate_work": 100012
+        }
+      ]
+    },
+    "expanded": {
+      "cases": 2400,
+      "baseline_work": 3662096792,
+      "candidate_work": 3662084061,
+      "result_changes": [],
+      "work_changed_cases": 538,
+      "largest_increases": [
+        {
+          "id": "0/choice_n20_c4_d2_slack0_s131_q1000",
+          "increase": 198319,
+          "baseline_work": 555014,
+          "candidate_work": 753333
+        },
+        {
+          "id": "1/choice_n32_c2_d12_slack0_s100_q1",
+          "increase": 8368,
+          "baseline_work": 2154618,
+          "candidate_work": 2162986
+        },
+        {
+          "id": "1/choice_n32_c2_d8_slack0_s102_q1",
+          "increase": 4137,
+          "baseline_work": 3091078,
+          "candidate_work": 3095215
+        }
+      ]
+    },
+    "baseline_note": "Previous complementary-join final graph logs are result/work identical to 2496def4 and represent the unchanged graph baseline at 915b6c0e."
+  },
+  "standard": {
+    "programs": 71,
+    "all_passed": true,
+    "source_sha256": "28a8dfb0b61d2278d2c93a6892c5a3cc0e872ea35066548aaa440ad50f5e0245",
+    "extended_queue_oracle": "Decision queue: 50,000 independent priority operations; models=452; queued=404; linear-oracle decisions=18290; conflicts=671; restarts=1; resumptions=240; rescalings=54; imports=82; weighted_cuts=36; proofs, memory refusal, cancellation, work limits and cleanup passed",
+    "publication_oracle": "Conflict publication: oversized batches, 400 unchanged yields, later proofs, auxiliary scope, optional refusal and cancellation passed",
+    "test_source_sha256": "abddc8133bfc332c556d5cc40a1ae840ad58411802a72ba1f972d91865db05f5"
+  },
+  "negative_controls": [
+    {
+      "mutation": "wrong-tie",
+      "exit": 1,
+      "detected": "Indexed queue lost"
+    },
+    {
+      "mutation": "missing-undo",
+      "exit": 1,
+      "detected": "Decision differs"
+    },
+    {
+      "mutation": "repeat-publication",
+      "exit": 1,
+      "detected": "Unchanged branch reinserted"
+    }
+  ],
+  "captured_replays": {
+    "serial": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_work_limits": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "transfer_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "verified": 9
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_work_limits": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "transfer_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "verified": 4
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_work_limits": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "transfer_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "verified": 3
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_work_limits": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "transfer_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "verified": 3
+      }
+    ],
+    "parallel": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_work_limits": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "transfer_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "verified": 9
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_work_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "transfer_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "verified": 4
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_work_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "transfer_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "verified": 3
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_work_limits": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "transfer_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "verified": 3
+      }
+    ],
+    "expanded": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_work_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "transfer_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "verified": 9
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_work_limits": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "transfer_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "verified": 4
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_work_limits": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "transfer_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "verified": 3
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_work_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "transfer_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "verified": 3
+      }
+    ]
+  },
+  "build": {
+    "offline_assemble": "PASS",
+    "java": "Eclipse Adoptium 17.0.19+10",
+    "source_jar_sha256": "efeae7353d976a5bbcc29b470db66397883b03bda8676238ac0a807ce27be9de",
+    "matching_java_sources": 202
+  },
+  "finite_support_experiment": {
+    "production": false,
+    "engine": "one-hot finite-domain support propagation with internal CDCL explanation learning",
+    "models": 32,
+    "work_cap": 20000000,
+    "solved": 17,
+    "unknown": 15,
+    "remaining_large_sparse_solved": 0,
+    "input_sha256": "149739d9aeb2e9a3fdc192751025d0678f58d2c0f202f139f9790735ee7035f8",
+    "prototype_source_sha256": "b617b7afaa7ea3726d21fac031f17a2a82d44fed4b8f0ae9849ede9667c0ba91",
+    "note": "Isolated local prototype; no negative proof export; no equal-cap main-portfolio gain established. Not shipped."
+  },
+  "limits": [
+    "Five original-order 20M limits remain; shuffled orders retain six each.",
+    "Logical work totals are not wall time and some individual cases cost more.",
+    "Captured-stock replay is not a fresh live AE server test.",
+    "Broader numeric admission and audit host-residency/end-to-end attribution gaps remain."
+  ]
+}

@@ -33,6 +33,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     final Set<ExactLinearProgram.Constraint> learnedMaterials = new LinkedHashSet<>();
     final Set<ExactLinearProgram.Constraint> usedMaterials = new LinkedHashSet<>();
     final List<CountGuard> supportConflicts = new ArrayList<>();
+    /** Newly proved original-coordinate clauses awaiting coordinator publication. */
     final Set<CountConflict> learnedChoices = new LinkedHashSet<>();
     private List<CountConflict> knownChoices = List.of();
     private List<ExactLinearProgram.Constraint> knownMaterials = List.of();

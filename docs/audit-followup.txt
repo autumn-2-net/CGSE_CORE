@@ -306,3 +306,17 @@ SCIP/CP-SAT source review and direct local prototypes do not establish another
 equal-cap gain on the four large sparse equalities. Native one-worker 10s runs
 also leave those four unresolved. The prototypes remain outside production;
 this does not claim those tools are ineffective in general or close H/J.
+
+2026-10-11 Boolean decision reuse and publication lifecycle
+----------------------------------------------------------
+decision-queue-and-publication.txt records an indexed Boolean priority queue
+preserving the existing selector, plus a coordinator outbox fix: paused branches
+no longer reinsert their evicted historical conflict batch on every yield.
+Independent selection, finite-model and proof oracles cover undo, weighted rows,
+rescaling, optional refusal and cancellation; three negative controls fail as
+expected. All 822 count conclusions remain, with 0.29% less total recorded work;
+the 72 parity neighbors retain their conclusions at 9.60% less work. All 3,117
+graph conclusions, 71 standard programs, 57 captured requests and assembly pass.
+No new portfolio arm or default-budget change is included. The five original
+limits, broader numeric/closure admission and H/J gaps are still open; the
+isolated finite-support/CDCL experiment did not add a solution to those limits.

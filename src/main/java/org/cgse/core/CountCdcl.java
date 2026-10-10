@@ -108,6 +108,8 @@ final class CountCdcl implements AutoCloseable {
     private long activityUpdates, materializedReasons;
     private boolean complete, infeasible, memoryLimit;
     private boolean retaining, paused;
+    private CountDecisionQueue decisionQueue;
+    private boolean queueAttempted;
 
     CountCdcl(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower, BigInteger[] upper,
               PlanningBudget budget, long maxWork) {
@@ -231,11 +233,7 @@ final class CountCdcl implements AutoCloseable {
                 nextRestart = conflicts + 32 * luby(restarts + 1);
                 return false;
             }
-            int best = -1;
-            for (int i = 0; i < values.length; i++) {
-                charge();
-                if (!lower[i].equals(upper[i]) && values[i] < 0 && (best < 0 || score(i) > score(best))) best = i;
-            }
+            int best = choose();
             if (best >= 0) {
                 level++;
                 decisions++;
@@ -277,6 +275,7 @@ final class CountCdcl implements AutoCloseable {
             sum = sum.add(weight);
             smallest = smallest == null ? weight : smallest.min(weight);
             activity[id] += 1.0 / input.terms().size();
+            if (decisionQueue != null && values[id] < 0) decisionQueue.update(id, score(id));
             polarity[id] -= coefficient.signum() / (double) input.terms().size();
         }
         if (capacity.signum() < 0) {
@@ -316,6 +315,35 @@ final class CountCdcl implements AutoCloseable {
 
     private double score(int id) {
         return branching == Branching.ACTIVITY ? activity[id] : learningRate[id] + 1e-8 * Math.min(activity[id], 1000);
+    }
+
+    private int choose() {
+        // Root propagation and short scouts need no queue preparation. Retain
+        // the index only after repeated scans on a nontrivial Boolean model.
+        if (decisionQueue == null && !queueAttempted && values.length >= 64 && decisions >= 2) {
+            queueAttempted = true;
+            long bytes = CountDecisionQueue.bytes(values.length);
+            if (budget.tryReserve(bytes)) {
+                memory += bytes;
+                decisionQueue = new CountDecisionQueue(values.length, this::charge);
+                for (int i = 0; i < values.length; i++) {
+                    charge();
+                    if (!lower[i].equals(upper[i]) && values[i] < 0) decisionQueue.update(i, score(i));
+                }
+            }
+        }
+        if (decisionQueue != null) {
+            // Propagated values may stay in the queue until they reach its
+            // head. Their stored scores are irrelevant until undo rekeys them.
+            for (int id; (id = decisionQueue.take()) >= 0;) if (values[id] < 0) return id;
+            return -1;
+        }
+        int best = -1;
+        for (int i = 0; i < values.length; i++) {
+            charge();
+            if (!lower[i].equals(upper[i]) && values[i] < 0 && (best < 0 || score(i) > score(best))) best = i;
+        }
+        return best;
     }
 
     private void assign(int literal, int[] reason) {
@@ -553,6 +581,10 @@ final class CountCdcl implements AutoCloseable {
         if (increment > 1e80) {
             for (int i = 0; i < activity.length; i++) activity[i] *= 1e-80;
             increment *= 1e-80;
+            if (decisionQueue != null) for (int i = 0; i < values.length; i++) {
+                charge();
+                if (!lower[i].equals(upper[i]) && values[i] < 0) decisionQueue.update(i, score(i));
+            }
         }
         if (conflicts % 128 == 0) reduceDatabase();
     }
@@ -776,6 +808,7 @@ final class CountCdcl implements AutoCloseable {
                 enqueue(occurrence.row);
             }
             values[id] = -1;
+            if (decisionQueue != null) decisionQueue.update(id, score(id));
             levels[id] = 0;
             reasons[id] = null;
             lazyReasons[id] = null;
@@ -933,6 +966,7 @@ final class CountCdcl implements AutoCloseable {
 
     @Override
     public void close() {
+        decisionQueue = null;
         budget.release(memory);
         memory = 0;
     }
