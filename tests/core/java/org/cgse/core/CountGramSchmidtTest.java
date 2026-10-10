@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class CountGramSchmidtTest {
     private record Factors(ExactRational[][] mu, ExactRational[] norms, long work) {}
     private record Model(List<ExactLinearProgram.Constraint> rows, BigInteger[] low, BigInteger[] high) {}
-    private record Solved(BigInteger[] counts, long work, int pauses) {}
+    private record Solved(BigInteger[] counts, long work, int pauses, long progress) {}
 
     public static void main(String[] args) throws Exception {
         long before = 0, after = 0;
@@ -46,6 +46,7 @@ public final class CountGramSchmidtTest {
         }
         var empty = new CountGramSchmidt(List.of(), () -> { throw new AssertionError("Empty work"); });
         check(empty.step() && !empty.dependent(), "Empty basis");
+        sparse();
         handoff();
         expandedAdmission();
         expandedKernel();
@@ -78,6 +79,42 @@ public final class CountGramSchmidtTest {
         long previous = work[0];
         check(factor.step() && work[0] == previous, "Completed factorization charged again");
         return new Factors(factor.mu(), factor.norms(), work[0]);
+    }
+
+    private static void sparse() {
+        long denseWork = 0, sparseWork = 0;
+        for (int seed = 0; seed < 96; seed++) {
+            var random = new Random(19671010L + seed);
+            int n = 32 + 24 * (seed % 4), d = 4 + seed % 21;
+            var columns = new ArrayList<Integer>();
+            for (int i = 0; i < n; i++) columns.add(i);
+            Collections.shuffle(columns, random);
+            var basis = new ArrayList<BigInteger[]>();
+            for (int j = 0; j < d; j++) {
+                var row = new BigInteger[n];
+                Arrays.fill(row, BigInteger.ZERO);
+                row[columns.get(j)] = BigInteger.valueOf(j % 2 == 0 ? 2 : -1);
+                for (int i = j + 1; i < n; i++) if (random.nextInt(8) == 0)
+                    row[columns.get(i)] = BigInteger.valueOf(random.nextInt(11) - 5);
+                basis.add(row);
+            }
+            Collections.shuffle(basis, random);
+            Factors expected = vectors(basis), actual = factors(basis);
+            check(Arrays.deepEquals(expected.mu, actual.mu) && Arrays.equals(expected.norms, actual.norms), "Sparse factors differ: " + seed);
+            // Cost of visiting the full integer-dot and triangular recurrence
+            // spaces; the new count includes building both sparse supports.
+            denseWork += (long) n * d * (d + 1) / 2 + (long) d * (d - 1) * (d + 1) / 6;
+            sparseWork += actual.work;
+        }
+        var cancelledProjection = List.of(new BigInteger[] {BigInteger.ONE, BigInteger.ONE, BigInteger.ZERO, BigInteger.ZERO},
+                new BigInteger[] {BigInteger.ONE, BigInteger.ONE.negate(), BigInteger.ZERO, BigInteger.ZERO},
+                new BigInteger[] {BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ZERO},
+                new BigInteger[] {BigInteger.ONE, BigInteger.ONE.negate(), BigInteger.ONE, BigInteger.ONE});
+        Factors expected = vectors(cancelledProjection), actual = factors(cancelledProjection);
+        check(expected.mu[1][0].signum() == 0, "Missing cancelled projection");
+        check(Arrays.deepEquals(expected.mu, actual.mu) && Arrays.equals(expected.norms, actual.norms), "Cancelled projection lost later contributions");
+        check(sparseWork < denseWork, "Sparse indexing did not save repeated full-space visits");
+        System.out.println("Sparse Gram: 97 independent vector oracles; dense integer-loop work=" + denseWork + "->" + sparseWork);
     }
 
     private static Factors vectors(List<BigInteger[]> basis) {
@@ -144,28 +181,32 @@ public final class CountGramSchmidtTest {
         var budget = budget(20_000_000, 128L << 20);
         BigInteger[] counts;
         int pauses = 0;
+        long progress;
         try (var search = new CountAffineLattice(model.rows, model.low, model.high, budget, first).retained()) {
             while (true) {
                 while (!search.step()) {}
                 if (!search.paused()) break;
                 check(search.counts() == null, "Paused witness escaped");
                 long work = budget.nodes();
-                check(search.step() && work == budget.nodes(), "Paused factorization repeated work");
+                long previousProgress = search.progress();
+                check(search.step() && work == budget.nodes() && previousProgress == search.progress(), "Paused factorization changed work or progress");
                 search.resume(quantum);
                 check(++pauses < 100000, "No progress");
             }
             counts = search.counts();
+            progress = search.progress();
             check(counts != null && valid(model, counts), "Expanded affine model not solved");
         }
         check(budget.reservedBytes() == 0, "Expanded matrix workspace leaked");
-        return new Solved(counts, budget.nodes(), pauses);
+        return new Solved(counts, budget.nodes(), pauses, progress);
     }
 
     private static void expandedAdmission() {
         for (int n : new int[] {49, 64, 96, 128}) for (boolean shifted : new boolean[] {false, true}) {
             Model model = model(n, shifted);
             Solved whole = solve(model, 131072, 131072), sliced = solve(model, 1024, 127);
-            check(Arrays.equals(whole.counts, sliced.counts) && whole.work == sliced.work && sliced.pauses > 0, "Expanded continuation changed result/work");
+            check(Arrays.equals(whole.counts, sliced.counts) && whole.work == sliced.work && whole.progress == sliced.progress && sliced.pauses > 0,
+                    "Expanded continuation changed result/work/progress");
         }
         // Many syntactically different equations can still have rank two.
         // The admission estimate must not replace the actual post-elimination check.

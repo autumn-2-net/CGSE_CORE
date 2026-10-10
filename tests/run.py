@@ -109,8 +109,16 @@ def main():
             spec.loader.exec_module(boundaries_helper)
             boundary = json.loads((BASE / 'regression/count-boundaries.json').read_text(encoding='utf-8'))
             manifest = json.loads((BASE / 'cases/manifest.json').read_text(encoding='utf-8'))
-            paths = {c['id']: c['path'] for c in manifest['cases'] if c['kind'] == 'count-model'}
-            cases = [json.loads((BASE / paths[c['id']]).read_text(encoding='utf-8')) for c in boundary['cases']]
+            records = [c for c in manifest['cases'] if c['kind'] == 'count-model']
+            # An order-sensitive boundary must use the complete corpus stream,
+            # not the different permutation obtained by shuffling a subset.
+            ordered = {order: {c['id']: c for c in boundaries_helper.count_model_order(records, order)}
+                       for order in {c.get('corpus_order', 0) for c in boundary['cases']}}
+            cases = []
+            for entry in boundary['cases']:
+                order = entry.get('corpus_order', 0)
+                case_id = entry['id'] + ('/order=' + str(order) if order else '')
+                cases.append(ordered[order][case_id])
             for case, oracle in zip(cases, boundary['cases']):
                 # Maintained witnesses / independent oracle verdicts override
                 # this check only; keep historical corpus records unchanged.

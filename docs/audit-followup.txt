@@ -229,3 +229,17 @@ known SAT, seven known UNSAT); one shuffled order of the new case is still
 unresolved. All 63 standard programs, 3,117 graph checks and 57 captured requests
 pass. This does not close order sensitivity, larger numeric/graph admission or
 the H/J observability gaps, and does not replace a live host integration run.
+
+2026-10-10 numeric progress and owner grants
+------------------------------------------
+numeric-progress-and-grants.txt completes the next retained-numeric boundary:
+exact sparse Gram supports, reporting completed LLL reductions/swaps, and using
+the owner's remaining grant when a nested continuation reaches an old deadline.
+Negative controls reproduce premature 0/37, 30/37 and 1/37 work returns. The
+822-case comparison gains the previously unresolved full-corpus permutation,
+with no lost conclusions or contradictions; total recorded work drops 8.9%.
+All three orders of that case now finish at 1.61M to 1.68M work, though some
+other solved cases cost more. The 15 original UNKNOWN cases and six unsupported
+conversions remain. All 63 standard programs, 3,117 graph checks, 57 captured
+requests and offline assembly pass. This closes neither broad numeric/graph
+admission nor H/J observability and is not a new live AE execution test.

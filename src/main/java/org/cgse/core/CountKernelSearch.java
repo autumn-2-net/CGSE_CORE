@@ -162,7 +162,14 @@ final class CountKernelSearch implements AutoCloseable {
             if (phase < 3) { prepareStep(); return false; }
             if (phase == 3) {
                 if (!search.step()) return false;
-                if (search.paused()) return paused = true;
+                if (search.paused()) {
+                    // The parent projection may have used part of an earlier
+                    // grant before yielding. Keep its remaining work available
+                    // when the inner walk subsequently reaches that deadline.
+                    long remaining = allowance - work - (budget.threadWork() - started);
+                    if (remaining > 0) { search.resume(remaining); return false; }
+                    return paused = true;
+                }
                 values = search.counts();
                 if (values == null) return complete = true;
                 restored = point.clone();

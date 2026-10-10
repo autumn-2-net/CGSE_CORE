@@ -9,7 +9,6 @@ import io
 import json
 from pathlib import Path
 import re
-import random
 import subprocess
 import tarfile
 
@@ -54,23 +53,7 @@ def main():
         parser.error('No count models selected')
     inputs = []
     for order in range(args.permutations):
-        rng = random.Random(20261009 + order)
-        for record in selected:
-            case = json.loads((ROOT / 'tests' / record['path']).read_text(encoding='utf-8'))
-            if order:
-                model = case['model']
-                old_ids = list(range(len(model['lower'])))
-                rng.shuffle(old_ids)
-                new_ids = {old: new for new, old in enumerate(old_ids)}
-                for key in ['lower', 'upper']:
-                    model[key] = [model[key][old] for old in old_ids]
-                for row in model['rows']:
-                    terms = [(str(new_ids[int(i)]), a) for i, a in row['terms'].items()]
-                    rng.shuffle(terms)
-                    row['terms'] = dict(terms)
-                rng.shuffle(model['rows'])
-                case['id'] += '/order=' + str(order)
-            inputs.append(case)
+        inputs.extend(helper.count_model_order(selected, order))
     helper.write_models(output / 'models.bin', inputs)
     harness = [ROOT / path for path in ['tests/regression/java/GraphFixtureRegression.java',
                'tests/corpus/java/CountModelRegression.java', 'tests/corpus/java/CountModelReplay.java',

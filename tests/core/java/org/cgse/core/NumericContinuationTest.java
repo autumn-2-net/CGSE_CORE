@@ -24,16 +24,18 @@ public final class NumericContinuationTest {
         }
         check(pauses > 100 && witnesses > 20, "Insufficient numeric handoff coverage: " + pauses + "/" + witnesses);
         kernel();
+        nested();
         limits();
         parallel();
         System.out.println("Numeric continuations: 80 paired runs; pauses=" + pauses + "; witnesses=" + witnesses +
-                "; projected kernels, scope, cancellation, memory and request limits passed");
+                "; 512 nested grant checks, projected kernels, scope, cancellation, memory and request limits passed");
     }
 
     private static Result solve(Model m, boolean affine, long first, long quantum) {
         var budget = new PlanningBudget(0, 4_000_000, 64L << 20, () -> false, System::nanoTime);
         BigInteger[] counts = null;
         int pauses = 0;
+        long sliceStart = budget.nodes(), granted = first;
         try (var lattice = affine ? new CountAffineLattice(m.rows, m.low, m.high, budget, first).retained() : null;
              var diophantine = affine ? null : new CountDiophantine(m.rows, m.low, m.high, budget, first).retained()) {
             while (true) {
@@ -43,6 +45,10 @@ public final class NumericContinuationTest {
                 if (!paused) break;
                 check(counts == null, "Paused incomplete witness escaped");
                 long work = budget.nodes(), bytes = budget.reservedBytes();
+                check(work - sliceStart >= granted, "Premature numeric pause: actual=" + (work - sliceStart) +
+                        " granted=" + granted + " affine=" + affine);
+                sliceStart = work;
+                granted = quantum;
                 for (int i = 0; i < 3; i++) check(affine ? lattice.step() : diophantine.step(), "Paused solver ran");
                 check(work == budget.nodes() && bytes == budget.reservedBytes(), "Paused poll changed work or memory");
                 if (affine) lattice.resume(quantum); else diophantine.resume(quantum);
@@ -104,6 +110,44 @@ public final class NumericContinuationTest {
             check(search.counts() != null && valid(new Model(rows, low, high), search.counts()), "Projected witness invalid");
         }
         check(pauses > 2 && budget.reservedBytes() == 0, "Projection was not interrupted or leaked");
+    }
+
+    private static void nested() {
+        var low = new BigInteger[5]; Arrays.fill(low, BigInteger.ZERO);
+        var high = new BigInteger[5]; Arrays.fill(high, BigInteger.TEN);
+        var rows = new ArrayList<ExactLinearProgram.Constraint>();
+        // Two independent exact equations leave a three-dimensional kernel.
+        for (int i : new int[] {0, 2}) {
+            rows.add(new ExactLinearProgram.Constraint(Map.of(i, BigInteger.TWO, i + 1, BigInteger.ONE.negate()), BigInteger.ZERO));
+            rows.add(new ExactLinearProgram.Constraint(Map.of(i, BigInteger.TWO.negate(), i + 1, BigInteger.ONE), BigInteger.ZERO));
+            rows.add(new ExactLinearProgram.Constraint(Map.of(i, BigInteger.ONE.negate()), BigInteger.valueOf(-4)));
+        }
+        // The local candidate walk cannot produce a witness: x0,x2 >= 4 but x0+x2 <= 7.
+        rows.add(new ExactLinearProgram.Constraint(Map.of(0, BigInteger.ONE, 2, BigInteger.ONE), BigInteger.valueOf(7)));
+        var basis = List.of(new BigInteger[] {BigInteger.ONE, BigInteger.TWO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO},
+                new BigInteger[] {BigInteger.ZERO, BigInteger.ZERO, BigInteger.ONE, BigInteger.TWO, BigInteger.ZERO},
+                new BigInteger[] {BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ONE});
+        var mu = new ExactRational[3][3];
+        for (var row : mu) Arrays.fill(row, ExactRational.ZERO);
+        var norms = new ExactRational[] {ExactRational.of(BigInteger.valueOf(5)), ExactRational.of(BigInteger.valueOf(5)), ExactRational.ONE};
+        for (boolean affine : new boolean[] {false, true}) {
+            var budget = new PlanningBudget(0, 1_000_000, 64L << 20, () -> false, System::nanoTime);
+            long granted = 2048;
+            try (var kernel = affine ? null : new CountKernelSearch(rows, low, high, low, basis, mu, norms, budget, granted).retained();
+                 var lattice = affine ? new CountAffineLattice(rows, low, high, budget, granted).retained() : null) {
+                for (int batch = 0; batch < 256; batch++) {
+                    long before = budget.nodes();
+                    while (!(affine ? lattice.step() : kernel.step())) {}
+                    check(affine ? lattice.paused() : kernel.paused(), "Nested search ended without exercising its continuation");
+                    check((affine ? lattice.counts() : kernel.counts()) == null, "Contradictory nested case produced a witness");
+                    check(budget.nodes() - before >= granted, "Premature nested pause: actual=" + (budget.nodes() - before) +
+                            " granted=" + granted + " affine=" + affine + " batch=" + batch);
+                    granted = 37;
+                    if (affine) lattice.resume(granted); else kernel.resume(granted);
+                }
+            }
+            check(budget.reservedBytes() == 0, "Nested continuation workspace leaked");
+        }
     }
 
     private static void limits() {

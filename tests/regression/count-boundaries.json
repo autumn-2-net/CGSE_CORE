@@ -124,6 +124,13 @@
       ],
       "expected": "SAT",
       "reason": "Admit a 53-coordinate affine model with a 37-dimensional integer kernel; 168b824b is unresolved at the same 20M budget."
+    },
+    {
+      "id": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
+      "names": ["generated/wide-equality-n64-w1000000/corpus-order-1"],
+      "corpus_order": 1,
+      "expected": "SAT",
+      "reason": "Sparse Gram work and completed LLL progress let the retained frontier finish; 66380b83 is unresolved at 20M on this full-corpus row/column/term order."
     }
   ]
 }

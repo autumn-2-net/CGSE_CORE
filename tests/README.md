@@ -405,3 +405,12 @@ recorded in `../docs/affine-gram-admission.txt` and
 ```text
 python tests/run.py --java-home <jdk17> --suite standard --case 'CountGramSchmidtTest|CountKernelTest|NumericContinuationTest|CountModelBoundaries' --timeout 600
 ```
+
+The next numeric boundary is recorded in `../docs/numeric-progress-and-grants.txt`
+and `provenance/numeric-progress-grants-20261010.json`. Sparse/cancelled Gram
+supports add 97 independent matrix checks. Numeric continuations now require
+each pause to have consumed its owner grant, including 512 nested handoffs;
+removing each renewal independently reproduces a premature pause. The count
+boundary includes the failing full-corpus permutation through `corpus_order`.
+It uses the complete manifest's deterministic shuffle stream, shared with the
+comparison runner, rather than shuffling only the selected boundary records.

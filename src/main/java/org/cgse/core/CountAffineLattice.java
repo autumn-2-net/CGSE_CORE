@@ -125,7 +125,12 @@ final class CountAffineLattice implements AutoCloseable {
                 try { done = kernel.step(); }
                 finally { work += budget.threadWork() - started; }
                 if (done) {
-                    if (kernel.paused()) return paused = true;
+                    if (kernel.paused()) {
+                        // Renew an older child deadline only inside the current
+                        // owner grant; this does not replenish the request cap.
+                        if (work < allowance) { kernel.resume(allowance - work); return false; }
+                        return paused = true;
+                    }
                     counts = kernel.counts();
                     kernel.close();
                     kernel = null;
@@ -396,6 +401,10 @@ final class CountAffineLattice implements AutoCloseable {
                 mu[k][i] = mu[k][i].subtract(multiple.multiply(mu[j][i]));
             }
             mu[k][j] = mu[k][j].subtract(multiple == null ? ExactRational.of(q) : multiple);
+            // A completed nonzero size reduction is paid numeric progress.
+            // Counting only equations and Gram rows made long retained LLL
+            // phases appear idle to the portfolio while their basis improved.
+            checkpoints++;
             if (reductionColumn < 0) reductionColumn = -2;
             return;
         }
@@ -423,6 +432,9 @@ final class CountAffineLattice implements AutoCloseable {
             mu[i][k - 1] = value.add(next.multiply(mu[i][k]));
         }
         Collections.swap(basis, k, k - 1);
+        // A Lovasz swap strictly decreases the lattice potential. Empty scans,
+        // zero reductions and polling a paused search never earn this feedback.
+        checkpoints++;
         pivot = Math.max(1, pivot - 1);
     }
 

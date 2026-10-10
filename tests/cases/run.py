@@ -2,10 +2,36 @@
 from pathlib import Path
 import importlib.util
 import json
+import random
 import re
 import struct
 
 BASE=Path(__file__).resolve().parent
+
+
+def count_model_order(records, order):
+    """One deterministic corpus order, including its original coordinate mapping."""
+    if order < 0:
+        raise ValueError('Negative corpus order')
+    rng = random.Random(20261009 + order)
+    result = []
+    for record in records:
+        case = json.loads((BASE.parent / record['path']).read_text(encoding='utf-8'))
+        if order:
+            model = case['model']
+            old_ids = list(range(len(model['lower'])))
+            rng.shuffle(old_ids)
+            new_ids = {old: new for new, old in enumerate(old_ids)}
+            for key in ['lower', 'upper']:
+                model[key] = [model[key][old] for old in old_ids]
+            for row in model['rows']:
+                terms = [(str(new_ids[int(i)]), a) for i, a in row['terms'].items()]
+                rng.shuffle(terms)
+                row['terms'] = dict(terms)
+            rng.shuffle(model['rows'])
+            case['id'] += '/order=' + str(order)
+        result.append(case)
+    return result
 
 
 def write_graphs(path,cases):

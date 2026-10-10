@@ -1,0 +1,687 @@
+{
+  "schema": "cgse-numeric-progress-grants-v1",
+  "date": "2026-10-10",
+  "baseline": "66380b8330a8f3add2971884ccf09887c440c647",
+  "candidate_source_sha256": "e4921f4fc7e12a1d8b9ff426fbaa0b9f04846d85684a5b651d09d576792bcb28",
+  "production_java_files": 200,
+  "scope": "Sparse exact Gram factors, completed lattice progress and renewing obsolete child deadlines inside existing owner grants. Candidate-only search; original-coordinate validation remains mandatory.",
+  "budget": {
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1
+  },
+  "account_policy": "Separate search/compilation caps; no strategy discount or larger request cap. Work totals include every recorded UNKNOWN exit.",
+  "models": {
+    "cases": 274,
+    "comparisons": 822,
+    "orders": {
+      "baseline": [
+        {
+          "order": 0,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 471983271
+        },
+        {
+          "order": 1,
+          "outcomes": {
+            "PASS": 252,
+            "UNRESOLVED": 16,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 518573113
+        },
+        {
+          "order": 2,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 480427945
+        }
+      ],
+      "candidate": [
+        {
+          "order": 0,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 439347718
+        },
+        {
+          "order": 1,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 457140622
+        },
+        {
+          "order": 2,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 443730660
+        }
+      ]
+    },
+    "gained": [
+      {
+        "case": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844/order=1",
+        "names": [
+          "generated/wide-equality-n64-w1000000"
+        ],
+        "baseline": [
+          "UNRESOLVED",
+          "work=19992682"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=1673286"
+        ]
+      }
+    ],
+    "lost": [],
+    "contradictions": [],
+    "total_recorded_work": {
+      "baseline": 1470984329,
+      "candidate": 1340219000
+    },
+    "largest_increases": [
+      {
+        "case": "706316fb15d8b802ab7cd91656d2c636d9aec07a25a319b1c236dffcd9b0ba96",
+        "names": [
+          "generated/sparse-equality-n96-s0"
+        ],
+        "extra_work": 1875925,
+        "baseline": [
+          "PASS",
+          "SAT",
+          "work=1830865"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=3706790"
+        ]
+      },
+      {
+        "case": "9b1cd481aaef5acaa369dafdaaf53741c12b38706790cb846175a90619656c55/order=1",
+        "names": [
+          "wide-23"
+        ],
+        "extra_work": 1748798,
+        "baseline": [
+          "PASS",
+          "SAT",
+          "work=1809994"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=3558792"
+        ]
+      },
+      {
+        "case": "706316fb15d8b802ab7cd91656d2c636d9aec07a25a319b1c236dffcd9b0ba96/order=2",
+        "names": [
+          "generated/sparse-equality-n96-s0"
+        ],
+        "extra_work": 1560805,
+        "baseline": [
+          "PASS",
+          "SAT",
+          "work=2210595"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=3771400"
+        ]
+      },
+      {
+        "case": "706316fb15d8b802ab7cd91656d2c636d9aec07a25a319b1c236dffcd9b0ba96/order=1",
+        "names": [
+          "generated/sparse-equality-n96-s0"
+        ],
+        "extra_work": 1468612,
+        "baseline": [
+          "PASS",
+          "SAT",
+          "work=2648752"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=4117364"
+        ]
+      },
+      {
+        "case": "9b1cd481aaef5acaa369dafdaaf53741c12b38706790cb846175a90619656c55",
+        "names": [
+          "wide-23"
+        ],
+        "extra_work": 310963,
+        "baseline": [
+          "PASS",
+          "SAT",
+          "work=1356368"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=1667331"
+        ]
+      }
+    ],
+    "wide_case_orders": [
+      {
+        "order": 0,
+        "baseline": [
+          "PASS",
+          "SAT",
+          "work=6680921"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=1614589"
+        ]
+      },
+      {
+        "order": 1,
+        "baseline": [
+          "UNRESOLVED",
+          "work=19992682"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=1673286"
+        ]
+      },
+      {
+        "order": 2,
+        "baseline": [
+          "PASS",
+          "SAT",
+          "work=6931399"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=1616705"
+        ]
+      }
+    ],
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "ba1d5248c632cd1ad8ccf8efa691b03ffb39179b3a6aec05bdf660dda46d73cf",
+    "report_sha256": "b6386ca2ca63115613d0f90319e889c9f215530f833c41c4be279bddbcfeb4b0"
+  },
+  "parity": {
+    "comparisons": 72,
+    "outcomes_and_work_identical": true,
+    "recorded_work": {
+      "baseline": 40479391,
+      "candidate": 40479391
+    }
+  },
+  "remaining_original": [
+    {
+      "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "names": [
+        "generated/sparse-equality-n144-s2"
+      ],
+      "known_truth": "SAT"
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "names": [
+        "scip/lseu-objective-1119"
+      ],
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "names": [
+        "scip/lseu-objective-1119/embedded/normalized"
+      ],
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "names": [
+        "generated/sparse-equality-n257-s2"
+      ],
+      "known_truth": "SAT"
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "names": [
+        "scip/lseu-objective-1119/raw/original"
+      ],
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "names": [
+        "generated/sparse-equality-n96-s2"
+      ],
+      "known_truth": "SAT"
+    },
+    {
+      "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "names": [
+        "generated/sparse-equality-n257-s1"
+      ],
+      "known_truth": "SAT"
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": [
+        "generated/sparse-equality-n144-s1"
+      ],
+      "known_truth": "SAT"
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "names": [
+        "scip/lseu-objective-1119/embedded/original"
+      ],
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "names": [
+        "scip/lseu-objective-1119/embedded/reduced"
+      ],
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+      "names": [
+        "wide-79"
+      ],
+      "known_truth": "SAT"
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "names": [
+        "scip/lseu-objective-1119/raw/reduced"
+      ],
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1"
+      ],
+      "known_truth": "SAT"
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "names": [
+        "scip/lseu-objective-1119/raw/normalized"
+      ],
+      "known_truth": "UNSAT"
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48"
+      ],
+      "known_truth": "SAT"
+    }
+  ],
+  "negative_controls": {
+    "removed_renewals": [
+      {
+        "removed": "diophantine child-deadline renewal",
+        "exit": 1,
+        "failure": "Exception in thread \"main\" java.lang.AssertionError: Premature numeric pause: actual=0 granted=37 affine=false"
+      },
+      {
+        "removed": "kernel child-deadline renewal",
+        "exit": 1,
+        "failure": "Caused by: java.lang.AssertionError: Premature nested pause: actual=30 granted=37 affine=false batch=17"
+      },
+      {
+        "removed": "affine child-deadline renewal",
+        "exit": 1,
+        "failure": "Caused by: java.lang.AssertionError: Premature nested pause: actual=1 granted=37 affine=true batch=19"
+      }
+    ],
+    "harness_sha256": "08fce3b95985eb8b2aee86ccace83b87582268887b52db167014abb030d477eb",
+    "note": "Local source mutations remove exactly one renewal in each trial; mutations and raw logs are not production sources."
+  },
+  "gram_oracles": {
+    "ordinary_matrices": 261,
+    "ordinary_loop_sample": 260,
+    "ordinary_loop_reference": "explicit rational vectors",
+    "ordinary_loop_work": [
+      545397,
+      296484
+    ],
+    "sparse_matrices": 97,
+    "sparse_loop_sample": 96,
+    "sparse_loop_reference": "dense integer Gram recurrence",
+    "sparse_loop_work": [
+      815795,
+      203830
+    ],
+    "harness_sha256": "f551d494df8919d9be81a88856db477d73eab78f6b4f5a21726fee9d2a866984",
+    "note": "Independent vector factors and exact original-coordinate checks. Loop counts are not wall-time comparisons."
+  },
+  "validation": {
+    "standard": {
+      "programs": 63,
+      "passed": 63,
+      "results_sha256": "cf26d85f3914688b07e3152be9887fc404588d5b11ffc51c2e6f2fa381424d04",
+      "logs_sha256": "994f84e4168b23c58098ac3b65987f89e75be84f3bfa1bd056cd7e9f7a0e2703"
+    },
+    "fixtures": {
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "e5c5b69ea2fae9bcb961e7215f8af1eedc66f50fee41ab25d7f57e8454c08c30",
+      "logs_sha256": "1ed41b480628fe47eef28851c61a3ac162b7fa57cb5efa555e88e98867fa2469",
+      "validated": 717,
+      "inputs_sha256": "4f4f66ab40bc43f18da4bf33225e764abb083c965a88fae01d313cb6089859bd"
+    },
+    "expanded": {
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "9383a21082f3a1ddfc263cee48f42be563840c40bc25611e92cfd2648236cbe0",
+      "logs_sha256": "7e586b2b44d392f23836765d9229f69a5ce87d78a4a9cbf4a97c5b00f322e3d4",
+      "validated": 2400,
+      "inputs_sha256": "2fb7374814999c1d63da0e5d92ae2e403f0930378f1792f2febb4667a563660e"
+    },
+    "numeric_grants": {
+      "paired_runs": 80,
+      "witnesses": 80,
+      "sliced_pauses": 202,
+      "nested_grant_checks": 512
+    },
+    "positive_boundaries": {
+      "records": 18,
+      "manifest_sha256": "33468dff3f88cd79f9ae7881e1e00d307baab5abba65409e4b846da988e0cf09",
+      "corpus_manifest_sha256": "f0cb4374689c06b700b2df6f67743c6fa91e6c948e894c1a41e86e36b77bfeab",
+      "runner_sha256": "5c662057d213fee50a537290fdd6624f3afc8ec6e3bb735d99cfef795d04311b"
+    },
+    "captured_serial": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "verified": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "33fb075712b4156c34074550d97791bb7b4d6a0dab964aa8b4062cd53593b8b0",
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "57f5641e4bd6fd6edffdb031a4610efb32136c60d8f29161d07e7fcd3f7e7d0b",
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "17d084e59d821fa004efdc967899b95509b39e62af6db167931b8cdbaab7965f",
+        "peak_reserved_bytes": 70584863
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "verified": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 1,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 1,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "f19b95e3b704533d5d791865b7068ae04aa198e1bf3464c030491faf66505bd7",
+        "peak_reserved_bytes": 72825838
+      }
+    ],
+    "captured_parallel": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "verified": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "3eb372953ebd31daf0a54271fd0364755b0ee8e6d8994fd9aecd5e0c88094875",
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          20000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "949d02215e0d00b930d658d926a9ac28bb42cc565d1ace0012902a56d29c9dd8",
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "afe417b94750ed7327b3508690f160ed94a90dc653bc0f4f980c51bd2cdcc0af",
+        "peak_reserved_bytes": 70237289
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "verified": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": false
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "41ea094eee1d58bca32ac66b93e816bd3910737dbf5b0c91025f9b6919078429",
+        "peak_reserved_bytes": 72825838
+      }
+    ],
+    "captured_expanded": [
+      {
+        "name": "emitter-residual-progress",
+        "requests": 9,
+        "verified": 9,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+        "results_sha256": "ca7a57cf4831349389a7a4fdd5481f05a7e1ded7c547b0838fc6e18824ad8589",
+        "peak_reserved_bytes": 73141007
+      },
+      {
+        "name": "miracle-seed-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 20000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          40000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+        "results_sha256": "ac25c1e605318ce7dc030d591709b9d53e78cb913b53b3ab0620e3ca09dfd541",
+        "peak_reserved_bytes": 69485518
+      },
+      {
+        "name": "miracle-quantity-source",
+        "requests": 3,
+        "verified": 3,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+        "results_sha256": "82e8016a4595986c11d9dd3013b5571c9e06834f9add7cbb523dcb33edbda850",
+        "peak_reserved_bytes": 70237289
+      },
+      {
+        "name": "miracle-funded-cycle-entry",
+        "requests": 4,
+        "verified": 4,
+        "budget": {
+          "milliseconds": 0,
+          "work": 40000000,
+          "memory_bytes": 268435456,
+          "workers": 4,
+          "expanded": true
+        },
+        "effective_limits": [
+          80000000
+        ],
+        "peak_workers": 4,
+        "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+        "results_sha256": "a4ba7b7c959e0fda3b2acb3fe1535c4106c21d7c697d0cd2183eba48c65ef1aa",
+        "peak_reserved_bytes": 72825838
+      }
+    ]
+  },
+  "limits": [
+    "Fifteen original-order models remain UNKNOWN: eight known SAT and seven known UNSAT; six conversions remain unsupported.",
+    "Some solved cases cost more; no uniform speedup or elimination of order sensitivity is claimed.",
+    "Ambient dimension 128, kernel dimension 48 and exact-arithmetic precision limits remain bounded.",
+    "Captured AE/JEI replay is offline, not a new live server run.",
+    "Large graph closures and H/J audit observability gaps remain."
+  ],
+  "build": {
+    "offline_assemble": true,
+    "production_java_files": 200,
+    "source_jar_matches_all_production_files": true,
+    "core_jar_sha256": "797d9b0d6582375ba973cc326bb084ee879c435b7db5ef2ecc67f45394f6be45",
+    "sources_jar_sha256": "3831aaca7dae26da3bbebf949a1abe0b894fdf653c3702f5646128c945319ac7",
+    "assemble_log_sha256": "b21c527dbb6f7b08a8e3a4ff4e6cb85e9e0545c65ab5934156c4dbeea2d3056f"
+  },
+  "sparse_progress_without_grant_fix": {
+    "candidate_source_sha256": "f4d399a2fc275526d5b42cec838339ae3c103fd039c13abf71f47e16ef295475",
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "report_sha256": "7e6173efd03da653a510e58402e0d37fa34ee1dc748fa87ed7c850d6ed729074",
+    "total_recorded_work": 1397400220,
+    "gained": [
+      "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844/order=1"
+    ],
+    "lost": [],
+    "wide_case_work": [
+      4004812,
+      5518364,
+      3652962
+    ],
+    "note": "Intermediate ablation, not final source validation. Production validation uses the completed owner-grant fixes."
+  }
+}

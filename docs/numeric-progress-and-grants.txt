@@ -1,0 +1,142 @@
+Numeric progress and retained owner grants (2026-10-10)
+=====================================================
+
+The equal-budget affine follow-up admitted a previously excluded 53-coordinate
+model, but one full-corpus permutation of wide-equality-n64-w1000000 still
+returned UNKNOWN. Its retained root search reached a long intermediate LLL
+phase, while other orders completed. Traces showed two different problems:
+useful lattice reductions were invisible to scheduling feedback, and nested
+continuations sometimes returned an old child pause before using the renewed
+owner grant. Repeated short-lived affine attempts in other branches had
+different bounds; they were not evidence that one frontier could be reused
+across those scopes.
+
+Sparse exact Gram arithmetic
+----------------------------
+CountGramSchmidt builds a charged nonzero-coordinate index for each frozen
+basis vector. Integer inner products visit the shorter support. The exact
+G = L D L^T recurrence similarly visits the shorter completed factor support;
+exactly cancelled coefficients are excluded. Both supports contain only
+completed entries, so every potentially nonzero product is included. Each
+scan/product remains charged, and finished projections survive local yields.
+
+These small primitive indices fit the existing reserved affine workspace.
+They are private to one frozen Gram factorization and expire with it. No
+floating arithmetic, wider arithmetic acceptance, proof shortcut or cross-box
+cache is introduced. Dense input still pays for building its support.
+
+Visible lattice progress
+------------------------
+A completed nonzero size reduction and a completed Lovasz swap now each report
+a progress checkpoint. Zero reductions, empty scans and polling a paused search
+do not. A Lovasz swap strictly reduces lattice potential. This is scheduling
+feedback for a candidate generator, not a witness or infeasibility proof.
+
+Nested grant renewal
+--------------------
+An owner can reach its scheduling deadline before its child does. If the child
+is not yet paused when the owner resumes, it keeps its earlier deadline. On a
+later step it may report that obsolete pause immediately. Propagating the pause
+to the owner wasted its new grant and gave the portfolio an idle observation.
+
+CountDiophantine (affine and face children), CountAffineLattice (kernel child),
+and CountKernelSearch (jump child) now renew a paused child using only the
+unused portion of the current owner grant. Accounting includes work consumed
+by the current child call before computing that remainder. This does not
+increase the request cap, reset work, alter scope checks or turn a local limit
+into an infeasibility proof. Cancellation and hard request exhaustion still
+come from the shared PlanningBudget.
+
+Regression design
+-----------------
+NumericContinuationTest keeps its 80 paired whole/sliced runs and additionally
+requires paused batches to have consumed their owner grant. One contradictory
+five-variable model, entered at two layers, exercises 512 nested grant handoffs
+through the affine, projected-kernel and jump layers. Infeasibility follows from
+x0 >= 4, x2 >= 4 and x0 + x2 <= 7; the local candidate walks must never emit a
+witness. Memory is released on close. Independent negative controls remove
+each renewal in isolation and fail at 0/37, 30/37 and 1/37 consumed/granted work.
+
+CountGramSchmidtTest compares 97 additional sparse/cancelled-factor matrices
+with its independent explicit-vector oracle. The 96 seeded sparse cases use
+815,795 dense-integer loop visits versus 203,830 charged visits with supports,
+including index construction. The separate 260 ordinary matrix campaign uses
+545,397 explicit-vector visits versus 296,484 new visits. These are different
+reference algorithms and are not wall-time measurements. Expanded affine and
+kernel tests still require original-coordinate witnesses and identical
+whole/sliced results and work, including cross-thread continuation.
+
+The maintained positive boundary now includes the exact failing full-corpus
+permutation. Benchmark and stable runner share one permutation helper; all
+822 serialized inputs are byte-for-byte identical to the preceding comparison.
+Shuffling only the selected boundary subset would produce a different case.
+
+Equal-budget result
+-------------------
+Against 66380b83, all 274 canonical count models run in three orders at the
+same 20M search/compilation caps, 256 MiB reservation limit, one worker and no
+wall deadline. The original order and shuffled order 2 keep 253 PASS, 15 UNKNOWN
+and six unsupported conversions. Shuffled order 1 improves from 252/16/6 to
+253/15/6. No previously solved model is lost and no conclusion contradicts the
+baseline. The separate 72 parity/neighbor verdicts and work are identical.
+
+wide-equality-n64-w1000000, complete-corpus orders:
+
+  Order      Before                         After (PASS)
+  0          PASS, 6,680,921 work            1,614,589 work
+  1          UNKNOWN, 19,992,682 work        1,673,286 work
+  2          PASS, 6,931,399 work            1,616,705 work
+
+Sparse Gram arithmetic plus LLL feedback alone solve these three orders at
+4,004,812 / 5,516,980 / 3,652,962 work. Correcting nested owner grants gives the
+final figures above. This ablation separates numeric savings and feedback from
+the additional benefit of actually using the resumed scheduling grant.
+
+Across all 822 runs, total recorded work decreases from 1,470,984,329 to
+1,340,219,000 (8.9%). UNKNOWN runs are included. Some solved cases cost more:
+the largest increase is 1,875,925 work for sparse-equality-n96-s0. Scheduling
+changes are not uniformly cheaper, and work counters are not latency estimates.
+The 15 remaining original-order UNKNOWN cases still include eight independently
+known SAT and seven independently known UNSAT cases.
+
+63 standard programs, all 18 maintained positive/negative count boundaries,
+3,117 graph checks (239 curated plus 800 planted inputs, each in three orders),
+and 57 captured requests pass. Captured inventory plus 5,903 manual and 62,284
+exported recipes is replayed in serial, four-worker base-budget, and four-worker
+expanded-budget mode. These are the real retained-work scheduler and existing
+production budget multipliers, not independent single-worker simulations.
+
+Offline assemble passes; all 200 production Java files match the source JAR.
+Fingerprints, remaining known truths, negative controls, and per-campaign caps
+are recorded in tests/provenance/numeric-progress-grants-20261010.json.
+
+Reproduce with JDK 17:
+
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline 66380b83 --permutations 3 --parity
+    --output build/numeric-grants-comparison --timeout 1800
+  python tests/run.py --java-home JDK17 --suite standard
+    --output build/numeric-grants-standard --timeout 600
+  python tests/run.py --java-home JDK17 --suite fixtures --milliseconds 0
+    --work 20000000 --permutations 3 --output build/numeric-grants-fixtures
+    --timeout 600
+  python tests/benchmarks/generate_choice_cases.py --seeds 32 --start-seed 100
+    --amounts 1,2,3,16,1000 --output build/gram-choice-inputs
+  python tests/run.py --java-home JDK17 --suite fixtures --milliseconds 0
+    --fixture-dir build/gram-choice-inputs --permutations 3 --work 20000000
+    --output build/numeric-grants-expanded --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17 --workers 1
+    --output build/numeric-grants-captures-serial --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4
+    --output build/numeric-grants-captures-parallel --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4
+    --expanded-budget --output build/numeric-grants-captures-expanded
+    --timeout 600
+
+Limits
+------
+These changes improve optional exact numeric search and its scheduling signals.
+They do not make order sensitivity disappear or close the broader large-closure,
+host residency (H), or end-to-end attribution (J) audit gaps. Captured network
+replay is offline testing, not a new live server/AE execution run. The main
+integer-count comparison does not measure the complete GraphPlanner pipeline.
