@@ -1,0 +1,413 @@
+{
+  "schema": "cgse-exact-row-activities-v1",
+  "date": "2026-10-11",
+  "baseline": "6795d7a3df37e00a852fad355ab84593aa2ce5d3",
+  "candidate_source_sha256": "1ec4d4238499d2c51e5cc1859dbc11b01f3f6a514f8c30b4d7cdad4f232515b5",
+  "scope": "Exact primitive cached row updates in LCG and weighted PB. Same work weights, decisions, proofs and request caps. No host/fallback change.",
+  "models": {
+    "checks": 822,
+    "outcomes": {
+      "PASS": 787,
+      "UNRESOLVED": 17,
+      "UNSUPPORTED": 18
+    },
+    "identical_results_and_work": true,
+    "total_recorded_work_per_revision": 950980421,
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "a144f6e2269fad4c62ca5f86a0e185380d954f0feba4a9d8282462ecec887f10",
+    "permutations": 3,
+    "original_order_unknown": 5
+  },
+  "parity": {
+    "checks": 72,
+    "outcomes": {
+      "UNSAT": 36,
+      "SAT": 36
+    },
+    "identical_results_and_work": true,
+    "total_recorded_work_per_revision": 36591590
+  },
+  "timing": {
+    "lcg": {
+      "engine": "lcg",
+      "input_sha256": "33d850a7eb739ae0a6dfd35603647888d7844e358e46cd585b72724f134e78b1",
+      "harness_sha256": "14469e01dc6982ef08c1baad7dc96f5f8c1cd1ad2d53c34d7c4177100b4f6846",
+      "warmup": 5,
+      "slice_work": 262144,
+      "request_work": 8000000,
+      "memory_bytes": 134217728,
+      "java": "openjdk version \"17.0.19\" 2026-04-21\nOpenJDK Runtime Environment Temurin-17.0.19+10 (build 17.0.19+10)\nOpenJDK 64-Bit Server VM Temurin-17.0.19+10 (build 17.0.19+10, mixed mode, sharing)",
+      "medians": {
+        "baseline": {
+          "nanoseconds": 608440200.0,
+          "allocated_bytes": 879626020.0,
+          "work": 7105522.0
+        },
+        "candidate": {
+          "nanoseconds": 546237000.0,
+          "allocated_bytes": 588919276.0,
+          "work": 7105522.0
+        }
+      },
+      "identical_trajectories": true,
+      "note": "Sequential B/C/C/B processes, warmed original-model slices. Allocation is current-thread allocated bytes, not retained heap or RSS. No whole-planner timing claim.",
+      "models": 45,
+      "case_filter": "sparse-equality|wide-equality|wide-79",
+      "process_order": [
+        "baseline",
+        "candidate",
+        "candidate",
+        "baseline"
+      ],
+      "samples_per_revision": 14,
+      "sample_ranges": {
+        "baseline": {
+          "nanoseconds": [
+            602814600,
+            615815900
+          ],
+          "allocated_bytes": [
+            878101032,
+            881151008
+          ],
+          "work": [
+            7105522,
+            7105522
+          ]
+        },
+        "candidate": {
+          "nanoseconds": [
+            533741700,
+            548599000
+          ],
+          "allocated_bytes": [
+            587507664,
+            590330888
+          ],
+          "work": [
+            7105522,
+            7105522
+          ]
+        }
+      }
+    },
+    "pb": {
+      "engine": "pb",
+      "input_sha256": "54fb1934a741fb3ea44866cc4b2e861fac1a7f20b1f3c31bf5a73ee4e125525f",
+      "harness_sha256": "14469e01dc6982ef08c1baad7dc96f5f8c1cd1ad2d53c34d7c4177100b4f6846",
+      "warmup": 5,
+      "slice_work": 262144,
+      "request_work": 8000000,
+      "memory_bytes": 134217728,
+      "java": "openjdk version \"17.0.19\" 2026-04-21\nOpenJDK Runtime Environment Temurin-17.0.19+10 (build 17.0.19+10)\nOpenJDK 64-Bit Server VM Temurin-17.0.19+10 (build 17.0.19+10, mixed mode, sharing)",
+      "medians": {
+        "baseline": {
+          "nanoseconds": 294738500.0,
+          "allocated_bytes": 525332764.0,
+          "work": 19015662.0
+        },
+        "candidate": {
+          "nanoseconds": 288928600.0,
+          "allocated_bytes": 468175496.0,
+          "work": 19015662.0
+        }
+      },
+      "identical_trajectories": true,
+      "note": "Sequential B/C/C/B processes, warmed original-model slices. Allocation is current-thread allocated bytes, not retained heap or RSS. No whole-planner timing claim.",
+      "models": 86,
+      "case_filter": ".*; finite Boolean domains, at most 1024 coordinates",
+      "process_order": [
+        "baseline",
+        "candidate",
+        "candidate",
+        "baseline"
+      ],
+      "samples_per_revision": 14,
+      "sample_ranges": {
+        "baseline": {
+          "nanoseconds": [
+            289568000,
+            377375900
+          ],
+          "allocated_bytes": [
+            525103864,
+            528270832
+          ],
+          "work": [
+            19015662,
+            19015662
+          ]
+        },
+        "candidate": {
+          "nanoseconds": [
+            282277300,
+            295790800
+          ],
+          "allocated_bytes": [
+            467808216,
+            468491160
+          ],
+          "work": [
+            19015662,
+            19015662
+          ]
+        }
+      }
+    }
+  },
+  "focused_tests": {
+    "CountLcgActivityTest": "LCG activities: 116650 original-row sums; primitive=38884, arbitrary=77766, promotions=3, rebuilds=1440",
+    "CountLcgFiniteTest": "Finite LCG: 630 exact row boundaries, 256 exhaustive paired trajectories; primitive=2258, arbitrary=420, resumptions=647; identical work, reasons and certificates",
+    "CountCdclFiniteTest": "Finite PB: 300 paired original-model oracles; primitive rows=119440, arbitrary rows=45588, resumptions=24, conflicts=190, derived rows=118; identical work, trail, reasons and independently replayed proofs",
+    "CountDecisionQueueTest": "Decision queue: 50,000 independent priority operations; models=452; queued=404; linear-oracle decisions=18290; conflicts=671; restarts=1; resumptions=240; rescalings=54; imports=82; weighted_cuts=36; proofs, memory refusal, cancellation, work limits and cleanup passed"
+  },
+  "negative_controls": [
+    {
+      "mutation": "multiply_wrap",
+      "test": "CountLcgActivityTest",
+      "detected": true,
+      "detail": "Exception in thread \"main\" java.lang.AssertionError: cached sum differs from original row: 18446744073709551614 != -2"
+    },
+    {
+      "mutation": "addition_wrap",
+      "test": "CountLcgActivityTest",
+      "detected": true,
+      "detail": "Exception in thread \"main\" java.lang.AssertionError: cached sum differs from original row: 9223372036854775809 != -9223372036854775807"
+    },
+    {
+      "mutation": "unsafe_weight_admission",
+      "test": "CountCdclFiniteTest",
+      "detected": true,
+      "detail": "Exception in thread \"main\" java.lang.AssertionError: different work"
+    },
+    {
+      "mutation": "missing_undo",
+      "test": "CountCdclFiniteTest",
+      "detected": true,
+      "detail": "Exception in thread \"main\" java.lang.AssertionError: original-coordinate activity mismatch"
+    }
+  ],
+  "standard": {
+    "programs": 73,
+    "outcomes": {
+      "PASS": 73
+    }
+  },
+  "graphs": {
+    "curated": {
+      "checks": 717,
+      "permutations": 3,
+      "identical_results_and_work": true,
+      "total_recorded_work_per_revision": 461254461
+    },
+    "expanded": {
+      "checks": 2400,
+      "permutations": 3,
+      "identical_results_and_work": true,
+      "total_recorded_work_per_revision": 3662084061
+    }
+  },
+  "captures": {
+    "serial": {
+      "requests": 19,
+      "assessments": {
+        "VERIFIED_FEASIBLE": 19
+      },
+      "maximum_live_workers": 1,
+      "effective_work_limits": [
+        20000000,
+        40000000
+      ],
+      "campaigns": [
+        {
+          "campaign": "emitter-residual-progress",
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 1,
+            "expanded": false
+          },
+          "transfer_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9"
+        },
+        {
+          "campaign": "miracle-funded-cycle-entry",
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 1,
+            "expanded": false
+          },
+          "transfer_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b"
+        },
+        {
+          "campaign": "miracle-quantity-source",
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 1,
+            "expanded": false
+          },
+          "transfer_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455"
+        },
+        {
+          "campaign": "miracle-seed-source",
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 1,
+            "expanded": false
+          },
+          "transfer_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943"
+        }
+      ]
+    },
+    "parallel": {
+      "requests": 19,
+      "assessments": {
+        "VERIFIED_FEASIBLE": 19
+      },
+      "maximum_live_workers": 4,
+      "effective_work_limits": [
+        20000000,
+        40000000
+      ],
+      "campaigns": [
+        {
+          "campaign": "emitter-residual-progress",
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": false
+          },
+          "transfer_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9"
+        },
+        {
+          "campaign": "miracle-funded-cycle-entry",
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": false
+          },
+          "transfer_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b"
+        },
+        {
+          "campaign": "miracle-quantity-source",
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": false
+          },
+          "transfer_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455"
+        },
+        {
+          "campaign": "miracle-seed-source",
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": false
+          },
+          "transfer_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943"
+        }
+      ]
+    },
+    "expanded": {
+      "requests": 19,
+      "assessments": {
+        "VERIFIED_FEASIBLE": 19
+      },
+      "maximum_live_workers": 4,
+      "effective_work_limits": [
+        40000000,
+        80000000
+      ],
+      "campaigns": [
+        {
+          "campaign": "emitter-residual-progress",
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": true
+          },
+          "transfer_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9"
+        },
+        {
+          "campaign": "miracle-funded-cycle-entry",
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": true
+          },
+          "transfer_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b"
+        },
+        {
+          "campaign": "miracle-quantity-source",
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": true
+          },
+          "transfer_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455"
+        },
+        {
+          "campaign": "miracle-seed-source",
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": true
+          },
+          "transfer_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943"
+        }
+      ]
+    },
+    "scope": "Captured complete inventories and manual/JEI catalogs. Not a fresh live AE server run."
+  },
+  "assembly": {
+    "command": "gradlew --offline assemble",
+    "status": "PASS",
+    "source_java_files": 202,
+    "source_jar_byte_matches_working_tree": true,
+    "source_jar_sha256": "d0a939655678016e47d8ff0c10fb0f5ce22c8c9996b56669159d56ccfd376a6a"
+  },
+  "local_experiments": {
+    "finite_support_cdcl_with_queue": {
+      "direct_20M_models": 32,
+      "SAT": 17,
+      "UNKNOWN": 15
+    },
+    "finite_support_cdcl_with_queue_and_fixpoint_cache": {
+      "direct_20M_models": 32,
+      "SAT": 18,
+      "UNKNOWN": 14,
+      "new_case": "cac65d1ec2d9b820956ac2a0b291be44e144578322be30f25338983794f9cea2",
+      "work": 18049660,
+      "already_solved_by_main_portfolio": true
+    },
+    "large_sparse_residuals_solved": 0,
+    "included_in_production": false
+  },
+  "remaining": "Five original-order main-count 20M UNKNOWN cases; order sensitivity, broader numeric/closure admission and audit H/J are not closed."
+}

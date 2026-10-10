@@ -49,15 +49,31 @@ final class CountCdcl implements AutoCloseable {
         final BigInteger capacity;
         final ExactLinearProgram.Constraint source;
         final int proofIndex;
+        final boolean finiteLong;
         BigInteger spent = BigInteger.ZERO;
+        long spentLong;
         int propagated;
 
-        Row(int[] literals, BigInteger[] weights, BigInteger capacity, ExactLinearProgram.Constraint source, int proofIndex) {
+        Row(int[] literals, BigInteger[] weights, BigInteger capacity, ExactLinearProgram.Constraint source, int proofIndex,
+            boolean finiteLong) {
             this.literals = literals;
             this.weights = weights;
             this.capacity = capacity;
             this.source = source;
             this.proofIndex = proofIndex;
+            this.finiteLong = finiteLong;
+        }
+
+        void add(int term) {
+            // Admission bounds the sum of ALL positive weights, hence every
+            // assigned subset, undo and learned-row initialization is exact.
+            if (finiteLong) spentLong += weights[term].longValue();
+            else spent = spent.add(weights[term]);
+        }
+
+        void remove(int term) {
+            if (finiteLong) spentLong -= weights[term].longValue();
+            else spent = spent.subtract(weights[term]);
         }
     }
 
@@ -302,8 +318,8 @@ final class CountCdcl implements AutoCloseable {
             coefficients[i] = weights.get(order.get(i));
             affected.get(sorted[i] / 2).add(new Occurrence(r, i));
         }
-        Row row = new Row(sorted, coefficients, capacity, input, proofIndex);
-        for (int i = 0; i < sorted.length; i++) if (value(sorted[i]) == 1) row.spent = row.spent.add(coefficients[i]);
+        Row row = new Row(sorted, coefficients, capacity, input, proofIndex, sum.bitLength() <= 63);
+        for (int i = 0; i < sorted.length; i++) if (value(sorted[i]) == 1) row.add(i);
         rows.add(row);
         enqueue(r);
     }
@@ -364,7 +380,7 @@ final class CountCdcl implements AutoCloseable {
             charge();
             Row row = rows.get(occurrence.row);
             if (value(row.literals[occurrence.term]) == 1) {
-                row.spent = row.spent.add(row.weights[occurrence.term]);
+                row.add(occurrence.term);
                 activityUpdates++;
                 enqueue(occurrence.row);
             }
@@ -444,18 +460,21 @@ final class CountCdcl implements AutoCloseable {
     }
 
     private void propagate(Row row) {
-        if (row.spent.compareTo(row.capacity) > 0) {
+        // Compiled capacities lie in [0, sum(weights)). The primitive
+        // difference therefore cannot overflow on an admitted row.
+        long slackLong = row.finiteLong ? row.capacity.longValue() - row.spentLong : 0;
+        BigInteger slack = row.finiteLong ? null : row.capacity.subtract(row.spent);
+        if (row.finiteLong ? slackLong < 0 : slack.signum() < 0) {
             weightedConflict = row;
             conflict = explanation(row, -1, trail.size());
             return;
         }
-        BigInteger slack = row.capacity.subtract(row.spent);
         // With no undo, slack only decreases and the already-visited prefix
         // contains assigned literals. Resume at its frontier instead of
         // inspecting those same large coefficients on every wake-up.
         for (int i = row.propagated; i < row.literals.length; i++) {
             charge();
-            if (row.weights[i].compareTo(slack) <= 0) break;
+            if (row.finiteLong ? row.weights[i].longValue() <= slackLong : row.weights[i].compareTo(slack) <= 0) break;
             if (value(row.literals[i]) < 0) {
                 int literal = row.literals[i] ^ 1;
                 lazyReasons[literal / 2] = new LazyReason(row, i, trail.size());
@@ -799,7 +818,7 @@ final class CountCdcl implements AutoCloseable {
                 charge();
                 Row row = rows.get(occurrence.row);
                 if (value(row.literals[occurrence.term]) == 1) {
-                    row.spent = row.spent.subtract(row.weights[occurrence.term]);
+                    row.remove(occurrence.term);
                     activityUpdates++;
                 }
                 // A previously visited literal becomes unassigned again.

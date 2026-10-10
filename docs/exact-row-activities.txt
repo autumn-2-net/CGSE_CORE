@@ -1,0 +1,120 @@
+Exact retained row activities, 2026-10-11
+=======================================
+
+Arithmetic and scope
+--------------------
+LCG already retained each row's exact minimum, but every endpoint event still
+allocated arbitrary-precision products and sums. A row with signed-long root
+endpoints, widths and coefficient magnitudes now stores its minimum as a long
+when the sum also fits. Each product and addition is checked. Overflow promotes
+the old exact total before applying the update with BigInteger; undo does not
+silently demote it. Rebuilding an invalidated/sleeping row independently recomputes
+the sum and can re-enter the primitive representation. Infinite or wider domains
+continue through arbitrary-precision arithmetic. Reasons still refer to their
+original frozen trail prefix, not the live cache.
+
+PB's positive-weight rows use a separate, stronger admission condition: the
+sum of ALL normalized weights must fit a nonnegative signed long. Every assigned
+subset and undo is consequently bounded, including newly compiled learned rows.
+The compiled capacity lies in [0, total weight), so its difference with the spent
+weight also fits. Original offsets, arbitrary-precision explanation construction,
+derived-row verification and final original-coordinate checks remain exact.
+Checking only the current subtotal or capacity would not be sufficient admission.
+
+The extra scalar fields fit the existing per-row reservation estimates and
+replace frequently allocated totals. No per-event table, new search strategy,
+request limit, operation weight or proof rule is added. Existing work charges
+are retained, including those on updates now performed with primitive arithmetic.
+
+The source review revisited exact incremental activity and slack-based propagation:
+https://github.com/google/or-tools/blob/stable/ortools/sat/linear_propagation.cc
+  AnalyzeConstraint, PropagateOneConstraint
+https://github.com/scipopt/scip/blob/master/src/scip/cons_linear.c
+  consdataUpdateActivities, consdataRecomputeMaxActivityDelta
+Consulted 2026-10-11. This is an independent specialization of CGSE's existing
+integer caches, not copied solver code or a new external runtime dependency.
+
+Focused evidence
+----------------
+CountLcgActivityTest independently recomputes 116,650 original-row sums after
+endpoint tightening/relaxation and 1,440 invalidation/rebuild events, including
+signed boundaries, cancelling wide terms and infinity ownership. Explicit cases
+exercise overflowing products, overflowing additions and undo after promotion.
+The existing CountLcgFiniteTest pairs 256 exhaustive model trajectories with the
+arbitrary-precision path, checking work, bounds, reasons and proof replay; its
+630 individual row boundaries also remain covered.
+
+CountCdclFiniteTest pairs 300 searches against forced BigInteger row execution.
+The models are independently enumerated in original coordinates. Work, assigned
+values, trail, learning, derived rows and final answers match at every step;
+proofs replay independently. These runs include 24 resumptions, 190 conflicts
+and 118 derived weighted rows. Huge offsets, weights on both sides of the long
+boundary and fixed variables do not bypass admission. The established decision-
+queue oracle additionally covers restarts, imports and resource cleanup.
+
+Four deliberately faulty local variants are rejected by the oracles: wrapping
+multiplication, wrapping addition, admitting PB from capacity alone, and omitting
+primitive undo. These mutation sources and logs remain ignored local artifacts.
+
+Measured cost
+-------------
+Sequential B/C/C/B JVMs compare the same original models to 6795d7a3, with five
+warmup iterations and seven samples per process (14 samples per revision).
+Each model receives the same 262,144-work slice, 8M request cap and 128 MiB
+reservation cap. No other regression process was run during these measurements.
+All work totals and witness/status signatures match between revisions.
+
+  Engine  Models  Median slice-batch time       Thread cumulative allocation
+  LCG        45    608.4402 -> 546.2370 ms        879,626,020 -> 588,919,276 bytes
+  PB         86    294.7385 -> 288.9286 ms        525,332,764 -> 468,175,496 bytes
+
+LCG batch time is 10.22% lower and allocation 33.05% lower. PB allocation is
+10.88% lower; its 1.97% timing difference is small and should not be treated as
+a reliable whole-planner acceleration. Cumulative allocation is neither retained
+heap nor RSS. These slice measurements do not establish a new solved case.
+
+Complete regression
+-------------------
+At the same 20M cap, all 822 count-model/order records exactly match 6795d7a3
+in result and work: 787 conclusions, 17 UNKNOWN and 18 unsupported conversions,
+with 950,980,421 total recorded work. The 72 parity-neighbor records likewise
+match, including work. The five original-order UNKNOWN cases therefore remain.
+The 717 curated and 2,400 expanded graph fixture/order records also retain
+their complete results and work; this is not only a no-lost-witness check.
+
+All 73 standard programs pass. All 57 captured-stock requests verify across
+one worker, four workers at the same cap, and four workers with the explicit
+production 2x allowance. Offline assembly succeeds and all 202 production Java
+sources in the source JAR match the working tree byte-for-byte. Captured-network
+replay is not a new live host execution test. Input/source hashes, sample ranges,
+negative controls and campaign settings are recorded in
+tests/provenance/exact-row-activities-20261011.json.
+
+Remaining tool experiment
+-------------------------
+Adding the retained decision queue to the isolated finite-support/CDCL prototype
+keeps its 17/32 sparse-equality conclusions at the same 20M direct-entry allowance.
+An exact domain-fixpoint cache then reaches 18/32 without losing those 17 answers,
+but still resolves none of the four large sparse residuals. Its one additional
+answer is already solved by the production portfolio. The experiment remains
+outside production; it is not evidence of a new main-stage solution, and lacks
+the complete resource/proof integration needed for admission.
+
+Broader numeric/closure admission and the audit's separate host-residency and
+end-to-end attribution gaps (H/J) remain open. This boundary does not claim
+general SCIP/CP-SAT equivalence or a new main-stage solved hard case.
+
+Reproduce
+---------
+python tests/benchmarks/compare_lcg_propagation.py --java-home JDK17
+  --baseline 6795d7a3 --warmup 5 --samples 7 --engine lcg
+  --output build/row-activity-lcg-timing
+python tests/benchmarks/compare_lcg_propagation.py --java-home JDK17
+  --baseline 6795d7a3 --warmup 5 --samples 7 --engine pb --case '.*'
+  --output build/row-activity-pb-timing
+python tests/benchmarks/compare_count_models.py --java-home JDK17
+  --baseline 6795d7a3 --permutations 3 --parity --timeout 1800
+  --output build/row-activity-comparison
+python tests/run.py --java-home JDK17 --suite standard --timeout 600
+
+The graph/capture commands in scalar-count-matching.txt apply unchanged.

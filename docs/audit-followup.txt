@@ -320,3 +320,18 @@ graph conclusions, 71 standard programs, 57 captured requests and assembly pass.
 No new portfolio arm or default-budget change is included. The five original
 limits, broader numeric/closure admission and H/J gaps are still open; the
 isolated finite-support/CDCL experiment did not add a solution to those limits.
+
+2026-10-11 exact row-activity cost follow-up
+-----------------------------------------
+exact-row-activities.txt extends primitive arithmetic to retained LCG minimum
+updates and PB positive-weight subsets. Checked promotion and whole-row admission
+preserve exact original-model semantics, operation charges and proof paths.
+The equal-cap 822 count and 72 parity records, and all 3,117 graph records,
+retain both results and work. Seventy-three standard programs, four negative
+controls, 57 captured requests and offline assembly pass. Sequential warmed
+LCG batches use 10.22% less median time and 33.05% less cumulative thread
+allocation; PB allocation falls 10.88%, with only a small timing difference.
+These are direct slice measurements, not whole-planner or RSS claims. The
+isolated finite-support fixpoint experiment reaches 18/32 direct cases but
+does not solve any remaining main-stage limit, and stays outside production.
+Five original 20M UNKNOWN cases and broader numeric/closure and H/J gaps remain.

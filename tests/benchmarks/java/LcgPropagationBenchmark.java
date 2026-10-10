@@ -9,7 +9,7 @@ import java.math.BigInteger;
 import java.nio.file.*;
 import java.util.*;
 
-/** Warmed, sequential original-model LCG slices; allocation is not retained heap or RSS. */
+/** Warmed, sequential original-model LCG/PB slices; allocation is not retained heap or RSS. */
 public final class LcgPropagationBenchmark {
     private record Model(List<ExactLinearProgram.Constraint> rows, BigInteger[] low, BigInteger[] high) {}
 
@@ -40,6 +40,8 @@ public final class LcgPropagationBenchmark {
         bean.setThreadAllocatedMemoryEnabled(true);
         long thread = Thread.currentThread().getId();
         int warmup = Integer.parseInt(args[1]), samples = Integer.parseInt(args[2]);
+        String engine = args.length > 3 ? args[3] : "lcg";
+        if (!Set.of("lcg", "pb").contains(engine)) throw new IllegalArgumentException("Unknown benchmark engine: " + engine);
         for (int iteration = -warmup; iteration < samples; iteration++) {
             long nanos = 0, allocated = 0, work = 0, signature = 1;
             for (Model model : models) {
@@ -47,10 +49,18 @@ public final class LcgPropagationBenchmark {
                 BigInteger[] point;
                 boolean impossible;
                 long before = bean.getThreadAllocatedBytes(thread), started = System.nanoTime();
-                try (var search = new CountLcg(model.rows, model.low, model.high, budget, 262144)) {
-                    while (!search.step()) {}
-                    point = search.counts();
-                    impossible = search.infeasible();
+                if (engine.equals("pb")) {
+                    try (var search = new CountCdcl(model.rows, model.low, model.high, budget, 262144)) {
+                        while (!search.step()) {}
+                        point = search.counts();
+                        impossible = search.infeasible();
+                    }
+                } else {
+                    try (var search = new CountLcg(model.rows, model.low, model.high, budget, 262144)) {
+                        while (!search.step()) {}
+                        point = search.counts();
+                        impossible = search.infeasible();
+                    }
                 }
                 nanos += System.nanoTime() - started;
                 allocated += bean.getThreadAllocatedBytes(thread) - before;

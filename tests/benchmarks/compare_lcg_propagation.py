@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 autumn
 # SPDX-License-Identifier: MPL-2.0
-"""Sequential warmed LCG comparison at identical work; run without concurrent regressions."""
+"""Sequential warmed LCG/PB comparison at identical work; run without concurrent regressions."""
 import argparse
 import hashlib
 import importlib.util
@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--java-home', required=True)
     parser.add_argument('--baseline', required=True)
     parser.add_argument('--case', default='sparse-equality|wide-equality|wide-79')
+    parser.add_argument('--engine', choices=['lcg', 'pb'], default='lcg')
     parser.add_argument('--warmup', type=int, default=2)
     parser.add_argument('--samples', type=int, default=3)
     parser.add_argument('--timeout', type=int, default=600)
@@ -49,6 +50,12 @@ def main():
     spec.loader.exec_module(helper)
     manifest = json.loads((ROOT / 'tests/cases/manifest.json').read_text(encoding='utf-8'))
     records = [c for c in manifest['cases'] if c['kind'] == 'count-model' and re.search(args.case, c['id'] + ' ' + ' '.join(c['names']))]
+    if args.engine == 'pb':
+        def boolean_model(record):
+            model = json.loads((ROOT / 'tests' / record['path']).read_text(encoding='utf-8'))['model']
+            return len(model['lower']) <= 1024 and all(hi is not None and 0 <= int(hi) - int(lo) <= 1
+                    for lo, hi in zip(model['lower'], model['upper']))
+        records = [c for c in records if boolean_model(c)]
     if not records:
         parser.error('No count models selected')
     helper.write_models(output / 'models.bin', [json.loads((ROOT / 'tests' / c['path']).read_text(encoding='utf-8')) for c in records])
@@ -69,14 +76,14 @@ def main():
                'harness_sha256': fingerprint(harness + [Path(__file__), ROOT / 'tests/cases/run.py']),
                'input_sha256': hashlib.sha256((output / 'models.bin').read_bytes()).hexdigest(),
                'corpus_ids': [c['id'] for c in records], 'warmup': args.warmup,
-               'slice_work': 262144, 'request_work': 8000000, 'memory_bytes': 128 << 20,
+               'engine': args.engine, 'slice_work': 262144, 'request_work': 8000000, 'memory_bytes': 128 << 20,
                'java': subprocess.run([str(java_dir / ('java' + ext)), '-version'], capture_output=True, text=True, check=True).stderr.strip(),
                'samples': {'baseline': [], 'candidate': []},
-               'note': 'Sequential B/C/C/B processes, warmed original-model LCG slices. Allocation is current-thread allocated bytes, not retained heap or RSS. No whole-planner timing claim.'}
+               'note': 'Sequential B/C/C/B processes, warmed original-model slices. Allocation is current-thread allocated bytes, not retained heap or RSS. No whole-planner timing claim.'}
     for index, name in enumerate(['baseline', 'candidate', 'candidate', 'baseline']):
         log = output / f'{index}-{name}.log'
         command = [str(java_dir / ('java' + ext)), '-ea', '-Xms512m', '-Xmx2g', '-Dfile.encoding=UTF-8', '-cp', str(output / name / 'classes'),
-                   'org.cgse.core.LcgPropagationBenchmark', str(output / 'models.bin'), str(args.warmup), str(args.samples)]
+                   'org.cgse.core.LcgPropagationBenchmark', str(output / 'models.bin'), str(args.warmup), str(args.samples), args.engine]
         with log.open('w', encoding='utf-8') as stream:
             subprocess.run(command, cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT, timeout=args.timeout, check=True)
         values = [list(map(int, line.split('\t'))) for line in log.read_text(encoding='utf-8').splitlines()]

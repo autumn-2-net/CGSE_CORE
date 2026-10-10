@@ -181,9 +181,32 @@ final class CountLcg implements AutoCloseable {
         boolean finiteLong = true;
 
         BigInteger minimum = BigInteger.ZERO;
+        // A null arbitrary-precision value denotes the exact primitive sum.
+        // The row estimate already covers this scalar; no extra cache grows.
+        long minimumLong;
         BigInteger maximumChange = BigInteger.ZERO;
         int infinities, infiniteXor;
         int[] booleanOrder;
+
+        BigInteger minimum() {
+            return minimum == null ? BigInteger.valueOf(minimumLong) : minimum;
+        }
+
+        void add(BigInteger coefficient, BigInteger delta) {
+            if (minimum == null && finiteLong) {
+                // Immutable root endpoints and widths admit both operands.
+                // Their product and the accumulated sum still need checks:
+                // individually small terms can overflow, including on undo.
+                try {
+                    long change = Math.multiplyExact(coefficient.longValue(), delta.longValue());
+                    minimumLong = Math.addExact(minimumLong, change);
+                    return;
+                } catch (ArithmeticException overflow) {
+                    // Promote before updating, retaining the exact old sum.
+                }
+            }
+            minimum = minimum().add(coefficient.multiply(delta));
+        }
     }
 
     private final PlanningBudget budget;
@@ -814,6 +837,10 @@ final class CountLcg implements AutoCloseable {
                 return row.terms().get(b).abs().compareTo(row.terms().get(a).abs());
             }).mapToInt(Integer::intValue).toArray();
         }
+        if (cached.finiteLong && cached.minimum.bitLength() <= 63) {
+            cached.minimumLong = cached.minimum.longValue();
+            cached.minimum = null;
+        }
         cached.valid = true;
         rowActivity[rowId] = cached;
         return cached;
@@ -836,7 +863,7 @@ final class CountLcg implements AutoCloseable {
                     cached.infinities += next == null ? 1 : -1;
                 }
                 integerCost(a, delta);
-                cached.minimum = cached.minimum.add(a.multiply(delta));
+                cached.add(a, delta);
             }
             enqueue(rowId);
         }
@@ -845,7 +872,7 @@ final class CountLcg implements AutoCloseable {
     private void propagate(int rowId) {
         var row = rows.get(rowId);
         RowActivity cached = activity(rowId);
-        BigInteger sum = cached.minimum;
+        BigInteger sum = cached.minimum();
         int infinities = cached.infinities, infinite = cached.infiniteXor;
         if (infinities == 0 && sum.compareTo(row.upper()) > 0) {
             conflict = antecedents(row, -1, sum.subtract(row.upper()).subtract(BigInteger.ONE), trail.size());
