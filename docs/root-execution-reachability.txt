@@ -1,0 +1,101 @@
+Root execution reachability, 2026-10-11
+=====================================
+
+Baseline: 7c54a97e (close solver gaps exposed by full regression).
+
+Problem and change
+------------------
+The integer count equation can have many solutions while every execution needs
+more simultaneous startup material than the request owns. Pebbling cases expose
+this gap: tools/working slots are returned eventually, but cannot be shared by
+simultaneous prerequisites. Excluding one unschedulable count vector at a time
+can spend the whole 20M request allowance without settling the order.
+
+After a concrete scheduling failure and 32K count-search work, the main count
+search can try the existing forward execution engine against its original root
+recipes, stock and goals. This is one bounded request-local attempt, admitted
+only with no incumbent, at most 32 keys and 64 recipes, and no consumed per-push
+configuration inputs. Exact reusable read arcs are supported. Optional compiled
+program searches do not recursively start it.
+
+Full-transition traversal complements the existing persistent-set traversal.
+A reduced traversal may find a witness without visiting a boundary closed under
+all original transitions; that visited set alone cannot prove absence. The new
+mode explores every enabled transition, then uses the independent ExecutionProof
+checker to verify the entire visited boundary against all original recipe arcs.
+No marked exit is allowed in this root certificate. The existing seed search
+keeps its persistent-set mode and independently checked proof boundary.
+
+Safety and accounting
+---------------------
+The search ignores incidental count-branch bounds and decision clauses. External
+supply is projected away and the inventory goal relaxes forced-production and
+implicit seed-preservation requirements. Therefore failure of this weaker
+problem proves the actual scoped order impossible. Its proof never becomes an
+empty count-model conflict: an execution impossibility need not contradict the
+state equation. Restricted neighborhood callers continue to consume witnesses
+only; their negative results do not escape to the full recipe catalog.
+
+A positive execution trace goes through the ordinary candidate assembly and
+original-recipe verification, including forced production and seed preservation.
+Even an empty trace covering stock cannot bypass these checks. Program-to-count
+conversion retains its continuation and charges repeated call edges. The root
+proof remains local to this inventory/request; it is not cached as a conclusion
+for a later order. Opt-in archives serialize its full execution certificate.
+
+Search is allotted min(32768, remaining order work / 32, current count turn's
+remaining allowance). Candidate validation gets a separate allocation of
+min(131072, remaining order work / 32). Bounded steps can cross a local scheduling
+allocation; all their work is charged to the same global order cap. The independent
+closure check includes work already spent in the current step when calculating
+its remaining allowance. Search cutoffs,
+memory refusal and incomplete proof checks leave the primary count frontier
+available; they never become an infeasibility result. Scratch and frontier bytes
+are reserved, and completion, refusal and cancellation release ownership.
+
+Validation
+----------
+Production fingerprint (206 Java source files):
+2c5c1832cf5ae137ab4c70aaa03b51f80d0a281d726fa5e7204c095089bc0932
+
+CountReachabilityTest checks 600 conserved-net/order cases against an independent
+primitive BFS, checks exact witness prefixes, replays and tampers with negative
+certificates, tests archive round-trips, stock replenishment on the same compiler,
+external supply, read/configuration inputs, optional memory refusal, local caps,
+cancellation and one/four-worker handoffs. Replacing only IntegerCountSearch with
+the baseline implementation makes its root regression exhaust 20M; the current
+implementation completes it with an independently checked execution proof.
+
+Final JDK 17 validation at the fingerprint above:
+- Standard suite: 84 programs/batches PASS, including 20M/80M pinned boundaries.
+- Curated fixtures: 244 inputs x three recipe orders = 732 PASS.
+- Complete graph corpus, all 20653 manifest IDs exactly once: 19700 PASS,
+  953 UNRESOLVED (952 SEARCH_LIMIT, one UNKNOWN), zero FAIL. Compared with the
+  baseline, 58 previously unresolved pebbling cases are now proven impossible,
+  and no previously resolved case becomes unresolved. All 58 have independent
+  UNSAT oracle labels. Their total recorded work, including compilation and
+  missing-preview construction, is 172183..540495 (median 390197), versus
+  exhausting the 20M search cap before this change. Concurrent campaign timings
+  are not used to claim a wall-clock speedup.
+- Complete count corpus: 274 inputs x three deterministic orders = 822 results:
+  790 PASS, 14 UNRESOLVED, 18 UNSUPPORTED, unchanged from the baseline.
+- Complete captured AE/JEI catalogs: all 19 registered requests in serial,
+  four-worker and four-worker expanded-budget modes = 57 VERIFIED_FEASIBLE.
+  These load 5903 manual recipes, 62284 extra recipes and 2670 stock keys.
+  These are captured-data replays, not a fresh game-server integration run.
+- GraphBenchmark and offline Gradle assembly pass. Every production source in
+  the source jar matches the validated working-tree bytes.
+
+Final local artifacts: build/reachability-final-20261011,
+build/reachability-fixtures-20261011 and build/reachability-captures-20261011.
+The earlier build/reachability-20261011 campaign is a preliminary comparison;
+the final campaign includes cooperative program counting and proof serialization
+checks. Temporary pair-search experiments and captured output stay under build/.
+
+Limits
+------
+This is bounded explicit state search, not a complete general Petri-net decision
+procedure. Large or growing state spaces can still return UNKNOWN. Large sparse
+integer equalities need other tools; widening CountJump's pair search was tested
+separately and rejected after reducing solved cases at equal work. No such pair
+search change is included here.

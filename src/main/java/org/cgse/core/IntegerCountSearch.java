@@ -52,6 +52,10 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private boolean shellPrepared;
     private IntegerCountBranch<K> shellProbe;
     private long shellWork, shellAllowance;
+    private boolean executionBlocked, reachabilityAttempted;
+    private CountReachability<K> reachability;
+    private IntegerCountBranch<K> reachabilityProbe;
+    private long reachabilityWork, reachabilityAllowance;
     private long work, improvementUntil = Long.MAX_VALUE, firstWitnessWork = -1, firstWitnessNanos;
     private long frontierWork, continuationWork;
     private int branches, rounds, suspensions, boundPrunes, choicePrunes, peakWidth;
@@ -203,6 +207,8 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             prepareShell();
         }
         if (shell != null) return stepShell();
+        if (best == null && executionBlocked && !reachabilityAttempted && work >= 32768) prepareReachability();
+        if (reachability != null) return stepReachability();
         if (pending.isEmpty() && deferred.isEmpty()) {
             if (unresolved && best == null && !portfolioScheduled) enqueuePortfolio();
             if (pending.isEmpty()) return finish(!unresolved && best == null);
@@ -379,6 +385,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                 branch.close();
                 continue;
             }
+            executionBlocked |= branch.needsRepair;
             if (branch.needsRepair && !repairScheduled) enqueueRepair();
             for (var conflict : branch.learnedMaterials) {
                 if (materialConflicts.offer(conflict)) {
@@ -581,6 +588,63 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         shell = null;
     }
 
+    private void prepareReachability() {
+        reachabilityAttempted = true;
+        if (!compileRecovery) return;
+        long before = budget.threadWork();
+        try {
+            reachabilityAllowance = Math.min(32768, Math.min(budget.remainingWork() / 32, allowance - work));
+            reachability = CountReachability.create(model, reachabilityAllowance);
+        } finally {
+            work += budget.threadWork() - before;
+        }
+    }
+
+    private boolean stepReachability() {
+        long before = budget.threadWork();
+        try {
+            if (reachabilityProbe == null) {
+                if (reachability.step()) {
+                    if (reachability.result() == BackwardCoverability.Result.CLOSED) {
+                        // This proves the original execution problem, not its
+                        // state equation. Never publish an empty count conflict
+                        // or let a restricted branch/view export this result.
+                        rootProved = true;
+                    } else if (reachability.result() == BackwardCoverability.Result.WITNESS) {
+                        reachabilityProbe = new IntegerCountBranch<>(model, execution, target, amount, stock, seeds, external,
+                                preserve, force, budget, started, List.of());
+                        reachabilityProbe.compiledCandidate(reachability.counts(), reachability.witness());
+                        // A coverability witness still owes forced production,
+                        // seed preservation and original-recipe verification.
+                        reachabilityAllowance = reachabilityWork + Math.min(131072, budget.remainingWork() / 32);
+                    }
+                }
+            } else reachabilityProbe.run(Math.max(1, Math.min(4096, reachabilityAllowance - reachabilityWork)),
+                    List.of(), List.of(), List.of(), null, CountPortfolioPolicy.Mode.FIRST_WITNESS, stopped::get);
+        } finally {
+            long spent = budget.threadWork() - before;
+            reachabilityWork += spent;
+            work += spent;
+        }
+        boolean found = reachabilityProbe != null && reachabilityProbe.state == IntegerCountBranch.State.FOUND;
+        if (found) retain(reachabilityProbe);
+        if (rootProved || found || reachabilityWork >= reachabilityAllowance ||
+                reachabilityProbe == null && reachability.result() != null ||
+                reachabilityProbe != null && reachabilityProbe.state != IntegerCountBranch.State.OPEN) {
+            budget.note("count_reachability", "closed=" + rootProved + "; verified_witness=" + found + "; work=" + reachabilityWork);
+            closeReachability();
+            if (rootProved || found) return finish(rootProved);
+        }
+        return false;
+    }
+
+    private void closeReachability() {
+        if (reachabilityProbe != null) reachabilityProbe.close();
+        reachabilityProbe = null;
+        if (reachability != null) reachability.close();
+        reachability = null;
+    }
+
     private void enqueueRepair() {
         repairScheduled = true;
         if (model.keys.size() > 16 || model.recipes.size() > 32) return;
@@ -741,6 +805,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private void release() {
         if (!released.compareAndSet(false, true)) return;
         closeShell();
+        closeReachability();
         budget.release(CACHE_ENTRY_BYTES * propagationCaches.size());
         propagationCaches.clear();
         propagationCacheBytes = 0;
