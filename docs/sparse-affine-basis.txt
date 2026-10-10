@@ -1,0 +1,83 @@
+Sparse affine updates and retained support indices
+=================================================
+
+Scope
+-----
+CountAffineLattice now retains nonzero-coordinate words alongside each integer
+basis vector. Bezout pairs update the existing two arrays over their support
+union; size reduction visits the source support; nearest-plane projection
+visits only nonzero basis coordinates. All operations keep ascending coordinate
+order, exact integer/rational arithmetic and the existing precision limits.
+The old values of both coordinates are read before either array is overwritten.
+Cancellation clears bits. Every pivot, removal, reset and deep insertion keeps
+the support and vector lists aligned. No candidate admission or request cap is
+increased, and no negative proof is produced by this strategy.
+
+Every visited support word and coordinate is charged. The pre-existing Gram
+prefix-swap loop now also pays for its visits. The index adds an explicitly
+reserved 48 + 8*ceil(ambient/64) bytes per initial basis row (at most 8192 bytes
+under the unchanged 128-variable admission limit). Precision refusal remains
+terminal; it cannot resume a partially modified pair or publish a candidate.
+Point updates retain their full-coordinate precision checks.
+
+Correctness evidence against 2552fcd9
+------------------------------------
+79 standard programs pass, followed by the strengthened CountSparseAffineTest.
+81 paired whole/sliced/handoff models include signed rows, 90-bit offsets and
+63/64/65/127/128 coordinate boundaries. The 254155 dense-state audits check
+support bits, array aliasing and cancellation. Completed intersections and
+subsequent reductions independently check the original equation/kernel
+invariants, not only the final witness. An isolated arithmetic check pins word
+and coordinate charging. Memory refusal and cancellation release reservations.
+
+Five local negative controls are rejected: omit support swaps, retain cancelled
+bits, ignore the second support word, use an overwritten Bezout coordinate, and
+omit support-word charging. The second-word mutant can still return a feasible
+corner, which is why the tests also verify the entire retained integer kernel.
+
+The equal-20M, three-order main-count campaign preserves all 822 conclusions:
+790 PASS, 14 UNRESOLVED and 18 UNSUPPORTED. Search work drops from 896124205 to
+885825013 (1.15%); 90 records change work, including a few small increases.
+All 72 parity verdicts and work are unchanged. The 2151 paired graph checks
+preserve results across cold/warm/replaced caches; total search changes from
+1321239793 to 1320027803, with compilation unchanged at 58838565.
+19 captured full-catalog requests pass with four workers and the existing 2x
+budget option. These are offline capture replays, not fresh live AE tests.
+Offline assembly passes and the source jar matches all 205 production files.
+
+Isolated throughput
+-------------------
+compare_throughput.py --baseline 2552fcd9 --retained-affine --allow-work-change
+  --engines lattice-sparse,lattice-sparse-offset,lattice,lattice-dense,lattice-offset
+  --cases 12 --forks 4 --warmup 3 --samples 5
+
+BC/CB order alternates between fresh JVMs with no concurrent CGSE regression
+jobs. Each case retains the same 4M cap. Every returned witness is independently
+validated outside the timer; full witnesses must match across revisions and
+charged work must be deterministic within each revision. All 60 distinct
+generated models produce witnesses in both revisions.
+
+Family                 Work before/after   Median time ratio   Allocation ratio
+sparse                 329392 / 257086          0.991                0.873
+sparse, 90-bit offset   329392 / 257086          0.906                0.942
+small dense              15439 / 14645          0.957                0.998
+larger dense            121347 / 104473          1.031                0.999
+dense, 80-bit offset     48665 / 42602           0.931                0.998
+
+These short batches do not establish a uniform elapsed-time improvement. The
+larger dense control is 3.09% slower at the measured median despite doing less
+charged work. A targeted follow-up uses the same 12 dense inputs, six BC/CB
+forks, ten warmups and twenty samples: 34488400 -> 33526025 ns, or 2.79% faster.
+Thus the small elapsed differences are warmup-sensitive, not evidence of a
+stable 3% regression or a large universal speedup. Both campaigns are retained.
+Allocation is cumulative thread allocation, not peak heap/RSS. The JSON
+provenance records per-fork medians and the exact source fingerprints.
+
+Remaining limits
+----------------
+The four original-order sparse-equality hard cases remain unresolved at 20M.
+Local wider affine, delayed-reduction, coefficient-balancing and simultaneous
+box-embedding probes did not solve them at that cap and are not admitted into
+production. Intermediate coefficient growth and expensive basis reduction
+still block this route. This increment does not close wider numeric admission,
+the remaining H/J benefit/residency work, or fresh server verification.

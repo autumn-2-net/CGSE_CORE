@@ -138,6 +138,7 @@ public final class CountLatticePotentialTest {
         // original-coordinate witnesses are separately pinned in the corpus.
         try (var search = new CountAffineLattice(List.of(), low, high, budget, 1024).retained()) {
             ((List<BigInteger[]>) get(search, "basis")).addAll(basis);
+            injectSupports(search, basis);
             set(search, "point", low.clone()); set(search, "mu", factors.mu); set(search, "norms", factors.norms);
             set(search, "deep", true); set(search, "strengthened", true); set(search, "phase", 2);
             while ((int) get(search, "phase") != 3) {
@@ -245,10 +246,20 @@ public final class CountLatticePotentialTest {
         var factors = factors(basis);
         var search = new CountAffineLattice(List.of(), low, high, budget, 1024).retained();
         ((List<BigInteger[]>) get(search, "basis")).addAll(basis);
+        injectSupports(search, basis);
         set(search, "point", low.clone()); set(search, "repairPoint", low.clone());
         set(search, "mu", factors.mu); set(search, "norms", factors.norms);
         set(search, "deep", true); set(search, "strengthened", true); set(search, "phase", 2);
         return search;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void injectSupports(CountAffineLattice search, List<BigInteger[]> basis) throws Exception {
+        for (var row : basis) {
+            var support = new long[(row.length + 63) / 64];
+            for (int i = 0; i < row.length; i++) if (row[i].signum() != 0) support[i >>> 6] |= 1L << (i & 63);
+            ((List<long[]>) get(search, "supports")).add(support);
+        }
     }
 
     private static void ownerLimits() throws Exception {

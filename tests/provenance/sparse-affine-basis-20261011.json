@@ -1,0 +1,456 @@
+{
+  "date": "2026-10-11",
+  "baseline_revision": "2552fcd954ed33a1452313aebd2236d63b1c9e99",
+  "candidate_source_sha256": "96805ca5a040495458390782d55a52f027f29e1973aba6ed6a2c7b7989818710",
+  "production_files": 205,
+  "scope": "Sparse affine basis updates and in-place Bezout pairs; existing admission/precision/request limits retained.",
+  "standard": {
+    "programs": 79,
+    "status": "PASS",
+    "final_strengthened_sparse_test": "PASS"
+  },
+  "sparse_invariants": {
+    "paired_models": 81,
+    "dense_state_audits": 254155,
+    "observed_cancellations": 354,
+    "observed_size_reductions": 1174,
+    "observed_swaps": 5546,
+    "test_sha256": "095f0d6a5af42f16371756baf3619aa97e1d6c6dd114b978a03df584ebf935cd",
+    "checks": [
+      "dense support equality and no array aliasing",
+      "original exact equations and integer kernel",
+      "full versus sliced and cross-thread handoff",
+      "two words plus four coordinates cost six work units",
+      "memory refusal and cancellation release"
+    ]
+  },
+  "count_models": {
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "a144f6e2269fad4c62ca5f86a0e185380d954f0feba4a9d8282462ecec887f10",
+    "work_cap": 20000000,
+    "records": 822,
+    "baseline": {
+      "PASS": 790,
+      "UNRESOLVED": 14,
+      "UNSUPPORTED": 18
+    },
+    "candidate": {
+      "PASS": 790,
+      "UNRESOLVED": 14,
+      "UNSUPPORTED": 18
+    },
+    "baseline_work": 896124205,
+    "candidate_work": 885825013,
+    "gains": 0,
+    "losses": 0,
+    "contradictions": 0,
+    "original_order_unresolved": [
+      "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3"
+    ]
+  },
+  "parity": {
+    "records": 72,
+    "results_and_work_equal": true
+  },
+  "graphs": {
+    "fixture_sha256": "4f4f66ab40bc43f18da4bf33225e764abb083c965a88fae01d313cb6089859bd",
+    "harness_sha256": "4e8a08d7cee91e37920137cf353e7e17059483fdc23440ca248e749f65b8e2dc",
+    "work_cap": 20000000,
+    "permutations": 3,
+    "results_equal": true,
+    "groups": {
+      "cold": {
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "baseline_search": 440638086,
+        "candidate_search": 440234582,
+        "compilation": 20657583
+      },
+      "warm": {
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "baseline_search": 439997000,
+        "candidate_search": 439591085,
+        "compilation": 17523399
+      },
+      "replaced": {
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "baseline_search": 440604707,
+        "candidate_search": 440202136,
+        "compilation": 20657583
+      }
+    },
+    "note": "Concurrent regression campaign; its wall times are not used as performance evidence."
+  },
+  "captures": {
+    "workers": 4,
+    "expanded_budget_multiplier": 2,
+    "groups": {
+      "emitter-residual-progress": {
+        "requests": 9,
+        "expected_rows": 9,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 9
+        },
+        "results": {
+          "FEASIBLE": 9
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      },
+      "miracle-funded-cycle-entry": {
+        "requests": 4,
+        "expected_rows": 4,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 4
+        },
+        "results": {
+          "FEASIBLE": 4
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      },
+      "miracle-quantity-source": {
+        "requests": 3,
+        "expected_rows": 3,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 3
+        },
+        "results": {
+          "FEASIBLE": 3
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      },
+      "miracle-seed-source": {
+        "requests": 3,
+        "expected_rows": 3,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 3
+        },
+        "results": {
+          "FEASIBLE": 3
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      }
+    },
+    "note": "Previously exported complete catalogs; not a fresh AE/server run."
+  },
+  "timing": {
+    "baseline": "2552fcd954ed33a1452313aebd2236d63b1c9e99",
+    "source_sha256": "96805ca5a040495458390782d55a52f027f29e1973aba6ed6a2c7b7989818710",
+    "harness_sha256": "8b04bae1db32bb7f9e6bee456c871260b347eb04ed2a64cf08d21e3d3a6095bd",
+    "java": "openjdk version \"17.0.19\" 2026-04-21\nOpenJDK Runtime Environment Temurin-17.0.19+10 (build 17.0.19+10)\nOpenJDK 64-Bit Server VM Temurin-17.0.19+10 (build 17.0.19+10, mixed mode, sharing)\n",
+    "warmup": 3,
+    "samples": 5,
+    "forks": 4,
+    "groups": {
+      "lattice-sparse": {
+        "baseline": {
+          "median_ns": 15384550.0,
+          "fork_median_ns": [
+            13907600,
+            18896200,
+            14646000,
+            16123100
+          ],
+          "median_allocated_bytes": 10808424.0,
+          "work": 329392,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "candidate": {
+          "median_ns": 15243750.0,
+          "fork_median_ns": [
+            15728000,
+            13542300,
+            15103900,
+            15383600
+          ],
+          "median_allocated_bytes": 9430804.0,
+          "work": 257086,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "time_ratio": 0.9908479611038347,
+        "allocation_ratio": 0.8725420098249291
+      },
+      "lattice-sparse-offset": {
+        "baseline": {
+          "median_ns": 16490350.0,
+          "fork_median_ns": [
+            20684200,
+            16214600,
+            15858300,
+            16766100
+          ],
+          "median_allocated_bytes": 11065120.0,
+          "work": 329392,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "candidate": {
+          "median_ns": 14941150.0,
+          "fork_median_ns": [
+            15169800,
+            14916300,
+            14437700,
+            14966000
+          ],
+          "median_allocated_bytes": 10418080.0,
+          "work": 257086,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "time_ratio": 0.9060541468192003,
+        "allocation_ratio": 0.9415243576210651
+      },
+      "lattice": {
+        "baseline": {
+          "median_ns": 9047050.0,
+          "fork_median_ns": [
+            8970600,
+            8931300,
+            9734600,
+            9123500
+          ],
+          "median_allocated_bytes": 8158552.0,
+          "work": 15439,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "candidate": {
+          "median_ns": 8656950.0,
+          "fork_median_ns": [
+            8469100,
+            8689800,
+            8654100,
+            8659800
+          ],
+          "median_allocated_bytes": 8141848.0,
+          "work": 14645,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "time_ratio": 0.9568809722506232,
+        "allocation_ratio": 0.9979525778594045
+      },
+      "lattice-dense": {
+        "baseline": {
+          "median_ns": 41953800.0,
+          "fork_median_ns": [
+            43047100,
+            40914600,
+            39871200,
+            42993000
+          ],
+          "median_allocated_bytes": 87696016.0,
+          "work": 121347,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "candidate": {
+          "median_ns": 43249250.0,
+          "fork_median_ns": [
+            43454100,
+            43295300,
+            43203200,
+            39068600
+          ],
+          "median_allocated_bytes": 87601112.0,
+          "work": 104473,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "time_ratio": 1.030878013433825,
+        "allocation_ratio": 0.9989178071669755
+      },
+      "lattice-offset": {
+        "baseline": {
+          "median_ns": 12084750.0,
+          "fork_median_ns": [
+            11015500,
+            12353000,
+            11816500,
+            12736900
+          ],
+          "median_allocated_bytes": 31020328.0,
+          "work": 48665,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "candidate": {
+          "median_ns": 11248700.0,
+          "fork_median_ns": [
+            11267600,
+            12046900,
+            11229800,
+            10713500
+          ],
+          "median_allocated_bytes": 30972504.0,
+          "work": 42602,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "time_ratio": 0.9308177661929291,
+        "allocation_ratio": 0.9984583012790839
+      }
+    },
+    "allow_work_change": true,
+    "retained_affine": true,
+    "notes": "Serial specialist throughput at the same 4M request cap. Thread allocation is measured, not heap/RSS. Identical per-case witnesses across revisions and deterministic work within each revision are checked. Cross-revision work equality is required unless allow_work_change is set. Does not establish whole-planner or server speed."
+  },
+  "dense_timing_followup": {
+    "baseline": "2552fcd954ed33a1452313aebd2236d63b1c9e99",
+    "source_sha256": "96805ca5a040495458390782d55a52f027f29e1973aba6ed6a2c7b7989818710",
+    "harness_sha256": "8b04bae1db32bb7f9e6bee456c871260b347eb04ed2a64cf08d21e3d3a6095bd",
+    "java": "openjdk version \"17.0.19\" 2026-04-21\nOpenJDK Runtime Environment Temurin-17.0.19+10 (build 17.0.19+10)\nOpenJDK 64-Bit Server VM Temurin-17.0.19+10 (build 17.0.19+10, mixed mode, sharing)\n",
+    "warmup": 10,
+    "samples": 20,
+    "forks": 6,
+    "groups": {
+      "lattice-dense": {
+        "baseline": {
+          "median_ns": 34488400.0,
+          "fork_median_ns": [
+            35000150.0,
+            34443900.0,
+            34532900.0,
+            34631750.0,
+            34415500.0,
+            33796850.0
+          ],
+          "median_allocated_bytes": 87164728.0,
+          "work": 121347,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "candidate": {
+          "median_ns": 33526025.0,
+          "fork_median_ns": [
+            33406350.0,
+            32851150.0,
+            33521550.0,
+            34229000.0,
+            33530500.0,
+            33551650.0
+          ],
+          "median_allocated_bytes": 87070976.0,
+          "work": 104473,
+          "cases": 12,
+          "outcomes": {
+            "WITNESS": 12
+          }
+        },
+        "time_ratio": 0.9720956901450922,
+        "allocation_ratio": 0.9989244273211063
+      }
+    },
+    "allow_work_change": true,
+    "retained_affine": true,
+    "notes": "Serial specialist throughput at the same 4M request cap. Thread allocation is measured, not heap/RSS. Identical per-case witnesses across revisions and deterministic work within each revision are checked. Cross-revision work equality is required unless allow_work_change is set. Does not establish whole-planner or server speed."
+  },
+  "negative_controls": {
+    "missing-swap": {
+      "status": "REJECTED",
+      "error": "Exception in thread \"main\" java.lang.AssertionError: Stale support at 0:0"
+    },
+    "stale-cancellation": {
+      "status": "REJECTED",
+      "error": "Exception in thread \"main\" java.lang.AssertionError: Stale support at 1:1"
+    },
+    "ignore-second-word": {
+      "status": "REJECTED",
+      "error": "Exception in thread \"main\" java.lang.AssertionError: Direction left the exact integer kernel"
+    },
+    "overwritten-coordinate": {
+      "status": "REJECTED",
+      "error": "Exception in thread \"main\" java.lang.AssertionError: Direction left the exact integer kernel"
+    },
+    "unpaid-word": {
+      "status": "REJECTED",
+      "error": "Exception in thread \"main\" java.lang.AssertionError: Expected two support words and four changed coordinates"
+    }
+  },
+  "build": {
+    "offline_assemble": "PASS",
+    "sources_jar_matching_production_files": 205
+  },
+  "excluded_local_probes": {
+    "affine-reduction-probe/delayed": {
+      "solved": 0,
+      "unresolved": 4,
+      "work_cap": 20000000,
+      "log_sha256": "9c651a349a31ed2efca4a6997c95509ca53b6d3075b6c150ae95fd6caefa5e3e"
+    },
+    "affine-reduction-probe/delayed99": {
+      "solved": 0,
+      "unresolved": 4,
+      "work_cap": 20000000,
+      "log_sha256": "102a449d9b56ee9ae3cea8396758adc981b3c9a19a2fcf5f678a52a2c7bd5a45"
+    },
+    "affine-reduction-probe/balanced": {
+      "solved": 0,
+      "unresolved": 4,
+      "work_cap": 20000000,
+      "log_sha256": "1e091c135b1e0078bce166a54ee3a19240d71f51c1edcb99041a33b01b6d0119"
+    },
+    "box-embedding-probe/75": {
+      "solved": 0,
+      "unresolved": 4,
+      "work_cap": 20000000,
+      "log_sha256": "73105168966e695229e6177fb09cbe47bc286259fdda97bff57e5adf903f41ec"
+    },
+    "box-embedding-probe/75first": {
+      "solved": 0,
+      "unresolved": 4,
+      "work_cap": 20000000,
+      "log_sha256": "48a8d6dbb741a87cb808d6da15b3152af2c2669d9cfcd61753861cc05e0c3d66"
+    }
+  },
+  "limits": [
+    "Four original sparse known-SAT limits remain.",
+    "Dense timing is warmup-sensitive: +3.09% in the short campaign and -2.79% in its longer follow-up.",
+    "Reserved workspace and cumulative allocation are not RSS.",
+    "Wider numeric admission and H/J benefit/residency remain open."
+  ]
+}

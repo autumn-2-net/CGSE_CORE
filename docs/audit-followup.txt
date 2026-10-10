@@ -411,3 +411,19 @@ four workers/2x budgets, a 64 MiB heap run and offline assembly pass.
 The four original sparse limits remain. A wider affine experiment still runs
 out of 20M work on intermediate or final basis reduction and stays local only.
 Wider admission and the remaining H/J benefit/residency gaps are not closed.
+
+2026-10-11 sparse affine basis updates
+------------------------------------
+sparse-affine-basis.txt retains nonzero-coordinate words through exact Bezout,
+size reduction, swaps, deep insertion and trial resets. Pair arrays are reused;
+word/coordinate scans and the old Gram prefix-swap loop pay for their visits.
+Dense state and original equation/kernel invariants independently check the
+retained representation, including cancellation and cross-word coordinates.
+All 822 equal-20M count conclusions remain, with 1.15% less total search work.
+The isolated 24-model sparse families use 21.95% less work. Small elapsed-time
+changes are warmup-sensitive: a dense control measures 3.09% slower in the short
+campaign and 2.79% faster in the longer follow-up; both results are retained.
+79 standard programs, five negative controls, 2151 paired graph requests,
+19 captured four-worker/2x requests and offline assembly pass. Four original
+sparse limits remain, and unsuccessful wider lattice probes stay local only.
+This does not claim new hard-case coverage or completion of the H/J gaps.

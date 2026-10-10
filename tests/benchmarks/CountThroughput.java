@@ -15,9 +15,11 @@ public final class CountThroughput {
     private static final com.sun.management.ThreadMXBean THREADS =
             (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
     private static final long THREAD = Thread.currentThread().getId();
+    private static boolean retainedAffine;
 
     public static void main(String[] args) {
         int cases = Integer.parseInt(args[0]), warmup = Integer.parseInt(args[1]), samples = Integer.parseInt(args[2]);
+        retainedAffine = args.length > 4 && args[4].equals("retained-affine");
         if (!THREADS.isThreadAllocatedMemorySupported()) throw new IllegalStateException("Allocation counter unavailable");
         THREADS.setThreadAllocatedMemoryEnabled(true);
         System.out.println("engine,sample,cases,nanos,allocated_bytes,work,results");
@@ -54,7 +56,11 @@ public final class CountThroughput {
             }
         } else if (engine.startsWith("lattice")) {
             try (var search = new CountAffineLattice(model.rows, model.low, model.high, budget)) {
-                while (!search.step()) {}
+                if (retainedAffine) search.retained();
+                do {
+                    if (search.paused()) search.resume(131072);
+                    while (!search.step()) {}
+                } while (search.paused());
                 counts = search.counts();
                 result = counts != null ? "WITNESS" : "UNKNOWN";
             }
@@ -97,6 +103,7 @@ public final class CountThroughput {
     }
 
     private static Model model(String engine, int seed) {
+        if (engine.startsWith("lattice-sparse")) return sparse(engine, seed);
         boolean binary = engine.equals("lcg-binary"), lp = engine.startsWith("lp-");
         int n = binary ? 64 : lp || engine.equals("lattice-offset") ? 12 : engine.equals("lattice-dense") ? 16 : 8;
         var low = new BigInteger[n];
@@ -149,5 +156,35 @@ public final class CountThroughput {
         }
         Collections.shuffle(rows, new Random(271L * seed + 5));
         return new Model(rows, low, high, objective);
+    }
+
+    private static Model sparse(String engine, int seed) {
+        int n = new int[] {63, 64, 65, 128}[seed % 4];
+        var random = new Random(711001L + seed * 97L + n);
+        var low = new BigInteger[n];
+        var high = new BigInteger[n];
+        var ids = new ArrayList<Integer>();
+        for (int i = 0; i < n; i++) {
+            low[i] = BigInteger.valueOf(i % 7 - 3);
+            if (engine.endsWith("-offset")) low[i] = low[i].add(BigInteger.ONE.shiftLeft(90).multiply(BigInteger.valueOf(i % 2 == 0 ? 1 : -1)));
+            high[i] = low[i].add(BigInteger.valueOf(12));
+            ids.add(i);
+        }
+        Collections.shuffle(ids, random);
+        var rows = new ArrayList<ExactLinearProgram.Constraint>();
+        for (int j = 4; j < n; j++) {
+            int i = ids.get(j), free = ids.get(j % 4);
+            BigInteger a = BigInteger.valueOf(2 + j % 2);
+            var terms = new TreeMap<Integer, BigInteger>();
+            terms.put(i, BigInteger.ONE);
+            terms.put(free, a.negate());
+            BigInteger rhs = low[i].subtract(a.multiply(low[free]));
+            rows.add(new ExactLinearProgram.Constraint(terms, rhs));
+            var reverse = new TreeMap<Integer, BigInteger>();
+            terms.forEach((id, coefficient) -> reverse.put(id, coefficient.negate()));
+            rows.add(new ExactLinearProgram.Constraint(reverse, rhs.negate()));
+        }
+        Collections.shuffle(rows, random);
+        return new Model(rows, low, high, null);
     }
 }

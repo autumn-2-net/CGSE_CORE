@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 autumn
 # SPDX-License-Identifier: MPL-2.0
-"""Serial warmed fork comparison with unchanged per-case results/work and actual allocated bytes."""
+"""Serial warmed fork comparison with identical witnesses and actual allocated bytes."""
 import argparse
 import csv
 import io
@@ -25,6 +25,8 @@ def main():
     parser.add_argument('--samples', type=int, default=5)
     parser.add_argument('--cases', type=int, default=12)
     parser.add_argument('--engines', default='lcg-binary,lcg-finite,lcg-offset,lp-unit,lp-dense,lattice,lattice-dense,lattice-offset')
+    parser.add_argument('--allow-work-change', action='store_true', help='Require identical witnesses; allow changed charging across revisions')
+    parser.add_argument('--retained-affine', action='store_true', help='Continue affine searches within the same 4M request cap')
     args = parser.parse_args()
     if min(args.forks, args.warmup, args.samples, args.cases) <= 0:
         parser.error('Require positive forks, warmup, samples and cases')
@@ -64,12 +66,14 @@ def main():
         subprocess.run([str(javac), '--release', '17', '-encoding', 'UTF-8', '-d', str(classes), '@' + str(argfile)], check=True)
     rows = []
     expected = {}
+    stable = {}
     for fork in range(args.forks):
         for revision in (['baseline', 'candidate'] if fork % 2 == 0 else ['candidate', 'baseline']):
             path = output / f'{revision}-{fork}.csv'
             with path.open('w', encoding='utf-8') as stream:
                 subprocess.run([str(java), '-ea', '-Xms512m', '-Xmx512m', '-cp', str(output / revision / 'classes'),
-                                'org.cgse.core.CountThroughput', str(args.cases), str(args.warmup), str(args.samples), args.engines],
+                                'org.cgse.core.CountThroughput', str(args.cases), str(args.warmup), str(args.samples), args.engines,
+                                'retained-affine' if args.retained_affine else 'single-turn'],
                                cwd=ROOT, stdout=stream, check=True, timeout=600)
             batch = list(csv.DictReader(path.open(encoding='utf-8')))
             if len(batch) != args.samples * len(args.engines.split(',')):
@@ -78,11 +82,15 @@ def main():
                 for field in ('sample', 'cases', 'nanos', 'allocated_bytes', 'work'):
                     row[field] = int(row[field])
                 signature = (row['work'], row['results'])
+                if stable.setdefault((revision, row['engine']), signature) != signature:
+                    raise AssertionError('Nondeterministic search/work: ' + revision + '/' + row['engine'])
+                if args.allow_work_change:
+                    signature = tuple(case.split(':', 1)[1] for case in row['results'].split(';'))
                 if expected.setdefault(row['engine'], signature) != signature:
                     raise AssertionError('Search/work changed: ' + revision + '/' + row['engine'])
                 row.update(revision=revision, fork=fork)
             rows.extend(batch)
-            print(f'{revision} fork={fork}: fixed work and results checked', flush=True)
+            print(f'{revision} fork={fork}: witnesses and per-revision work checked', flush=True)
     groups = {}
     for engine in args.engines.split(','):
         groups[engine] = {}
@@ -102,7 +110,10 @@ def main():
     (output / 'rows.json').write_text(json.dumps(rows, indent=2), encoding='utf-8')
     summary = {'baseline': baseline, 'source_sha256': source_hash, 'harness_sha256': harness_hash,
                'java': version, 'warmup': args.warmup, 'samples': args.samples, 'forks': args.forks, 'groups': groups,
-               'notes': 'Serial fixed-search specialist throughput. Thread allocation is measured, not heap/RSS. Same case fingerprints, work and results checked in every sample. Does not establish whole-planner or server speed.'}
+               'allow_work_change': args.allow_work_change, 'retained_affine': args.retained_affine,
+               'notes': 'Serial specialist throughput at the same 4M request cap. Thread allocation is measured, not heap/RSS. '
+                        'Identical per-case witnesses across revisions and deterministic work within each revision are checked. '
+                        'Cross-revision work equality is required unless allow_work_change is set. Does not establish whole-planner or server speed.'}
     (output / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
     print(json.dumps(groups, indent=2))
 
