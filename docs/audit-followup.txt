@@ -292,3 +292,17 @@ Five original-order known-SAT residuals remain at 20M: four larger sparse
 equalities and one costly four-list subset join. Blindly widening admission
 does not solve the former; the latter solves at an explicit 80M diagnostic
 cap with its existing tool. Default request limits and audit H/J scope remain.
+
+2026-10-10 complementary residue reuse and tool comparison
+---------------------------------------------------------
+complement-count-matching.txt records exact complementary-table reuse and
+packing epochs/masks while reconstructing full keys from retained quarter sums.
+The same 822 main-stage checks retain all conclusions; the 48-bit subset's
+direct 80M entry gains one previously unresolved order and keeps the other
+two, with explicitly recorded order-dependent cost. Maximum table reservation
+is approximately halved. Original-coordinate finite oracles, three negative
+controls, 3,117 graph checks, 57 captured requests and assembly pass.
+SCIP/CP-SAT source review and direct local prototypes do not establish another
+equal-cap gain on the four large sparse equalities. Native one-worker 10s runs
+also leave those four unresolved. The prototypes remain outside production;
+this does not claim those tools are ineffective in general or close H/J.

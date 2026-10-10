@@ -128,13 +128,18 @@ def main():
                 work = oracle.get('work', boundary['work'])
                 if not isinstance(work, int) or work <= 0:
                     raise ValueError('Invalid count boundary work cap')
-                batches.setdefault(work, []).append(case)
-            for work, batch in sorted(batches.items()):
+                engine = oracle.get('engine', 'main-counts')
+                if engine not in ('main-counts', 'mitm-retained'):
+                    raise ValueError('Invalid count boundary engine')
+                batches.setdefault((engine, work), []).append(case)
+            for (engine, work), batch in sorted(batches.items()):
                 suffix = '' if work == boundary['work'] else '-' + str(work)
+                if engine != 'main-counts':
+                    suffix = '-' + engine + suffix
                 path = output / ('count-boundaries' + suffix + '.bin')
                 boundaries_helper.write_models(path, batch)
                 run('CountModelBoundaries' + suffix, 'org.cgse.core.CountModelRegression',
-                    [path, 0, work, 'main-counts', 'true'])
+                    [path, 0, work, engine, 'true'])
     if args.suite == 'benchmarks' and re.search(args.case, 'GraphBenchmark'):
         run('GraphBenchmark', 'org.cgse.core.GraphBenchmark')
     if args.suite in ('fixtures', 'all'):

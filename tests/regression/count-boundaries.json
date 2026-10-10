@@ -445,6 +445,39 @@
       "corpus_order": 2,
       "expected": "UNSAT",
       "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "SAT",
+      "engine": "mitm-retained",
+      "work": 80000000,
+      "reason": "Direct retained four-list algorithm at an explicit 80M diagnostic cap; complement reuse gains order 2 over 2496def4. All witnesses are checked in original coordinates. This is not a main-planner 20M guarantee."
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "SAT",
+      "engine": "mitm-retained",
+      "work": 80000000,
+      "reason": "Direct retained four-list algorithm at an explicit 80M diagnostic cap; complement reuse gains order 2 over 2496def4. All witnesses are checked in original coordinates. This is not a main-planner 20M guarantee."
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "SAT",
+      "engine": "mitm-retained",
+      "work": 80000000,
+      "reason": "Direct retained four-list algorithm at an explicit 80M diagnostic cap; complement reuse gains order 2 over 2496def4. All witnesses are checked in original coordinates. This is not a main-planner 20M guarantee."
     }
   ]
 }

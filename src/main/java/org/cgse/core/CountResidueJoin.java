@@ -22,8 +22,8 @@ final class CountResidueJoin implements AutoCloseable {
             int capacity = left * 2;
             long lists = (1L << first) + (1L << (split - first)) +
                     (1L << third) + (1L << (variables - split - third));
-            long bytes = 1024 + 8L * variables + 16L * capacity + 8L * lists +
-                    4L * ((1L << first) + (1L << third)) + (8L << bits);
+            long bytes = 1056 + 8L * variables + 8L * capacity + 8L * lists +
+                    4L * ((1L << first) + (1L << third)) + (9L << bits);
             // The density estimate chooses a strategy, not a completeness bound.
             // Skewed residues still charge each actual pair and hash inspection.
             long work = 4 * (left + (long) right) + 4 * lists;
@@ -34,15 +34,15 @@ final class CountResidueJoin implements AutoCloseable {
     private final PlanningBudget budget;
     private final Shape shape;
     private final long target;
-    private long[] coefficients, keys;
-    private int[] codes, epochs;
+    private long[] coefficients, table;
     private long[][] sums;
     private int[][] heads, links;
+    private boolean[] covered;
     private final int[] starts, sizes;
     private PairCursor left, right;
-    private long memory, work, progress, candidate = -1, value, key;
-    private int phase, group, cursor, residue, slot, joinedCode, distinct, truncated;
-    private boolean pending, done;
+    private long memory, work, progress, candidate = -1, value, key, leftTotal;
+    private int phase, group, cursor, residue, complement, slot, joinedCode, distinct, truncated, reused;
+    private boolean pending, done, reflected, partial;
 
     CountResidueJoin(long[] coefficients, long target, PlanningBudget budget, Shape shape) {
         this.budget = budget;
@@ -58,13 +58,12 @@ final class CountResidueJoin implements AutoCloseable {
         memory = shape.bytes;
         try {
             this.coefficients = coefficients.clone();
-            keys = new long[shape.capacity];
-            codes = new int[shape.capacity];
-            epochs = new int[shape.capacity];
+            table = new long[shape.capacity];
             sums = new long[4][];
             for (int i = 0; i < 4; i++) sums[i] = new long[sizes[i]];
             heads = new int[][] {new int[1 << shape.residueBits], new int[1 << shape.residueBits]};
             links = new int[][] {new int[sizes[0]], new int[sizes[2]]};
+            covered = new boolean[1 << shape.residueBits];
             left = new PairCursor(0);
             right = new PairCursor(2);
             budget.note("count_residue_join", "quarters=" + sizes[0] + "," + sizes[1] + "," + sizes[2] + "," + sizes[3] +
@@ -94,7 +93,11 @@ final class CountResidueJoin implements AutoCloseable {
                 if (++cursor == sizes[group]) {
                     cursor = 0;
                     value = 0;
-                    if (++group == 4) { phase = 1; group = 0; }
+                    if (++group == 4) {
+                        phase = 1;
+                        group = 0;
+                        leftTotal = sums[0][sizes[0] - 1] + sums[1][sizes[1] - 1];
+                    }
                 }
             } else if (phase == 1) {
                 charge();
@@ -105,55 +108,73 @@ final class CountResidueJoin implements AutoCloseable {
                     cursor = 0;
                     if (++group == 2) phase = 2;
                 }
+            } else if (phase == 4) {
+                charge();
+                if (++residue == covered.length) return finish();
+                if (covered[residue]) continue;
+                phase = 2;
+                distinct = 0;
+                reflected = partial = false;
+                left.reset();
+                right.reset();
             } else {
                 PairCursor pairs = phase == 2 ? left : right;
                 if (!pending) {
                     if (!pairs.next()) continue;
                     if (pairs.done) {
                         if (phase == 2) phase = 3;
-                        else if (++residue == heads[0].length) return finish();
                         else {
-                            // Epochs avoid clearing a large hash table at every
-                            // residue. Quarter sums/buckets are never rebuilt.
-                            phase = 2;
-                            distinct = 0;
-                            left.reset();
-                            right.reset();
+                            covered[reflected ? complement : residue] = true;
+                            complement = (int) (leftTotal - residue) & (covered.length - 1);
+                            if (!reflected && !partial && !covered[complement]) {
+                                // Complementing a left option mask replaces its
+                                // sum s by leftTotal - s. Reuse the complete table
+                                // for that second residue instead of enumerating
+                                // and hashing all of its left pairs again.
+                                reflected = true;
+                                reused++;
+                                right.reset();
+                            } else phase = 4;
                         }
                         return false;
                     }
-                    key = phase == 2 ? pairs.value : target - pairs.value;
+                    key = phase == 2 ? pairs.value : reflected ? leftTotal - target + pairs.value : target - pairs.value;
                     joinedCode = pairs.code;
                     long hash = key;
                     hash = (hash ^ (hash >>> 33)) * 0xff51afd7ed558ccdL;
                     hash = (hash ^ (hash >>> 33)) * 0xc4ceb9fe1a85ec53L;
-                    slot = (int) (hash ^ (hash >>> 33)) & (keys.length - 1);
+                    slot = (int) (hash ^ (hash >>> 33)) & (table.length - 1);
                     pending = true;
                 }
                 charge();
-                if (epochs[slot] != residue + 1) {
+                // Quarter sums already retain the exact key. A slot needs only
+                // its option mask and epoch, avoiding a second long-key array.
+                long entry = table[slot];
+                int storedCode = (int) entry;
+                if ((entry >>> 32) != residue + 1) {
                     if (phase == 2) {
-                        if (distinct >= keys.length / 4 * 3) {
+                        if (distinct >= table.length / 4 * 3) {
                             // A skewed bucket can exceed its density estimate.
                             // Probe the retained partial table, then try another
                             // residue; this is still only a witness heuristic.
                             truncated++;
+                            partial = true;
                             pending = false;
                             phase = 3;
                             return false;
                         }
-                        keys[slot] = key;
-                        codes[slot] = joinedCode;
-                        epochs[slot] = residue + 1;
+                        table[slot] = ((long) (residue + 1) << 32) | joinedCode;
                         distinct++;
                     }
-                } else if (keys[slot] == key) {
+                } else if (sums[0][storedCode & (sizes[0] - 1)] + sums[1][storedCode >>> shape.first] == key) {
                     if (phase == 3) {
-                        candidate = (long) codes[slot] | ((long) joinedCode << shape.split);
+                        int leftCode = storedCode;
+                        if (reflected) leftCode ^= (1 << shape.split) - 1;
+                        candidate = (long) leftCode | ((long) joinedCode << shape.split);
                         return finish();
                     }
                 } else {
-                    slot = (slot + 1) & (keys.length - 1);
+                    slot = (slot + 1) & (table.length - 1);
                     continue;
                 }
                 pending = false;
@@ -177,7 +198,7 @@ final class CountResidueJoin implements AutoCloseable {
             if (inner < 0) {
                 if (outer == sizes[group + 1]) return done = true;
                 charge();
-                long wanted = group == 0 ? residue : target - residue;
+                long wanted = group == 0 ? residue : target - (reflected ? complement : residue);
                 int bucket = (int) (wanted - sums[group + 1][outer]) & (heads[0].length - 1);
                 inner = heads[group / 2][bucket] - 1;
                 if (inner < 0) { outer++; return false; }
@@ -203,7 +224,7 @@ final class CountResidueJoin implements AutoCloseable {
     private boolean finish() {
         done = true;
         budget.note("count_residue_join", "witness=" + (candidate >= 0) + "; residue=" + residue +
-                "; truncated=" + truncated + "; work=" + work + "; positive_only");
+                "; reused=" + reused + "; truncated=" + truncated + "; work=" + work + "; positive_only");
         return true;
     }
 
@@ -216,10 +237,10 @@ final class CountResidueJoin implements AutoCloseable {
     @Override
     public void close() {
         done = true;
-        coefficients = keys = null;
-        codes = epochs = null;
+        coefficients = table = null;
         sums = null;
         heads = links = null;
+        covered = null;
         left = right = null;
         budget.release(memory);
         memory = 0;

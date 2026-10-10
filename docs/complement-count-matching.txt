@@ -1,0 +1,137 @@
+Complementary residue tables and residual-tool experiments
+=========================================================
+2026-10-10, baseline 2496def4.
+
+Production change
+-----------------
+CountResidueJoin retains an exact sum for every quarter option mask already.
+A hash slot now packs its epoch and left option mask into one long, and
+reconstructs the full signed key from the two retained quarter sums. There is
+no fingerprint-only equality check. The maximum left mask has 26 bits; it
+cannot overlap the epoch. Every collision still charges a hash inspection.
+
+Let S be the total of the two left quarters. Complementing every left choice
+maps sum x to S-x, and residue r to (S-r) modulo the residue modulus. After
+probing a COMPLETE table for r, probe this second residue with the same table:
+look up S-target+rightSum, then complement the returned left option mask.
+The arithmetic is covered by the parent's signed-long sum certificate; large
+original lower bounds are restored and checked with BigInteger as before.
+
+An incomplete table cannot cover its complementary residue. Truncation keeps
+the old partial-table behavior and the complement must receive its own build.
+Neither exhaustion nor truncation proves UNSAT. The covered-residue scan,
+both probe cursors, hash-collision cursor and epoch survive local pauses.
+No request limit or work weighting changes; cancellation and memory ownership
+remain shared with the parent and other workers.
+
+On subset-n48-bits48 the child reservation falls from 33,719,808 to 16,942,640
+bytes. These are charged workspace reservations, not measured JVM heap/RSS.
+A separate 20 MiB regression admits a maximum-capacity table and verifies a
+unique witness; the former layout cannot enter that workspace.
+
+Equal-cap results
+-----------------
+The complete 274-model count corpus in three orders remains 787 PASS,
+17 UNKNOWN and 18 unsupported conversions at 20M: no gained/lost conclusions
+or contradictions. Total recorded work is 953,777,704 versus 953,776,600.
+This negligible difference is not a whole-planner performance improvement.
+All 72 parity/neighbor checks retain their verdicts.
+
+The direct retained MITM entry has a separate, explicit 80M diagnostic cap.
+Use the full-corpus shuffles, not permutations generated from a selected subset:
+
+  subset-n48-bits48     Baseline work/result       Current work/result
+  Original             76,968,526 SAT             63,370,456 SAT
+  Corpus order 1        12,696,421 SAT             16,535,703 SAT
+  Corpus order 2        80,000,001 UNKNOWN         66,383,404 SAT
+
+The original order uses 17.7% less work. Order 1 costs 30.2% more because the
+second probe changes visitation order. Order 2 gains a verified witness.
+These direct results do NOT assert main-planner success at 20M or uniform
+improvement under all permutations. All three direct boundaries now run in
+the regular suite with their engine and cap named explicitly. Historical
+corpus expectations and existing main-count boundaries are unchanged.
+
+CountComplementJoinTest checks independently unique subsets, signed/permuted
+coefficients, partial-table coverage, the signed-long arithmetic boundary,
+large original offsets, low-memory admission and identical whole/sliced results.
+CountResidueJoinTest retains its 240 finite models / 720 orders / 489,600
+exhaustively enumerated assignments plus cancellation/shared-budget checks.
+Three deliberately broken variants are rejected: complementing a partial
+table, omitting the left-mask complement, and restoring the old reservation.
+
+The 68 existing/current standard programs pass; the final extended complement
+test and all three boundary batches also pass. All 3,117 graph fixture/order
+checks retain their result AND work against 2496def4. The 57 captured-stock
+requests cover one worker, four workers with the same cap, and four workers
+with the explicit production 2x allowance. Offline assembly and byte-for-byte
+source-JAR comparison pass. These captures are not fresh server execution.
+Detailed input/source hashes and results are in
+tests/provenance/complement-count-matching-20261010.json.
+
+SCIP / CP-SAT review and experiments
+----------------------------------
+The existing CountNeighborhood, CountFeasibilityPump and CountDiving already
+cover bounded RENS, feasibility-pump and lock-guided diving ideas. Adding the
+same names again would not supply a missing inference. Sources inspected:
+
+https://github.com/scipopt/scip/blob/master/src/scip/heur_rens.c
+https://github.com/scipopt/scip/blob/master/src/scip/heur_feaspump.c
+https://github.com/scipopt/scip/blob/master/src/scip/heur_shiftandpropagate.c
+https://github.com/google/or-tools/blob/stable/ortools/sat/feasibility_jump.cc
+https://github.com/google/or-tools/blob/stable/ortools/sat/cp_model_expand.cc
+
+CP-SAT's general feasibility jump also builds and backtracks compound moves,
+with discounted currently satisfied constraints. CGSE's established pair walk
+is more restricted. Another distinct gap is retaining finite-domain holes
+with explanations, rather than keeping only interval endpoints or a stride.
+These observations motivated local experiments on all 32 sparse-equality
+models, with a 20M direct-tool allowance:
+
+  Binary coordinate expansion + PB          23 SAT / 9 UNKNOWN
+  Binary coordinate expansion + LCG         19 SAT / 13 UNKNOWN
+  Exact directed two-variable repair         4 SAT / 28 UNKNOWN
+  Finite-domain bitset support + DFS         19 SAT / 13 UNKNOWN
+  Discounted compound-move prototype         6 SAT / 26 UNKNOWN
+
+None of these prototypes resolves any of the four remaining n144/n257 cases.
+These are independent direct entries, not equal-cost main-portfolio gains.
+Binary experiments check the expanded model; they were not wired into an
+original-coordinate production view. Finite-support DFS lacks explanation
+learning and the compound prototype is not a complete CP-SAT implementation.
+No experimental solver or new portfolio arm is included in this change.
+Single-equality affine search and an exact sphere-enumeration prototype also
+fail to improve the 48-bit subset boundary; they remain local experiments.
+
+Native OR-Tools 9.15.6755 and PySCIPOpt 6.2.1 were rerun on the four large
+sparse equalities, one worker and 10 seconds per model. All eight attempts
+return UNKNOWN/time limit, with no witness. CP-SAT also times out on the
+48-bit subset. That SCIP call does not return under its soft limit; only the
+owned test process was stopped after 244.5 seconds total process runtime.
+The native comparison is incomplete for that last call and does not rank
+solvers by speed. Native seconds are not CGSE logical work, and a timeout
+does not change a planted SAT expectation into UNSAT.
+
+What remains
+------------
+Five original-order cases still reach the main stage's 20M budget. Improving
+finite support with explanation learning, larger sparse lattice kernels and
+bounded compound search remain candidate research directions, not finished
+production capabilities. A new arm needs a reproducible equal-cap gain and
+must preserve the cheap graph/linear frontiers before admission. The audit's
+separate host-residency and end-to-end attribution gaps remain open.
+
+Reproduce
+---------
+python tests/benchmarks/compare_count_models.py --java-home JDK17
+  --baseline 2496def4 --permutations 3 --parity --timeout 1800
+  --output build/complement-final-comparison
+python tests/run.py --java-home JDK17 --suite core
+  --case 'CountComplementJoinTest|CountResidueJoinTest' --timeout 600
+python tests/run.py --java-home JDK17 --suite oracles
+  --case CountModelBoundaries --timeout 600
+python tests/run.py --java-home JDK17 --suite standard --timeout 600
+
+Full graph/captured-stock commands in scalar-count-matching.txt still apply.
+The research prototypes and their raw logs remain in ignored local build
+directories; no private AW cases, adapters or game data are added to Git.

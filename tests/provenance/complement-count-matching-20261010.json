@@ -1,0 +1,698 @@
+{
+  "schema": "cgse-complement-count-matching-v1",
+  "date": "2026-10-10",
+  "baseline": "2496def4360d81660fc1272460e227734e749057",
+  "candidate_source_sha256": "1cee0853ea1f5a54a2ac4ff73953bd3fda952a72fa537d03fefd9f5cab6d543d",
+  "production_java_files": 201,
+  "scope": "Exact complementary residue reuse, compact exact hash storage and explicitly named direct-tool boundaries. No new portfolio arm, work weighting or host integration.",
+  "models_20m": {
+    "baseline": {
+      "outcomes": {
+        "PASS": 787,
+        "UNRESOLVED": 17,
+        "UNSUPPORTED": 18
+      },
+      "total_recorded_work": 953777704
+    },
+    "candidate": {
+      "outcomes": {
+        "PASS": 787,
+        "UNRESOLVED": 17,
+        "UNSUPPORTED": 18
+      },
+      "total_recorded_work": 953776600
+    },
+    "gained": [],
+    "lost": [],
+    "contradictions": [],
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "a144f6e2269fad4c62ca5f86a0e185380d954f0feba4a9d8282462ecec887f10",
+    "permutations": 3,
+    "orders": [
+      {
+        "order": 0,
+        "baseline": {
+          "outcomes": {
+            "PASS": 263,
+            "UNRESOLVED": 5,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 306048600
+        },
+        "candidate": {
+          "outcomes": {
+            "PASS": 263,
+            "UNRESOLVED": 5,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 306048011
+        }
+      },
+      {
+        "order": 1,
+        "baseline": {
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 330006461
+        },
+        "candidate": {
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 330005832
+        }
+      },
+      {
+        "order": 2,
+        "baseline": {
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 317722643
+        },
+        "candidate": {
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 317722757
+        }
+      }
+    ]
+  },
+  "parity": {
+    "baseline": {
+      "outcomes": {
+        "UNSAT": 36,
+        "SAT": 36
+      }
+    },
+    "candidate": {
+      "outcomes": {
+        "UNSAT": 36,
+        "SAT": 36
+      }
+    },
+    "gained": [],
+    "lost": [],
+    "contradictions": []
+  },
+  "direct_mitm_80m": {
+    "engine": "mitm-retained",
+    "request_work": 80000000,
+    "input_sha256": "ba7fb6d1e63df63bea45cb4b0d8daaff2f3cd8803f023751955f025bcf7ac343",
+    "permutation_population": "complete count corpus",
+    "note": "Original-coordinate direct entry, not the main planner. No uniform order or time improvement claim.",
+    "baseline": {
+      "results": {
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": [
+          "PASS",
+          "SAT",
+          "work=76968526"
+        ],
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=1": [
+          "PASS",
+          "SAT",
+          "work=12696421"
+        ],
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=2": [
+          "UNRESOLVED",
+          "work=80000001",
+          "org.cgse.core.PlanningBudget$Exhausted: GRAPH_SEARCH_LIMIT (search_work=80000001/80000000)"
+        ]
+      },
+      "log_sha256": "1079afe5819f583bb801b7ceb31ce52d4e2c6ea61758ff1db4b0faba64bae4c4"
+    },
+    "candidate": {
+      "results": {
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": [
+          "PASS",
+          "SAT",
+          "work=63370456"
+        ],
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=1": [
+          "PASS",
+          "SAT",
+          "work=16535703"
+        ],
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=2": [
+          "PASS",
+          "SAT",
+          "work=66383404"
+        ]
+      },
+      "log_sha256": "0c883ebb826c5144e77bf57193b2d95869b513c6d3ddb1101f3eac94dbde6bfe"
+    }
+  },
+  "child_workspace_bytes": {
+    "case": "subset-n48-bits48",
+    "baseline": 33719808,
+    "candidate": 16942640,
+    "measurement": "Charged reservation, not JVM heap/RSS"
+  },
+  "standard": {
+    "programs": 68,
+    "passed": 68,
+    "results_sha256": "7b8758e2afe5cdc22a5c37da1e4c992bf27d17d7b3661352d9e49335bd05a0d5",
+    "note": "Production sources fixed. Afterwards added the maximum-table low-memory assertion and explicit direct-tool boundaries, tested below without repeating unrelated programs."
+  },
+  "extended_complement_test": {
+    "programs": 1,
+    "passed": 1,
+    "results_sha256": "2d48829372a8fbcc840e32fe48b5e9a264c7adf2bad0cc0994d7f12ffdea71cc"
+  },
+  "boundary_batches": {
+    "programs": 3,
+    "passed": 3,
+    "results_sha256": "d5bc62d5f6eaab64fa687c2660d3fd1c98c796f5b87db4cd48b539cdda198628",
+    "cases": 54,
+    "registry_sha256": "3dc89b2bfe97f7506c53247259076d736105079ddf2d0c43923abfc429000a7d",
+    "runner_sha256": "f17f166e87c8eaf3f6a285a47aa863a203b22c795f9acf0402ffc3b2235ec047"
+  },
+  "negative_controls": [
+    {
+      "mutation": "partial",
+      "rejected": true,
+      "message": "Exception in thread \"main\" java.lang.AssertionError: Partial complement incorrectly covered an unvisited residue"
+    },
+    {
+      "mutation": "unreflected-code",
+      "rejected": true,
+      "message": "Exception in thread \"main\" java.lang.AssertionError: Incorrect reflected witness"
+    },
+    {
+      "mutation": "old-memory",
+      "rejected": true,
+      "message": "Exception in thread \"main\" java.lang.AssertionError: Compact table failed its independent unique witness"
+    }
+  ],
+  "graph_regressions": [
+    {
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "349f1885afdbc6b7e010100a88ba6910f6d0a79fa6bc82d86f8f82aa298d5d52",
+      "name": "curated",
+      "cases": 239,
+      "orders": 3,
+      "identical_results_and_work": true,
+      "inputs_sha256": [
+        "040d45c8d5728b24a87d9ff5b2dce78100448a28c9140bd89cbd7d4de1c1b728",
+        "86fbd385defe450ab4c84fb1cd4136e263a9e4bd98a8d1fca51f2dd80b9353e5",
+        "b9258985707ebf1dbfa9bd0bc8dbcd108fe0884eea36697d13c178b25a0ea577"
+      ]
+    },
+    {
+      "programs": 3,
+      "passed": 3,
+      "results_sha256": "326634dc3d990ba612bb847a94c0746167c5c1085438c267bdcd8849f3bba50a",
+      "name": "expanded",
+      "cases": 800,
+      "orders": 3,
+      "identical_results_and_work": true,
+      "inputs_sha256": [
+        "a58448b493d224e5e7a65b6cc580745cc27f68ec3bc75fca6ce1cfa64d9e8807",
+        "f5c55a271c03cb36ef1ce5491c87510d33dd8937ea7352435b87524b24e37dbb",
+        "ff654555673f2185e02d42025d5dc2086dd5aa328fd99e9737a92a28d74e91e7"
+      ]
+    }
+  ],
+  "capture_replays": [
+    {
+      "workers": 1,
+      "expanded_budget": false,
+      "campaigns": [
+        {
+          "name": "emitter-residual-progress",
+          "requests": 9,
+          "verified": 9,
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 1,
+            "expanded": false
+          },
+          "effective_limits": [
+            20000000
+          ],
+          "peak_workers": 1,
+          "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+          "results_sha256": "df61d8daba28cb4c1b5bedfdaa8acd77440d2751f0063a39bd27a031b6f420ba",
+          "peak_reserved_bytes": 73141007
+        },
+        {
+          "name": "miracle-seed-source",
+          "requests": 3,
+          "verified": 3,
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 1,
+            "expanded": false
+          },
+          "effective_limits": [
+            20000000
+          ],
+          "peak_workers": 1,
+          "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+          "results_sha256": "30416ae0e42c3184e6605ee5871299b0ebfde95796aa13c06df59c87e99f18bc",
+          "peak_reserved_bytes": 69485518
+        },
+        {
+          "name": "miracle-quantity-source",
+          "requests": 3,
+          "verified": 3,
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 1,
+            "expanded": false
+          },
+          "effective_limits": [
+            40000000
+          ],
+          "peak_workers": 1,
+          "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+          "results_sha256": "805e2e8587820fc835e6bb486f80975ea38da1b6bd99bb7e5f462794fc6ececb",
+          "peak_reserved_bytes": 70584863
+        },
+        {
+          "name": "miracle-funded-cycle-entry",
+          "requests": 4,
+          "verified": 4,
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 1,
+            "expanded": false
+          },
+          "effective_limits": [
+            40000000
+          ],
+          "peak_workers": 1,
+          "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+          "results_sha256": "856f58af5280d4244a210cbd1a163325d43a1962b81cede670adbe772d85e64a",
+          "peak_reserved_bytes": 72825838
+        }
+      ]
+    },
+    {
+      "workers": 4,
+      "expanded_budget": false,
+      "campaigns": [
+        {
+          "name": "emitter-residual-progress",
+          "requests": 9,
+          "verified": 9,
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": false
+          },
+          "effective_limits": [
+            20000000
+          ],
+          "peak_workers": 4,
+          "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+          "results_sha256": "f65310cd0a9f57e1f93ae7aefa32871a9b3f4c39e33afb0f6db42774d9c5bbd1",
+          "peak_reserved_bytes": 73141007
+        },
+        {
+          "name": "miracle-seed-source",
+          "requests": 3,
+          "verified": 3,
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": false
+          },
+          "effective_limits": [
+            20000000
+          ],
+          "peak_workers": 4,
+          "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+          "results_sha256": "c27a7a66afb8d3a0869466776cb352f457676a90fe766b7a1e12d3d6ac9b1376",
+          "peak_reserved_bytes": 69485518
+        },
+        {
+          "name": "miracle-quantity-source",
+          "requests": 3,
+          "verified": 3,
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": false
+          },
+          "effective_limits": [
+            40000000
+          ],
+          "peak_workers": 4,
+          "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+          "results_sha256": "d297c15f7783d055dc5596b6c7edb2bee660e1d1ad6945062049a5fdc2eba729",
+          "peak_reserved_bytes": 70584863
+        },
+        {
+          "name": "miracle-funded-cycle-entry",
+          "requests": 4,
+          "verified": 4,
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": false
+          },
+          "effective_limits": [
+            40000000
+          ],
+          "peak_workers": 4,
+          "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+          "results_sha256": "bd77f7f8750827e8864b40af1d566d08a1a2a66385eb9e82c148f0f9e6cb23a3",
+          "peak_reserved_bytes": 72825838
+        }
+      ]
+    },
+    {
+      "workers": 4,
+      "expanded_budget": true,
+      "campaigns": [
+        {
+          "name": "emitter-residual-progress",
+          "requests": 9,
+          "verified": 9,
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": true
+          },
+          "effective_limits": [
+            40000000
+          ],
+          "peak_workers": 4,
+          "input_sha256": "2c9e211ecc05483a4d80b77fea003d52760ec7b784fa7b0e54eafde0d3d33ec9",
+          "results_sha256": "3d708a428494955143895e7b5a04cbf1577cff3c3145000fa1b49d02c88ac4f7",
+          "peak_reserved_bytes": 73140687
+        },
+        {
+          "name": "miracle-seed-source",
+          "requests": 3,
+          "verified": 3,
+          "budget": {
+            "milliseconds": 0,
+            "work": 20000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": true
+          },
+          "effective_limits": [
+            40000000
+          ],
+          "peak_workers": 4,
+          "input_sha256": "649d21b48fb4c21e66115ff615ea2f2effe32cf24b54ab5e2724521cb87ad943",
+          "results_sha256": "c8dc77391d71cf3234c2fa6210cd551a5f5ba1d20cf9d4c5c9c7701902f58eaf",
+          "peak_reserved_bytes": 69485518
+        },
+        {
+          "name": "miracle-quantity-source",
+          "requests": 3,
+          "verified": 3,
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": true
+          },
+          "effective_limits": [
+            80000000
+          ],
+          "peak_workers": 4,
+          "input_sha256": "0d5669bf7198bc9bff34118bb961996319a70a458bc37592cfecbbe378d28455",
+          "results_sha256": "a8716b5497cfca368c7213cb234ad5aad3e5348ad5bfbd03d765cfac7f0f1c5a",
+          "peak_reserved_bytes": 70584863
+        },
+        {
+          "name": "miracle-funded-cycle-entry",
+          "requests": 4,
+          "verified": 4,
+          "budget": {
+            "milliseconds": 0,
+            "work": 40000000,
+            "memory_bytes": 268435456,
+            "workers": 4,
+            "expanded": true
+          },
+          "effective_limits": [
+            80000000
+          ],
+          "peak_workers": 4,
+          "input_sha256": "ee4ebda8181d24e25c4404c73606ae9707e2fb944d94e0d5a3c9366e0734ff4b",
+          "results_sha256": "4548d732c73365b73603e3b00fa1ff4e5596de7b835df17e8f47306b42c1c276",
+          "peak_reserved_bytes": 72825838
+        }
+      ]
+    }
+  ],
+  "local_research_prototypes": [
+    {
+      "name": "binary PB",
+      "outcomes": {
+        "UNRESOLVED": 9,
+        "PASS": 23
+      },
+      "large_residuals_resolved": 0,
+      "request_work": 20000000,
+      "source_sha256": null,
+      "input_sha256": "be229f784a813d16e1d387ac3e8618859ed7f22732ed1a24da87d17148655267",
+      "log_sha256": "4b13c75b85880fd922c7856f49604411fe4a743ed02675ac055d2ea31666c122",
+      "production": false
+    },
+    {
+      "name": "binary LCG",
+      "outcomes": {
+        "UNRESOLVED": 13,
+        "PASS": 19
+      },
+      "large_residuals_resolved": 0,
+      "request_work": 20000000,
+      "source_sha256": null,
+      "input_sha256": "be229f784a813d16e1d387ac3e8618859ed7f22732ed1a24da87d17148655267",
+      "log_sha256": "f3c6dc66880fe1472f78eb701da07566c548c4868ce6a9b45703b3a2081d01d1",
+      "production": false
+    },
+    {
+      "name": "directed two-variable repair",
+      "outcomes": {
+        "UNRESOLVED": 28,
+        "PASS": 4
+      },
+      "large_residuals_resolved": 0,
+      "request_work": 20000000,
+      "source_sha256": "d66470f78e44280d629ee396f933b4e4c83f32d0c39727c07067fc802e8b1f44",
+      "input_sha256": "149739d9aeb2e9a3fdc192751025d0678f58d2c0f202f139f9790735ee7035f8",
+      "log_sha256": "84eaac0250e1a225d2526866f57a79515802456e91560313e49634fbf8fb67a4",
+      "production": false
+    },
+    {
+      "name": "finite-domain bitset support DFS",
+      "outcomes": {
+        "UNRESOLVED": 13,
+        "PASS": 19
+      },
+      "large_residuals_resolved": 0,
+      "request_work": 20000000,
+      "source_sha256": "8addeca198c14ff900f52b092c0b0f7ea397c836fc17563147464efb231cb247",
+      "input_sha256": "149739d9aeb2e9a3fdc192751025d0678f58d2c0f202f139f9790735ee7035f8",
+      "log_sha256": "fc41bcf61b199f54275ede71ce2632b3e0c8fc26bc9ab4a7e2c1e2f79856a556",
+      "production": false
+    },
+    {
+      "name": "discounted compound prototype",
+      "outcomes": {
+        "UNRESOLVED": 26,
+        "PASS": 6
+      },
+      "large_residuals_resolved": 0,
+      "request_work": 20000000,
+      "source_sha256": "8344842ce690fd59c7221da734026e05c7186217b539681f9f9de102ce68ebde",
+      "input_sha256": "149739d9aeb2e9a3fdc192751025d0678f58d2c0f202f139f9790735ee7035f8",
+      "log_sha256": "e891c2c11696e38a7205b187bed0446d5b378fe61af87b6b782d19d9715f164f",
+      "production": false
+    }
+  ],
+  "prototype_limitations": "Not full SCIP/CP-SAT implementations or main-portfolio measurements. Binary runs validate expanded coordinates only. Finite support has no explanation learning; no new production tool is claimed.",
+  "native_comparison": {
+    "limit_seconds": 10,
+    "workers": 1,
+    "note": "Native wall limits differ from CGSE logical work. SCIP floats alone do not certify infeasibility; every returned point is checked with Python integers.",
+    "results": [
+      {
+        "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+        "names": [
+          "generated/sparse-equality-n144-s2"
+        ],
+        "engine": "cp-sat",
+        "version": "9.15.6755",
+        "status": "UNKNOWN",
+        "seconds": 10.03200000000652,
+        "witness": null,
+        "exact_valid": null
+      },
+      {
+        "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+        "names": [
+          "generated/sparse-equality-n144-s2"
+        ],
+        "engine": "scip",
+        "version": "6.2.1",
+        "status": "timelimit",
+        "seconds": 9.71799999999348,
+        "witness": null,
+        "exact_valid": null
+      },
+      {
+        "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+        "names": [
+          "generated/sparse-equality-n257-s2"
+        ],
+        "engine": "cp-sat",
+        "version": "9.15.6755",
+        "status": "UNKNOWN",
+        "seconds": 10.03200000000652,
+        "witness": null,
+        "exact_valid": null
+      },
+      {
+        "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+        "names": [
+          "generated/sparse-equality-n257-s2"
+        ],
+        "engine": "scip",
+        "version": "6.2.1",
+        "status": "timelimit",
+        "seconds": 9.952999999994063,
+        "witness": null,
+        "exact_valid": null
+      },
+      {
+        "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+        "names": [
+          "generated/sparse-equality-n257-s1"
+        ],
+        "engine": "cp-sat",
+        "version": "9.15.6755",
+        "status": "UNKNOWN",
+        "seconds": 10.014999999999418,
+        "witness": null,
+        "exact_valid": null
+      },
+      {
+        "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+        "names": [
+          "generated/sparse-equality-n257-s1"
+        ],
+        "engine": "scip",
+        "version": "6.2.1",
+        "status": "timelimit",
+        "seconds": 9.985000000000582,
+        "witness": null,
+        "exact_valid": null
+      },
+      {
+        "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+        "names": [
+          "generated/sparse-equality-n144-s1"
+        ],
+        "engine": "cp-sat",
+        "version": "9.15.6755",
+        "status": "UNKNOWN",
+        "seconds": 10.014999999999418,
+        "witness": null,
+        "exact_valid": null
+      },
+      {
+        "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+        "names": [
+          "generated/sparse-equality-n144-s1"
+        ],
+        "engine": "scip",
+        "version": "6.2.1",
+        "status": "timelimit",
+        "seconds": 9.985000000000582,
+        "witness": null,
+        "exact_valid": null
+      },
+      {
+        "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+        "names": [
+          "generated/subset-n48-bits48"
+        ],
+        "engine": "cp-sat",
+        "version": "9.15.6755",
+        "status": "UNKNOWN",
+        "seconds": 10.014999999999418,
+        "witness": null,
+        "exact_valid": null
+      }
+    ],
+    "interruption": {
+      "engine": "scip",
+      "case": "subset-n48-bits48",
+      "status": "PROCESS_TIMEOUT",
+      "reason": "Did not return from optimize despite a 10s solver limit; stopped only the owned probe after 180s total process runtime.",
+      "process_elapsed": 244.50005388259888
+    }
+  },
+  "references": [
+    "https://github.com/scipopt/scip/blob/master/src/scip/heur_rens.c",
+    "https://github.com/scipopt/scip/blob/master/src/scip/heur_feaspump.c",
+    "https://github.com/scipopt/scip/blob/master/src/scip/heur_shiftandpropagate.c",
+    "https://github.com/google/or-tools/blob/stable/ortools/sat/feasibility_jump.cc",
+    "https://github.com/google/or-tools/blob/stable/ortools/sat/cp_model_expand.cc"
+  ],
+  "build": {
+    "offline_assemble": "PASS",
+    "source_jar_files_verified": 201,
+    "source_jar_sha256": "aedc8e797c89048303af4c942e1b46ff58221422ed432909acaa048c937b118b"
+  },
+  "remaining": {
+    "original_order_20m_unknown": 5,
+    "other_order_extra_unknown": "wide-79",
+    "large_sparse_equality_ids": [
+      "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3"
+    ],
+    "limitations": [
+      "Main-stage 20M gain not established.",
+      "Prototype failures and native timeouts are not infeasibility proofs.",
+      "No current live Minecraft execution test.",
+      "Audit H/J scope remains open."
+    ]
+  },
+  "independent_oracle_sources_sha256": "eef6772dfd2b232f1b87c596c9d3b7cc9b72e1bcebda155adc1d72c3031606c3"
+}
