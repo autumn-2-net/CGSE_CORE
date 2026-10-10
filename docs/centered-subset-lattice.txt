@@ -1,0 +1,175 @@
+Centered subset witnesses and retained block updates
+===================================================
+
+Scope
+-----
+Baseline: 9fd651db (2026-10-11).
+
+CountMeetInMiddle now gives a bounded lattice attempt to a certified scalar
+equality with 41..52 binary option coordinates, distinct nonzero absolute
+weights and at least as many coefficient bits as coordinates. These are
+admission hints for low-density subset instances, not feasibility facts.
+Repeated weights keep the quarter-representative matcher. Other dimensions,
+active inequalities and uncertified scalar arithmetic keep their existing
+paths. This adds an internal candidate method, not a general-purpose BKZ,
+SCIP/CP-SAT replacement or a new negative-proof rule.
+
+References consulted
+--------------------
+Coster, Joux, LaMacchia, Odlyzko, Schnorr and Stern, Improved Low-Density
+Subset Sum Algorithms, section 3:
+https://d-nb.info/1156214629/34
+
+fplll/fpylll's pedagogical block-reduction control flow:
+https://github.com/fplll/fpylll/blob/master/src/fpylll/algorithms/simple_bkz.py
+
+The first reference motivates centering binary coordinates; the second
+illustrates projected short-vector search followed by basis insertion and
+another reduction pass. CGSE implements these mathematical operations with
+its own integer/rational primitives, retained state and request accounting.
+The implementation is independently written; no external solver dependency
+or external implementation source is added to the production artifact.
+
+SCIP's exact knapsack path also considers dynamic programming:
+https://www.scipopt.org/doc/html/group__CONSHDLRS.php
+Its capacity-dependent table is not a useful replacement for this boundary's
+roughly 4.5e15 target. This is a conclusion about that representation/case,
+not a comparison against SCIP's complete portfolio.
+
+Representation and validation
+-----------------------------
+Negative coefficients are complemented and absolute weights sorted. A target
+above half the total weight is complemented again. The original coordinate
+permutation and both complement decisions are restored before publication.
+
+The basis contains (2*unit_i, 16*a_i, 0) and (1,...,1,16*target,1).
+A binary solution is represented by (2*x-1,0,-1). The final marker retains
+independent rows even when the target is exactly half the weight total.
+All basis arithmetic is BigInteger; Gram factors, LLL comparisons and block
+enumeration distances are ExactRational. Existing bounded precision applies.
+There is no floating-point acceptance or rounded quantity arithmetic here.
+
+LLL is followed by bounded projected block searches. A proposed combination
+is inserted only when it has a +/-1 coefficient, so the row replacement is
+unimodular. Other proposed vectors are declined. Local enumeration cutoffs,
+precision refusal and memory refusal only end this candidate attempt.
+
+Insertion rotates the unit row to the end of its block, changes its sign if
+needed, adds earlier rows, then rotates it back. Each operation updates the
+exact Gram factors. The unchanged prefix remains reduced. This avoids the
+initial prototype's complete Gram reconstruction and prefix LLL after every
+insertion. Every completed atomic operation and enumeration cursor survives
+an owner yield; polling a paused parent does no work. There is no cross-request
+basis cache or state shared between independently running candidates.
+
+Only vectors with +/-1 binary coordinates, zero residual and a +/-1 marker
+are considered. The restored mask must satisfy the original signed equality
+exactly. CountMeetInMiddle then restores original domain/group coordinates
+and validates all original constraints. Ordinary plan validation still follows.
+Failure of any local search is UNKNOWN, never global UNSAT.
+
+Budget and rejected variants
+----------------------------
+All constructor preparation, factor updates, enumeration and reconstruction
+use the request's existing accounting. Workspace is reserved before allocation
+and released before starting the original residue matcher. The request cap,
+operation weights, host adapter and ordinary tree fallback are unchanged.
+
+The table-only scout estimate was not sufficient after adding another numeric
+attempt. A lattice search could use up that local scout grant before the old
+matcher ran. The final estimate includes both costs and bounded dispatch
+headroom, and caps their owner grant at the existing two-thirds request bound.
+The lattice receives at most half the estimated matching work and one quarter
+of the remaining request work. Its refusal/limit falls through to the original
+matcher. This changes allocation within a request, not its total work limit.
+
+The first reconstruction-based prototype gained 25 generated records but lost
+four prior successes. Incremental factors recovered those losses; extending
+the family to 50/52 coordinates then exposed two grant-starvation losses.
+Both intermediate variants were rejected. The final two-cost allocation keeps
+every old success in the tested families. It gives up some intermediate new
+gains to leave the established matcher an opportunity. This is not a claim
+that every possible finite-budget ordering has identical coverage.
+
+Independent checks
+------------------
+CountSubsetLatticeTest enumerates small original subsets independently; tests
+signed weights, zero/impossible neighbors and half-total rank; restores large
+100-bit offsets through the parent matcher; compares whole and 37-work slices;
+and checks memory refusal, local accounting and cancellation.
+An integer-dot-product oracle compares retained factors with L*D*L^T during
+partial block insertion, without using the production swap/add recurrences.
+The complement-specific regression uses two forced-zero repeated high weights
+to retain its original reflection coverage after adding the distinct-weight
+scout; its assertions and original-coordinate checks remain mandatory.
+
+Local negative controls remove the marker, leave a factor stale, corrupt the
+coordinate mapping and omit request charges. Each fails the corresponding
+oracle. These mutations and experiment output stay in ignored build paths.
+
+Results and reproduction
+------------------------
+Final source fingerprints, exact work totals, outcomes and independent timing
+are recorded in tests/provenance/centered-subset-lattice-20261011.json.
+
+The canonical 20M comparison covers 274 count models in three full-corpus
+orders (822 records), plus 72 parity neighbors. All three orders of the known
+48-bit subset boundary move from UNKNOWN to verified SAT at 1,703,445 /
+1,703,541 / 1,703,685 charged work. PASS rises from 787 to 790; 14 records
+remain UNKNOWN and 18 conversions unsupported. No prior canonical conclusion
+is lost. Total count work changes from 950,982,158 to 896,113,465; parity
+results and work are identical. The four original-order larger sparse-equality
+cases remain UNKNOWN; this scalar-specific method does not claim to solve them.
+
+Two deterministic generated campaigns cover distinct signed weights, binary
+domains with large offsets, row reversal and permutations. After deduplicating
+their overlap, there are 120 records: verified SAT rises from 41 to 77, with
+36 gains and no lost old successes at the same 20M request cap. The remaining
+43 records are still UNKNOWN, including arithmetic/admission boundaries;
+their planted SAT truth is not rewritten. Work-cap gains are separate from
+the direct timing campaign's explicitly larger, equal 80M cap.
+
+Seventy-seven standard programs pass. All 2,151 paired graph requests retain
+results and charged search/compilation work across cold, warm and replaced
+catalogs. Nineteen complete-catalog captures pass with four workers and the
+existing explicit 2x per-account allowance. Offline assembly passes, and all
+204 production Java files match the source jar byte for byte.
+
+The direct timing campaign uses sequential BC/CB order, two warmup batches and
+six measured three-model batches per revision, without concurrent regression
+jobs. Both revisions obtain the same original-coordinate witnesses at an equal
+80M cap. Median batch time is 2,273.41 ms -> 1,592.00 ms (-29.97%); charged
+work is 146,290,368 -> 4,555,256 (-96.89%). Peak reserved child/parent workspace
+is 17,067,266 -> 9,934,418 bytes. These are narrow retained-matcher results,
+not a whole-planner speed claim or a production cap increase.
+
+There is a material allocation tradeoff: cumulative thread allocation per
+three-case batch rises from 51,317,836 to 2,662,385,052 bytes because exact
+rational operations create temporary objects. This is cumulative allocation,
+not live heap or RSS. All three cases also pass in a separate 64 MiB heap JVM,
+but that does not eliminate GC cost or establish host-wide memory behavior.
+Further rational-allocation optimization remains open; lower reserved workspace
+must not be advertised as a general reduction in memory cost.
+
+Commands (supply --java-home for the local JDK 17):
+
+  python tests/run.py --suite standard --output build/embedding-balanced-standard
+  python tests/benchmarks/compare_count_models.py --baseline 9fd651db
+      --permutations 3 --parity --output build/embedding-balanced-comparison
+  python tests/benchmarks/compare_subset_lattice.py --baseline 9fd651db
+      --seeds 12 --permutations 3 --output build/embedding-balanced-family
+  python tests/benchmarks/compare_subset_lattice.py --baseline 9fd651db
+      --seeds 12 --permutations 3 --large --output build/embedding-balanced-large
+  python tests/benchmarks/compare_planning.py --baseline 9fd651db --permutations 3
+      --milliseconds 0 --work 20000000 --modes accounts --require-same-work
+      --output build/embedding-balanced-planning
+  python tests/datasets/regressions.py --workers 4 --expanded-budget
+      --output build/embedding-balanced-captures
+  python tests/benchmarks/compare_subset_matching.py --baseline 9fd651db
+      --work 80000000 --warmup 2 --repetitions 3 --cycles 2
+      --output build/embedding-timing
+
+The capture suite replays previously exported complete catalogs; it is not a
+new live AE/server session. Wider numeric/graph admission, native finite-domain
+holes, and the audit's remaining host-residency/benefit attribution gaps stay
+open. No player saves, private external cases or unrelated host code are added.

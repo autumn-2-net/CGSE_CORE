@@ -109,7 +109,10 @@ public final class CountComplementJoinTest {
     }
 
     private static void retainedCoordinates() {
-        int n = 41;
+        // Two equal weights above the requested sum are forced to zero.
+        // They preserve the unique oracle while keeping this specifically a
+        // complement-table test after adding the distinct-weight lattice scout.
+        int n = 42;
         BigInteger[] low = new BigInteger[n], high = new BigInteger[n];
         var terms = new LinkedHashMap<Integer, BigInteger>();
         var reverse = new LinkedHashMap<Integer, BigInteger>();
@@ -118,10 +121,10 @@ public final class CountComplementJoinTest {
             low[i] = BigInteger.ONE.shiftLeft(100 + i % 3).add(BigInteger.valueOf(i - 20));
             if (i % 3 == 0) low[i] = low[i].negate();
             high[i] = low[i].add(BigInteger.ONE);
-            BigInteger a = BigInteger.ONE.shiftLeft(i);
+            BigInteger a = BigInteger.ONE.shiftLeft(Math.min(i, 40));
             terms.put(i, a);
             reverse.put(i, a.negate());
-            target = target.add(a.multiply(i == 0 || i % 5 == 0 ? high[i] : low[i]));
+            target = target.add(a.multiply(i < 40 && (i == 0 || i % 5 == 0) ? high[i] : low[i]));
         }
         var rows = List.of(new ExactLinearProgram.Constraint(terms, target),
                 new ExactLinearProgram.Constraint(reverse, target.negate()));
@@ -143,7 +146,7 @@ public final class CountComplementJoinTest {
                 check(budget.diagnostics().contains("reused=1"), "Retained test missed reflection");
                 BigInteger sum = BigInteger.ZERO;
                 for (int i = 0; i < n; i++) {
-                    check(answer[i].equals(i == 0 || i % 5 == 0 ? high[i] : low[i]), "Wrong restored coordinate");
+                    check(answer[i].equals(i < 40 && (i == 0 || i % 5 == 0) ? high[i] : low[i]), "Wrong restored coordinate");
                     sum = sum.add(terms.get(i).multiply(answer[i]));
                 }
                 check(sum.equals(target), "Restored counts fail the original equation");

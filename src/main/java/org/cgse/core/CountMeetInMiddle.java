@@ -93,6 +93,10 @@ final class CountMeetInMiddle implements CountContinuation {
     private Enumeration enumeratingLeft, enumeratingRight;
     private ScalarTable scalar;
     private CountResidueJoin residueJoin;
+    private CountSubsetLattice subsetLattice;
+    private CountResidueJoin.Shape residueShape;
+    private long[] residueValues;
+    private long latticeProgress;
     private long entryBytes;
     private Entry[] ranged;
     private BigInteger[] queryLow, queryHigh;
@@ -128,7 +132,7 @@ final class CountMeetInMiddle implements CountContinuation {
                 if ((left > MAX_STATES || right > MAX_STATES) && (count > 52 || sizes[count - 1] != 2)) return 0;
             }
             boolean weighted = false;
-            int bits = 1, activeRows = 0;
+            int bits = 1, activeRows = 0, scalarWeightBits = 0;
             long terms = 0;
             Set<Map<Integer, BigInteger>> dimensionsSeen = new HashSet<>();
             for (var row : rows) {
@@ -144,6 +148,7 @@ final class CountMeetInMiddle implements CountContinuation {
                     maximum = maximum.add(coefficient.multiply(coefficient.signum() > 0 ? upper[id] : lower[id]));
                     if (lower[id].equals(upper[id])) continue;
                     int width = coefficient.abs().bitLength();
+                    scalarWeightBits = Math.max(scalarWeightBits, width);
                     bits = Math.max(bits, width + upper[id].subtract(lower[id]).bitLength() + 7);
                     rowWeighted |= width > 1;
                 }
@@ -179,8 +184,17 @@ final class CountMeetInMiddle implements CountContinuation {
             long scalarSpan = activeRows == 1 && sizes[count - 1] == 2 ? scalarSpan(rows, lower, upper, budget) : 0;
             if (scalarSpan > left + right && (left > MAX_STATES || right > MAX_STATES)) {
                 var shape = CountResidueJoin.Shape.create(count, scalarSpan);
-                if (shape != null && shape.bytes() <= budget.availableBytes() / 4 && shape.work() <= budget.remainingWork() / 2)
+                if (shape != null && shape.bytes() <= budget.availableBytes() / 4 && shape.work() <= budget.remainingWork() / 2) {
+                    if (scalarWeightBits >= count) {
+                        // Both attempts belong to the same scout. Charging a
+                        // lattice attempt against a table-only estimate could
+                        // end the scout before its original matcher ever ran.
+                        long lattice = latticeWork(shape, budget.remainingWork());
+                        return Math.min(budget.remainingWork() / 3 * 2,
+                                shape.work() + lattice + Math.max(262144, lattice / 4));
+                    }
                     return shape.work();
+                }
             }
             if (left > MAX_STATES || right > MAX_STATES) return 0;
             if (scalarSpan > left + right) {
@@ -203,6 +217,12 @@ final class CountMeetInMiddle implements CountContinuation {
         } finally {
             budget.release(bytes);
         }
+    }
+
+    private static long latticeWork(CountResidueJoin.Shape shape, long remaining) {
+        // Preserve most of the owner's grant for the existing exact matcher.
+        // Division before multiplication also keeps oversized user caps safe.
+        return Math.min(shape.work() / 2, remaining / 4);
     }
 
     private static long scalarSpan(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
@@ -268,6 +288,27 @@ final class CountMeetInMiddle implements CountContinuation {
         }
         try {
             charge();
+            if (subsetLattice != null && phase == 1) {
+                long started = subsetLattice.work();
+                boolean done;
+                try { done = subsetLattice.step(); }
+                finally { work += subsetLattice.work() - started; }
+                if (!done) return false;
+                long candidate = subsetLattice.candidate();
+                latticeProgress += subsetLattice.progress();
+                subsetLattice.close();
+                subsetLattice = null;
+                if (candidate < 0) residueJoin = new CountResidueJoin(residueValues, compactGoalHigh[0], budget, residueShape);
+                else {
+                    counts = lower.clone();
+                    decode((int) (candidate & ((1L << split) - 1)), 0, split);
+                    decode((int) (candidate >>> split), split, domains.size());
+                    rowIndex = 0;
+                    phase = 3;
+                }
+                residueValues = null;
+                return false;
+            }
             if (residueJoin != null && phase == 1) {
                 long started = residueJoin.work();
                 boolean done;
@@ -595,7 +636,18 @@ final class CountMeetInMiddle implements CountContinuation {
             }
             var shape = CountResidueJoin.Shape.create(values.length, span);
             if (shape == null) return finish(false, "residue_shape_limit");
-            residueJoin = new CountResidueJoin(values, compactGoalHigh[0], budget, shape);
+            long started = budget.threadWork();
+            boolean lattice;
+            try { lattice = CountSubsetLattice.eligible(values, budget); }
+            finally { work += budget.threadWork() - started; }
+            if (lattice) {
+                // Keep this numeric attempt within the existing matching grant.
+                // Its decline/limit falls through to the retained exact matcher.
+                residueValues = values;
+                residueShape = shape;
+                subsetLattice = new CountSubsetLattice(values, compactGoalHigh[0], budget,
+                        latticeWork(shape, budget.remainingWork()));
+            } else residueJoin = new CountResidueJoin(values, compactGoalHigh[0], budget, shape);
             phase = 1;
             return false;
         }
@@ -1048,6 +1100,7 @@ final class CountMeetInMiddle implements CountContinuation {
 
     /** Setup is paid; bounded hash probes or original-row validation are live. */
     boolean probing() {
+        if (subsetLattice != null && !complete && phase == 1) return subsetLattice.progress() > 0;
         if (residueJoin != null && !complete && phase == 1) return residueJoin.probing();
         return !complete && phase >= 2 && phase <= 3 && (equalities || pointWidths != null);
     }
@@ -1055,6 +1108,7 @@ final class CountMeetInMiddle implements CountContinuation {
     /** Scheduling estimate for an admitted equality table, never a proof bound. */
     long continuationWork() {
         if (complete || costProbe || !equalities || phase < 1 || phase > 2) return 0;
+        if (subsetLattice != null) return subsetLattice.remainingWork();
         if (residueJoin != null) return residueJoin.continuationWork();
         // Signature generation and complement lookup both scale with the
         // projected table dimensions. Keep one small turn for prefix overhead.
@@ -1072,7 +1126,8 @@ final class CountMeetInMiddle implements CountContinuation {
     public boolean paused() { return paused; }
     public long work() { return work; }
     public long progress() {
-        return signatures + probes + (residueJoin == null ? 0 : residueJoin.progress());
+        return signatures + probes + latticeProgress + (subsetLattice == null ? 0 : subsetLattice.progress()) +
+                (residueJoin == null ? 0 : residueJoin.progress());
     }
     public boolean matches(List<ExactLinearProgram.Constraint> rows, BigInteger[] low, BigInteger[] high) {
         return original.equals(rows) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
@@ -1092,6 +1147,9 @@ final class CountMeetInMiddle implements CountContinuation {
         scalar = null;
         if (residueJoin != null) residueJoin.close();
         residueJoin = null;
+        if (subsetLattice != null) subsetLattice.close();
+        subsetLattice = null;
+        residueValues = null;
         rows.clear();
         budget.release(memory);
         memory = 0;

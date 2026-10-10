@@ -1,0 +1,503 @@
+{
+  "schema": "cgse-centered-subset-lattice-v1",
+  "date": "2026-10-11",
+  "baseline": "9fd651db2c97a1799d99019a29b7d83539c7b9c5",
+  "candidate_source_sha256": "986113ae472ab78f164eba6ea3bec9a71b1ecfb52d2577ea503baa89704b2a07",
+  "production_java_files": 204,
+  "scope": "Bounded candidate-only centered lattice in existing scalar matching; exact retained factor updates and joint local scout costing. Request caps, operation weights, compiler semantics, negative-proof rules and host/fallback roles unchanged.",
+  "canonical_20m": {
+    "cases": 822,
+    "work_cap": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "permutations": 3,
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "a144f6e2269fad4c62ca5f86a0e185380d954f0feba4a9d8282462ecec887f10",
+    "outcomes": {
+      "baseline": {
+        "PASS": 787,
+        "UNRESOLVED": 17,
+        "UNSUPPORTED": 18
+      },
+      "candidate": {
+        "PASS": 790,
+        "UNRESOLVED": 14,
+        "UNSUPPORTED": 18
+      }
+    },
+    "work": {
+      "baseline": 950982158,
+      "candidate": 896113465
+    },
+    "gained": [
+      "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=1",
+      "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=2"
+    ],
+    "lost": [],
+    "contradictions": [],
+    "new_boundary": {
+      "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": [
+        "PASS",
+        "SAT",
+        "work=1703445"
+      ],
+      "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=1": [
+        "PASS",
+        "SAT",
+        "work=1703541"
+      ],
+      "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=2": [
+        "PASS",
+        "SAT",
+        "work=1703685"
+      ]
+    },
+    "original_order_unknown": [
+      "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3"
+    ],
+    "note": "Main integer-count stage, not whole GraphPlanner. UNKNOWN/unsupported never counted as negative proofs."
+  },
+  "parity": {
+    "cases": 72,
+    "identical_results_and_work": true,
+    "total_work_per_revision": 0
+  },
+  "generated_families": {
+    "generator": "tests/benchmarks/compare_subset_lattice.py",
+    "seeds_per_campaign": 12,
+    "permutations": 3,
+    "work_cap": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "campaigns": [
+      {
+        "large": false,
+        "records": 72,
+        "input_sha256": "45cb6a717989d85922d579f39e7f2e5f0bb9cec2207693e7feb242fa1f9cd5ba",
+        "harness_sha256": "1227269c5204d01436397c67fae24be799956501385674c506e03cd052973e5f",
+        "gained": 28,
+        "lost": 0,
+        "outcomes": {
+          "baseline": {
+            "PASS": 30,
+            "UNRESOLVED": 42
+          },
+          "candidate": {
+            "PASS": 58,
+            "UNRESOLVED": 14
+          }
+        }
+      },
+      {
+        "large": true,
+        "records": 72,
+        "input_sha256": "b3ac67781bc1041a75d96dab85a8201ecefb379d4e7ff49aeed13004f0a80fa2",
+        "harness_sha256": "1227269c5204d01436397c67fae24be799956501385674c506e03cd052973e5f",
+        "gained": 17,
+        "lost": 0,
+        "outcomes": {
+          "baseline": {
+            "PASS": 20,
+            "UNRESOLVED": 52
+          },
+          "candidate": {
+            "PASS": 37,
+            "UNRESOLVED": 35
+          }
+        }
+      }
+    ],
+    "unique_records": 120,
+    "unique_outcomes": {
+      "baseline": {
+        "PASS": 41,
+        "UNRESOLVED": 79
+      },
+      "candidate": {
+        "PASS": 77,
+        "UNRESOLVED": 43
+      }
+    },
+    "unique_gained": [
+      "subset-lattice-n44-bits44-s1/order=1",
+      "subset-lattice-n44-bits44-s1/order=2",
+      "subset-lattice-n44-bits52-s1/order=0",
+      "subset-lattice-n44-bits52-s1/order=1",
+      "subset-lattice-n44-bits52-s1/order=2",
+      "subset-lattice-n46-bits46-s2/order=0",
+      "subset-lattice-n46-bits46-s2/order=1",
+      "subset-lattice-n46-bits46-s2/order=2",
+      "subset-lattice-n46-bits54-s2/order=1",
+      "subset-lattice-n42-bits42-s4/order=1",
+      "subset-lattice-n44-bits44-s5/order=0",
+      "subset-lattice-n44-bits52-s5/order=0",
+      "subset-lattice-n44-bits52-s5/order=2",
+      "subset-lattice-n46-bits46-s6/order=2",
+      "subset-lattice-n46-bits54-s6/order=0",
+      "subset-lattice-n46-bits54-s6/order=1",
+      "subset-lattice-n46-bits54-s6/order=2",
+      "subset-lattice-n48-bits48-s7/order=0",
+      "subset-lattice-n48-bits48-s7/order=1",
+      "subset-lattice-n48-bits48-s7/order=2",
+      "subset-lattice-n42-bits50-s8/order=0",
+      "subset-lattice-n44-bits44-s9/order=2",
+      "subset-lattice-n44-bits52-s9/order=0",
+      "subset-lattice-n44-bits52-s9/order=1",
+      "subset-lattice-n46-bits54-s10/order=2",
+      "subset-lattice-n48-bits48-s11/order=0",
+      "subset-lattice-n48-bits48-s11/order=1",
+      "subset-lattice-n48-bits48-s11/order=2",
+      "subset-lattice-n44-bits52-s7/order=0",
+      "subset-lattice-n44-bits52-s7/order=1",
+      "subset-lattice-n44-bits52-s7/order=2",
+      "subset-lattice-n46-bits54-s8/order=0",
+      "subset-lattice-n46-bits54-s8/order=1",
+      "subset-lattice-n50-bits55-s10/order=0",
+      "subset-lattice-n50-bits55-s10/order=1",
+      "subset-lattice-n50-bits55-s10/order=2"
+    ],
+    "unique_lost": [],
+    "note": "Two campaigns overlap on 24 records. All planted-SAT inputs and expectations retained, including unresolved arithmetic/admission limits."
+  },
+  "graph_comparison": {
+    "paired_requests": 2151,
+    "workers": 1,
+    "work_cap": 20000000,
+    "milliseconds": 0,
+    "cache_states": [
+      "cold",
+      "warm",
+      "replaced"
+    ],
+    "require_same_work": true,
+    "fixture_sha256": "4f4f66ab40bc43f18da4bf33225e764abb083c965a88fae01d313cb6089859bd",
+    "harness_sha256": "4e8a08d7cee91e37920137cf353e7e17059483fdc23440ca248e749f65b8e2dc",
+    "groups": [
+      {
+        "revision": "baseline",
+        "cache": "cold",
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "total_search": 440638086,
+        "total_compilation": 20657583
+      },
+      {
+        "revision": "baseline",
+        "cache": "warm",
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "total_search": 439997000,
+        "total_compilation": 17523399
+      },
+      {
+        "revision": "baseline",
+        "cache": "replaced",
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "total_search": 440604707,
+        "total_compilation": 20657583
+      },
+      {
+        "revision": "candidate",
+        "cache": "cold",
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "total_search": 440638086,
+        "total_compilation": 20657583
+      },
+      {
+        "revision": "candidate",
+        "cache": "warm",
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "total_search": 439997000,
+        "total_compilation": 17523399
+      },
+      {
+        "revision": "candidate",
+        "cache": "replaced",
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "total_search": 440604707,
+        "total_compilation": 20657583
+      }
+    ],
+    "note": "All paired results and charged work equal; concurrent functional run is not timing evidence."
+  },
+  "standard": {
+    "programs": 77,
+    "outcomes": {
+      "PASS": 77
+    }
+  },
+  "negative_controls": {
+    "zero-marker": {
+      "exit_code": 1,
+      "reason": "Exception in thread \"main\" java.lang.AssertionError: Half-total embedding lost rank or the valid subset",
+      "source_sha256": "611fb1e26bdccfb5c87e0bcdce21dba7a856bb5260795bfbf4e6d0cd23dd60ec"
+    },
+    "stale-factor": {
+      "exit_code": 1,
+      "reason": "Exception in thread \"main\" java.lang.AssertionError: Stale factor during retained block insertion",
+      "source_sha256": "5f504023dad0325b76b29696f8f9b1dc160834fd9b452fe1cf14d7e6fd6e7538"
+    },
+    "wrong-coordinate": {
+      "exit_code": 1,
+      "reason": "Exception in thread \"main\" java.lang.AssertionError: Finite SAT/UNSAT oracle coverage missing",
+      "source_sha256": "4778f9a36c6922bdea18b284b1380f56551810595d8c6c296996ca8853699b62"
+    },
+    "uncharged": {
+      "exit_code": 1,
+      "reason": "Exception in thread \"main\" java.lang.AssertionError: Local limit was expanded or numeric work went uncharged",
+      "source_sha256": "37cf76b019e5dbebbc64eb2bd39718d03a8e33fdec9035889b63d736f1c63e13"
+    }
+  },
+  "capture_replays": {
+    "requests": 19,
+    "workers": 4,
+    "expanded_budget": true,
+    "per_account_multiplier": 2,
+    "manual_recipes": 5903,
+    "extra_recipes": 62284,
+    "stock_keys": 2670,
+    "campaigns": {
+      "emitter-residual-progress": {
+        "requests": 9,
+        "expected_rows": 9,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 9
+        },
+        "results": {
+          "FEASIBLE": 9
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      },
+      "miracle-funded-cycle-entry": {
+        "requests": 4,
+        "expected_rows": 4,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 4
+        },
+        "results": {
+          "FEASIBLE": 4
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      },
+      "miracle-quantity-source": {
+        "requests": 3,
+        "expected_rows": 3,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 3
+        },
+        "results": {
+          "FEASIBLE": 3
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      },
+      "miracle-seed-source": {
+        "requests": 3,
+        "expected_rows": 3,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 3
+        },
+        "results": {
+          "FEASIBLE": 3
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      }
+    },
+    "note": "Previously captured full catalogs, not a new live server/AE execution test."
+  },
+  "isolated_timing": {
+    "baseline_revision": "9fd651db2c97a1799d99019a29b7d83539c7b9c5",
+    "harness_sha256": "b6a87aaeb4709a7fb9dd4f120cd1aa90f006e197cd781c08c88710015cf26584",
+    "input_sha256": "ba7fb6d1e63df63bea45cb4b0d8daaff2f3cd8803f023751955f025bcf7ac343",
+    "work": 80000000,
+    "memory_bytes": 268435456,
+    "milliseconds": 0,
+    "workers": 1,
+    "warmup": 2,
+    "repetitions": 3,
+    "cycles": 2,
+    "models_per_batch": 3,
+    "scope": "Direct retained matching, explicit larger equal cap so both revisions reach a witness. Not whole-planner timing, not a default-budget increase; cumulative allocation and reserved workspace are not RSS.",
+    "baseline": {
+      "cases": {
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": {
+          "work": "63370724",
+          "witness": "[0| 0| 1| 1| 0| 0| 1| 1| 1| 0| 1| 0| 0| 0| 1| 1| 0| 0| 0| 0| 1| 1| 0| 1| 1| 1| 1| 0| 1| 1| 0| 0| 1| 0| 0| 1| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 0| 1]"
+        },
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=1": {
+          "work": "16535971",
+          "witness": "[0| 0| 1| 0| 0| 1| 1| 1| 0| 0| 1| 0| 0| 0| 1| 0| 0| 1| 0| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 1| 1| 1| 0| 1| 1| 0| 1| 0| 1| 0| 1| 0| 0| 1| 0| 1| 1| 1]"
+        },
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=2": {
+          "work": "66383673",
+          "witness": "[1| 1| 0| 1| 0| 0| 0| 1| 1| 1| 0| 1| 1| 1| 0| 0| 1| 1| 0| 0| 1| 1| 1| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 0| 0| 1| 0| 0| 1| 0| 0| 1| 0| 0| 1| 1| 0| 0]"
+        }
+      },
+      "batches": [
+        {
+          "nanos": 2341938600,
+          "allocated_bytes": 51317680,
+          "work": 146290368
+        },
+        {
+          "nanos": 2180854500,
+          "allocated_bytes": 51317992,
+          "work": 146290368
+        },
+        {
+          "nanos": 2179961800,
+          "allocated_bytes": 51318048,
+          "work": 146290368
+        },
+        {
+          "nanos": 2319066400,
+          "allocated_bytes": 51317680,
+          "work": 146290368
+        },
+        {
+          "nanos": 2265395400,
+          "allocated_bytes": 51317680,
+          "work": 146290368
+        },
+        {
+          "nanos": 2281432000,
+          "allocated_bytes": 51318048,
+          "work": 146290368
+        }
+      ],
+      "median_batch": {
+        "nanos": 2273413700.0,
+        "allocated_bytes": 51317836.0,
+        "work": 146290368.0
+      },
+      "max_peak_reserved_bytes": 17067266
+    },
+    "candidate": {
+      "cases": {
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": {
+          "work": "1518424",
+          "witness": "[0| 0| 1| 1| 0| 0| 1| 1| 1| 0| 1| 0| 0| 0| 1| 1| 0| 0| 0| 0| 1| 1| 0| 1| 1| 1| 1| 0| 1| 1| 0| 0| 1| 0| 0| 1| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 0| 1]"
+        },
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=1": {
+          "work": "1518354",
+          "witness": "[0| 0| 1| 0| 0| 1| 1| 1| 0| 0| 1| 0| 0| 0| 1| 0| 0| 1| 0| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 1| 1| 1| 0| 1| 1| 0| 1| 0| 1| 0| 1| 0| 0| 1| 0| 1| 1| 1]"
+        },
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=2": {
+          "work": "1518478",
+          "witness": "[1| 1| 0| 1| 0| 0| 0| 1| 1| 1| 0| 1| 1| 1| 0| 0| 1| 1| 0| 0| 1| 1| 1| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 0| 0| 1| 0| 0| 1| 0| 0| 1| 0| 0| 1| 1| 0| 0]"
+        }
+      },
+      "batches": [
+        {
+          "nanos": 1608892600,
+          "allocated_bytes": 2663004864,
+          "work": 4555256
+        },
+        {
+          "nanos": 1593036300,
+          "allocated_bytes": 2663004864,
+          "work": 4555256
+        },
+        {
+          "nanos": 1590965600,
+          "allocated_bytes": 2663005184,
+          "work": 4555256
+        },
+        {
+          "nanos": 1612814800,
+          "allocated_bytes": 2661764664,
+          "work": 4555256
+        },
+        {
+          "nanos": 1586797400,
+          "allocated_bytes": 2661764664,
+          "work": 4555256
+        },
+        {
+          "nanos": 1583475600,
+          "allocated_bytes": 2661765240,
+          "work": 4555256
+        }
+      ],
+      "median_batch": {
+        "nanos": 1592000950.0,
+        "allocated_bytes": 2662385052.0,
+        "work": 4555256.0
+      },
+      "max_peak_reserved_bytes": 9934418
+    }
+  },
+  "heap_probe": {
+    "cases": 3,
+    "max_heap_bytes": 67108864,
+    "cap": 80000000,
+    "warmup": 0,
+    "repetitions": 1,
+    "all_original_witnesses_verified": true,
+    "max_reserved_bytes": 9934418,
+    "note": "Functional JVM heap check only; cumulative thread allocation is not live heap/RSS."
+  },
+  "assembly": {
+    "command": "gradlew.bat --offline assemble",
+    "result": "PASS",
+    "source_jar_byte_identical_files": 204
+  },
+  "remaining": "Four original sparse-equality limits, other finite-budget generated/ordering limits, temporary rational allocation, broader admission, native domain holes and audit host-residency/benefit attribution.",
+  "local_artifacts": [
+    "build/embedding-balanced-comparison",
+    "build/embedding-balanced-family",
+    "build/embedding-balanced-large",
+    "build/embedding-balanced-standard",
+    "build/embedding-balanced-planning",
+    "build/embedding-balanced-captures",
+    "build/embedding-negative",
+    "build/embedding-timing"
+  ],
+  "rejected_experiments": [
+    {
+      "artifact": "build/embedding-new-family",
+      "reason": "Rebuilding Gram factors: 25 gains but 4 lost old successes."
+    },
+    {
+      "artifact": "build/embedding-final-large",
+      "reason": "Incremental factors with table-only scout grant: 24 gains but 2 lost old successes."
+    }
+  ]
+}
