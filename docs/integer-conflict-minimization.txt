@@ -1,0 +1,140 @@
+Auxiliary integer conflict minimization (2026-10-10)
+===================================================
+
+This follows 3a75f505. Integer LCG previously stopped at its first asserting
+conflict. Some lower-level bounds in that conflict are already implied by the
+other retained bounds. Keeping them lengthens learned clauses and can repeat
+decisions which a stronger learned clause would exclude.
+
+Algorithm and scope
+-------------------
+The direct check is inspired by MinimizeConflictSimple in CP-SAT:
+https://github.com/google/or-tools/blob/stable/ortools/sat/sat_solver.cc
+This is an independently implemented Java integer-bound adaptation, not copied
+C++ source. CGSE's Boolean/PB arm already has its own minimization.
+
+After first-UIP resolution, the existing auxiliary LCG arm tries removing
+nonasserting bounds. A bound is redundant only if every antecedent in its frozen
+reason is either a root consequence or entailed by a different retained bound.
+Variable identity is insufficient: the direction and numeric strength must
+match. Removal is sequential; a removed bound cannot justify a later removal.
+The asserting literal stays, and backjump levels/watches use the final clause.
+Imported/learned constraints retain their existing proof verification path.
+
+Only integer domains wider than two values, including unbounded domains, enable
+this optional work. Shifted two-value domains are identified exactly. The primary
+and structural/view LCG paths retain their previous clause strategy. This reuses
+an existing portfolio arm rather than adding more workers or search budget.
+
+The distinction matters empirically: shorter clauses do not make every finite-
+budget search trajectory better. The default policy is not a per-case lookup;
+all auxiliary LCG instances use the same rule. Retained searches can still be
+shared only under the existing original-model/domain/coordinate identity checks.
+
+Budget, memory and continuation
+------------------------------
+The optional scan uses at most the accumulated 1/32 share of LCG work, with a
+2,048-unit limit per conflict and 256 units per candidate. Existing scan and
+integer arithmetic charges apply; no request cap is replenished. A refused or
+unfinished check retains the original literal. No recursive implication walk
+is added to the atomic conflict-analysis step.
+
+Scratch reservation is 512 + 16 * conflict_size bytes. Lazy row explanations
+with at most 256 terms reserve 96 bytes per term before construction. A failed
+optional reservation does not terminate the main search. Complete explanations
+are charged to the original trail entry and reused by later analysis; unfinished
+ones are discarded and never cached. Backtracking/close releases their memory.
+The ordinary mandatory reason builder keeps its original complete-scan behavior.
+
+Local handoffs occur between existing atomic operations. The frontier never
+crosses a trail mutation; cached reasons use the original frozen trail prefix.
+Diagnostics expose actual minimization work and the number of removed bounds.
+
+Independent safety checks
+-------------------------
+CountLcgMinimizeTest constructs valid implication trails and independently
+enumerates 54 finite boxes, including both bound directions, weak/opposite
+bounds and origins at zero and +/-2^90. It checks equivalence on every original
+model witness. This includes 18 scratch refusals and 18 explanation-allocation
+refusals; all reservations return to zero after close.
+
+An unrepresented-antecedent case and a 128-input partial explanation protect
+against unsound deletion. The latter is retried after replenishing the local
+opportunity with real charged work, checking that no partial cache is trusted.
+Two negative controls deliberately weaken the numeric comparison or cache an
+unfinished explanation; each fails its corresponding oracle.
+
+120 signed finite-domain models are independently enumerated (4^6 assignments
+each), then solved with minimization enabled across 127 worker/coordinator
+handoffs. Five actual conflict-bound removals occur in these searches. Every
+conclusion and witness is checked; all 120 proof certificates are serialized,
+read back and independently verified. The original stable proof caps remain.
+
+Rejected experiments
+---------------------
+SCIP's dual-proof tightening code also informed a separate rounding experiment:
+https://github.com/scipopt/scip/blob/master/src/scip/conflict_dualproofanalysis.c
+The prototype added complement/floor cuts to failed aggregation attempts. It
+lost six previously conclusive ordering cases, and a known UNSAT model that the
+baseline proves within 80M stayed UNKNOWN. It is not in production.
+
+Recursive integer minimization and global direct minimization were also tested.
+The former regressed wide-52/order-1; the latter regressed wide-68/order-1. Both
+are excluded. The auxiliary-only direct strategy retains those conclusions in
+the targeted comparison while solving wide-79/order-0. All three cases are now
+explicit default-budget boundaries. Other orders of wide-79 remain measured
+UNKNOWN, not omitted or promoted to an infeasibility result.
+
+Equal-budget results
+--------------------
+Baseline 3a75f505 and the final auxiliary-only implementation use identical
+20M work caps, 256 MiB reservations, one worker and no wall deadline. Across
+274 canonical models in three full-corpus orders:
+
+                          Baseline      Candidate
+  Conclusive PASS             759            760
+  UNKNOWN                      45             44
+  Unsupported conversion       18             18
+
+There are no lost conclusions or SAT/UNSAT contradictions. All 72 parity and
+neighbor verdicts are unchanged. wide-79/order-0 now yields an independently
+checked count witness and executable plan in 5,826,601 work units; the baseline
+uses 19,994,554 and remains UNKNOWN. Its other two orders remain UNKNOWN.
+Original-order unresolved models drop from 15 to 14 (seven independently known
+SAT and seven known UNSAT). Six unsupported conversions remain in each order.
+
+Total recorded work across all 822 runs, including unresolved runs, falls from
+1,340,926,800 to 1,317,693,718 (1.73%). Individual searches can cost more; this
+is neither a wall-clock speed claim nor a change to default request caps.
+
+All 66 standard checks pass, including the three existing 80M lattice boundaries
+under their explicitly recorded caps. The strengthened minimization oracle also
+passes its separate rerun. All 3,117 graph checks (239 curated plus 800 planted,
+each in three orders) and 57 captured requests pass. Capture replay uses full
+stock, 5,903 manual recipes and 62,284 extracted recipes in one-worker,
+four-worker base-budget and four-worker expanded-budget modes.
+
+Offline assembly passes, with all 201 production Java files matching the source
+JAR. Input/source/harness/artifact hashes and the remaining limits are recorded
+in tests/provenance/integer-conflict-minimization-20261010.json.
+
+Reproduction (JDK 17)
+---------------------
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline 3a75f505 --permutations 3 --parity
+    --output build/lcg-minimize-comparison --timeout 1800
+
+  python tests/run.py --java-home JDK17 --suite standard
+    --output build/lcg-minimize-standard --timeout 600
+
+The pinned corpus_order boundaries use the complete canonical manifest's
+row/column/term shuffle stream. Shuffling only a filtered subset is a different
+experiment. Raw rejected prototypes and logs stay under ignored build/ paths.
+
+Remaining scope
+---------------
+This does not remove order sensitivity, close general numeric/graph admission,
+or claim SCIP/CP-SAT equivalence. Host-residency accounting (audit H) and complete
+end-to-end attribution (J) remain separate work. Captured-catalog replay is
+offline evidence, not a new live AE/server integration test. The host adapter,
+graph front-end, ordinary fallback role and default request caps are unchanged.

@@ -190,7 +190,8 @@ final class CountLcg implements AutoCloseable {
     private List<ExactLinearProgram.Constraint> rows;
     private final BigInteger[] rootLow, rootHigh, low, high;
     private final BigInteger[] levelZeroLow, levelZeroHigh;
-    private long rootVersion;
+    private long rootVersion, minimizationWork, minimized;
+    private boolean integerMinimization, minimizationEnabled;
     private final double[] activity;
     private RowActivity[] rowActivity;
     private final List<List<Incidence>> incident = new ArrayList<>();
@@ -300,6 +301,12 @@ final class CountLcg implements AutoCloseable {
         return List.copyOf(sharedRows);
     }
 
+    /** The auxiliary portfolio arm uses shorter integer clauses; other arms retain their ordering. */
+    CountLcg minimizeIntegerConflicts() {
+        minimizationEnabled = true;
+        return this;
+    }
+
     /** An independent rounding arm; the default search keeps its old ordering. */
     CountLcg lockBranching() {
         if (lockBranching || complete && !paused) return this;
@@ -358,6 +365,11 @@ final class CountLcg implements AutoCloseable {
                 boundTrail.add(new ArrayList<>());
                 boundTrail.add(new ArrayList<>());
                 if (upper[i] != null && lower[i].compareTo(upper[i]) > 0) conflict = List.of();
+                if (!integerMinimization && (upper[i] == null || !lower[i].equals(upper[i]) &&
+                        !(lower[i].signum() == 0 && BigInteger.ONE.equals(upper[i])))) {
+                    integerCost(lower[i], BigInteger.ONE);
+                    integerMinimization = upper[i] == null || !lower[i].add(BigInteger.ONE).equals(upper[i]);
+                }
             }
             for (int r = 0; r < rows.size(); r++) {
                 charge();
@@ -936,8 +948,13 @@ final class CountLcg implements AutoCloseable {
     }
 
     private List<Literal> antecedents(ExactLinearProgram.Constraint row, int except, BigInteger slack, int prefix) {
+        return antecedents(row, except, slack, prefix, Long.MAX_VALUE);
+    }
+
+    private List<Literal> antecedents(ExactLinearProgram.Constraint row, int except, BigInteger slack, int prefix, long until) {
         var result = new ArrayList<Literal>();
         for (var term : row.terms().entrySet()) {
+            if (work >= until) return null;
             charge();
             int id = term.getKey();
             if (id == except || term.getValue().signum() == 0) continue;
@@ -1170,6 +1187,9 @@ final class CountLcg implements AutoCloseable {
             finish("proven_infeasible");
             return;
         }
+        // Keep complementary primary/Boolean search orderings. The auxiliary
+        // integer arm checks implication strength as well as literal identity.
+        if (minimizationEnabled && integerMinimization) minimize(frontier, highest);
         int back = 0;
         BitSet levels = new BitSet();
         for (ExplainedLiteral explained : frontier.terms.values()) {
@@ -1205,6 +1225,87 @@ final class CountLcg implements AutoCloseable {
                 memory -= bytes;
                 budget.release(bytes);
             }
+        }
+    }
+
+    /**
+     * Remove a bound only if the remaining conjunction directly implies it
+     * through its frozen reason. Unlike Boolean variable marks, a retained bound
+     * must entail the exact requested direction AND strength. Only a finished
+     * walk can remove a literal; decisions, cutoffs and memory refusals keep it.
+     */
+    private void minimize(ConflictFrontier frontier, int highest) {
+        if (frontier.terms.size() < 3) return;
+        long available = Math.min(2048, work / 32 - minimizationWork);
+        if (available < 32) return;
+        long bytes = 512L + 16L * frontier.terms.size();
+        if (!budget.tryReserve(bytes)) return;
+        long started = work;
+        try {
+            var entries = new ArrayList<>(frontier.terms.values());
+            for (int at = entries.size() - 1; at >= 0 && work - started < available; at--) {
+                charge();
+                ExplainedLiteral candidate = entries.get(at);
+                if (trail.get(candidate.source).level == highest) continue;
+                long quantum = Math.max(0, Math.min(256, available - (work - started)));
+                long until = quantum > Long.MAX_VALUE - work ? Long.MAX_VALUE : work + quantum;
+                List<Literal> reason = minimizationReason(trail.get(candidate.source), until);
+                if (reason == null || reason.size() > 256) continue;
+                boolean redundant = true;
+                for (int index = reason.size() - 1; index >= 0; index--) {
+                    if (work >= until) {
+                        redundant = false;
+                        break;
+                    }
+                    charge();
+                    Literal required = reason.get(index);
+                    if (rootTrue(required)) continue;
+                    int key = boundKey(required.variable, required.minimum);
+                    ExplainedLiteral retained = frontier.terms.get(key);
+                    if (retained != null && retained != candidate && (required.minimum ?
+                            retained.literal.value.compareTo(required.value) >= 0 :
+                            retained.literal.value.compareTo(required.value) <= 0)) continue;
+                    redundant = false;
+                    break;
+                }
+                if (redundant) {
+                    // Commit only a complete scan. A later candidate can use
+                    // already retained antecedents, never a removed bound.
+                    if (work >= until) continue;
+                    charge();
+                    // The heap served first-UIP resolution; only the ordered
+                    // map is consulted for the final clause and backjump now.
+                    frontier.terms.remove(boundKey(candidate.literal.variable, candidate.literal.minimum));
+                    minimized++;
+                }
+            }
+        } finally {
+            minimizationWork += work - started;
+            budget.release(bytes);
+        }
+    }
+
+    /** Optional explanation allocation must not terminate an otherwise viable search. */
+    private List<Literal> minimizationReason(Change change, long until) {
+        if (work >= until) return null;
+        if (change.reason != null || change.linear == null) return change.reason;
+        var linear = change.linear;
+        int size = linear.row.terms().size();
+        if (size > 256) return null;
+        long bytes = 96L * size;
+        if (!budget.tryReserve(bytes)) return null;
+        try {
+            explainedReasons++;
+            var result = antecedents(linear.row, linear.except, linear.slack, linear.prefix, until);
+            if (result == null) return null;
+            change.reason = List.copyOf(result);
+            long retained = 96L * result.size();
+            change.bytes += retained;
+            memory += retained;
+            bytes -= retained;
+            return change.reason;
+        } finally {
+            budget.release(bytes);
         }
     }
 
@@ -1380,7 +1481,8 @@ final class CountLcg implements AutoCloseable {
         }
         complete = true;
         budget.note("count_lcg", detail + "; decisions=" + decisions + "; conflicts=" + conflicts + "; backjumps=" + jumps +
-                "; restarts=" + restarts + "; relaxed_reasons=" + relaxedReasons + "; lazy_reasons=" + lazyReasons +
+                "; restarts=" + restarts + "; minimized=" + minimized + "; minimization_work=" + minimizationWork +
+                "; relaxed_reasons=" + relaxedReasons + "; lazy_reasons=" + lazyReasons +
                 "; explained_reasons=" + explainedReasons + "; work=" + work);
         if (learnedRelaxation) budget.note("count_lp_learning", "calls=" + relaxationCalls + "; cuts=" + relaxationCuts +
                 "; proposal_misses=" + relaxationMisses + "; numerical_work=" + relaxationNumericalWork);

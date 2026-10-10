@@ -423,3 +423,13 @@ corpus outcomes from three new 80M successes. The three new boundaries have an
 explicit per-case `work` cap; existing boundaries still run at 20M. The comparison
 runner accepts `--work` and `--complete-corpus-order` to reproduce the same
 filtered higher-budget campaign without changing solver defaults.
+
+`CountLcgMinimizeTest` checks integer-bound conflict minimization against 54
+independently enumerated boxes and 120 finite-domain models. It covers exact
+bound strength/direction, both optional allocation refusals, partial reason
+retry, worker handoff, actual learned-bound removal and independent replay of
+all 120 serialized proofs. The gained `wide-79` ordering and protected `wide-52`
+and `wide-68` orderings are pinned in `count-boundaries.json`. Equal-budget
+outcomes, rejected broader policies and residual UNKNOWN orders are recorded in
+`../docs/integer-conflict-minimization.txt` and
+`provenance/integer-conflict-minimization-20261010.json`.

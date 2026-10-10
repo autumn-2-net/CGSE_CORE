@@ -258,3 +258,19 @@ known-SAT sparse-equality-n96-s1; the companion s2 and the 15 original 20M UNKNO
 models remain unresolved. 65 standard checks, 3,117 graph checks, 57 capture
 replays and offline assembly pass. No default cap, host adapter or fallback
 role changes. This does not close general numeric reach or audit H/J.
+
+2026-10-10 auxiliary integer conflict minimization
+------------------------------------------------
+integer-conflict-minimization.txt adds direct reason-based minimization to the
+existing auxiliary integer LCG arm. Stronger retained bounds must actually
+entail each antecedent; partial reasons and optional allocation refusals cannot
+remove a bound. Completed explanations are reused by the original trail entry.
+Global direct/recursive policies and a SCIP-inspired rounding experiment caused
+finite-budget regressions and were excluded.
+The complete 822-case equal-20M comparison gains wide-79/order-0 without lost
+conclusions or contradictions; recorded work falls 1.73%. Original-order UNKNOWN
+drops from 15 to 14; the other two wide-79 orders remain unresolved. Independent
+finite-box/proof oracles, two deliberately unsound negative controls, 66 stable
+checks, 3,117 graph checks, 57 capture replays and offline assembly pass. This
+strengthens an existing search tool, not general SCIP/CP-SAT equivalence, broad
+admission or the remaining host-residency/end-to-end attribution gaps (H/J).

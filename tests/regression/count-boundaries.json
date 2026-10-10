@@ -2,6 +2,27 @@
   "work": 20000000,
   "cases": [
     {
+      "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+      "names": ["wide-79/corpus-order-0"],
+      "corpus_order": 0,
+      "expected": "SAT",
+      "reason": "Direct integer-bound conflict minimization; 3a75f505 is UNKNOWN at the same 20M cap. Other orders remain explicit UNKNOWN in the complete corpus."
+    },
+    {
+      "id": "852d0b06f7ec7833f9bcb96a0a2e3599d066ac1b18d61a3b8ca47b60c9102769",
+      "names": ["wide-52/corpus-order-1"],
+      "corpus_order": 1,
+      "expected": "SAT",
+      "reason": "Protect an existing 20M conclusion: globally recursive minimization regressed this order; direct minimization must retain it."
+    },
+    {
+      "id": "b27775fba4017cfff15dd5977caa63d8227cd50b0c4ecbc38e480ada4a08d2cf",
+      "names": ["wide-68/corpus-order-1"],
+      "corpus_order": 1,
+      "expected": "SAT",
+      "reason": "Protect complementary portfolio orderings: global direct minimization regressed this order; auxiliary-only minimization must retain it."
+    },
+    {
       "id": "a18f16aaf5b7fb63a459988338e58e34ac148d7d73e8c6a30569ee8df4c5f420",
       "names": ["generated/subset-n48-bits40"],
       "expected": "SAT",

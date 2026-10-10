@@ -1,0 +1,325 @@
+{
+  "schema": "cgse-integer-conflict-minimization-v1",
+  "date": "2026-10-10",
+  "baseline": "3a75f505d2e6510907f2d56a5418cb164168b9a9",
+  "candidate_source_sha256": "b819d73ec30dc20a3ecc93f71095caf56bdb135b98075ed0b402eb2d2df93bb2",
+  "production_java_files": 201,
+  "scope": "Direct integer-bound reason minimization in the existing auxiliary LCG arm. Primary/structural/Boolean clause policies and request defaults remain unchanged.",
+  "references": [
+    "https://github.com/google/or-tools/blob/stable/ortools/sat/sat_solver.cc",
+    "https://github.com/scipopt/scip/blob/master/src/scip/conflict_dualproofanalysis.c"
+  ],
+  "optional_work": {
+    "accumulated_fraction_denominator": 32,
+    "per_conflict_maximum": 2048,
+    "per_candidate_maximum": 256,
+    "lazy_explanation_terms_maximum": 256
+  },
+  "memory": {
+    "scratch_base_bytes": 512,
+    "scratch_per_conflict_literal": 16,
+    "explanation_per_term": 96,
+    "partial_reasons_cached": false,
+    "allocation_refusal": "Keep the original clause; do not terminate the search."
+  },
+  "models_20m": {
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "09679526d13a3808a70c357c6197954c27cd2c8854d16b12fcff3723f245cfc8",
+    "baseline": {
+      "outcomes": {
+        "PASS": 759,
+        "UNRESOLVED": 45,
+        "UNSUPPORTED": 18
+      },
+      "total_recorded_work": 1340926800,
+      "orders": [
+        {
+          "order": 0,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 439519649
+        },
+        {
+          "order": 1,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 457115955
+        },
+        {
+          "order": 2,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 444291196
+        }
+      ]
+    },
+    "candidate": {
+      "outcomes": {
+        "PASS": 760,
+        "UNRESOLVED": 44,
+        "UNSUPPORTED": 18
+      },
+      "total_recorded_work": 1317693718,
+      "orders": [
+        {
+          "order": 0,
+          "outcomes": {
+            "PASS": 254,
+            "UNRESOLVED": 14,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 426385949
+        },
+        {
+          "order": 1,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 452380685
+        },
+        {
+          "order": 2,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "total_recorded_work": 438927084
+        }
+      ]
+    },
+    "gained": [
+      "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e"
+    ],
+    "lost": [],
+    "contradictions": [],
+    "comparisons": 822,
+    "raw_log_root": "build/lcg-minimize-aux-final-comparison",
+    "gained_details": [
+      {
+        "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+        "baseline": [
+          "UNRESOLVED",
+          "work=19994554"
+        ],
+        "candidate": [
+          "PASS",
+          "SAT",
+          "work=5826601"
+        ]
+      }
+    ],
+    "recorded_work_delta_percent": -1.7326137414808929
+  },
+  "parity": {
+    "checks": 72,
+    "gained": [],
+    "lost": [],
+    "contradictions": [],
+    "baseline_outcomes": {
+      "UNSAT": 36,
+      "SAT": 36
+    },
+    "candidate_outcomes": {
+      "UNSAT": 36,
+      "SAT": 36
+    }
+  },
+  "validation": {
+    "standard": {
+      "status": "PASS",
+      "programs_or_orders": 66,
+      "log_root": "build/lcg-minimize-aux-final-standard"
+    },
+    "oracle": {
+      "status": "PASS",
+      "programs_or_orders": 1,
+      "log_root": "build/lcg-minimize-aux-final-oracle",
+      "boxes": 54,
+      "finite_models": 120,
+      "proof_archive_records": 120,
+      "actual_search_bound_removals": 5,
+      "thread_handoffs": 127,
+      "scratch_refusals": 18,
+      "explanation_refusals": 18,
+      "source_sha256": "28b4793dfcce2e6b96c2480f3d6db547e60268d3ed3d977af578567cff8e0004"
+    },
+    "curated": {
+      "status": "PASS",
+      "programs_or_orders": 3,
+      "log_root": "build/lcg-minimize-aux-final-curated",
+      "inputs": 239,
+      "checks": 717
+    },
+    "expanded": {
+      "status": "PASS",
+      "programs_or_orders": 3,
+      "log_root": "build/lcg-minimize-aux-final-expanded",
+      "inputs": 800,
+      "checks": 2400
+    },
+    "captures": [
+      {
+        "mode": "serial",
+        "workers": 1,
+        "expanded_budget": false,
+        "requests": 19,
+        "status": "PASS",
+        "log_root": "build/lcg-minimize-aux-final-captures-serial"
+      },
+      {
+        "mode": "parallel",
+        "workers": 4,
+        "expanded_budget": false,
+        "requests": 19,
+        "status": "PASS",
+        "log_root": "build/lcg-minimize-aux-final-captures-parallel"
+      },
+      {
+        "mode": "expanded",
+        "workers": 4,
+        "expanded_budget": true,
+        "requests": 19,
+        "status": "PASS",
+        "log_root": "build/lcg-minimize-aux-final-captures-expanded"
+      }
+    ],
+    "negative_controls": [
+      {
+        "mutation": "weak-bound",
+        "status": "REJECTED_BY_ORACLE",
+        "assertion": "A weak or opposite bound incorrectly implied the stronger bound",
+        "log": "build/lcg-minimize-aux-final-negative/weak-bound/result.log"
+      },
+      {
+        "mutation": "partial-reason",
+        "status": "REJECTED_BY_ORACLE",
+        "assertion": "Retry trusted an unfinished cached explanation",
+        "log": "build/lcg-minimize-aux-final-negative/partial-reason/result.log"
+      }
+    ],
+    "offline_assemble": {
+      "status": "PASS",
+      "production_sources_in_source_jar": 201,
+      "artifacts": {
+        "cgse-core-0.1.0-SNAPSHOT-sources.jar": "debc901606a0a1573546d3b95919a24b88d3b57041ab5130b13830a0bc5b03e3",
+        "cgse-core-0.1.0-SNAPSHOT-view.jar": "bfc6ff9f389ed051e27c0e26960befa48a594b2f7129dd8883d5a74681d74560",
+        "cgse-core-0.1.0-SNAPSHOT.jar": "266ff5f1309973aee849bc4af2742c63e4429a1599a4e33f8347274d40b0bc94"
+      }
+    }
+  },
+  "remaining_original_20m": [
+    {
+      "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "names": [
+        "generated/sparse-equality-n144-s2"
+      ]
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "names": [
+        "scip/lseu-objective-1119"
+      ]
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "names": [
+        "scip/lseu-objective-1119/embedded/normalized"
+      ]
+    },
+    {
+      "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "names": [
+        "generated/sparse-equality-n257-s2"
+      ]
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "names": [
+        "scip/lseu-objective-1119/raw/original"
+      ]
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "names": [
+        "generated/sparse-equality-n96-s2"
+      ]
+    },
+    {
+      "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "names": [
+        "generated/sparse-equality-n257-s1"
+      ]
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": [
+        "generated/sparse-equality-n144-s1"
+      ]
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "names": [
+        "scip/lseu-objective-1119/embedded/original"
+      ]
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "names": [
+        "scip/lseu-objective-1119/embedded/reduced"
+      ]
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "names": [
+        "scip/lseu-objective-1119/raw/reduced"
+      ]
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1"
+      ]
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "names": [
+        "scip/lseu-objective-1119/raw/normalized"
+      ]
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48"
+      ]
+    }
+  ],
+  "excluded_experiments": {
+    "dual_integer_rounding": "Six lost conclusions; no gains. A known UNSAT case remains UNKNOWN at 80M while the baseline proves it. Not included.",
+    "global_recursive_minimization": "Regressed wide-52/order-1. Not included.",
+    "global_direct_minimization": "Regressed wide-68/order-1. Not included."
+  },
+  "remaining_scope": [
+    "14 original-order UNKNOWN and six unsupported conversions at 20M",
+    "wide-79 full-corpus orders 1 and 2 remain UNKNOWN at 20M",
+    "General larger numeric/graph admission",
+    "Audit H host residency and J complete cost attribution",
+    "Offline capture replay is not a live AE/server test"
+  ],
+  "interpretation": "All failed/unsupported runs are retained in outcome counts. Recorded work is not wall-clock performance. Existing higher-budget boundaries keep their separately recorded 80M cap."
+}

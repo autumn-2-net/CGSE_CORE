@@ -993,7 +993,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 viewSearch.resume(Math.max(1, auxiliaryUntil - auxiliaryWork - (budget.threadWork() - runStarted)));
                 viewStage = 6;
             } else if (auxiliaryMode == 1) cdcl = new CountDomainSearch(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072, CountCdcl.Branching.LEARNING_RATE).retained();
-            else if (auxiliaryMode >= 2) auxiliaryLcg = new CountLcg(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072);
+            else if (auxiliaryMode >= 2) auxiliaryLcg = new CountLcg(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072).minimizeIntegerConflicts();
             else {
                 if (!matchingScouted && current.isEmpty()) {
                     matchingScouted = true;
