@@ -343,6 +343,7 @@ final class CountDiophantine implements CountContinuation {
     CountDiophantine retained() { retaining = true; return this; }
     @Override public boolean paused() { return paused; }
     @Override public long work() { return work; }
+    boolean hasCoupledElimination() { return affine != null && affine.hasCoupledElimination(); }
     @Override public long progress() {
         return affine != null ? affine.progress() : faceAttempt;
     }

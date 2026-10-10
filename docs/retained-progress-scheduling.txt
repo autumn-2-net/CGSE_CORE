@@ -1,0 +1,148 @@
+Retained progress and complementary first visits (2026-10-10)
+===========================================================
+
+This follows 124cc943. Its original-order count corpus had 14 UNKNOWN models
+at 20M work. They are not fourteen unrelated missing algorithms: seven are
+representations of the same lseu objective-1119 infeasibility boundary, six
+are sparse weighted equality models, and one is a 48-variable subset sum.
+Known independent SAT/UNSAT truth is recorded in numeric-oracles-20261009.json.
+The new record is tests/provenance/retained-progress-scheduling-20261010.json.
+
+Algorithm capacity versus dispatch
+----------------------------------
+Direct original-coordinate replays give an existing tool the same entire 20M
+request allowance, with 256 MiB reservations and no wall deadline. The retained
+LP/LCG arm proves all seven lseu cases; retained affine search finds witnesses
+for both 96-variable equalities. The baseline integrated count stage solves
+none of these nine. Direct and embedded models have different representations,
+so that comparison alone would not establish a scheduling bug.
+
+Controlled in-pipeline experiments confirm it: extending the SAME LP frontier
+before root/child fan-out closes all seven negatives, and extending the SAME
+adopted numeric frontier closes the two positives. Neither needs new inference,
+extra threads, a larger request limit or weaker plan verification. Every
+positive is checked against the original rows, domains and primitive execution.
+
+The other four equality cases have 144 or 257 variables. The current affine
+tool's ambient/kernel admission limits exclude those raw models. A local-only
+experiment widened them from 128/48 to 288/144; the four original residuals
+still did not solve at 20M. Removing a size guard alone is not a demonstrated
+fix, and these cases do not justify claiming a mathematical impossibility.
+This experiment also included two additional same-family records; they are
+not counted as newly solved original residuals.
+
+The 48-variable, 48-bit subset sum remains UNKNOWN when its existing four-list
+join gets the whole 20M allowance. At an explicit 80M diagnostic cap it returns
+an independently checked witness after 76,968,526 work. Thus the tool exists,
+but its measured computation does not yet fit the 20M comparison budget. This is a
+cost/admission gap, not evidence that all remaining failures are dispatch-only
+or that adding one particular new algorithm is necessarily sufficient.
+
+Implemented policy
+------------------
+CountLpSearch preserves its bounded first sample. Source faces, packing,
+decomposition and matching keep their first opportunities to find cheap plans.
+At their continuation into Boolean search, an undecided retained LP with real
+certified-cut progress can receive more consecutive samples. Completion,
+candidate rejection or local cutoff returns to that same Boolean entrance;
+it does not replay the scouts or prematurely disperse this frontier into the
+root/child queue. Ordinary later root resumes can also use this opportunity.
+
+Only distinct, verified LP consequences count as progress, including after the
+exported-row buffer is full. A sample remains at most 262,144 work plus the
+existing atomic-operation boundary. Four completed samples without a new cut
+end the preference. Preferential LP work has a fixed half-of-entrance-allowance
+ceiling. Parent resumes never renew it. Sharing/restoration and atomic work
+remain charged to the same request, so this is not a hard reservation of half
+the global account against every other concurrent operation.
+
+CountViewSearch pays every eligible arm's mandatory first visit before granting
+preference to an adopted Diophantine frontier. The evidence must be two actual
+completed exact rank reductions: duplicate equations, fixed coordinates and
+trial inequality faces cannot manufacture it. Its ceiling is established once
+at seven eighths of the then-remaining allowance; 262,144 charged work without
+new numeric progress returns selection to the ordinary policy. The policy can
+later select this retained frontier normally. Proof-mode eligibility still
+excludes candidate-only numeric algorithms. No cutoff or scheduling observation
+is exported as a proof or removed search region.
+
+These fractions and stagnation windows are bounded heuristic choices, not
+completeness guarantees. Selection is based on paid, retained progress rather
+than model names or a lookup of known verdicts. The general work/time/memory
+limits, compiler budget, fallback role, graph semantics and host adapter stay
+unchanged. This is an independently implemented scheduling change, not an
+import of a general-purpose solver.
+
+Reference topics were deterministic-work allocation in CP-SAT's subsolver
+scheduler and observed-outcome scheduling of MIP heuristics:
+https://github.com/google/or-tools/blob/stable/ortools/sat/subsolver.cc
+https://arxiv.org/abs/2304.03755
+The important distinction here is between productive retained work, a cheap
+complementary first visit, and completion/proof; turn counts or the existence
+of a conflict alone cannot identify those stages.
+
+Rejected policies and regression protection
+------------------------------------------
+An unconditional early LP extension gained the same 27 ordering conclusions
+in the count-only corpus but lost graph conclusions. Capping it at half instead
+of three quarters restored those conclusions, yet increased total work on the
+717 curated graph checks by 51.8%. Delaying only until source-face attempts
+still displaced cheap matching witnesses. Deferring all continuation until
+late root resumes preserved graph behavior but lost the seven lseu gains.
+None of these intermediate policies is the final implementation.
+
+CountProgressSchedulingTest checks real LP/lattice frontiers, independently
+enumerated rank fixtures, fixed/trial/duplicate rows, stagnant observations,
+nonrenewable grants, mandatory visits, proof eligibility, cancellation, huge
+integer work caps and cleanup. Controlled accounting observations in that test
+never alter a proof or domain. RootPortfolioTest separately bounds the paid
+work of six existing cheap matching witnesses. Deliberately incorrect rank,
+ceiling and early-LP variants must fail these checks.
+
+The 27 newly conclusive full-corpus orderings are pinned at 20M in
+tests/regression/count-boundaries.json. The three previous 80M lattice
+boundaries remain explicitly separate; no case silently gets a larger cap.
+Direct capacity diagnosis is now reproducible with the test-only entries
+lp-retained, pb-retained, affine-retained and mitm-retained. For example:
+
+python tests/run.py --java-home <jdk17> --suite models --model-engine lp-retained --case lseu-objective-1119 --permutations 1 --milliseconds 0 --work 20000000 --model-trace --keep-going
+python tests/run.py --java-home <jdk17> --suite models --model-engine mitm-retained --case ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c --permutations 1 --milliseconds 0 --work 80000000 --model-trace
+
+Local admission refusals remain UNKNOWN, not UNSUPPORTED conversions or UNSAT.
+The direct entries do not call GraphPlanner; main-counts is the integrated
+integer stage with graph execution checks, also not the whole planner.
+
+Final validation and remaining scope
+-----------------------------------
+Identical 20M limits, one worker, 256 MiB reservations and no wall deadline:
+
+                             124cc943       Candidate
+  Conclusive PASS                 760             787
+  UNKNOWN                          44              17
+  Unsupported conversion           18              18
+
+All 27 gains are the seven lseu and two 96-variable cases in three full-corpus
+orders. There are no lost conclusions or SAT/UNSAT contradictions. The 72
+parity/neighbor conclusions remain unchanged. Original-order UNKNOWN falls
+from 14 to 5. The other two UNKNOWN entries are wide-79's other source orders;
+they were already explicit residuals rather than part of those fourteen.
+Total recorded count work falls from 1,317,693,718 to 953,777,704 (27.62%).
+This is recorded work, not a wall-time speedup or a JVM allocation measure.
+
+All 67 stable checks pass, including 51 explicit count/order/cap boundaries,
+and all three intentionally incorrect controls are rejected. The 239 curated
+and 800 planted graph inputs in three orders produce 3,117 checks with exactly
+the same result AND recorded work as 124cc943, on byte-identical binary inputs.
+The earlier broad-policy graph overhead is absent from the final policy.
+
+Captured inventory/manual/JEI replay passes 19 requests each for one worker,
+four workers at the same shared cap, and four workers with the explicit budget
+multiplier: 57 checks. These are offline capture replays, not a new server run.
+Offline assemble passes; all 201 main Java files match the sources JAR exactly.
+
+The remaining five original models are known-SAT but unresolved within this
+20M comparison, not missing-material or infeasibility proofs. Next numeric work
+must address larger sparse integer kernels and the four-list join's measured
+cost; another blind increase of a scheduling share is not an established fix.
+This does not close general numeric reach, whole-process residency accounting,
+or end-to-end attribution gaps in audit H/J.

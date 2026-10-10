@@ -1,0 +1,688 @@
+{
+  "schema": "cgse-retained-progress-scheduling-v1",
+  "date": "2026-10-10",
+  "baseline": "124cc94357cd1565719f6920ecf635d9f0046046",
+  "candidate_source_sha256": "9658c5c603706e13733decf03a6d57d7f1e542dc2dd91f24879a44969bb11fe1",
+  "production_java_files": 201,
+  "scope": "Bounded continuation of existing LP and affine tools after complementary first visits. No new mathematical inference, request-cap change or host integration.",
+  "references": [
+    "https://github.com/google/or-tools/blob/stable/ortools/sat/subsolver.cc",
+    "https://arxiv.org/abs/2304.03755"
+  ],
+  "known_truth": "Prior independent Z3/CP-SAT/SCIP verdicts and original witnesses: numeric-oracles-20261009.json. Native solvers were not rerun for this policy-only change.",
+  "models_20m": {
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "a144f6e2269fad4c62ca5f86a0e185380d954f0feba4a9d8282462ecec887f10",
+    "permutations": 3,
+    "baseline": {
+      "outcomes": {
+        "PASS": 760,
+        "UNRESOLVED": 44,
+        "UNSUPPORTED": 18
+      },
+      "total_recorded_work": 1317693718,
+      "orders": [
+        {
+          "order": 0,
+          "outcomes": {
+            "PASS": 254,
+            "UNRESOLVED": 14,
+            "UNSUPPORTED": 6
+          }
+        },
+        {
+          "order": 1,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          }
+        },
+        {
+          "order": 2,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          }
+        }
+      ]
+    },
+    "candidate": {
+      "outcomes": {
+        "PASS": 787,
+        "UNRESOLVED": 17,
+        "UNSUPPORTED": 18
+      },
+      "total_recorded_work": 953777704,
+      "orders": [
+        {
+          "order": 0,
+          "outcomes": {
+            "PASS": 263,
+            "UNRESOLVED": 5,
+            "UNSUPPORTED": 6
+          }
+        },
+        {
+          "order": 1,
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          }
+        },
+        {
+          "order": 2,
+          "outcomes": {
+            "PASS": 262,
+            "UNRESOLVED": 6,
+            "UNSUPPORTED": 6
+          }
+        }
+      ]
+    },
+    "gained": [
+      "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92/order=1",
+      "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8/order=1",
+      "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448/order=1",
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf/order=1",
+      "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b/order=1",
+      "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0/order=1",
+      "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8/order=1",
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f/order=1",
+      "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a/order=1",
+      "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92/order=2",
+      "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8/order=2",
+      "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448/order=2",
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf/order=2",
+      "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b/order=2",
+      "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0/order=2",
+      "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8/order=2",
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f/order=2",
+      "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a/order=2"
+    ],
+    "lost": [],
+    "contradictions": [],
+    "comparisons": 822,
+    "recorded_work_delta_percent": -27.617648094456506,
+    "raw_log_root": "build/retained-progress-final-comparison"
+  },
+  "parity": {
+    "checks": 72,
+    "baseline_outcomes": {
+      "UNSAT": 36,
+      "SAT": 36
+    },
+    "candidate_outcomes": {
+      "UNSAT": 36,
+      "SAT": 36
+    },
+    "gained": [],
+    "lost": [],
+    "contradictions": []
+  },
+  "diagnosis_original_14": [
+    {
+      "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "names": [
+        "generated/sparse-equality-n144-s2"
+      ],
+      "diagnosis": "ambient/kernel admission and larger exact-arithmetic cost",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19996357"
+      ],
+      "candidate": [
+        "UNRESOLVED",
+        "work=19996357"
+      ]
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "names": [
+        "scip/lseu-objective-1119"
+      ],
+      "diagnosis": "retained LP scheduling",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19994438"
+      ],
+      "candidate": [
+        "PASS",
+        "UNSAT",
+        "work=7869573"
+      ]
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "names": [
+        "scip/lseu-objective-1119/embedded/normalized"
+      ],
+      "diagnosis": "retained LP scheduling",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19995043"
+      ],
+      "candidate": [
+        "PASS",
+        "UNSAT",
+        "work=8881377"
+      ]
+    },
+    {
+      "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "names": [
+        "generated/sparse-equality-n257-s2"
+      ],
+      "diagnosis": "ambient/kernel admission and larger exact-arithmetic cost",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19998002"
+      ],
+      "candidate": [
+        "UNRESOLVED",
+        "work=19998002"
+      ]
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "names": [
+        "scip/lseu-objective-1119/raw/original"
+      ],
+      "diagnosis": "retained LP scheduling",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19994436"
+      ],
+      "candidate": [
+        "PASS",
+        "UNSAT",
+        "work=7869572"
+      ]
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "names": [
+        "generated/sparse-equality-n96-s2"
+      ],
+      "diagnosis": "retained affine scheduling",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19994560"
+      ],
+      "candidate": [
+        "PASS",
+        "SAT",
+        "work=17579436"
+      ]
+    },
+    {
+      "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "names": [
+        "generated/sparse-equality-n257-s1"
+      ],
+      "diagnosis": "ambient/kernel admission and larger exact-arithmetic cost",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19997666"
+      ],
+      "candidate": [
+        "UNRESOLVED",
+        "work=19997675"
+      ]
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": [
+        "generated/sparse-equality-n144-s1"
+      ],
+      "diagnosis": "ambient/kernel admission and larger exact-arithmetic cost",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19995242"
+      ],
+      "candidate": [
+        "UNRESOLVED",
+        "work=19995059"
+      ]
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "names": [
+        "scip/lseu-objective-1119/embedded/original"
+      ],
+      "diagnosis": "retained LP scheduling",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19992328"
+      ],
+      "candidate": [
+        "PASS",
+        "UNSAT",
+        "work=7862189"
+      ]
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "names": [
+        "scip/lseu-objective-1119/embedded/reduced"
+      ],
+      "diagnosis": "retained LP scheduling",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19999618"
+      ],
+      "candidate": [
+        "PASS",
+        "UNSAT",
+        "work=7859032"
+      ]
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "names": [
+        "scip/lseu-objective-1119/raw/reduced"
+      ],
+      "diagnosis": "retained LP scheduling",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19993229"
+      ],
+      "candidate": [
+        "PASS",
+        "UNSAT",
+        "work=7857536"
+      ]
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1"
+      ],
+      "diagnosis": "retained affine scheduling",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19994654"
+      ],
+      "candidate": [
+        "PASS",
+        "SAT",
+        "work=10019681"
+      ]
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "names": [
+        "scip/lseu-objective-1119/raw/normalized"
+      ],
+      "diagnosis": "retained LP scheduling",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19998128"
+      ],
+      "candidate": [
+        "PASS",
+        "UNSAT",
+        "work=8880535"
+      ]
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48"
+      ],
+      "diagnosis": "four-list join cost at 20M",
+      "baseline": [
+        "UNRESOLVED",
+        "work=19997213"
+      ],
+      "candidate": [
+        "UNRESOLVED",
+        "work=19997213"
+      ]
+    }
+  ],
+  "direct_capacity": [
+    {
+      "engine": "lp-retained",
+      "work": 20000000,
+      "input_sha256": "29fff49610ad3d9fa9ad937e6508a84ae090b5f045397fd05fef3339a9fdca1a",
+      "log": "build/retained-progress-final-direct/lp-retained-20000000.log",
+      "exit_code": 2,
+      "outcomes": {
+        "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d": [
+          "UNRESOLVED",
+          "work=397"
+        ],
+        "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92": [
+          "PASS",
+          "UNSAT",
+          "work=11750224"
+        ],
+        "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8": [
+          "PASS",
+          "UNSAT",
+          "work=8296445"
+        ],
+        "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d": [
+          "UNRESOLVED",
+          "work=705"
+        ],
+        "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448": [
+          "PASS",
+          "UNSAT",
+          "work=11750224"
+        ],
+        "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf": [
+          "UNRESOLVED",
+          "work=265"
+        ],
+        "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba": [
+          "UNRESOLVED",
+          "work=577"
+        ],
+        "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3": [
+          "UNRESOLVED",
+          "work=325"
+        ],
+        "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b": [
+          "PASS",
+          "UNSAT",
+          "work=12182714"
+        ],
+        "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0": [
+          "PASS",
+          "UNSAT",
+          "work=12113012"
+        ],
+        "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8": [
+          "PASS",
+          "UNSAT",
+          "work=16620108"
+        ],
+        "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f": [
+          "UNRESOLVED",
+          "work=217"
+        ],
+        "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a": [
+          "PASS",
+          "UNSAT",
+          "work=8026384"
+        ],
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": [
+          "UNRESOLVED",
+          "work=20000001",
+          "org.cgse.core.PlanningBudget$Exhausted: GRAPH_SEARCH_LIMIT (search_work=20000001/20000000)"
+        ]
+      }
+    },
+    {
+      "engine": "affine-retained",
+      "work": 20000000,
+      "input_sha256": "29fff49610ad3d9fa9ad937e6508a84ae090b5f045397fd05fef3339a9fdca1a",
+      "log": "build/retained-progress-final-direct/affine-retained-20000000.log",
+      "exit_code": 2,
+      "outcomes": {
+        "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d": [
+          "UNRESOLVED",
+          "work=0"
+        ],
+        "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92": [
+          "UNRESOLVED",
+          "work=880"
+        ],
+        "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8": [
+          "UNRESOLVED",
+          "work=858"
+        ],
+        "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d": [
+          "UNRESOLVED",
+          "work=0"
+        ],
+        "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448": [
+          "UNRESOLVED",
+          "work=880"
+        ],
+        "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf": [
+          "PASS",
+          "SAT",
+          "work=12569551"
+        ],
+        "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba": [
+          "UNRESOLVED",
+          "work=0"
+        ],
+        "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3": [
+          "UNRESOLVED",
+          "work=0"
+        ],
+        "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b": [
+          "UNRESOLVED",
+          "work=1850"
+        ],
+        "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0": [
+          "UNRESOLVED",
+          "work=1756"
+        ],
+        "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8": [
+          "UNRESOLVED",
+          "work=1770"
+        ],
+        "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f": [
+          "PASS",
+          "SAT",
+          "work=9170334"
+        ],
+        "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a": [
+          "UNRESOLVED",
+          "work=861"
+        ],
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": [
+          "UNRESOLVED",
+          "work=57"
+        ]
+      }
+    },
+    {
+      "engine": "mitm-retained",
+      "work": 20000000,
+      "input_sha256": "a5dbe5201aaea04d5365bc264b73e3a94738ee08b2b3d8a043fb8e48c4719b38",
+      "log": "build/retained-progress-final-direct/mitm-retained-20000000.log",
+      "exit_code": 2,
+      "outcomes": {
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": [
+          "UNRESOLVED",
+          "work=20000001",
+          "org.cgse.core.PlanningBudget$Exhausted: GRAPH_SEARCH_LIMIT (search_work=20000001/20000000)"
+        ]
+      }
+    },
+    {
+      "engine": "mitm-retained",
+      "work": 80000000,
+      "input_sha256": "a5dbe5201aaea04d5365bc264b73e3a94738ee08b2b3d8a043fb8e48c4719b38",
+      "log": "build/retained-progress-final-direct/mitm-retained-80000000.log",
+      "exit_code": 0,
+      "outcomes": {
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": [
+          "PASS",
+          "SAT",
+          "work=76968526"
+        ]
+      }
+    }
+  ],
+  "remaining_original_20m": [
+    {
+      "id": "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "names": [
+        "generated/sparse-equality-n144-s2"
+      ]
+    },
+    {
+      "id": "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "names": [
+        "generated/sparse-equality-n257-s2"
+      ]
+    },
+    {
+      "id": "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "names": [
+        "generated/sparse-equality-n257-s1"
+      ]
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": [
+        "generated/sparse-equality-n144-s1"
+      ]
+    },
+    {
+      "id": "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c",
+      "names": [
+        "generated/subset-n48-bits48"
+      ]
+    }
+  ],
+  "validation": {
+    "standard": {
+      "status": "PASS",
+      "programs_or_orders": 67,
+      "log_root": "build/retained-progress-final-standard"
+    },
+    "curated": {
+      "status": "PASS",
+      "programs_or_orders": 3,
+      "log_root": "build/retained-progress-final-curated",
+      "inputs": 239,
+      "checks": 717,
+      "baseline_log_root": "build/lcg-minimize-aux-final-curated",
+      "identical_binary_inputs": true,
+      "changed_outcomes_or_recorded_work": 0
+    },
+    "expanded": {
+      "status": "PASS",
+      "programs_or_orders": 3,
+      "log_root": "build/retained-progress-final-expanded",
+      "inputs": 800,
+      "checks": 2400,
+      "baseline_log_root": "build/lcg-minimize-aux-final-expanded",
+      "identical_binary_inputs": true,
+      "changed_outcomes_or_recorded_work": 0
+    },
+    "captures": [
+      {
+        "mode": "serial",
+        "workers": 1,
+        "expanded_budget": false,
+        "requests": 19,
+        "status": "PASS",
+        "log_root": "build/retained-progress-final-captures-serial"
+      },
+      {
+        "mode": "parallel",
+        "workers": 4,
+        "expanded_budget": false,
+        "requests": 19,
+        "status": "PASS",
+        "log_root": "build/retained-progress-final-captures-parallel"
+      },
+      {
+        "mode": "expanded",
+        "workers": 4,
+        "expanded_budget": true,
+        "requests": 19,
+        "status": "PASS",
+        "log_root": "build/retained-progress-final-captures-expanded"
+      }
+    ],
+    "negative_controls": [
+      {
+        "mutation": "rank",
+        "status": "REJECTED_BY_ORACLE",
+        "assertion": "Redundant/fixed/trial rows earned exact-rank preference",
+        "log": "build/retained-progress-final-negative/rank/result.log"
+      },
+      {
+        "mutation": "lp-ceiling",
+        "status": "REJECTED_BY_ORACLE",
+        "assertion": "LP ceiling overflowed or grew its reserved share",
+        "log": "build/retained-progress-final-negative/lp-ceiling/result.log"
+      },
+      {
+        "mutation": "early-lp",
+        "status": "REJECTED_BY_ORACLE",
+        "assertion": "LP continuation displaced the cheap matching witness",
+        "log": "build/retained-progress-final-negative/early-lp/result.log"
+      }
+    ],
+    "offline_assemble": {
+      "status": "PASS",
+      "source_jar_exact_java_matches": 201,
+      "jars": {
+        "cgse-core-0.1.0-SNAPSHOT-sources.jar": "67ee111d60f5b818f7ded6edd98efa77dc11bac9e7c70d49b081420af95a05c7",
+        "cgse-core-0.1.0-SNAPSHOT-view.jar": "bfc6ff9f389ed051e27c0e26960befa48a594b2f7129dd8883d5a74681d74560",
+        "cgse-core-0.1.0-SNAPSHOT.jar": "2231a3dc552a2120106a2a258c67a184bd23cb298317136480650633684cb1c2"
+      }
+    }
+  },
+  "limitations": [
+    "Five original-order known-SAT models remain UNKNOWN at 20M. Across three orders there are 17 UNKNOWN entries, including two other orders of wide-79.",
+    "Six unsupported original-to-recipe conversions (18 ordering entries) remain explicitly separate.",
+    "No wall-time or JVM heap claim; graph capture replays are offline, not new live-server tests.",
+    "The bounded fractions/stagnation windows remain heuristic choices; audit H/J and general high-dimensional numeric reach are not closed."
+  ],
+  "rejected_controls": [
+    {
+      "policy": "early LP, 3/4 ceiling",
+      "count_models_gained": 27,
+      "count_models_lost": 0,
+      "curated_first_order_unresolved": 2,
+      "expanded_first_order_unresolved": 12,
+      "logs": "build/residual-14-final-curated; build/residual-14-final-expanded"
+    },
+    {
+      "policy": "early LP, 1/2 ceiling",
+      "count_models_gained": 27,
+      "count_models_lost": 0,
+      "curated_work_increase_percent": 51.814399415502365,
+      "logs": "build/residual-14-complete-comparison; build/residual-14-complete-curated"
+    },
+    {
+      "policy": "LP after source faces only",
+      "count_models_gained": 27,
+      "count_models_lost": 0,
+      "curated_first_order_work": 232424276,
+      "curated_first_order_baseline_work": 157972886,
+      "logs": "build/residual-14-probe/lp-after-faces"
+    },
+    {
+      "policy": "only late root resumes",
+      "count_models_gained": 6,
+      "count_models_lost": 0,
+      "lseu_20m_still_unknown": 7,
+      "logs": "build/residual-14-probe/lp-resumed"
+    },
+    {
+      "policy": "expanded affine 288 ambient / 144 kernel",
+      "scope": "Raw original-coordinate local-only experiment, not production. Four original residuals plus two other same-family records.",
+      "original_residuals_still_unknown_at_20m": 4,
+      "additional_same_family_sat": 1,
+      "logs": "build/residual-14-probe/expanded-kernel"
+    }
+  ]
+}

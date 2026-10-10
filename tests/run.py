@@ -24,8 +24,9 @@ def main():
     parser.add_argument('--permutations', type=int, default=3)
     parser.add_argument('--milliseconds', type=int, default=3000)
     parser.add_argument('--work', type=int, default=20_000_000)
-    parser.add_argument('--model-engine', choices=['lcg-first', 'lcg-retained', 'views', 'main-counts'], default='lcg-first',
-                        help='Count models only: original first LCG slice, retained LCG, views, or main integer-count stage')
+    parser.add_argument('--model-engine', choices=['lcg-first', 'lcg-retained', 'lp-retained', 'pb-retained',
+                                                 'affine-retained', 'mitm-retained', 'views', 'main-counts'], default='lcg-first',
+                        help='Count models only: direct original-coordinate algorithms, views, or main integer-count stage')
     parser.add_argument('--model-trace', action='store_true', help='Include count-model diagnostics, also on budget exits')
     parser.add_argument('--timeout', type=int, default=180, help='Process wall limit in seconds')
     parser.add_argument('--output', type=Path, default=ROOT / 'build/tests')

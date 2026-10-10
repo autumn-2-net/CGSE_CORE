@@ -26,7 +26,7 @@ final class CountAffineLattice implements AutoCloseable {
     private BigInteger[] point, counts, repairPoint;
     private ExactRational[][] mu;
     private ExactRational[] norms;
-    private int equation, phase, pivot = 1, attempt, trialFaces, equationLimit, exactEquations, faceAttempt;
+    private int equation, phase, pivot = 1, attempt, trialFaces, equationLimit, exactEquations, faceAttempt, exactEliminations;
     private long work, memory;
     private boolean complete, retaining, paused;
     private ExactLinearProgram.Constraint intersectRow;
@@ -247,7 +247,7 @@ final class CountAffineLattice implements AutoCloseable {
         basis.clear();
         mu = null;
         norms = null;
-        equation = attempt = 0;
+        equation = attempt = exactEliminations = 0;
         intersectRow = null;
         intersectValues = null;
         gram = null;
@@ -340,6 +340,7 @@ final class CountAffineLattice implements AutoCloseable {
         intersectRow = null;
         intersectValues = null;
         equation++;
+        if (!intersectTrial) exactEliminations++;
         checkpoints++;
         // Exact Bezout substitutions can inflate an otherwise small integer
         // lattice before the final LLL stage. Reduce the intermediate basis
@@ -655,6 +656,10 @@ final class CountAffineLattice implements AutoCloseable {
 
     CountAffineLattice retained() { retaining = true; return this; }
     boolean paused() { return paused; }
+    /** Scheduling evidence from two actual exact dimension reductions, not row count alone. */
+    boolean hasCoupledElimination() {
+        return exactEliminations >= 2;
+    }
     long progress() { return checkpoints + (kernel == null ? 0 : kernel.progress()); }
     void resume(long quantum) {
         if (!retaining || !paused || complete) throw new IllegalStateException("Affine search is not paused");

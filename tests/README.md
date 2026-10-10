@@ -433,3 +433,19 @@ and `wide-68` orderings are pinned in `count-boundaries.json`. Equal-budget
 outcomes, rejected broader policies and residual UNKNOWN orders are recorded in
 `../docs/integer-conflict-minimization.txt` and
 `provenance/integer-conflict-minimization-20261010.json`.
+
+`CountProgressSchedulingTest` checks retained LP progress and exact numeric
+elimination evidence against duplicate rows, fixed variables and trial faces.
+It covers mandatory visits, stagnation, one-time ceilings, proof eligibility,
+large integer budgets and cleanup. `RootPortfolioTest` also guards the work
+of six cheap matching witnesses against premature LP extensions. The new 27
+20M count/order boundaries are pinned in `regression/count-boundaries.json`.
+Diagnosis and rejected broader policies are recorded in
+`../docs/retained-progress-scheduling.txt` and
+`provenance/retained-progress-scheduling-20261010.json`.
+
+The model runner now also accepts `lp-retained`, `pb-retained`,
+`affine-retained` and `mitm-retained` with `--model-engine`. These direct
+original-row entries separate tool capacity from portfolio dispatch. Returned
+witnesses still pass the independent row/domain oracle. An admission refusal
+or an incomplete retained search stays UNKNOWN; it is never an UNSAT result.

@@ -15,9 +15,52 @@ final class CountModelReplay {
 
     static Result solve(String engine, List<ExactLinearProgram.Constraint> rows, BigInteger[] low,
                         BigInteger[] high, PlanningBudget budget, long maximumWork) {
-        if (engine.equals("lcg-first") || engine.equals("lcg-retained")) {
-            boolean retained = engine.equals("lcg-retained");
+        // Direct entries isolate algorithm capacity from the main portfolio.
+        // They keep the original rows and domains, and the caller independently
+        // checks every returned witness. A local admission refusal stays UNKNOWN.
+        if (engine.equals("pb-retained")) {
+            try (var search = new CountCdcl(rows, low, high, budget, 262144).retained()) {
+                while (true) {
+                    long before = budget.nodes();
+                    while (!search.step()) {}
+                    if (!search.paused() || search.counts() != null || search.infeasible() ||
+                            budget.remainingWork() < 1024 || before == budget.nodes())
+                        return new Result(search.counts(), search.infeasible());
+                    search.resume(Math.min(262144, budget.remainingWork()));
+                }
+            }
+        }
+        if (engine.equals("affine-retained")) {
+            try (var search = new CountAffineLattice(rows, low, high, budget, 262144).retained()) {
+                while (true) {
+                    long before = budget.nodes();
+                    while (!search.step()) {}
+                    if (!search.paused() || search.counts() != null ||
+                            budget.remainingWork() < 1024 || before == budget.nodes())
+                        return new Result(search.counts(), false);
+                    search.resume(Math.min(262144, budget.remainingWork()));
+                }
+            }
+        }
+        if (engine.equals("mitm-retained")) {
+            try (var search = new CountMeetInMiddle(rows, low, high, budget, 262144).retained()) {
+                while (true) {
+                    long before = budget.nodes();
+                    while (!search.step()) {}
+                    if (!search.paused() || search.counts() != null || search.infeasible() ||
+                            budget.remainingWork() < 1024 || before == budget.nodes())
+                        return new Result(search.counts(), search.infeasible());
+                    search.resume(Math.min(262144, budget.remainingWork()));
+                }
+            }
+        }
+        if (engine.equals("lcg-first") || engine.equals("lcg-retained") || engine.equals("lp-retained")) {
+            boolean retained = !engine.equals("lcg-first");
             try (var search = new CountLcg(rows, low, high, budget, retained ? 262144 : maximumWork)) {
+                if (engine.equals("lp-retained")) {
+                    search.learnedRelaxation();
+                    if (!search.learnedRelaxationEnabled()) return new Result(null, false);
+                }
                 do {
                     long before = budget.nodes();
                     while (!search.step()) {}

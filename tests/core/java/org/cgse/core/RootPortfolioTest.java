@@ -19,6 +19,9 @@ public final class RootPortfolioTest {
             var compiler = new GraphCompiler<>(recipes);
             var plan = new GraphPlanner<>(compiler).plan("GOAL", 1, stock(20, 1), false, true, budget);
             verify(plan, recipes, stock(20, 1), 1);
+            // These matching witnesses need less than 1M at the fixed seed.
+            // Valid LP cuts must not postpone them behind a long retained run.
+            check(budget.searchWork() < 2_000_000, "LP continuation displaced the cheap matching witness");
             check(budget.reservedBytes() == 0 && compiler.cacheMetrics().activeSearches() == 0, "Root search leaked");
         }
         parallelRequests(false);

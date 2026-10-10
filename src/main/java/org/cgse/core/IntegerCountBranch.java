@@ -90,6 +90,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     CountViewSearch viewSearch;
     CountLpSearch lpSearch;
     boolean lpTried, lpActive, lpResuming, preferLpResume = true;
+    boolean lpScoutsSampled, lpAfterScouts;
     int viewStage, viewCandidateStage;
     CountLcg auxiliaryLcg;
     int auxiliaryMode;
@@ -432,6 +433,10 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         if (lpActive) {
             if (!lpSearch.step()) return;
             lpSearch.publishCuts(modelViews, reduction);
+            // Leave the initial sample bounded so cheap candidate strategies
+            // can run. Later, productive cuts earn a bounded continuation
+            // before branch fan-out disperses the remaining budget.
+            if ((lpResuming || lpScoutsSampled) && lpSearch.continueOnCuts()) return;
             lpActive = false;
             counts = lpSearch.counts();
             boolean impossible = lpSearch.infeasible();
@@ -442,7 +447,8 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             // The initial LP turn precedes registration of reduced views.
             // Return through the portfolio entrance before ordinary strategies;
             // a retained LP search must not hide those equivalent coordinates.
-            int continuation = lpResuming ? 4 : 5;
+            int continuation = lpAfterScouts ? 8 : lpResuming ? 4 : 5;
+            lpAfterScouts = false;
             if (counts != null) {
                 viewCandidateStage = continuation;
                 beginScheduling();
@@ -1280,6 +1286,17 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     }
 
     private void beginBoolean() {
+        // Source faces, packing, decomposition and matching retain their first
+        // chances at a cheap witness. Only then extend a productive LP sample;
+        // rejection/cutoff returns to this same Boolean entrance, not a replay
+        // of those completed scouts or an unresolved root/child fan-out.
+        if (!earlyBinary && !lpScoutsSampled) {
+            lpScoutsSampled = true;
+            if (lpSearch != null && lpSearch.continueOnCuts()) {
+                lpAfterScouts = lpActive = true;
+                return;
+            }
+        }
         // A local cutoff falls through to other representations, but revisiting
         // the identical rows and bounds would merely repeat the same search.
         if (triedBinary) {
@@ -1963,6 +1980,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         else if (continuation == 4 || continuation == 6) state = State.UNRESOLVED;
         else if (continuation == 5) beginCompiledPortfolio();
         else if (continuation == 7) groups = new CountGroups(reduction.rows(), reduction.lower(), reduction.upper(), budget);
+        else if (continuation == 8) beginBoolean();
         // Stage 1 resumes compilation, preserving the untouched original model.
     }
 

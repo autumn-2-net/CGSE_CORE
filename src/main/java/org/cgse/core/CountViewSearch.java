@@ -66,6 +66,7 @@ final class CountViewSearch implements AutoCloseable {
         CountJump jump;
         CountContinuation specialist;
         long sliceWork, progress, work, candidates, verified, dead, unknown, downstreamWork;
+        long continuationLimit, continuationProgress, continuationCheckpoint;
         long publishedRoots;
         long importedBounds;
         int publishedConflicts, importedConflicts;
@@ -420,6 +421,30 @@ final class CountViewSearch implements AutoCloseable {
     }
 
     private Search select() {
+        // Pay each eligible engine's first visit before extending an already
+        // productive exact-elimination path. A learned conflict alone never
+        // turns a witness task into a proof task or disables other engines.
+        boolean sampled = searches.stream().noneMatch(search -> !search.done && search.scheduling.eligible &&
+                policy.selections(search.scheduling) == 0);
+        if (sampled) for (Search search : searches) {
+            if (search.done || !search.scheduling.eligible || !(search.specialist instanceof CountDiophantine numeric) ||
+                    !numeric.hasCoupledElimination()) continue;
+            if (search.continuationLimit == 0) {
+                long remaining = budget.remainingWork();
+                search.continuationLimit = saturatedAdd(search.work, remaining - remaining / 8);
+                search.continuationCheckpoint = search.work;
+                search.continuationProgress = search.progress;
+            }
+            if (search.progress > search.continuationProgress) {
+                search.continuationCheckpoint = search.work;
+                search.continuationProgress = search.progress;
+            }
+            // The one-time work ceiling and a charged-work stagnation window
+            // bound this preference. Ordinary selection resumes after either;
+            // the retained state and its undecided domain are never discarded.
+            if (search.work < search.continuationLimit && search.work - search.continuationCheckpoint < 262144)
+                return search;
+        }
         var chosen = policy.select();
         return searches.stream().filter(search -> search.scheduling == chosen).findFirst().orElse(null);
     }

@@ -1444,6 +1444,9 @@ final class CountLcg implements AutoCloseable {
         certificate = null;
     }
 
+    /** Only distinct, exactly certified LP consequences count toward continued sampling. */
+    long cutProgress() { return relaxationCuts; }
+
     /** Search feedback, never a proof or a reason to exclude a model. */
     long progress() {
         return rootProgress + learnedProgress + fixedPeak;

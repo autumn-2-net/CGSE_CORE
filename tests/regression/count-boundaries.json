@@ -3,58 +3,76 @@
   "cases": [
     {
       "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
-      "names": ["wide-79/corpus-order-0"],
+      "names": [
+        "wide-79/corpus-order-0"
+      ],
       "corpus_order": 0,
       "expected": "SAT",
       "reason": "Direct integer-bound conflict minimization; 3a75f505 is UNKNOWN at the same 20M cap. Other orders remain explicit UNKNOWN in the complete corpus."
     },
     {
       "id": "852d0b06f7ec7833f9bcb96a0a2e3599d066ac1b18d61a3b8ca47b60c9102769",
-      "names": ["wide-52/corpus-order-1"],
+      "names": [
+        "wide-52/corpus-order-1"
+      ],
       "corpus_order": 1,
       "expected": "SAT",
       "reason": "Protect an existing 20M conclusion: globally recursive minimization regressed this order; direct minimization must retain it."
     },
     {
       "id": "b27775fba4017cfff15dd5977caa63d8227cd50b0c4ecbc38e480ada4a08d2cf",
-      "names": ["wide-68/corpus-order-1"],
+      "names": [
+        "wide-68/corpus-order-1"
+      ],
       "corpus_order": 1,
       "expected": "SAT",
       "reason": "Protect complementary portfolio orderings: global direct minimization regressed this order; auxiliary-only minimization must retain it."
     },
     {
       "id": "a18f16aaf5b7fb63a459988338e58e34ac148d7d73e8c6a30569ee8df4c5f420",
-      "names": ["generated/subset-n48-bits40"],
+      "names": [
+        "generated/subset-n48-bits40"
+      ],
       "expected": "SAT",
       "reason": "Retained four-list residue joining finds a candidate without allocating the full 24-bit half table; b3059076 is unresolved at 20M. Independent native truth is recorded in numeric-oracles-20261009.json."
     },
     {
       "id": "a65596b89e9eb4805fdd1e6d5a77cac08ee58aa636317dc73d8c731542c9b14b",
-      "names": ["generated/subset-n48-bits24"],
+      "names": [
+        "generated/subset-n48-bits24"
+      ],
       "expected": "SAT",
       "reason": "Dense residue buckets let the retained candidate path join a fraction of the exponential pair space; b3059076 is unresolved at 20M. Exhaustion remains UNKNOWN."
     },
     {
       "id": "73f42a3e6595fcc0b2290db0264bf6c40d7b2364dc4b9bbac9ba6460558aae2b",
-      "names": ["generated/subset-n40-bits40"],
+      "names": [
+        "generated/subset-n40-bits40"
+      ],
       "expected": "SAT",
       "reason": "Certified scalar matching must be admitted at its actual representation cost; 01dff286 is unresolved at 20M. Independent native truth is recorded in numeric-oracles-20261009.json."
     },
     {
       "id": "7bd9cac1431000093a9a425ceed8d6412c1cf59a1040b06027fe4ea03e97727f",
-      "names": ["generated/subset-n40-bits48"],
+      "names": [
+        "generated/subset-n40-bits48"
+      ],
       "expected": "SAT",
       "reason": "Retained Gray-code matching and primitive signatures replace object-table traversal for a certified long equality; 01dff286 is unresolved at 20M."
     },
     {
       "id": "64a889df4156fb9c7754c554b9a32c31c59f64ff378ad907f4048e8e7fcdd6a3",
-      "names": ["scip/lseu-objective-1120/embedded/normalized"],
+      "names": [
+        "scip/lseu-objective-1120/embedded/normalized"
+      ],
       "expected": "SAT",
       "reason": "Keep resumed frontiers eligible and measure their scheduling share by completed effort; c67ead23 is unresolved at 20M. Native oracle truth is recorded in numeric-oracles-20261009.json."
     },
     {
       "id": "7cd7e27a366c3b15a6a7abb690941acc1849e2adffd4e7a72f1ad037848f7ad9",
-      "names": ["scip/lseu-objective-1120/raw/normalized"],
+      "names": [
+        "scip/lseu-objective-1120/raw/normalized"
+      ],
       "expected": "SAT",
       "reason": "Keep resumed frontiers eligible and measure their scheduling share by completed effort; c67ead23 is unresolved at 20M. Native oracle truth is recorded in numeric-oracles-20261009.json."
     },
@@ -148,7 +166,9 @@
     },
     {
       "id": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
-      "names": ["generated/wide-equality-n64-w1000000/corpus-order-1"],
+      "names": [
+        "generated/wide-equality-n64-w1000000/corpus-order-1"
+      ],
       "corpus_order": 1,
       "expected": "SAT",
       "reason": "Sparse Gram work and completed LLL progress let the retained frontier finish; 66380b83 is unresolved at 20M on this full-corpus row/column/term order."
@@ -161,7 +181,7 @@
       "corpus_order": 0,
       "work": 80000000,
       "expected": "SAT",
-      "reason": "Potential-guided retained lattice refinement; 366cf2ba is UNKNOWN at the same 80M cap. Lower-cap UNKNOWN remains explicit in the complete corpus."
+      "reason": "Potential-guided retained lattice refinement; 366cf2ba is UNKNOWN at the same 80M cap. Retain this higher-budget boundary alongside the new explicit 20M regression."
     },
     {
       "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
@@ -171,7 +191,7 @@
       "corpus_order": 1,
       "work": 80000000,
       "expected": "SAT",
-      "reason": "Potential-guided retained lattice refinement; 366cf2ba is UNKNOWN at the same 80M cap. Lower-cap UNKNOWN remains explicit in the complete corpus."
+      "reason": "Potential-guided retained lattice refinement; 366cf2ba is UNKNOWN at the same 80M cap. Retain this higher-budget boundary alongside the new explicit 20M regression."
     },
     {
       "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
@@ -181,7 +201,250 @@
       "corpus_order": 2,
       "work": 80000000,
       "expected": "SAT",
-      "reason": "Potential-guided retained lattice refinement; 366cf2ba is UNKNOWN at the same 80M cap. Lower-cap UNKNOWN remains explicit in the complete corpus."
+      "reason": "Potential-guided retained lattice refinement; 366cf2ba is UNKNOWN at the same 80M cap. Retain this higher-budget boundary alongside the new explicit 20M regression."
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "names": [
+        "scip/lseu-objective-1119/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "names": [
+        "scip/lseu-objective-1119/embedded/normalized/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "names": [
+        "scip/lseu-objective-1119/raw/original/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "names": [
+        "generated/sparse-equality-n96-s2/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "SAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "names": [
+        "scip/lseu-objective-1119/embedded/original/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "names": [
+        "scip/lseu-objective-1119/embedded/reduced/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "names": [
+        "scip/lseu-objective-1119/raw/reduced/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "SAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "names": [
+        "scip/lseu-objective-1119/raw/normalized/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "names": [
+        "scip/lseu-objective-1119/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "names": [
+        "scip/lseu-objective-1119/embedded/normalized/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "names": [
+        "scip/lseu-objective-1119/raw/original/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "names": [
+        "generated/sparse-equality-n96-s2/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "SAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "names": [
+        "scip/lseu-objective-1119/embedded/original/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "names": [
+        "scip/lseu-objective-1119/embedded/reduced/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "names": [
+        "scip/lseu-objective-1119/raw/reduced/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "SAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "names": [
+        "scip/lseu-objective-1119/raw/normalized/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+      "names": [
+        "scip/lseu-objective-1119/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+      "names": [
+        "scip/lseu-objective-1119/embedded/normalized/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+      "names": [
+        "scip/lseu-objective-1119/raw/original/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "names": [
+        "generated/sparse-equality-n96-s2/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "SAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+      "names": [
+        "scip/lseu-objective-1119/embedded/original/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+      "names": [
+        "scip/lseu-objective-1119/embedded/reduced/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+      "names": [
+        "scip/lseu-objective-1119/raw/reduced/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "SAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
+    },
+    {
+      "id": "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+      "names": [
+        "scip/lseu-objective-1119/raw/normalized/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "expected": "UNSAT",
+      "reason": "Bounded continuation of certified LP cuts or coupled exact lattice elimination; 124cc943 is UNKNOWN at the same 20M cap. Full-corpus row/column/term order, independent original-row witness and external oracle checks."
     }
   ]
 }

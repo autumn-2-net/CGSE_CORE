@@ -274,3 +274,21 @@ finite-box/proof oracles, two deliberately unsound negative controls, 66 stable
 checks, 3,117 graph checks, 57 capture replays and offline assembly pass. This
 strengthens an existing search tool, not general SCIP/CP-SAT equivalence, broad
 admission or the remaining host-residency/end-to-end attribution gaps (H/J).
+
+2026-10-10 retained progress and complementary first visits
+--------------------------------------------------------
+retained-progress-scheduling.txt separates the 14 original-order UNKNOWN
+models at 124cc943 into measured scheduling and capacity/cost gaps. Existing
+LP and affine tools already handle nine at 20M; bounded continuation in the
+integrated pipeline now gives those tools their required opportunity after
+cheap candidate first visits. Duplicate/fixed/trial rows cannot fake exact
+elimination progress, and progress does not renew the work ceilings.
+The complete 822-case comparison gains 27 conclusions across three orders,
+with none lost and 27.62% less recorded count work. All 3,117 graph checks keep
+their original result AND work. 67 stable checks, 57 capture replays, three
+negative controls and offline assembly pass. Earlier broad policies that
+regressed graph conclusions or cost were rejected, not left in production.
+Five original-order known-SAT residuals remain at 20M: four larger sparse
+equalities and one costly four-list subset join. Blindly widening admission
+does not solve the former; the latter solves at an explicit 80M diagnostic
+cap with its existing tool. Default request limits and audit H/J scope remain.
