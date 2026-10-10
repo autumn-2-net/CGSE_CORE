@@ -17,9 +17,9 @@ from compare_planning import fingerprint
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def models(seeds, permutations, large=False):
+def models(seeds, permutations, large=False, seed_start=0):
     records = []
-    for seed in range(seeds):
+    for seed in range(seed_start, seed_start + seeds):
         for gap in (0, 8):
             rng = random.Random(2026101100 + 2 * seed + gap)
             sizes = (42, 44, 46, 48, 50, 52) if large else (42, 44, 46, 48)
@@ -52,14 +52,15 @@ def main():
     parser.add_argument('--java-home', required=True)
     parser.add_argument('--baseline', required=True)
     parser.add_argument('--seeds', type=int, default=12)
+    parser.add_argument('--seed-start', type=int, default=0, help='Continue with unseen seeds without repeating earlier inputs')
     parser.add_argument('--permutations', type=int, default=3)
     parser.add_argument('--work', type=int, default=20_000_000)
     parser.add_argument('--large', action='store_true', help='Also cover 50/52-coordinate inputs within certified scalar range')
     parser.add_argument('--timeout', type=int, default=1800)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    if min(args.seeds, args.permutations, args.work) < 1:
-        parser.error('Require positive seeds, permutations and work')
+    if min(args.seeds, args.permutations, args.work) < 1 or args.seed_start < 0:
+        parser.error('Require positive seeds, permutations and work, and a nonnegative seed start')
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     baseline = subprocess.check_output(['git', 'rev-parse', '--verify', args.baseline + '^{commit}'], cwd=ROOT, text=True).strip()
@@ -76,18 +77,18 @@ def main():
     spec = importlib.util.spec_from_file_location('inputs', ROOT / 'tests/cases/run.py')
     helper = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(helper)
-    inputs = models(args.seeds, args.permutations, args.large)
+    inputs = models(args.seeds, args.permutations, args.large, args.seed_start)
     helper.write_models(output / 'models.bin', inputs)
     (output / 'models.json').write_text(json.dumps(inputs), encoding='utf-8')
     harness = [ROOT / path for path in ('tests/regression/java/GraphFixtureRegression.java',
                'tests/corpus/java/CountModelRegression.java', 'tests/corpus/java/CountModelReplay.java')]
     jdk = Path(args.java_home) / 'bin'
     extension = '.exe' if (jdk / 'java.exe').exists() else ''
-    summary = {'baseline': baseline, 'candidate_source_sha256': fingerprint((ROOT / 'src/main/java').rglob('*.java')),
+    summary = {'baseline_revision': baseline, 'candidate_source_sha256': fingerprint((ROOT / 'src/main/java').rglob('*.java')),
                'harness_sha256': fingerprint(harness + [Path(__file__), ROOT / 'tests/cases/run.py']),
                'input_sha256': hashlib.sha256((output / 'models.bin').read_bytes()).hexdigest(),
                'work': args.work, 'milliseconds': 0, 'memory_bytes': 256 << 20, 'workers': 1,
-               'seeds': args.seeds, 'permutations': args.permutations, 'large': args.large,
+               'seeds': args.seeds, 'seed_start': args.seed_start, 'permutations': args.permutations, 'large': args.large,
                'note': 'Main integer-count stage; witnesses independently checked against original rows and domains. '
                        'Planted SAT; UNKNOWN is not infeasibility. Functional campaign, not an isolated timing comparison.'}
     for name, source in [('baseline', old), ('candidate', ROOT)]:
@@ -115,6 +116,8 @@ def main():
     summary['lost'] = [key for key in summary['baseline'] if summary['baseline'][key][0] == 'PASS' and summary['candidate'][key][0] != 'PASS']
     (output / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
     print(f'gained={len(summary["gained"])} lost={len(summary["lost"])}', flush=True)
+    if summary['lost']:
+        raise AssertionError('Previously solved inputs regressed; inspect summary.json')
 
 
 if __name__ == '__main__':

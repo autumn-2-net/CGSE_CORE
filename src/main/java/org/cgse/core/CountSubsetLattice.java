@@ -19,7 +19,7 @@ final class CountSubsetLattice implements AutoCloseable {
     private long[] coefficients;
     private int[] order;
     private final List<BigInteger[]> basis = new ArrayList<>();
-    private CountGramSchmidt gram;
+    private CountIntegralGram gram;
     private ExactRational[][] mu;
     private ExactRational[] norms, centers, distances;
     private BigInteger[] choices, offsets, best;
@@ -47,6 +47,8 @@ final class CountSubsetLattice implements AutoCloseable {
             choices = new BigInteger[n + 1];
             offsets = new BigInteger[n + 1];
             directions = new int[n + 1];
+            mu = new ExactRational[n + 1][n + 1];
+            norms = new ExactRational[n + 1];
         } catch (RuntimeException | Error failure) { close(); throw failure; }
     }
 
@@ -79,7 +81,7 @@ final class CountSubsetLattice implements AutoCloseable {
                 boolean finished = gram.step();
                 if (gram.dependent()) return finish();
                 progress += gram.completedRows() - before;
-                if (finished) { gram = null; phase = 2; }
+                if (finished) phase = 2;
             } else if (phase == 2) reduce();
             else if (phase == 3) inspect();
             else if (phase == 4) enumerate();
@@ -124,8 +126,7 @@ final class CountSubsetLattice implements AutoCloseable {
     }
 
     private void beginGram() {
-        gram = new CountGramSchmidt(basis, this::charge);
-        mu = gram.mu(); norms = gram.norms();
+        gram = new CountIntegralGram(basis, this::charge);
         pivot = 1; reduceStage = 0; phase = 1;
     }
 
@@ -141,8 +142,7 @@ final class CountSubsetLattice implements AutoCloseable {
             return;
         }
         charge();
-        ExactRational m = mu[k][k - 1], square = m.multiply(m);
-        if (norms[k].compareTo(DELTA.subtract(square).multiply(norms[k - 1])) >= 0) {
+        if (gram.lovasz(k, 99, 100)) {
             reduceColumn = k - 2; reduceStage = 2; return;
         }
         swap(k);
@@ -150,40 +150,19 @@ final class CountSubsetLattice implements AutoCloseable {
     }
 
     private void swap(int k) {
-        charge();
-        ExactRational m = mu[k][k - 1], square = m.multiply(m);
-        ExactRational combined = norms[k].add(square.multiply(norms[k - 1]));
-        ExactRational next = m.multiply(norms[k - 1]).divide(combined);
-        norms[k] = norms[k].multiply(norms[k - 1]).divide(combined);
-        norms[k - 1] = combined;
-        mu[k][k - 1] = next;
-        for (int i = 0; i < k - 1; i++) {
-            charge();
-            var previous = mu[k][i]; mu[k][i] = mu[k - 1][i]; mu[k - 1][i] = previous;
-        }
-        for (int i = k + 1; i < basis.size(); i++) {
-            charge();
-            var previous = mu[i][k];
-            mu[i][k] = mu[i][k - 1].subtract(m.multiply(previous));
-            mu[i][k - 1] = previous.add(next.multiply(mu[i][k]));
-        }
+        gram.swap(k);
         Collections.swap(basis, k, k - 1);
     }
 
     private void sizeReduce(int k, int j) {
         charge();
-        ExactRational value = mu[k][j];
-        if ((value.signum() < 0 ? value.negate() : value).compareTo(HALF) <= 0) return;
-        BigInteger q = mu[k][j].add(HALF).floor();
+        if (!gram.needsReduction(k, j)) return;
+        BigInteger q = gram.nearest(k, j);
         for (int i = 0; i < n + 2; i++) {
             charge();
             basis.get(k)[i] = bounded(basis.get(k)[i].subtract(q.multiply(basis.get(j)[i])));
         }
-        ExactRational multiple = ExactRational.of(q);
-        for (int i = 0; i < j; i++) {
-            charge(); mu[k][i] = mu[k][i].subtract(multiple.multiply(mu[j][i]));
-        }
-        mu[k][j] = mu[k][j].subtract(multiple);
+        gram.add(k, j, q.negate());
         progress++;
     }
 
@@ -220,6 +199,13 @@ final class CountSubsetLattice implements AutoCloseable {
             if (width > 24) { finish(); return; }
         }
         end = Math.min(basis.size(), block + width);
+        // Fractions are needed only while enumerating a frozen projected block.
+        // Rebuild that small view after every insertion/reduction, never use
+        // cached fractions to update the authoritative integer Gram factors.
+        for (int i = block; i < end; i++) {
+            charge(); norms[i] = gram.norm(i);
+            for (int j = block; j < i; j++) { charge(); mu[i][j] = gram.mu(i, j); }
+        }
         depth = end - 1; radius = norms[block].multiply(DELTA);
         distances[end] = ExactRational.ZERO;
         Arrays.fill(choices, block, end, BigInteger.ZERO);
@@ -279,8 +265,7 @@ final class CountSubsetLattice implements AutoCloseable {
             if (position < end - 1) { swap(++position); return; }
             if (best[unit].signum() < 0) {
                 for (int i = 0; i < n + 2; i++) { charge(); basis.get(position)[i] = basis.get(position)[i].negate(); }
-                for (int i = 0; i < position; i++) { charge(); mu[position][i] = mu[position][i].negate(); }
-                for (int i = position + 1; i < basis.size(); i++) { charge(); mu[i][position] = mu[i][position].negate(); }
+                gram.negate(position);
             }
             adding = 0; insertStage = 2; return;
         }
@@ -298,9 +283,7 @@ final class CountSubsetLattice implements AutoCloseable {
                 for (int i = 0; i < n + 2; i++) {
                     charge(); basis.get(position)[i] = bounded(basis.get(position)[i].add(q.multiply(basis.get(j)[i])));
                 }
-                var multiple = ExactRational.of(q);
-                for (int i = 0; i < j; i++) { charge(); mu[position][i] = mu[position][i].add(multiple.multiply(mu[j][i])); }
-                mu[position][j] = mu[position][j].add(multiple);
+                gram.add(position, j, q);
                 return;
             }
             insertStage = 3;

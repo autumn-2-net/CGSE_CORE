@@ -1,0 +1,137 @@
+Retained integer Gram factors (2026-10-11)
+=========================================
+
+Scope and motivation
+--------------------
+The centered subset tool introduced in cc653c5c solves the formerly unresolved
+48-bit subset case, but its rational updates allocate many temporary objects.
+A local JFR sample attributes about 72% of sampled allocation to its adjacent
+Gram swaps and size reductions. This increment changes that representation,
+not the request cap, admission policy, enumeration radius or candidate semantics.
+
+CountIntegralGram stores leading Gram determinants D[j] and integer-scaled
+projections L[i][j] = mu[i][j] * D[j+1]. These are minors of the integer Gram
+matrix; fraction-free elimination computes them with exact integer divisions.
+An adjacent swap only changes one determinant and two later projection columns.
+Adding an earlier row only changes the corresponding projection prefix. Sign
+changes preserve determinants and negate the appropriate projection row/column.
+
+For a swap at k, with a=D[k-1], b=D[k], c=D[k+1], m=L[k][k-1]:
+
+  D'[k]       = (a*c + m*m) / b
+  L'[i][k-1]  = (a*L[i][k] + m*L[i][k-1]) / b
+  L'[i][k]    = (c*L[i][k-1] - m*L[i][k]) / b, for i > k
+
+The other leading determinants and L[k][k-1] stay unchanged. Lovasz and nearest
+integer decisions use integer comparisons, including the previous positive
+direction for exact half ties. Only the frozen projected enumeration block is
+converted to reduced rationals. Every new block reconstructs that view after
+all basis updates; stale rational entries are never authoritative factors.
+
+Mathematical reference: Bottesch, Haslbeck and Thiemann, A Verified Efficient
+Implementation of the LLL Basis Reduction Algorithm, section 3:
+https://easychair.org/publications/paper/spJt/open
+This is an independent implementation of the integer representation and update
+identities, not copied solver source or a formal verification claim about CGSE.
+
+Boundaries
+----------
+The caller still reserves the workspace before allocation and owns retained
+state, cancellation and charging. Integer-dot visits, elimination terms, factor
+updates and block-view construction are charged. A scheduler yield does not
+repeat finished projections or grant new request work. Gram minors have a
+2048-bit limit and basis coordinates retain their existing 512-bit limit.
+Integer minors can reach this limit before reduced rational projections would;
+such a refusal ends only this optional candidate attempt. It proves nothing
+about the original model. Every integer division checks the remainder; a broken
+integrality invariant is an error, not truncation or an infeasibility claim.
+Original signed quantities, domain offsets and complete plan checks still
+decide acceptance. ExactRational and other lattice tools are unchanged.
+
+Validation
+----------
+CountIntegralGramTest compares 96 matrices and 3,456 mixed swap/add/negate
+updates with independent vector Gram-Schmidt. It also checks negative half
+ties, near-dependent 400-bit coordinates, dependency, precision refusal,
+charged cancellation and worker handoff. The existing retained subset tests
+still reconstruct integer dot products during partially completed insertions,
+and check finite brute-force witnesses, signed large offsets, tiny slices,
+memory refusal and cancellation.
+
+Five isolated bad mutations are rejected: a wrong swap sign, omitting zero
+projection rescaling, reversing a negative half tie, failing to update the
+added-row pivot, and removing numeric charging. They are not production modes.
+
+The equal-20M canonical comparison retains all 822 conclusions: 790 PASS,
+14 UNKNOWN and 18 unsupported conversions. The four original-order sparse
+equalities remain unresolved. Total recorded count work changes from
+896,113,465 to 896,124,205; the additional 10,740 units are paid block-view
+construction on the three subset orders. All 72 parity verdicts and work stay
+identical. All 78 standard programs, 2,151 paired graph requests across three
+orders and cold/warm/replaced caches, and 19 complete-catalog capture replays
+with four workers and the existing explicit 2x budget pass. Paired graph results
+and work are unchanged. Captures are replays, not a new live AE/server session.
+
+The two prior subset families plus twelve unseen seeds cover 192 distinct
+signed/shifted/order records. Both revisions solve 121 and leave 71 UNKNOWN,
+with no gained, lost or contradictory conclusions. The runner now supports
+seed offsets, preserves the baseline revision separately from observations,
+and exits with failure if a previously solved input regresses. Offline assembly
+passes; the sources jar matches all 205 production Java files exactly.
+
+Performance comparison
+----------------------
+The existing SubsetMatchingThroughput harness compares cc653c5c with this tree,
+sequential BC/CB, two warmups and three measured batches in each of two cycles.
+Each batch contains three complete-corpus orders of the same known boundary.
+Both versions use the same explicit 80M cap and return identical full witnesses.
+No other CGSE regression campaign runs during this timing comparison.
+
+Median three-case batch:
+
+  elapsed ns:                1,608,112,300 ->   287,689,100  (-82.11%)
+  cumulative allocated bytes:2,662,389,676 ->   702,789,952  (-73.60%)
+  charged work:                  4,555,256 ->     4,565,996  (+0.24%)
+
+Peak reserved matcher workspace stays 9,934,418 bytes. A separate 64 MiB heap
+run also returns all three witnesses. Cumulative allocation is not live heap
+or RSS; allocation remains material. These are direct-tool measurements, not
+whole-planner, game FPS or default-budget claims. Source hashes, input hashes,
+raw batch observations and all campaign summaries are in the provenance file.
+
+Remaining sparse boundary
+-------------------------
+A local-only wide-affine prototype applies the same integer representation,
+allows ambient size 288 and residual dimension 144, and permits 16384-bit
+minors. At the unchanged 20M direct-tool limit it solves 0/4 original residuals.
+The two 257-variable cases consume their allowance reducing intermediate
+bases of dimension 205/198 after only 52/59 of 128 equations. The two
+144-variable cases finish all 72 intersections but remain in ordinary/deep
+reduction. This is evidence against merely widening admission; that prototype
+is excluded. It is not evidence that the instances are infeasible, nor a
+comparison with a native solver's wall-time budget.
+
+Broader numeric/closure admission, sparse affine representations, native domain
+holes and the audit's remaining candidate-benefit and host-residency questions
+remain open. This increment introduces no host, adapter or fallback changes.
+
+Reproduction (add --java-home for the local JDK 17)
+------------------------------------------------
+  python tests/run.py --suite standard --output build/integral-gram-standard
+  python tests/benchmarks/compare_count_models.py --baseline cc653c5c
+      --permutations 3 --parity --output build/integral-gram-comparison
+  python tests/benchmarks/compare_subset_lattice.py --baseline cc653c5c
+      --seeds 12 --permutations 3 --output build/integral-gram-family
+  python tests/benchmarks/compare_subset_lattice.py --baseline cc653c5c
+      --seeds 12 --permutations 3 --large --output build/integral-gram-large
+  python tests/benchmarks/compare_subset_lattice.py --baseline cc653c5c
+      --seed-start 12 --seeds 12 --permutations 3 --large
+      --output build/integral-gram-new-seeds
+  python tests/benchmarks/compare_planning.py --baseline cc653c5c
+      --permutations 3 --milliseconds 0 --work 20000000 --modes accounts
+      --require-same-work --output build/integral-gram-planning
+  python tests/datasets/regressions.py --workers 4 --expanded-budget
+      --output build/integral-gram-captures
+  python tests/benchmarks/compare_subset_matching.py --baseline cc653c5c
+      --work 80000000 --warmup 2 --repetitions 3 --cycles 2
+      --output build/integral-gram-timing

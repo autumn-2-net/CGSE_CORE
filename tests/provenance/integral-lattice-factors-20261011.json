@@ -1,0 +1,416 @@
+{
+  "date": "2026-10-11",
+  "baseline_revision": "cc653c5c613ba66a3a50c3d824e229e816cae828",
+  "candidate_source_sha256": "b4daaa04267fa1e611468eeea0e4f095a1767f494a20fcffbb33dfae46292d2b",
+  "production_files": 205,
+  "scope": "Exact integer Gram representation within the existing positive-only subset tool; no admission or request-cap increase.",
+  "reference": "https://easychair.org/publications/paper/spJt/open",
+  "standard": {
+    "programs": 78,
+    "status": "PASS"
+  },
+  "count_models": {
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "a144f6e2269fad4c62ca5f86a0e185380d954f0feba4a9d8282462ecec887f10",
+    "work_cap": 20000000,
+    "records": 822,
+    "baseline": {
+      "PASS": 790,
+      "UNRESOLVED": 14,
+      "UNSUPPORTED": 18
+    },
+    "candidate": {
+      "PASS": 790,
+      "UNRESOLVED": 14,
+      "UNSUPPORTED": 18
+    },
+    "baseline_work": 896113465,
+    "candidate_work": 896124205,
+    "gains": 0,
+    "losses": 0,
+    "contradictions": 0,
+    "original_order_unresolved": [
+      "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+      "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+      "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+      "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3"
+    ]
+  },
+  "parity": {
+    "records": 72,
+    "results_and_work_equal": true
+  },
+  "subset_families": {
+    "family": {
+      "input_sha256": "45cb6a717989d85922d579f39e7f2e5f0bb9cec2207693e7feb242fa1f9cd5ba",
+      "harness_sha256": "051b4852b4a73a7e92f68ebb2f9b4e798c7ed510b7ab751d4be6d00c41dbd9ed",
+      "seeds": 12,
+      "permutations": 3,
+      "large": false,
+      "seed_start": 0,
+      "baseline": {
+        "PASS": 58,
+        "UNRESOLVED": 14
+      },
+      "candidate": {
+        "PASS": 58,
+        "UNRESOLVED": 14
+      },
+      "baseline_work": 423228270,
+      "candidate_work": 423590063
+    },
+    "large": {
+      "input_sha256": "b3ac67781bc1041a75d96dab85a8201ecefb379d4e7ff49aeed13004f0a80fa2",
+      "harness_sha256": "1227269c5204d01436397c67fae24be799956501385674c506e03cd052973e5f",
+      "seeds": 12,
+      "permutations": 3,
+      "large": true,
+      "seed_start": 0,
+      "baseline": {
+        "PASS": 37,
+        "UNRESOLVED": 35
+      },
+      "candidate": {
+        "PASS": 37,
+        "UNRESOLVED": 35
+      },
+      "baseline_work": 822860403,
+      "candidate_work": 822987552
+    },
+    "new-seeds": {
+      "input_sha256": "634f3b02cd07bdf994ef3fcc41dc3d5c93861318782694ad9c242c48178cc0bc",
+      "harness_sha256": "051b4852b4a73a7e92f68ebb2f9b4e798c7ed510b7ab751d4be6d00c41dbd9ed",
+      "seeds": 12,
+      "permutations": 3,
+      "large": true,
+      "seed_start": 12,
+      "baseline": {
+        "PASS": 44,
+        "UNRESOLVED": 28
+      },
+      "candidate": {
+        "PASS": 44,
+        "UNRESOLVED": 28
+      },
+      "baseline_work": 657669568,
+      "candidate_work": 657963942
+    }
+  },
+  "subset_union": {
+    "records": 192,
+    "baseline": {
+      "PASS": 121,
+      "UNRESOLVED": 71
+    },
+    "candidate": {
+      "PASS": 121,
+      "UNRESOLVED": 71
+    },
+    "gains": 0,
+    "losses": 0,
+    "contradictions": 0
+  },
+  "graphs": {
+    "fixture_sha256": "4f4f66ab40bc43f18da4bf33225e764abb083c965a88fae01d313cb6089859bd",
+    "harness_sha256": "4e8a08d7cee91e37920137cf353e7e17059483fdc23440ca248e749f65b8e2dc",
+    "work_cap": 20000000,
+    "permutations": 3,
+    "results_and_work_equal": true,
+    "groups": {
+      "cold": {
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "total_search": 440638086,
+        "total_compilation": 20657583
+      },
+      "warm": {
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "total_search": 439997000,
+        "total_compilation": 17523399
+      },
+      "replaced": {
+        "cases": 717,
+        "results": {
+          "FEASIBLE_NOT_PROVEN_OPTIMAL": 576,
+          "MISSING_INPUT": 105,
+          "FEASIBLE": 36
+        },
+        "total_search": 440604707,
+        "total_compilation": 20657583
+      }
+    }
+  },
+  "captures": {
+    "workers": 4,
+    "expanded_budget_multiplier": 2,
+    "note": "Previously exported complete catalogs, not a fresh AE/server run.",
+    "groups": {
+      "emitter-residual-progress": {
+        "requests": 9,
+        "expected_rows": 9,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 9
+        },
+        "results": {
+          "FEASIBLE": 9
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      },
+      "miracle-funded-cycle-entry": {
+        "requests": 4,
+        "expected_rows": 4,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 4
+        },
+        "results": {
+          "FEASIBLE": 4
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      },
+      "miracle-quantity-source": {
+        "requests": 3,
+        "expected_rows": 3,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 3
+        },
+        "results": {
+          "FEASIBLE": 3
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      },
+      "miracle-seed-source": {
+        "requests": 3,
+        "expected_rows": 3,
+        "exit_code": 0,
+        "assessments": {
+          "VERIFIED_FEASIBLE": 3
+        },
+        "results": {
+          "FEASIBLE": 3
+        },
+        "note": "UNKNOWN expected truth and INCONCLUSIVE results are retained explicitly, never counted as an infeasibility proof."
+      }
+    }
+  },
+  "timing": {
+    "baseline_revision": "cc653c5c613ba66a3a50c3d824e229e816cae828",
+    "candidate_source_sha256": "b4daaa04267fa1e611468eeea0e4f095a1767f494a20fcffbb33dfae46292d2b",
+    "harness_sha256": "b6a87aaeb4709a7fb9dd4f120cd1aa90f006e197cd781c08c88710015cf26584",
+    "input_sha256": "ba7fb6d1e63df63bea45cb4b0d8daaff2f3cd8803f023751955f025bcf7ac343",
+    "work": 80000000,
+    "memory_bytes": 268435456,
+    "milliseconds": 0,
+    "workers": 1,
+    "warmup": 2,
+    "repetitions": 3,
+    "cycles": 2,
+    "models_per_batch": 3,
+    "scope": "Direct retained matching, explicit larger equal cap so both revisions reach a witness. Not whole-planner timing, not a default-budget increase; cumulative allocation and reserved workspace are not RSS.",
+    "baseline": {
+      "cases": {
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": {
+          "work": "1518424",
+          "witness": "[0| 0| 1| 1| 0| 0| 1| 1| 1| 0| 1| 0| 0| 0| 1| 1| 0| 0| 0| 0| 1| 1| 0| 1| 1| 1| 1| 0| 1| 1| 0| 0| 1| 0| 0| 1| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 0| 1]"
+        },
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=1": {
+          "work": "1518354",
+          "witness": "[0| 0| 1| 0| 0| 1| 1| 1| 0| 0| 1| 0| 0| 0| 1| 0| 0| 1| 0| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 1| 1| 1| 0| 1| 1| 0| 1| 0| 1| 0| 1| 0| 0| 1| 0| 1| 1| 1]"
+        },
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=2": {
+          "work": "1518478",
+          "witness": "[1| 1| 0| 1| 0| 0| 0| 1| 1| 1| 0| 1| 1| 1| 0| 0| 1| 1| 0| 0| 1| 1| 1| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 0| 0| 1| 0| 0| 1| 0| 0| 1| 0| 0| 1| 1| 0| 0]"
+        }
+      },
+      "batches": [
+        {
+          "nanos": 1600700200,
+          "allocated_bytes": 2663014368,
+          "work": 4555256
+        },
+        {
+          "nanos": 1615524400,
+          "allocated_bytes": 2663014368,
+          "work": 4555256
+        },
+        {
+          "nanos": 1580383300,
+          "allocated_bytes": 2663014368,
+          "work": 4555256
+        },
+        {
+          "nanos": 1628420400,
+          "allocated_bytes": 2661764664,
+          "work": 4555256
+        },
+        {
+          "nanos": 1618610400,
+          "allocated_bytes": 2661764664,
+          "work": 4555256
+        },
+        {
+          "nanos": 1565547700,
+          "allocated_bytes": 2661764984,
+          "work": 4555256
+        }
+      ],
+      "median_batch": {
+        "nanos": 1608112300.0,
+        "allocated_bytes": 2662389676.0,
+        "work": 4555256.0
+      },
+      "max_peak_reserved_bytes": 9934418
+    },
+    "candidate": {
+      "cases": {
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c": {
+          "work": "1522004",
+          "witness": "[0| 0| 1| 1| 0| 0| 1| 1| 1| 0| 1| 0| 0| 0| 1| 1| 0| 0| 0| 0| 1| 1| 0| 1| 1| 1| 1| 0| 1| 1| 0| 0| 1| 0| 0| 1| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 0| 1]"
+        },
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=1": {
+          "work": "1521934",
+          "witness": "[0| 0| 1| 0| 0| 1| 1| 1| 0| 0| 1| 0| 0| 0| 1| 0| 0| 1| 0| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 1| 1| 1| 0| 1| 1| 0| 1| 0| 1| 0| 1| 0| 0| 1| 0| 1| 1| 1]"
+        },
+        "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c/order=2": {
+          "work": "1522058",
+          "witness": "[1| 1| 0| 1| 0| 0| 0| 1| 1| 1| 0| 1| 1| 1| 0| 0| 1| 1| 0| 0| 1| 1| 1| 0| 0| 1| 1| 0| 0| 0| 0| 0| 0| 0| 0| 1| 0| 0| 1| 0| 0| 1| 0| 0| 1| 1| 0| 0]"
+        }
+      },
+      "batches": [
+        {
+          "nanos": 290143800,
+          "allocated_bytes": 703453056,
+          "work": 4565996
+        },
+        {
+          "nanos": 292376600,
+          "allocated_bytes": 703453056,
+          "work": 4565996
+        },
+        {
+          "nanos": 285234400,
+          "allocated_bytes": 703453376,
+          "work": 4565996
+        },
+        {
+          "nanos": 295546800,
+          "allocated_bytes": 702126528,
+          "work": 4565996
+        },
+        {
+          "nanos": 284688700,
+          "allocated_bytes": 702126528,
+          "work": 4565996
+        },
+        {
+          "nanos": 284531100,
+          "allocated_bytes": 702126848,
+          "work": 4565996
+        }
+      ],
+      "median_batch": {
+        "nanos": 287689100.0,
+        "allocated_bytes": 702789952.0,
+        "work": 4565996.0
+      },
+      "max_peak_reserved_bytes": 9934418
+    }
+  },
+  "negative_controls": {
+    "wrong-swap-sign": {
+      "exit_code": 1,
+      "reason": "Exception in thread \"main\" java.lang.AssertionError: Incorrect projection",
+      "source_sha256": "7836db07b2e7f2e490f4bce49a8c4c1e8e114a201f47ccaaaeb0e4bc3061351c"
+    },
+    "omit-zero-rescale": {
+      "exit_code": 1,
+      "reason": "Exception in thread \"main\" java.lang.ArithmeticException: Nonintegral Gram minor",
+      "source_sha256": "aca92e2efb8592ef131d2d0e07e43f9fe92ff3b19219622b37af7cb2fc976505"
+    },
+    "negative-half-tie": {
+      "exit_code": 1,
+      "reason": "Exception in thread \"main\" java.lang.AssertionError: Rounding changed direction/tie",
+      "source_sha256": "23dcfd13b19771fe92d6e67265e3dfa67f17fc847ec9fd20c1ba4ac6a5b7619f"
+    },
+    "stale-added-pivot": {
+      "exit_code": 1,
+      "reason": "Exception in thread \"main\" java.lang.AssertionError: Incorrect projection",
+      "source_sha256": "1967b3a425baf9a948e88bfffac501b39e41a35747d1dc0e01106d316a3c686f"
+    },
+    "uncharged-numerics": {
+      "exit_code": 1,
+      "reason": "Exception in thread \"main\" java.lang.AssertionError: Factor completion/accounting",
+      "source_sha256": "69b40bc6dafafef6b20ede221c19a96e44e8a2830b7be181e659f3a6371a71bc"
+    }
+  },
+  "heap_smoke": {
+    "heap_mib": 64,
+    "verified_original_witnesses": 3,
+    "note": "Functional check only; does not measure host RSS."
+  },
+  "build": {
+    "offline_assemble": "PASS",
+    "sources_jar_matching_production_files": 205
+  },
+  "excluded_sparse_prototype": {
+    "ambient_limit": 288,
+    "residual_dimension_limit": 144,
+    "minor_bit_limit": 16384,
+    "direct_work_cap": 20000000,
+    "solved": 0,
+    "unresolved": 4,
+    "final_states": [
+      {
+        "id_prefix": "1204d210",
+        "phase": "ordinary-reduction",
+        "equations_done": 72,
+        "equations": 72,
+        "basis_dimension": 72,
+        "pivot": 45
+      },
+      {
+        "id_prefix": "3f627567",
+        "phase": "intermediate-reduction",
+        "equations_done": 52,
+        "equations": 128,
+        "basis_dimension": 205,
+        "pivot": 123
+      },
+      {
+        "id_prefix": "867653b0",
+        "phase": "intermediate-reduction",
+        "equations_done": 59,
+        "equations": 128,
+        "basis_dimension": 198,
+        "pivot": 157
+      },
+      {
+        "id_prefix": "898e00c6",
+        "phase": "potential-reduction",
+        "equations_done": 72,
+        "equations": 72,
+        "basis_dimension": 72,
+        "pivot": 17
+      }
+    ],
+    "source_sha256": "999027ce169d8f021fcd6847e67b0482dfd8f995ca41287639c1c58ccdbc37fb",
+    "note": "Local-only experiment, no witness and no infeasibility proof; not integrated or committed."
+  },
+  "limits": [
+    "Four original sparse known-SAT limits remain.",
+    "71 of 192 generated subset/order cases remain UNKNOWN.",
+    "Reserved workspace and cumulative allocation are not RSS.",
+    "Candidate lineage/benefit and host residency are not closed."
+  ]
+}

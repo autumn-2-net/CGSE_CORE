@@ -174,17 +174,16 @@ public final class CountSubsetLatticeTest {
                 if (phase != 5 || stage == previousStage || stage == 0 || checked >= 9) continue;
                 previousStage = stage;
                 List<BigInteger[]> basis = (List<BigInteger[]>) field(search, "basis");
-                ExactRational[][] mu = (ExactRational[][]) field(search, "mu");
-                ExactRational[] norms = (ExactRational[]) field(search, "norms");
+                CountIntegralGram factors = (CountIntegralGram) field(search, "gram");
                 // Compare integer dot products with L*D*L^T. This oracle does
                 // not use the production row-swap or addition recurrences.
                 for (int i = 0; i < basis.size(); i++) for (int j = 0; j <= i; j++) {
                     BigInteger dot = BigInteger.ZERO;
                     for (int k = 0; k < basis.get(i).length; k++) dot = dot.add(basis.get(i)[k].multiply(basis.get(j)[k]));
                     ExactRational reconstructed = ExactRational.ZERO;
-                    for (int k = 0; k <= j; k++) reconstructed = reconstructed.add(norms[k]
-                            .multiply(k == i ? ExactRational.ONE : mu[i][k])
-                            .multiply(k == j ? ExactRational.ONE : mu[j][k]));
+                    for (int k = 0; k <= j; k++) reconstructed = reconstructed.add(factors.norm(k)
+                            .multiply(k == i ? ExactRational.ONE : factors.mu(i, k))
+                            .multiply(k == j ? ExactRational.ONE : factors.mu(j, k)));
                     check(reconstructed.equals(ExactRational.of(dot)), "Stale factor during retained block insertion");
                 }
                 checked++;

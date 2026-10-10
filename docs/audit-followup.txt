@@ -394,3 +394,20 @@ matcher comparison is 29.97% faster, but cumulative rational allocation grows
 substantially; this tradeoff is recorded explicitly, with a passing 64 MiB heap
 check. This does not close broader numeric/closure reach, native domain holes,
 host residency, candidate-benefit attribution or fresh live AE verification.
+
+2026-10-11 integer Gram representation and allocation follow-up
+---------------------------------------------------------------
+integral-lattice-factors.txt replaces repeated rational Gram updates in the
+centered subset tool with retained exact integer minors. Swaps, size reduction
+and insertion retain their factors; only the frozen enumeration block builds
+a rational view. Numeric charging includes that conversion, and all candidate,
+precision, cancellation and original-coordinate checks remain authoritative.
+The isolated warmed matcher comparison is 82.11% faster and allocates 73.60%
+fewer cumulative bytes than cc653c5c, with 0.24% more charged work. This is not
+a whole-planner or RSS claim. All 822 count conclusions, 72 parity records and
+192 generated subset records are unchanged. Seventy-eight standard programs,
+five negative controls, 2,151 paired graph requests, 19 captured requests with
+four workers/2x budgets, a 64 MiB heap run and offline assembly pass.
+The four original sparse limits remain. A wider affine experiment still runs
+out of 20M work on intermediate or final basis reduction and stays local only.
+Wider admission and the remaining H/J benefit/residency gaps are not closed.
