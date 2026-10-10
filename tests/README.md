@@ -16,7 +16,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Suite | Command / location | Coverage |
 | --- | --- | --- |
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
-| Stable oracles | `--suite oracles` | 23 independent oracle programs plus twelve pinned count-model boundaries |
+| Stable oracles | `--suite oracles` | 23 independent oracle programs plus 21 pinned count-model boundaries at explicit 20M/80M caps |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
 | Fixed counterexamples | `--suite fixtures --keep-going` | All 239 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
@@ -414,3 +414,12 @@ removing each renewal independently reproduces a premature pause. The count
 boundary includes the failing full-corpus permutation through `corpus_order`.
 It uses the complete manifest's deterministic shuffle stream, shared with the
 comparison runner, rather than shuffling only the selected boundary records.
+
+`CountLatticePotentialTest` independently checks deeper lattice insertions with
+Gram determinants, exact factor updates, certified integer enclosures, retained
+handoffs and request-scoped norm reuse. `../docs/lattice-potential-refinement.txt`
+and `provenance/lattice-potential-20261010.json` distinguish the unchanged 20M
+corpus outcomes from three new 80M successes. The three new boundaries have an
+explicit per-case `work` cap; existing boundaries still run at 20M. The comparison
+runner accepts `--work` and `--complete-corpus-order` to reproduce the same
+filtered higher-budget campaign without changing solver defaults.

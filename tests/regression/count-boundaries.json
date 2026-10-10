@@ -131,6 +131,36 @@
       "corpus_order": 1,
       "expected": "SAT",
       "reason": "Sparse Gram work and completed LLL progress let the retained frontier finish; 66380b83 is unresolved at 20M on this full-corpus row/column/term order."
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1/corpus-order-0"
+      ],
+      "corpus_order": 0,
+      "work": 80000000,
+      "expected": "SAT",
+      "reason": "Potential-guided retained lattice refinement; 366cf2ba is UNKNOWN at the same 80M cap. Lower-cap UNKNOWN remains explicit in the complete corpus."
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1/corpus-order-1"
+      ],
+      "corpus_order": 1,
+      "work": 80000000,
+      "expected": "SAT",
+      "reason": "Potential-guided retained lattice refinement; 366cf2ba is UNKNOWN at the same 80M cap. Lower-cap UNKNOWN remains explicit in the complete corpus."
+    },
+    {
+      "id": "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "names": [
+        "generated/sparse-equality-n96-s1/corpus-order-2"
+      ],
+      "corpus_order": 2,
+      "work": 80000000,
+      "expected": "SAT",
+      "reason": "Potential-guided retained lattice refinement; 366cf2ba is UNKNOWN at the same 80M cap. Lower-cap UNKNOWN remains explicit in the complete corpus."
     }
   ]
 }

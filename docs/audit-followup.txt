@@ -243,3 +243,18 @@ other solved cases cost more. The 15 original UNKNOWN cases and six unsupported
 conversions remain. All 63 standard programs, 3,117 graph checks, 57 captured
 requests and offline assembly pass. This closes neither broad numeric/graph
 admission nor H/J observability and is not a new live AE execution test.
+
+2026-10-10 retained lattice potential follow-up
+----------------------------------------------
+lattice-potential-refinement.txt adds optional potential-guided deep insertions
+after ordinary affine LLL/nearest-plane attempts. Certified integer enclosures
+avoid most wide rational comparisons; ambiguous boundaries remain exact. Norm
+bounds are reused only within one request/factorization, with explicit work,
+memory and continuation ownership. Independent determinant/rounding oracles and
+negative controls cover stale-cache and inward-rounding errors.
+The complete 822-case comparison retains all 20M conclusions at 0.053% more
+recorded work. A separate equal-80M comparison gains all three orders of the
+known-SAT sparse-equality-n96-s1; the companion s2 and the 15 original 20M UNKNOWN
+models remain unresolved. 65 standard checks, 3,117 graph checks, 57 capture
+replays and offline assembly pass. No default cap, host adapter or fallback
+role changes. This does not close general numeric reach or audit H/J.

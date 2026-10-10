@@ -1,0 +1,288 @@
+{
+  "schema": "cgse-lattice-potential-v1",
+  "date": "2026-10-10",
+  "baseline": "366cf2ba25aca479aeaf676c021d4ba40d7ccd6d",
+  "candidate_source_sha256": "ca2730509f607739da58bce7b09136aa82fd5739eb957a1683de754c5348e7c5",
+  "production_java_files": 201,
+  "scope": "Optional retained potential-guided deep lattice insertion, certified integer enclosures and request-local norm bounds. Only positive candidates; original count rows and executable plans remain verified.",
+  "reference": "https://arxiv.org/abs/1307.7534",
+  "budget_policy": "Unchanged solver defaults; baseline and candidate use identical request limits within each comparison. The separate 80M campaign does not replace 20M UNKNOWN results.",
+  "workspace": {
+    "scratch_bytes": 65536,
+    "bytes_per_kernel_vector": 4096,
+    "admitted_kernel_vectors_max": 48,
+    "optional_peak_bytes": 262144,
+    "integer_product_bits": 16384,
+    "rational_factor_bits_unchanged": 2048,
+    "coordinate_bits_unchanged": 512
+  },
+  "models_20m": {
+    "comparisons": 822,
+    "work_cap": 20000000,
+    "memory_bytes": 268435456,
+    "milliseconds": 0,
+    "workers": 1,
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "comparison_harness_sha256": "ba1d5248c632cd1ad8ccf8efa691b03ffb39179b3a6aec05bdf660dda46d73cf",
+    "baseline": {
+      "outcomes": {
+        "PASS": 759,
+        "UNRESOLVED": 45,
+        "UNSUPPORTED": 18
+      },
+      "orders": [
+        {
+          "order": 0,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "work": 439347718
+        },
+        {
+          "order": 1,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "work": 457140622
+        },
+        {
+          "order": 2,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "work": 443730660
+        }
+      ],
+      "total_recorded_work": 1340219000
+    },
+    "candidate": {
+      "outcomes": {
+        "PASS": 759,
+        "UNRESOLVED": 45,
+        "UNSUPPORTED": 18
+      },
+      "orders": [
+        {
+          "order": 0,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "work": 439519649
+        },
+        {
+          "order": 1,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "work": 457115955
+        },
+        {
+          "order": 2,
+          "outcomes": {
+            "PASS": 253,
+            "UNRESOLVED": 15,
+            "UNSUPPORTED": 6
+          },
+          "work": 444291196
+        }
+      ],
+      "total_recorded_work": 1340926800
+    },
+    "gained": [],
+    "lost": [],
+    "contradictions": [],
+    "raw_log_root": "build/lattice-potential-final-comparison"
+  },
+  "higher_budget": {
+    "work": 80000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "input_sha256": "bf1d4dbec139b9b837df0d601bd162cb551f34b1dc64a8baa5e53d2cc350f758",
+    "ids": [
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf/order=1",
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f/order=1",
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf/order=2",
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f/order=2"
+    ],
+    "baseline": {
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf": [
+        "UNRESOLVED",
+        "work=79994617"
+      ],
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f": [
+        "UNRESOLVED",
+        "work=79995306"
+      ],
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf/order=1": [
+        "UNRESOLVED",
+        "work=79994834"
+      ],
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f/order=1": [
+        "UNRESOLVED",
+        "work=79994343"
+      ],
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf/order=2": [
+        "UNRESOLVED",
+        "work=79994616"
+      ],
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f/order=2": [
+        "UNRESOLVED",
+        "work=79995078"
+      ]
+    },
+    "candidate": {
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf": [
+        "UNRESOLVED",
+        "work=79994544"
+      ],
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f": [
+        "PASS",
+        "SAT",
+        "work=58088853"
+      ],
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf/order=1": [
+        "UNRESOLVED",
+        "work=79994619"
+      ],
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f/order=1": [
+        "PASS",
+        "SAT",
+        "work=57255867"
+      ],
+      "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf/order=2": [
+        "UNRESOLVED",
+        "work=79994841"
+      ],
+      "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f/order=2": [
+        "PASS",
+        "SAT",
+        "work=74659955"
+      ]
+    }
+  },
+  "parity": {
+    "checks": 72,
+    "baseline": {
+      "UNSAT": 36,
+      "SAT": 36
+    },
+    "candidate": {
+      "UNSAT": 36,
+      "SAT": 36
+    },
+    "same_results_and_work": true
+  },
+  "unit": {
+    "determinant_oracle_bases": 96,
+    "accepted_insertion_choices": 244,
+    "whole_sliced_pairs": 24,
+    "pauses": 2391,
+    "norm_reuse_comparisons": 128,
+    "norm_reuse_work_before": 23201,
+    "norm_reuse_work_after": 21184,
+    "strict_boundary_offsets": "-2^-400, 0, +2^-400 around 3/4; three norm scales",
+    "negative_controls": {
+      "stale-norm": "Exception in thread \"main\" java.lang.AssertionError: Completed insertion did not certify its potential decrease",
+      "inward-rounding": "Potential bound reuse: 128 fresh/cached scans agree through immutable replacements; work=23201->21184"
+    }
+  },
+  "verification": {
+    "standard": {
+      "checks": 65,
+      "outcomes": {
+        "PASS": 65
+      },
+      "log_root": "build/lattice-potential-release-standard",
+      "strengthened_rounding_assertions": "build/lattice-potential-rounding-unit/CountLatticePotentialTest.log"
+    },
+    "curated_graphs": {
+      "inputs": 239,
+      "orders": 3,
+      "checks": 717,
+      "status": "PASS",
+      "log_root": "build/lattice-potential-final-fixtures"
+    },
+    "planted_graphs": {
+      "inputs": 800,
+      "orders": 3,
+      "checks": 2400,
+      "status": "PASS",
+      "log_root": "build/lattice-potential-final-expanded"
+    },
+    "captures": [
+      {
+        "mode": "serial",
+        "workers": 1,
+        "expanded_budget": false,
+        "requests": 19,
+        "status": "PASS",
+        "log_root": "build/lattice-potential-captures-serial"
+      },
+      {
+        "mode": "parallel",
+        "workers": 4,
+        "expanded_budget": false,
+        "requests": 19,
+        "status": "PASS",
+        "log_root": "build/lattice-potential-captures-parallel"
+      },
+      {
+        "mode": "expanded",
+        "workers": 4,
+        "expanded_budget": true,
+        "requests": 19,
+        "status": "PASS",
+        "log_root": "build/lattice-potential-captures-expanded"
+      }
+    ],
+    "offline_assemble": {
+      "status": "PASS",
+      "production_sources_in_source_jar": 201,
+      "artifacts": {
+        "cgse-core-0.1.0-SNAPSHOT-sources.jar": "1d8765597da016a73ad81cd36624dba0cb428f23978cd254ac00656e42699ca7",
+        "cgse-core-0.1.0-SNAPSHOT-view.jar": "bfc6ff9f389ed051e27c0e26960befa48a594b2f7129dd8883d5a74681d74560",
+        "cgse-core-0.1.0-SNAPSHOT.jar": "2aa54733c9be5ddac8445eead9b1abaf78b34bb319ec6c1ca89c9fe46015a0dd"
+      }
+    }
+  },
+  "remaining_original_20m": [
+    "1204d21049c45b59c5a10208c841c14fd81dbd9cb0bfd6af55d72a954efd9e5d",
+    "1214497ebe8a453c57fda77731bd7b38266cefc8ad779070529e7f536c319b92",
+    "33e8eeae122696d50a63c8c65d97771f5df8f41e54fbe34353c4cc4e5bcf7ed8",
+    "3f6275678665f204c1870697079a316eaa5caf41971d05226cdf922ea9d9358d",
+    "48880f9acf6951e0070a3f2179fd6c0994912fd561986f85231ec4c9bbc11448",
+    "6424ff0e915dd902930fd4458bbb8f533aab6d398d9fa966fe7b5b5e457760bf",
+    "867653b0b24662e173e557b84bb782029b0d6679d167812b0a851f4194dd3eba",
+    "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+    "a4320bb70db9985070904787abd4f805517f0853cb1c3ee8d7c8351e60498f4b",
+    "b4b3c9112cc12b0ad1c7e482c1bda10e01d0f0a15acdbdb9f410df5c0b2967d0",
+    "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
+    "da1ab279bcfcbfb9fc1cb915bf07044f6fdb77e86e7374796f013cd03b1abff8",
+    "da4aaa28a5350a4f9b3064a86cd109d56f1a6298f21b8c86243aaf8ff396674f",
+    "e2461fc70114ce67503495aa111c4ae8c863f3cb7e083a91cdaa59b290c8869a",
+    "ff19ef4b291940ad997c1dc17e0c4a304210e1b5e8251e0361586aa8f0e2c26c"
+  ],
+  "remaining_scope": [
+    "15 original-order UNKNOWN and six unsupported conversions at 20M",
+    "The n96-s2 companion remains UNKNOWN in all three 80M orders",
+    "General larger numerical/graph admission",
+    "Audit H host-residency observability and J end-to-end attribution",
+    "Offline capture replay is not a new live AE/server integration test"
+  ],
+  "excluded_experiment": {
+    "lp_basis_fixed_column_structure": "No gains, 21 previously solved order cases lost; not included in production.",
+    "raw_affine_prototypes": "Not counted as main-stage successes."
+  }
+}

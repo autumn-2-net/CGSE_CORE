@@ -119,14 +119,21 @@ def main():
                 order = entry.get('corpus_order', 0)
                 case_id = entry['id'] + ('/order=' + str(order) if order else '')
                 cases.append(ordered[order][case_id])
+            batches = {}
             for case, oracle in zip(cases, boundary['cases']):
                 # Maintained witnesses / independent oracle verdicts override
                 # this check only; keep historical corpus records unchanged.
                 case['expected'] = oracle['expected']
-            path = output / 'count-boundaries.bin'
-            boundaries_helper.write_models(path, cases)
-            run('CountModelBoundaries', 'org.cgse.core.CountModelRegression',
-                [path, 0, boundary['work'], 'main-counts', 'true'])
+                work = oracle.get('work', boundary['work'])
+                if not isinstance(work, int) or work <= 0:
+                    raise ValueError('Invalid count boundary work cap')
+                batches.setdefault(work, []).append(case)
+            for work, batch in sorted(batches.items()):
+                suffix = '' if work == boundary['work'] else '-' + str(work)
+                path = output / ('count-boundaries' + suffix + '.bin')
+                boundaries_helper.write_models(path, batch)
+                run('CountModelBoundaries' + suffix, 'org.cgse.core.CountModelRegression',
+                    [path, 0, work, 'main-counts', 'true'])
     if args.suite == 'benchmarks' and re.search(args.case, 'GraphBenchmark'):
         run('GraphBenchmark', 'org.cgse.core.GraphBenchmark')
     if args.suite in ('fixtures', 'all'):

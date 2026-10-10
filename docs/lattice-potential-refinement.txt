@@ -1,0 +1,132 @@
+Retained potential-guided lattice refinement (2026-10-10)
+=======================================================
+
+This follows 366cf2ba. Ordinary affine elimination, LLL and nearest-plane trials
+can leave a valid lattice whose short basis still misses the bounded integer
+box. The new candidate-only stage strengthens that basis before kernel repair.
+It does not alter recipe semantics, model admission, request caps, or proofs.
+
+Algorithm and continuation
+--------------------------
+The insertion criterion follows the exact potential ratio in PotLLL, Algorithm
+2 and equation (3.3): Fontein, Schneider and Wagner, "PotLLL: A Polynomial Time
+Version of LLL With Deep Insertions", https://arxiv.org/abs/1307.7534 . This is a
+Java implementation of the mathematical criterion, not copied solver source or
+a claim to implement a general SCIP/CP-SAT replacement.
+
+The ordinary pass and its nine nearest-plane targets run first. On failure,
+the retained refinement still handles an available Lovasz swap cheaply. When
+that adjacent test passes, it scans deeper insertion positions and accepts only
+a strict potential ratio below 3/4. A completed pass retries the nearest-plane
+targets, then uses the existing projected-kernel search. The short lower-first
+conditional path does not enter this extra phase.
+
+Potential scans retain one projected prefix per step. Deep insertions retain
+their position between adjacent swaps, whose exact Gram updates are atomic.
+Only a completed insertion earns a potential-decrease progress checkpoint;
+an individual swap inside it can increase potential. Ordinary size reductions
+and ordinary Lovasz swaps keep their existing feedback. Neither polling nor
+an unfinished scan is reported as a new witness or completed reduction.
+
+Certified integer comparisons and safe reuse
+--------------------------------------------
+The fast comparison uses outward-rounded integer enclosures with 128 fractional
+bits. Squared norms share a fixed scale; coefficients, projections, ratios and
+products all maintain lower and upper bounds. Disjoint intervals certify the
+same strict ordering as exact arithmetic. Any ambiguous comparison restarts an
+exact rational/product scan. This is not floating-point tolerance or rounded
+feasibility: original bounds, rows and executable plans are still verified.
+
+The exact comparison accumulator is limited to 16,384 bits. The existing
+2,048-bit rational-factor and 512-bit coordinate limits remain. Optional
+precision/range refusal continues to the kernel path with the valid current
+basis; it cannot establish infeasibility. Work for arithmetic, conversions,
+scans and retries is charged. Wider integer products use multiple accounting
+tiers instead of being silently capped at the ordinary 2,048-bit tier.
+
+The workspace reserves 64 KiB plus 4 KiB per kernel vector, at most 256 KiB for
+the admitted 48-vector kernel. It caches only the enclosures of identical
+immutable norm objects in one factor array and one request budget. Swaps replace
+norm objects, so changed entries are recomputed. Face resets, completion and
+close discard the workspace. Memory refusal retains the ordinary kernel path;
+local handoffs preserve unfinished scans and never replenish the request cap.
+
+Independent checks
+------------------
+CountLatticePotentialTest rebuilds prefix Gram determinants after every proposed
+permutation for 96 independent bases. It checks 244 accepted insertion choices,
+24 whole/sliced reductions, exact intermediate Gram factors, lattice determinant
+preservation and the strict potential decrease of each completed insertion.
+Continuation crosses worker threads and includes 2,391 local pauses. Tests also
+cover cancellation during scanning/insertion, hard budget exhaustion, optional
+memory refusal, precision/product refusal and exact neighbors of 3/4 separated
+by 2^-400. Outward rounding is checked across discarded-bit and large-width
+boundaries by an independent division/remainder oracle.
+
+128 fresh/cached scans agree through immutable norm replacements. Recorded work
+falls from 23,201 to 21,184 in that focused comparison; this is not an end-to-end
+latency claim. Negative controls that retain stale norms or round an upper bound
+inward fail the potential-decrease and discarded-bit assertions respectively.
+
+Equal-budget results
+--------------------
+Baseline and candidate use the same canonical models, row/column/term shuffles,
+memory reservation limit (256 MiB), one worker and no wall deadline.
+
+At 20M work, all 274 count models in three orders retain the baseline outcomes:
+759 PASS, 45 UNKNOWN, 18 unsupported conversions. There are no lost conclusions
+or contradictions. The 72 parity/neighbor verdicts are unchanged. Total recorded
+work across the 822 count runs increases from 1,340,219,000 to 1,340,926,800
+(0.053%); this stronger optional phase is not universally cheaper. The same 15
+original-order UNKNOWN models remain: eight known SAT and seven known UNSAT.
+
+At the separate 80M cap, sparse-equality-n96-s1 changes from UNKNOWN in all three
+orders to independently checked executable plans:
+
+  Complete-corpus order    Baseline             Candidate work
+  0                        UNKNOWN              58,088,853
+  1                        UNKNOWN              57,255,867
+  2                        UNKNOWN              74,659,955
+
+The companion sparse-equality-n96-s2 remains UNKNOWN in all three orders at
+80M. These six higher-budget runs are additional comparisons, not replacements
+for the 20M failures. Defaults have not been raised. Raw affine prototypes are
+not counted as main-stage successes. An unrelated LP-structure reuse experiment
+lost 21 previously solved permutation cases and was not incorporated.
+
+The three successful 80M cases are pinned separately in count-boundaries.json;
+the original 18 boundaries retain their 20M cap. The stable runner batches these
+caps explicitly instead of increasing the allowance for all existing tests.
+All 65 standard checks, 3,117 graph checks and 57 captured requests pass. Capture
+replay uses the full exported inventory, 5,903 manual and 62,284 exported recipes
+in serial, four-worker base-budget and four-worker expanded-budget modes.
+Offline assemble passes; all 201 production Java files match the source JAR.
+Hashes, outcomes and limits are in provenance/lattice-potential-20261010.json
+under tests. Raw experiments and logs remain below ignored build/ directories.
+
+Reproduction (JDK 17)
+---------------------
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline 366cf2ba --permutations 3 --parity
+    --output build/lattice-potential-comparison --timeout 1800
+
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline 366cf2ba --case "sparse-equality-n96-s[12]"
+    --complete-corpus-order --permutations 3 --work 80000000
+    --output build/lattice-potential-higher-budget --timeout 1800
+
+  python tests/run.py --java-home JDK17 --suite standard
+    --output build/lattice-potential-standard --timeout 600
+
+--complete-corpus-order preserves the shuffle stream of the whole canonical
+manifest before filtering the harder subset. Re-shuffling just that subset
+would be a different experiment. The comparison command was smoke-tested with
+a nondefault cap and three full-corpus permutations on a small canonical model.
+
+Remaining scope
+---------------
+This adds an exact positive-candidate tool; it does not improve the remaining
+UNSAT proof cases or remove low-budget/order sensitivity. Larger numeric/graph
+admission, host residency accounting (audit H) and complete end-to-end cost
+attribution (J) remain open. Capture replay is offline evidence, not a new live
+AE/server integration run. No host adapter or ordinary fallback role changed.

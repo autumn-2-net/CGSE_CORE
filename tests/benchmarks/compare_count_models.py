@@ -24,11 +24,15 @@ def main():
     parser.add_argument('--case', default='.*')
     parser.add_argument('--parity', action='store_true', help='Also compare the 72 deterministic odd-cycle/neighbor cases')
     parser.add_argument('--permutations', type=int, default=1, help='Original input plus deterministic row/column/term shuffles')
+    parser.add_argument('--work', type=int, default=20_000_000, help='Same count-model request cap for baseline and candidate')
+    parser.add_argument('--complete-corpus-order', action='store_true', help='Shuffle the full manifest before filtering --case')
     parser.add_argument('--timeout', type=int, default=600)
     parser.add_argument('--output', type=Path, default=ROOT / 'build/count-comparison')
     args = parser.parse_args()
-    if args.permutations < 1:
-        parser.error('Require a positive permutation count')
+    if args.permutations < 1 or args.work <= 0:
+        parser.error('Require positive permutations and work')
+    if args.parity and args.work != 20_000_000:
+        parser.error('The parity harness has fixed limits; run nondefault count caps separately')
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     baseline = subprocess.check_output(['git', 'rev-parse', '--verify', args.baseline + '^{commit}'], cwd=ROOT, text=True).strip()
@@ -48,12 +52,15 @@ def main():
     helper = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(helper)
     manifest = json.loads((ROOT / 'tests/cases/manifest.json').read_text(encoding='utf-8'))
-    selected = [c for c in manifest['cases'] if c['kind'] == 'count-model' and re.search(args.case, c['id'] + ' ' + ' '.join(c['names']))]
+    records = [c for c in manifest['cases'] if c['kind'] == 'count-model']
+    selected = [c for c in records if re.search(args.case, c['id'] + ' ' + ' '.join(c['names']))]
     if not selected:
         parser.error('No count models selected')
     inputs = []
+    selected_ids = {c['id'] for c in selected}
     for order in range(args.permutations):
-        inputs.extend(helper.count_model_order(selected, order))
+        stream = helper.count_model_order(records if args.complete_corpus_order else selected, order)
+        inputs.extend(c for c in stream if c['id'].partition('/order=')[0] in selected_ids)
     helper.write_models(output / 'models.bin', inputs)
     harness = [ROOT / path for path in ['tests/regression/java/GraphFixtureRegression.java',
                'tests/corpus/java/CountModelRegression.java', 'tests/corpus/java/CountModelReplay.java',
@@ -62,7 +69,8 @@ def main():
     extension = '.exe' if (java_dir / 'java.exe').exists() else ''
     summary = {'baseline': baseline, 'candidate_source_sha256': fingerprint((ROOT / 'src/main/java').rglob('*.java')),
                'harness_sha256': fingerprint(harness + [Path(__file__), ROOT / 'tests/cases/run.py']),
-               'request_work': 20_000_000, 'milliseconds': 0, 'memory_bytes': 256 << 20, 'workers': 1,
+               'request_work': args.work, 'milliseconds': 0, 'memory_bytes': 256 << 20, 'workers': 1,
+               'permutation_population': 'complete corpus' if args.complete_corpus_order else 'selected models',
                'corpus_ids': [c['id'] for c in selected], 'permutations': args.permutations, 'models': {}, 'parity': {},
                'input_sha256': hashlib.sha256((output / 'models.bin').read_bytes()).hexdigest(),
                'note': 'Main integer-count stage, not GraphPlanner. UNKNOWN and unsupported conversions are not proofs. No wall-time or JVM heap claim.'}
@@ -78,7 +86,7 @@ def main():
         command = [str(java_dir / ('java' + extension)), '-ea', '-Xmx2g', '-Dfile.encoding=UTF-8', '-cp', str(classes)]
         for campaign in ['models'] + (['parity'] if args.parity else []):
             log = output / f'{name}-{campaign}.log'
-            arguments = ['org.cgse.core.CountModelRegression', str(output / 'models.bin'), '0', '20000000', 'main-counts'] if campaign == 'models' else ['org.cgse.core.ParityPipelineReview', 'measure']
+            arguments = ['org.cgse.core.CountModelRegression', str(output / 'models.bin'), '0', str(args.work), 'main-counts'] if campaign == 'models' else ['org.cgse.core.ParityPipelineReview', 'measure']
             with log.open('w', encoding='utf-8') as stream:
                 result = subprocess.run(command + arguments, cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT, timeout=args.timeout)
             if result.returncode not in ((0, 2) if campaign == 'models' else (0,)):

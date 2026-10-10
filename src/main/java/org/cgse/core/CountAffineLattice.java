@@ -37,6 +37,10 @@ final class CountAffineLattice implements AutoCloseable {
     private CountGramSchmidt gram;
     private long checkpoints;
     private CountKernelSearch kernel;
+    private CountLatticePotential potential;
+    private CountLatticePotential.Workspace potentialWorkspace;
+    private boolean deep, strengthened;
+    private int insertionFrom = -1, insertionTo;
 
     CountAffineLattice(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
                        BigInteger[] upper, PlanningBudget budget) {
@@ -93,20 +97,25 @@ final class CountAffineLattice implements AutoCloseable {
             } else if (phase == 2) {
                 if (pivot < basis.size()) reduce();
                 else {
+                    closePotential();
                     phase = 3;
                 }
             } else if (phase == 3) {
                 nearest();
                 if (counts != null) return finish();
                 if (++attempt == (lowerFirst ? 1 : 9)) {
-                    long started = budget.threadWork();
-                    try {
-                        kernel = new CountKernelSearch(rows, lower, upper, repairPoint, basis, mu, norms, budget,
-                                retaining ? Math.max(2048, allowance - work) : allowance - work);
-                        if (retaining) kernel.retained();
-                    } finally { work += budget.threadWork() - started; }
-                    phase = 4;
+                    if (!lowerFirst && !strengthened) {
+                        // Preserve the cheap ordinary LLL/nearest attempts.
+                        // Only their failure admits a stronger retained pass.
+                        strengthened = deep = true;
+                        pivot = 1;
+                        reductionColumn = -1;
+                        attempt = 0;
+                        phase = 2;
+                    } else beginKernel();
                 }
+            } else if (phase == 7) {
+                potentialStep();
             } else if (phase == 5) {
                 gramStep();
             } else if (phase == 6) {
@@ -232,6 +241,9 @@ final class CountAffineLattice implements AutoCloseable {
     private void reset() {
         if (kernel != null) kernel.close();
         kernel = null;
+        closePotential();
+        deep = strengthened = false;
+        insertionFrom = -1;
         basis.clear();
         mu = null;
         norms = null;
@@ -412,9 +424,27 @@ final class CountAffineLattice implements AutoCloseable {
         ExactRational m = mu[k][k - 1];
         ExactRational square = m.multiply(m);
         if (norms[k].compareTo(LOVASZ.subtract(square).multiply(norms[k - 1])) >= 0) {
-            pivot++;
+            if (deep) {
+                if (potentialWorkspace == null) potentialWorkspace = new CountLatticePotential.Workspace(norms, budget);
+                potential = new CountLatticePotential(mu, norms, k, budget, potentialWorkspace);
+                phase = 7;
+            } else pivot++;
             return;
         }
+        swap(k, m, square);
+        // A Lovasz swap strictly decreases the lattice potential. Empty scans,
+        // zero reductions and polling a paused search never earn this feedback.
+        checkpoints++;
+        pivot = Math.max(1, pivot - 1);
+    }
+
+    private void swap(int k) {
+        ExactRational m = mu[k][k - 1];
+        ExactRational square = m.multiply(m);
+        swap(k, m, square);
+    }
+
+    private void swap(int k, ExactRational m, ExactRational square) {
         ExactRational combined = norms[k].add(square.multiply(norms[k - 1]));
         ExactRational next = m.multiply(norms[k - 1]).divide(combined);
         norms[k] = norms[k].multiply(norms[k - 1]).divide(combined);
@@ -432,10 +462,60 @@ final class CountAffineLattice implements AutoCloseable {
             mu[i][k - 1] = value.add(next.multiply(mu[i][k]));
         }
         Collections.swap(basis, k, k - 1);
-        // A Lovasz swap strictly decreases the lattice potential. Empty scans,
-        // zero reductions and polling a paused search never earn this feedback.
-        checkpoints++;
-        pivot = Math.max(1, pivot - 1);
+    }
+
+    private void potentialStep() {
+        if (insertionFrom >= 0) {
+            // Adjacent factor updates are atomic, but a deep insertion can
+            // yield between them. No scan sees its partially permuted basis.
+            swap(insertionFrom--);
+            if (insertionFrom == insertionTo) {
+                insertionFrom = -1;
+                pivot = Math.max(1, insertionTo);
+                phase = 2;
+                // Only the complete insertion has the certified potential
+                // decrease; individual adjacent swaps need not improve it.
+                checkpoints++;
+            }
+            return;
+        }
+        long started = budget.threadWork();
+        boolean done;
+        try { done = potential.step(); }
+        finally { work += budget.threadWork() - started; }
+        if (!done) return;
+        boolean declined = potential.declined();
+        int target = potential.insertion();
+        potential.close();
+        potential = null;
+        if (declined) {
+            deep = false;
+            closePotential();
+            beginKernel();
+        } else if (target < 0) {
+            pivot++;
+            phase = 2;
+        } else {
+            insertionFrom = pivot;
+            insertionTo = target;
+        }
+    }
+
+    private void beginKernel() {
+        long started = budget.threadWork();
+        try {
+            kernel = new CountKernelSearch(rows, lower, upper, repairPoint, basis, mu, norms, budget,
+                    retaining ? Math.max(2048, allowance - work) : allowance - work);
+            if (retaining) kernel.retained();
+        } finally { work += budget.threadWork() - started; }
+        phase = 4;
+    }
+
+    private void closePotential() {
+        if (potential != null) potential.close();
+        potential = null;
+        if (potentialWorkspace != null) potentialWorkspace.close();
+        potentialWorkspace = null;
     }
 
     private void nearest() {
@@ -587,6 +667,7 @@ final class CountAffineLattice implements AutoCloseable {
     public void close() {
         if (kernel != null) kernel.close();
         kernel = null;
+        closePotential();
         gram = null;
         budget.release(memory);
         memory = 0;
