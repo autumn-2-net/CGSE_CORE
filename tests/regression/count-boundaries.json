@@ -116,6 +116,14 @@
       ],
       "expected": "UNSAT",
       "reason": "Retained numeric checkpoints or completed root proof; c8fd075a is unresolved at 20M."
+    },
+    {
+      "id": "85e5cb1e5c835c6393ec40c3bf81b5b003f8c954a8a4c282d73005329231d844",
+      "names": [
+        "generated/wide-equality-n64-w1000000"
+      ],
+      "expected": "SAT",
+      "reason": "Admit a 53-coordinate affine model with a 37-dimensional integer kernel; 168b824b is unresolved at the same 20M budget."
     }
   ]
 }

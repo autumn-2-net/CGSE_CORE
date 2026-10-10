@@ -1,0 +1,142 @@
+Affine admission and exact integer Gram factors, 2026-10-10
+=========================================================
+
+Problem and scope
+-----------------
+The canonical generated/wide-equality-n64-w1000000 case is known SAT, but
+168b824b exhausts the 20M main-count budget. Reduction leaves 53 coordinates
+and 16 independent equations, hence a 37-dimensional integer kernel. The old
+48-coordinate entrance limit prevents the affine strategy from trying it.
+
+CountAffineLattice now admits ambient dimension up to 128 only when the larger
+model has at least two weighted exact equations and its estimated free dimension
+is at most 48. The estimate subtracts the equation count from the unfixed variable
+count; it is not a rank proof. Exact intersections must actually leave at most
+48 basis vectors before the final LLL/nearest-plane search. Dependent equations
+cannot bypass that second check. Intermediate basis stabilization still uses
+the reserved ambient workspace. CountKernelSearch accepts the same bounded
+ambient space with a kernel of at most 48 dimensions.
+
+This remains an optional candidate strategy. Failed admission, precision limits,
+unproductive trial faces and interrupted searches do not imply infeasibility.
+Original-coordinate bounds/rows and executable primitive prefixes still validate
+accepted count-stage results. Request budgets, full-model admission and fallback
+semantics are unchanged.
+
+Exact factorization and retained work
+------------------------------------
+CountGramSchmidt computes integer dot products G_ij = b_i . b_j, then the exact
+unit-lower-triangular factors G = L D L^T:
+
+  r_ij = G_ij - sum(k < j, L_ik * L_jk * D_k)
+  L_ij = r_ij / D_j                  (j < i)
+  D_i  = r_ii
+
+The implicit diagonal of L is one. There is no floating-point conversion.
+Integer dot products avoid repeatedly updating rational orthogonal vectors in
+the ambient space. Existing exact LLL updates and nearest-plane reconstruction
+consume the same coefficients and norms. The 512-bit basis and 2048-bit rational
+precision guards remain; a guard failure terminates only this candidate attempt.
+
+Each completed projection or norm is retained. A local quantum can suspend the
+search between those checkpoints without restarting a row. Each dot-product
+coordinate and lower-triangular recurrence term is charged; cancellation and
+the hard request cap remain active inside those loops. This changes actual
+arithmetic work, not a strategy work multiplier.
+
+Before basis/factor allocation, the optional reservation is
+8192 + 512 * ambient * free + 1536 * free^2 + 256 * rows bytes. When all variables
+are free, this equals the former 2048 * ambient^2 workspace term. Fixed variables
+no longer imply allocating a full square basis. This is a bounded workspace
+estimate, not a measurement of JVM heap or process RSS.
+
+Reference: fplll's MatGSO describes exact integer Gram matrices and retained
+Gram-Schmidt coefficients. The recurrence here is independently implemented;
+no fplll code or native dependency is included.
+
+  https://fplll.github.io/fplll/classMatGSO.html (consulted 2026-10-10)
+
+Equal-budget result
+-------------------
+Against 168b824b, the complete 274-model corpus in three deterministic orders
+uses the same 20M search/compilation account caps, 256 MiB reservation limit,
+one worker and no wall deadline. These are main integer-count comparisons,
+not complete GraphPlanner runs.
+
+                   Before (PASS / UNKNOWN / unsupported)    After
+  Original order                 252 / 16 / 6           253 / 15 / 6
+  Shuffled order 1               250 / 18 / 6           252 / 16 / 6
+  Shuffled order 2               252 / 16 / 6           253 / 15 / 6
+
+There are four gained conclusions, no lost answers and no contradictions:
+  wide-equality-n64-w1000000: original and shuffled order 2;
+  sparse-equality-n48-s1: shuffled order 1;
+  wide-equality-n64-w10000: shuffled order 1.
+
+The first case now takes 6,680,921 and 6,931,399 recorded work in the two solved
+orders, versus approximately 19.99M and UNKNOWN. Its shuffled order 1 remains
+UNKNOWN at the same cap. The focused 45-model comparison uses different shuffles
+because the deterministic stream depends on the selected corpus; it solves all
+three orders of this case and must not be substituted for the complete corpus.
+
+Total recorded work across all 822 runs decreases from 1,505,615,620 to
+1,470,984,329. Some already-solved cases cost more: the largest increase is
+1,245,560 for wide-equality-n64-w31/order=2. The separate 72 parity/neighbor
+conclusions are unchanged; their work increases from 40,446,078 to 40,479,391.
+These results do not imply uniformly cheaper search or eliminate order sensitivity.
+
+Validation
+----------
+CountGramSchmidtTest compares the factors and norms against an independent
+explicit-vector Gram-Schmidt implementation on 261 matrices, including signed
+coefficients, 49/64/96/128 ambient dimensions and a near-dependent 400-bit case.
+Across the 260 ordinary matrices, arithmetic-loop charges decrease from 545,397
+to 325,433. This is not a wall-time or whole-solver speed measurement.
+
+The test also checks expanded affine and projected-kernel witnesses against
+original rows, large signed offsets, identical sliced/whole result and work,
+dependent rank estimates, empty/dependent bases, memory refusal, cancellation,
+hard cutoffs and sequential handoff between worker threads.
+
+63 standard programs passed. The maintained positive count boundary now pins
+the newly solved original model; all 17 boundary records pass. Graph regressions
+validate 239 curated and 800 independently planted cases in three recipe orders
+(3,117 checks). Captured inventory plus 5,903 manual and 62,284 exported recipes
+passes all 19 maintained requests in each of serial, four-worker base-budget and
+four-worker expanded-budget mode (57 verified requests). This replays existing
+network captures; it is not a new live AE/server test.
+
+Offline assemble passed. All 200 production Java files match the source JAR
+byte-for-byte. Input, source, harness and report fingerprints are retained in
+tests/provenance/affine-gram-admission-20261010.json. Generated inputs, temporary
+experiments and raw reports remain under ignored build directories.
+
+Reproduce with JDK 17:
+
+  python tests/benchmarks/compare_count_models.py --java-home JDK17
+    --baseline 168b824b --permutations 3 --parity
+    --output build/gram-full-comparison --timeout 1800
+  python tests/run.py --java-home JDK17 --suite standard --timeout 600
+  python tests/run.py --java-home JDK17 --suite fixtures --milliseconds 0
+    --work 20000000 --permutations 3 --output build/gram-fixtures --timeout 600
+  python tests/benchmarks/generate_choice_cases.py --seeds 32 --start-seed 100
+    --amounts 1,2,3,16,1000 --output build/gram-choice-inputs
+  python tests/run.py --java-home JDK17 --suite fixtures --milliseconds 0
+    --fixture-dir build/gram-choice-inputs --permutations 3 --work 20000000
+    --output build/gram-expanded --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17 --workers 1
+    --output build/gram-captures-serial --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4
+    --output build/gram-captures-parallel --timeout 600
+  python tests/datasets/regressions.py --java-home JDK17 --workers 4
+    --expanded-budget --output build/gram-captures-expanded --timeout 600
+
+Remaining boundary
+------------------
+15 original-order models remain UNKNOWN: eight independently known SAT and
+seven independently known UNSAT. The six unbounded finite-conversion exclusions
+are unchanged. Larger sparse equalities, a wide scalar equality/subset case,
+objective-bound proofs and unfavorable orders remain numeric targets. The
+128-coordinate / 48-kernel admission is still bounded, not a general lattice
+solver. Large graph closures, complete end-to-end attribution (J) and host-wide
+residency accounting (H) remain separate audit gaps.

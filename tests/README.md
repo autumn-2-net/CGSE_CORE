@@ -392,3 +392,16 @@ then verifies the original executable plan. Its bounded scan is also checked
 across coordinator-thread handoff, cancellation and memory/local-work limits.
 The full captured JEI-first boundary is pinned in `datasets/regressions.json`;
 the equal-budget comparison is in `../docs/funded-cycle-entries.txt`.
+
+`CountGramSchmidtTest` compares integer Gram factors with an independent explicit
+vector oracle, including wide ambient matrices, large signed coefficients and
+retained execution. Expanded affine/kernel admission is checked against original
+bounds and rows, with rank refusal, memory/cancellation limits and worker handoff.
+The new canonical positive boundary is part of `CountModelBoundaries`; the
+complete 822-case equal-budget comparison and remaining order sensitivity are
+recorded in `../docs/affine-gram-admission.txt` and
+`provenance/affine-gram-admission-20261010.json`.
+
+```text
+python tests/run.py --java-home <jdk17> --suite standard --case 'CountGramSchmidtTest|CountKernelTest|NumericContinuationTest|CountModelBoundaries' --timeout 600
+```

@@ -216,3 +216,16 @@ identical outcomes and work. On 45 warmed LCG models the measured median time is
 12.2% lower and current-thread cumulative allocation is 37.1% lower. This is not
 a whole-planner speed claim or additional solved case; the 16 original limits
 and the numeric reach, large-closure and H/J gaps remain.
+
+2026-10-10 affine admission follow-up
+-----------------------------------
+affine-gram-admission.txt records exact integer Gram factors and an entrance
+based on the bounded ambient matrix plus the actual remaining integer kernel.
+This supersedes the blanket 48-coordinate lattice limit above: up to 128 ambient
+coordinates can enter when exact intersections leave at most 48 kernel vectors.
+The complete equal-budget 822-case comparison gains four conclusions with no
+losses or contradictions. Original-order UNKNOWN drops from 16 to 15 (eight
+known SAT, seven known UNSAT); one shuffled order of the new case is still
+unresolved. All 63 standard programs, 3,117 graph checks and 57 captured requests
+pass. This does not close order sensitivity, larger numeric/graph admission or
+the H/J observability gaps, and does not replace a live host integration run.

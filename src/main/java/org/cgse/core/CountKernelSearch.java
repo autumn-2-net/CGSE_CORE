@@ -44,7 +44,7 @@ final class CountKernelSearch implements AutoCloseable {
         started = budget.threadWork();
         int n = lower.length, d = basis.size();
         long bytes = 4096L + 2048L * n * d + 256L * (rows.size() + 2L * n) * (d + 1L);
-        if (d < 2 || d >= n || n > 48 || rows.size() > 512 || allowance < 2048 || !budget.tryReserve(bytes)) {
+        if (d < 2 || d >= n || d > 48 || n > 128 || rows.size() > 512 || allowance < 2048 || !budget.tryReserve(bytes)) {
             complete = true;
             return;
         }
