@@ -23,7 +23,7 @@ final class CountResidueJoin implements AutoCloseable {
             long lists = (1L << first) + (1L << (split - first)) +
                     (1L << third) + (1L << (variables - split - third));
             long bytes = 1056 + 8L * variables + 8L * capacity + 8L * lists +
-                    4L * ((1L << first) + (1L << third)) + (9L << bits);
+                    4L * lists + (9L << bits) + 128;
             // The density estimate chooses a strategy, not a completeness bound.
             // Skewed residues still charge each actual pair and hash inspection.
             long work = 4 * (left + (long) right) + 4 * lists;
@@ -36,12 +36,14 @@ final class CountResidueJoin implements AutoCloseable {
     private final long target;
     private long[] coefficients, table;
     private long[][] sums;
-    private int[][] heads, links;
+    private int[][] heads, links, options;
+    private final int[] optionCounts = new int[2];
+    private final boolean[] reduceQuarter = new boolean[4];
     private boolean[] covered;
     private final int[] starts, sizes;
     private PairCursor left, right;
     private long memory, work, progress, candidate = -1, value, key, leftTotal;
-    private int phase, group, cursor, residue, complement, slot, joinedCode, distinct, truncated, reused;
+    private int phase, group, cursor, residue, complement, slot, joinedCode, distinct, truncated, reused, duplicates;
     private boolean pending, done, reflected, partial;
 
     CountResidueJoin(long[] coefficients, long target, PlanningBudget budget, Shape shape) {
@@ -63,6 +65,7 @@ final class CountResidueJoin implements AutoCloseable {
             for (int i = 0; i < 4; i++) sums[i] = new long[sizes[i]];
             heads = new int[][] {new int[1 << shape.residueBits], new int[1 << shape.residueBits]};
             links = new int[][] {new int[sizes[0]], new int[sizes[2]]};
+            options = new int[][] {new int[sizes[1]], new int[sizes[3]]};
             covered = new boolean[1 << shape.residueBits];
             left = new PairCursor(0);
             right = new PairCursor(2);
@@ -86,6 +89,17 @@ final class CountResidueJoin implements AutoCloseable {
                 if (cursor != 0) {
                     int bit = Integer.numberOfTrailingZeros(cursor);
                     long coefficient = coefficients[starts[group] + bit];
+                    if ((cursor & (cursor - 1)) == 0 && !reduceQuarter[group]) {
+                        // Equal/opposite weights or a zero guarantee duplicate
+                        // quarter sums. Unstructured quarters keep their cheap
+                        // original walk instead of paying to hash every sum.
+                        reduceQuarter[group] = coefficient == 0;
+                        for (int previous = 0; previous < bit && !reduceQuarter[group]; previous++) {
+                            charge();
+                            long other = coefficients[starts[group] + previous];
+                            reduceQuarter[group] = other == coefficient || other == -coefficient;
+                        }
+                    }
                     value += (code & (1 << bit)) == 0 ? -coefficient : coefficient;
                 }
                 sums[group][code] = value;
@@ -100,10 +114,60 @@ final class CountResidueJoin implements AutoCloseable {
                     }
                 }
             } else if (phase == 1) {
+                // Quarter sums remain indexed by the original mask. Reuse the
+                // as-yet empty pair table to keep one exact representative per
+                // sum, without allocating another key table or sorting masks.
+                int capacity = sizes[group] * 2;
+                if (!reduceQuarter[group] || capacity > table.length) {
+                    // Dense odd-sized quarters may exceed this scratch space.
+                    // Keep every choice there; admission must not rely on the
+                    // expected number of duplicates or spin on a full table.
+                    charge();
+                    reduceQuarter[group] = false;
+                    if ((group & 1) != 0) optionCounts[group / 2] = sizes[group];
+                    cursor = sizes[group] - 1;
+                } else {
+                    if (!pending) {
+                        key = sums[group][cursor];
+                        slot = hash(key) & (capacity - 1);
+                        pending = true;
+                    }
+                    charge();
+                    long entry = table[slot];
+                    long epoch = 0x80000000L + group;
+                    int previous = (int) entry;
+                    if ((entry >>> 32) != epoch) {
+                        table[slot] = (epoch << 32) | cursor;
+                        if ((group & 1) != 0) options[group / 2][optionCounts[group / 2]++] = cursor;
+                    } else if (sums[group][previous] == key) {
+                        duplicates++;
+                        if ((group & 1) == 0) {
+                            // Inner buckets visit masks in descending order;
+                            // outer lists visit in ascending order. Keep the
+                            // same first representative as the original walk.
+                            links[group / 2][previous] = -2;
+                            table[slot] = (epoch << 32) | cursor;
+                        }
+                    } else {
+                        slot = (slot + 1) & (capacity - 1);
+                        continue;
+                    }
+                    pending = false;
+                }
+                if (++cursor == sizes[group]) {
+                    cursor = 0;
+                    if (++group == 4) {
+                        phase = 5;
+                        group = 0;
+                    }
+                }
+            } else if (phase == 5) {
                 charge();
-                int bucket = (int) sums[group * 2][cursor] & (heads[group].length - 1);
-                links[group][cursor] = heads[group][bucket] - 1;
-                heads[group][bucket] = cursor + 1;
+                if (links[group][cursor] != -2) {
+                    int bucket = (int) sums[group * 2][cursor] & (heads[group].length - 1);
+                    links[group][cursor] = heads[group][bucket] - 1;
+                    heads[group][bucket] = cursor + 1;
+                }
                 if (++cursor == sizes[group * 2]) {
                     cursor = 0;
                     if (++group == 2) phase = 2;
@@ -140,10 +204,7 @@ final class CountResidueJoin implements AutoCloseable {
                     }
                     key = phase == 2 ? pairs.value : reflected ? leftTotal - target + pairs.value : target - pairs.value;
                     joinedCode = pairs.code;
-                    long hash = key;
-                    hash = (hash ^ (hash >>> 33)) * 0xff51afd7ed558ccdL;
-                    hash = (hash ^ (hash >>> 33)) * 0xc4ceb9fe1a85ec53L;
-                    slot = (int) (hash ^ (hash >>> 33)) & (table.length - 1);
+                    slot = hash(key) & (table.length - 1);
                     pending = true;
                 }
                 charge();
@@ -187,7 +248,7 @@ final class CountResidueJoin implements AutoCloseable {
 
     private final class PairCursor {
         final int group;
-        int outer, inner = -1, code;
+        int outer, outerCode, inner = -1, code;
         long value;
         boolean ready, done;
 
@@ -196,16 +257,17 @@ final class CountResidueJoin implements AutoCloseable {
         boolean next() {
             if (ready || done) return true;
             if (inner < 0) {
-                if (outer == sizes[group + 1]) return done = true;
+                if (outer == optionCounts[group / 2]) return done = true;
                 charge();
+                outerCode = reduceQuarter[group + 1] ? options[group / 2][outer] : outer;
                 long wanted = group == 0 ? residue : target - (reflected ? complement : residue);
-                int bucket = (int) (wanted - sums[group + 1][outer]) & (heads[0].length - 1);
+                int bucket = (int) (wanted - sums[group + 1][outerCode]) & (heads[0].length - 1);
                 inner = heads[group / 2][bucket] - 1;
                 if (inner < 0) { outer++; return false; }
             }
             charge();
-            value = sums[group][inner] + sums[group + 1][outer];
-            code = inner | (outer << (group == 0 ? shape.first : shape.third));
+            value = sums[group][inner] + sums[group + 1][outerCode];
+            code = inner | (outerCode << (group == 0 ? shape.first : shape.third));
             ready = true;
             return true;
         }
@@ -221,10 +283,17 @@ final class CountResidueJoin implements AutoCloseable {
 
     private void charge() { budget.check(); work++; }
 
+    private static int hash(long value) {
+        value = (value ^ (value >>> 33)) * 0xff51afd7ed558ccdL;
+        value = (value ^ (value >>> 33)) * 0xc4ceb9fe1a85ec53L;
+        return (int) (value ^ (value >>> 33));
+    }
+
     private boolean finish() {
         done = true;
         budget.note("count_residue_join", "witness=" + (candidate >= 0) + "; residue=" + residue +
-                "; reused=" + reused + "; truncated=" + truncated + "; work=" + work + "; positive_only");
+                "; reused=" + reused + "; truncated=" + truncated + "; duplicates=" + duplicates +
+                "; work=" + work + "; positive_only");
         return true;
     }
 
@@ -239,7 +308,7 @@ final class CountResidueJoin implements AutoCloseable {
         done = true;
         coefficients = table = null;
         sums = null;
-        heads = links = null;
+        heads = links = options = null;
         covered = null;
         left = right = null;
         budget.release(memory);

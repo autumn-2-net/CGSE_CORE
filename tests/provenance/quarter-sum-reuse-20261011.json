@@ -1,0 +1,286 @@
+{
+  "schema": "cgse-quarter-sum-reuse-v1",
+  "date": "2026-10-11",
+  "baseline": "62f9883e977352f67520fea10fc1266d502e3eed",
+  "candidate_source_sha256": "f3c911cec44b44c963e291996258e64a5decf2b2ef5eafa5882555e1273f13cc",
+  "production_java_files": 203,
+  "scope": "Exact quarter representatives within the existing scalar candidate-only join. No operation weighting, request cap, scheduler policy, host, fallback, global proof or compiler merge change.",
+  "models_20m": {
+    "cases": 822,
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "permutations": 3,
+    "input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+    "harness_sha256": "a144f6e2269fad4c62ca5f86a0e185380d954f0feba4a9d8282462ecec887f10",
+    "outcomes": {
+      "PASS": 787,
+      "UNRESOLVED": 17,
+      "UNSUPPORTED": 18
+    },
+    "work": {
+      "baseline": 950980421,
+      "candidate": 950982158
+    },
+    "gained": [],
+    "lost": [],
+    "contradictions": [],
+    "original_order_unknown": 5,
+    "note": "UNKNOWN and unsupported conversions are not negative proofs. Existing expectations unchanged."
+  },
+  "parity": {
+    "cases": 72,
+    "identical_results_and_work": true,
+    "total_work_per_revision": 36591590
+  },
+  "low_cap_direct_tool": {
+    "cases": 288,
+    "request_work": 1000000,
+    "milliseconds": 0,
+    "memory_bytes": 67108864,
+    "workers": 1,
+    "families": {
+      "baseline": {
+        "repeated": {
+          "UNKNOWN": 144
+        },
+        "distinct": {
+          "UNKNOWN": 144
+        }
+      },
+      "candidate": {
+        "repeated": {
+          "WITNESS": 144
+        },
+        "distinct": {
+          "UNKNOWN": 144
+        }
+      }
+    },
+    "gained": 144,
+    "lost": 0,
+    "harness_sha256": "a1548aef4317d77f120372389b8533326d3a9d766bc29cad16f9c778691e111c",
+    "note": "Explicit reduced cap, not default-budget main-planner gains. Concurrent functional runs are not timing evidence."
+  },
+  "isolated_timing": {
+    "repeated": {
+      "cases_per_batch": 36,
+      "warmup_per_jvm": 2,
+      "measured_batches_per_revision": 10,
+      "execution_order": "BC then CB; no concurrent regression jobs",
+      "request_work": 20000000,
+      "milliseconds": 0,
+      "memory_bytes": 67108864,
+      "workers": 1,
+      "heap_option": "-Xmx1g",
+      "harness_sha256": "a1548aef4317d77f120372389b8533326d3a9d766bc29cad16f9c778691e111c",
+      "medians": {
+        "baseline": {
+          "nanos": 671366600.0,
+          "allocated_bytes": 609459072.0,
+          "work": 79988683.0
+        },
+        "candidate": {
+          "nanos": 43328100.0,
+          "allocated_bytes": 610754784.0,
+          "work": 3165511.0
+        }
+      },
+      "changes_percent": {
+        "nanos": -93.54628305906192,
+        "allocated_bytes": 0.2126003302810764,
+        "work": -96.04255141943017
+      },
+      "all_witnesses_identical": true,
+      "peak_reserved_bytes": {
+        "baseline": 17106944,
+        "candidate": 17172608
+      }
+    },
+    "distinct": {
+      "cases_per_batch": 36,
+      "warmup_per_jvm": 2,
+      "measured_batches_per_revision": 10,
+      "execution_order": "BC then CB; no concurrent regression jobs",
+      "request_work": 20000000,
+      "milliseconds": 0,
+      "memory_bytes": 67108864,
+      "workers": 1,
+      "heap_option": "-Xmx1g",
+      "harness_sha256": "a1548aef4317d77f120372389b8533326d3a9d766bc29cad16f9c778691e111c",
+      "medians": {
+        "baseline": {
+          "nanos": 3265451150.0,
+          "allocated_bytes": 609459104.0,
+          "work": 200173050.0
+        },
+        "candidate": {
+          "nanos": 3144057750.0,
+          "allocated_bytes": 610754784.0,
+          "work": 200182152.0
+        }
+      },
+      "changes_percent": {
+        "nanos": -3.7175077630544284,
+        "allocated_bytes": 0.21259506856099453,
+        "work": 0.004547065651450133
+      },
+      "all_witnesses_identical": true,
+      "peak_reserved_bytes": {
+        "baseline": 17106944,
+        "candidate": 17172608
+      }
+    }
+  },
+  "standard": {
+    "programs": 76,
+    "all_pass": true,
+    "source_sha256": "f3c911cec44b44c963e291996258e64a5decf2b2ef5eafa5882555e1273f13cc"
+  },
+  "graph_comparison": {
+    "paired_requests": 2151,
+    "recipe_orders": 3,
+    "cache_states": [
+      "cold",
+      "warm",
+      "replaced"
+    ],
+    "results_both_accounts_and_first_verified_work_identical": true,
+    "work_limit_per_account": 20000000,
+    "milliseconds": 0,
+    "workers": 1,
+    "fixture_sha256": "4f4f66ab40bc43f18da4bf33225e764abb083c965a88fae01d313cb6089859bd",
+    "harness_sha256": "4e8a08d7cee91e37920137cf353e7e17059483fdc23440ca248e749f65b8e2dc",
+    "totals": [
+      {
+        "revision": "baseline",
+        "cache": "cold",
+        "cases": 717,
+        "total_search": 440638086,
+        "total_compilation": 20657583
+      },
+      {
+        "revision": "baseline",
+        "cache": "warm",
+        "cases": 717,
+        "total_search": 439997000,
+        "total_compilation": 17523399
+      },
+      {
+        "revision": "baseline",
+        "cache": "replaced",
+        "cases": 717,
+        "total_search": 440604707,
+        "total_compilation": 20657583
+      },
+      {
+        "revision": "candidate",
+        "cache": "cold",
+        "cases": 717,
+        "total_search": 440638086,
+        "total_compilation": 20657583
+      },
+      {
+        "revision": "candidate",
+        "cache": "warm",
+        "cases": 717,
+        "total_search": 439997000,
+        "total_compilation": 17523399
+      },
+      {
+        "revision": "candidate",
+        "cache": "replaced",
+        "cases": 717,
+        "total_search": 440604707,
+        "total_compilation": 20657583
+      }
+    ]
+  },
+  "capture_replay": {
+    "verified_requests": 19,
+    "workers": 4,
+    "allowance_multiplier_per_account": 2,
+    "campaigns": {
+      "emitter-residual-progress": 9,
+      "miracle-funded-cycle-entry": 4,
+      "miracle-quantity-source": 3,
+      "miracle-seed-source": 3
+    },
+    "fresh_live_server": false,
+    "regression_manifest_sha256": "d8b8a6d9df26e7c554ea44988d46d4a04526d4664f798b8a0da9cf00a9aa10a8"
+  },
+  "negative_controls": [
+    {
+      "mutation": "hash-is-not-equality",
+      "exit": 1,
+      "diagnostic": [
+        "Exception in thread \"main\" java.lang.AssertionError: Exact quarter reduction removed the only sum",
+        "\tat org.cgse.core.CountQuarterReductionTest.check(CountQuarterReductionTest.java:161)",
+        "\tat org.cgse.core.CountQuarterReductionTest.finiteOracles(CountQuarterReductionTest.java:43)",
+        "\tat org.cgse.core.CountQuarterReductionTest.main(CountQuarterReductionTest.java:13)"
+      ]
+    },
+    {
+      "mutation": "outer-mask-not-restored",
+      "exit": 1,
+      "diagnostic": [
+        "Exception in thread \"main\" java.lang.AssertionError: Exact quarter reduction removed the only sum",
+        "\tat org.cgse.core.CountQuarterReductionTest.check(CountQuarterReductionTest.java:161)",
+        "\tat org.cgse.core.CountQuarterReductionTest.finiteOracles(CountQuarterReductionTest.java:43)",
+        "\tat org.cgse.core.CountQuarterReductionTest.main(CountQuarterReductionTest.java:13)"
+      ]
+    },
+    {
+      "mutation": "scratch-capacity-ignored",
+      "exit": 1,
+      "diagnostic": [
+        "Exception in thread \"main\" java.lang.ArrayIndexOutOfBoundsException: Index 21 out of bounds for length 16",
+        "\tat org.cgse.core.CountResidueJoin.step(CountResidueJoin.java:136)",
+        "\tat org.cgse.core.CountQuarterReductionTest.finiteOracles(CountQuarterReductionTest.java:39)",
+        "\tat org.cgse.core.CountQuarterReductionTest.main(CountQuarterReductionTest.java:13)"
+      ]
+    },
+    {
+      "mutation": "quarter-reduction-disabled",
+      "exit": 1,
+      "diagnostic": [
+        "Exception in thread \"main\" java.lang.AssertionError: Repeated-quarter path not covered",
+        "\tat org.cgse.core.CountQuarterReductionTest.check(CountQuarterReductionTest.java:161)",
+        "\tat org.cgse.core.CountQuarterReductionTest.finiteOracles(CountQuarterReductionTest.java:50)",
+        "\tat org.cgse.core.CountQuarterReductionTest.main(CountQuarterReductionTest.java:13)"
+      ]
+    }
+  ],
+  "unchanged_baseline_control": "New test exhausts 1M work on denseOddQuarters against 62f9883e.",
+  "assembly": {
+    "command": "gradlew.bat --offline assemble",
+    "passed": true,
+    "source_jar_matches_all_java_bytes": true,
+    "source_jar_sha256": "5d2fef206893d7aec8793ef810dd32d14ffb86e0fe9587119092eff822f6d598"
+  },
+  "test_sha256": {
+    "tests/core/java/org/cgse/core/CountQuarterReductionTest.java": "56073d138fc9873c5032d231a7d4ba3395a6e84be3fb21cb6654fed4683d320d",
+    "tests/core/java/org/cgse/core/CountResidueJoinTest.java": "06cb5724e9092c19ed52cdf077b4e50974b83903b7ec3701ed0cf7b50122d739",
+    "tests/core/java/org/cgse/core/CountComplementJoinTest.java": "99d82c456b26ed85152b80fb5d369c4f6da8a489c4fad68f7a79c8d99a2bfecd",
+    "tests/benchmarks/QuarterJoinThroughput.java": "6b3e6bef439ee762f5abcbc1636b1fe2fe0ba7ba7068a6808412091c7023dd28",
+    "tests/benchmarks/compare_quarter_join.py": "d4f06015ccde2dd95d3de2b4b5e6cc92d80709a9f717d093a30922339fe39c4c"
+  },
+  "local_artifact_sha256": {
+    "build/quarter-final-comparison/summary.json": "555b88f927bce304221460df846d2e564b95caab6f5ac3e6af4a12ac90d0b5da",
+    "build/quarter-final-planning/summary.json": "6eec7ec30b1a01fc3ad7e96c6029717af3bd950d2a8ea3e4fac1c94ec2acd7de",
+    "build/quarter-final-low-cap/summary.json": "cc87efd00a921ffd494040a68bfbf5a8b6eaee4163d8303b599085fb8d16cdb8",
+    "build/quarter-final-timing-repeated/summary.json": "5644b92ae0cd984eae0f4ad48b39d605bed4de860ed5947212a70507ea93bc08",
+    "build/quarter-final-timing-distinct/summary.json": "434096bb5e2a6d46ec67910ecb26d1b053f51f0380b5b98c58615fa883de5d8f",
+    "build/quarter-final-negative/results.json": "0f07e7286062a9c5ae502c296be12d3f84fad766ddca36a51fdd28e7e690a3a7",
+    "build/quarter-final-negative/baseline/check.log": "49bc2d4e88034c6b0f6cdaa7c2032a1eb27245c522087f5546d4bf76858fc925",
+    "build/quarter-final-standard/results.json": "9afb495ff9a3bf2e1f07c5bf20ed2f039295d1d40f2724007d80d762d79bf0d9",
+    "build/quarter-final-standard/CountModelBoundaries-mitm-retained-80000000.log": "27e4a317728d2ef2e7ce740399a98a20616536e09fb05b64ae274afc6bfa6a8d"
+  },
+  "limits": [
+    "The original five known-SAT 20M limits remain: four sparse equalities and subset-n48-bits48.",
+    "Direct repeated-weight tool improvement is not a general whole-planner speed or completeness claim.",
+    "Maximum child reservation increases 65664 bytes; measured allocation rises about 0.21%. Neither is JVM RSS.",
+    "Wider numeric/closure admission, full candidate lineage/benefit and host snapshot residency remain open."
+  ]
+}

@@ -356,3 +356,22 @@ All paired graph results and charged work are unchanged. Detailed metrics add
 Per-candidate lineage/benefit, startup-cut contribution, host capture/install
 costs and snapshot residency remain open; this does not solve the five numeric
 budget residuals or justify claiming the entire I/J scope complete.
+
+2026-10-11 exact repeated quarter sums
+------------------------------------
+quarter-sum-reuse.txt removes duplicate exact quarter sums before pair
+enumeration in the existing candidate-only four-list matcher. Admission uses
+repeated/opposite/zero weights; unstructured quarters skip the extra hash pass.
+Scratch shares the later pair table with disjoint epochs, retains original
+masks and survives yields. A scratch refusal cannot become a negative proof.
+At an identical 1M direct-tool cap, 144 repeated-weight/order cases gain verified
+witnesses, while 144 unstructured controls retain their UNKNOWN result. The
+36-case warmed repeated-weight benchmark uses 96.04% less work and 93.55% less
+median time; this is not a whole-planner improvement claim. Maximum child
+reservation grows about 64 KiB for the compact representative indices.
+All 822 canonical count results and 72 parity verdicts remain; the former
+uses 0.000183% more work. Seventy-six standard checks, four negative controls,
+2,151 paired graph requests, 19 four-worker/2x capture replays and assembly pass.
+The original five 20M limits, broader admission and the remaining H/J lineage,
+benefit and host residency work are still open. No host/fallback changes or
+fresh live AE/server verification are included in this increment.

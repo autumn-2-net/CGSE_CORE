@@ -1,0 +1,128 @@
+Exact repeated quarter sums (2026-10-11)
+=======================================
+Baseline: 62f9883e.
+
+Measured issue and scope
+------------------------
+The retained four-list matcher materializes each quarter by its original
+binary option mask. Equal quarter sums previously remained separate entries
+in the residue buckets and outer loops. Pair-table deduplication happened
+after enumerating those combinations, so repeated weights could spend millions
+of work units rediscovering the same signatures.
+
+The new reduction is confined to CountResidueJoin, whose parent requires one
+certified scalar equality and binary coordinates. It is not a graph recipe
+merge, execution-equivalence rule or whole-model preprocessing pass. It keeps
+the existing candidate-only contract: exhaustion, truncation, scratch refusal
+and a missing witness never establish global infeasibility. Counts still pass
+the original rows/domains and downstream execution checks.
+
+Implementation and retained ownership
+------------------------------------
+Equal/opposite coefficients or a zero within a quarter guarantee duplicate
+sums and enable the optional reduction. Other quarters keep their original
+enumeration. The small structural check charges every coefficient comparison.
+An earlier unconditional version preserved all 822 count conclusions but added
+29K work to a roughly 97K case. The structural gate reduces that overhead to
+under 300 work on the same cases; unstructured subset sums are not rehashed.
+
+Quarter deduplication temporarily uses the existing pair-table allocation.
+Negative epochs cannot overlap the later positive residue epochs. Every hash
+collision compares full signed sums, not fingerprints. When this scratch
+table cannot hold twice the quarter's option count, that quarter retains all
+choices. The loop never assumes duplicates will make an otherwise full table
+safe. No extra large key table or sorting phase is allocated.
+
+The original sum arrays remain mask-indexed. Inner buckets retain the largest
+mask for each sum, matching their descending traversal; outer lists retain
+the smallest mask, matching ascending traversal. Dense outer indices restore
+their original masks before pair composition. Complemented tables still use
+the complete left-mask transformation. Skewed partial tables retain their
+existing incomplete-coverage rules.
+
+Sum construction, structural checks, hash inspections, bucket construction
+and pair enumeration charge the same work unit as before. Both preparation
+and collision cursors survive local yields. Small arrays for representative
+outer masks are reserved and released with their owner. The largest child
+reservation rises by 65,664 bytes (about 64 KiB), not another megabyte-scale
+table. No request cap, operation weighting, thread multiplier, solver mode,
+host adapter or fallback role changes.
+
+Correctness and budget evidence
+-------------------------------
+CountQuarterReductionTest adds 160 finite signed/zero catalogs and 640 target
+checks against exhaustive original-mask sums, dense odd-quarter scratch
+refusal, 100-bit original offsets, whole/sliced identical witnesses and work,
+and cancellation during reduction. The previous residue suite still covers
+240 finite models / 720 orders / 489,600 independently enumerated assignments,
+shared budgets, arithmetic bounds, partial-table coverage and restoration.
+
+Three unsound controls (hash equality in place of sum equality, omitting the
+outer mask restoration, and ignoring scratch capacity) fail. Disabling the
+new reduction also fails path coverage. The new finite-budget regression run
+against the unchanged baseline exhausts its 1M work allowance.
+
+The complete canonical count corpus in three orders keeps 787 PASS, 17 UNKNOWN
+and 18 unsupported conversions at 20M. Work changes from 950,980,421 to
+950,982,158 (+0.000183%). All 72 parity/neighbor verdicts AND work remain equal.
+The original five known-SAT 20M limits remain: four large sparse equalities
+and the 48-variable/48-bit subset sum. The latter has no duplicate coefficients;
+its direct 80M retained results remain explicit separate boundaries, with only
+268/268/269 additional work across the three existing orders.
+
+The new deterministic repeated-weight campaign uses 41-52 variables, signed
+weights, planted witnesses and three random orders. At an equal 1M cap, all
+144 repeated-weight cases move from UNKNOWN to independently checked witnesses.
+Another 144 unstructured-weight controls remain UNKNOWN at that small cap.
+These are direct candidate-tool results, not 144 new whole-planner conclusions
+or a change to default budgets. Timing from concurrently running regression
+jobs is excluded from performance claims.
+
+With other regression jobs finished, sequential BC/CB runs (two warmups and
+five measured batches in each JVM; ten measured batches per revision) give:
+
+  36 repeated-weight cases      Baseline           Candidate
+  Median batch work            79,988,683          3,165,511
+  Median batch time            671.37 ms           43.33 ms
+  Cumulative thread allocation 609,459,072 bytes   610,754,784 bytes
+
+All 36 return the same original-mask witness at 20M. Work falls 96.04% and
+median time 93.55% in this deliberately repetition-heavy direct-tool family.
+The 36 distinct-weight controls also preserve all witnesses: work rises
+0.00455% for the structural check and median time changes by -3.72%. That
+small timing difference is not a general speed guarantee. Allocation rises
+about 0.21% in both families, consistent with the small reserved index arrays.
+
+The final 76 standard programs, 2,151 paired graph requests (three orders,
+cold/warm/replaced compiler caches), and offline assembly pass. Graph results,
+both work accounts and first-verified-plan work all remain equal. The 19
+captured-stock requests pass with four workers and the existing explicit 2x
+per-account allowance, including handwritten/extra-first/random mixtures of
+5,903 manual recipes and 62,284 exported recipes. These are retained capture
+replays, not a new live server test. All 203 production Java files match the
+built source JAR byte-for-byte.
+
+Reproduce
+---------
+python tests/run.py --java-home JDK17 --suite standard
+python tests/benchmarks/compare_count_models.py --java-home JDK17
+  --baseline 62f9883e --permutations 3 --parity --timeout 1800
+python tests/benchmarks/compare_quarter_join.py --java-home JDK17
+  --baseline 62f9883e --cases 48 --work 1000000 --warmup 0
+  --repetitions 1 --cycles 1 --family all
+python tests/benchmarks/compare_quarter_join.py --java-home JDK17
+  --baseline 62f9883e --cases 12 --work 20000000 --warmup 2
+  --repetitions 5 --cycles 2 --family repeated
+  # Run again separately with --family distinct after all other jobs finish.
+
+The comparison harness also supports warmed sequential BC/CB timing with
+explicit caps and separate repeated/distinct families. Its validation is
+outside the timer and checks the original equation using BigInteger. Charged
+workspace and cumulative thread allocation are not measured live heap/RSS.
+
+This follows the audit's guidance to measure actual missing capacity/cost
+before adding a portfolio arm. Broad numeric/closure admission, per-candidate
+lineage/benefit and host snapshot residency remain separate open work. No new
+native-domain-hole solver, global symmetry proof or live AE verification is
+claimed here. Exact validation artifacts are recorded in
+tests/provenance/quarter-sum-reuse-20261011.json.
