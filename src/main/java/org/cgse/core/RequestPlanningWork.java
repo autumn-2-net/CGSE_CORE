@@ -87,16 +87,17 @@ public final class RequestPlanningWork<K> implements PlanningScheduler.Work<Grap
         this.budget = budget;
         this.cancelled = cancelled;
         this.fallbackReporter = fallbackReporter;
-        available = PlanningInventory.availability(stock, checkpoint == null ? Map.of() : checkpoint.forecast());
-        directEmission = emitable.contains(target) && compiler.producers(target).isEmpty();
-        unavailableTarget = checkpoint == null && !emitable.contains(target) && compiler.producers(target).isEmpty();
-        recoverySeeds = checkpoint == null ? Map.of() : GraphRecipe.amounts(checkpoint.recoverySeeds());
+        directEmission = this.emitable.contains(target) && compiler.producers(target).isEmpty();
+        unavailableTarget = checkpoint == null && !this.emitable.contains(target) && compiler.producers(target).isEmpty();
+        available = PlanningInventory.availability(stock, checkpoint == null ? Map.of() : checkpoint.forecast(),
+                directEmission && checkpoint == null ? target : null);
+        recoverySeeds = PlanningInventory.snapshot(checkpoint == null ? Map.of() : checkpoint.recoverySeeds());
         requestScope = new ReuseScope<>(target, amount, preserve, craftLess, strategy, catalysts,
                 checkpoint == null && !directEmission, checkpoint != null, fallbackEnabled, boundedAlternatives,
                 this.emitable, recoverySeeds);
     }
 
-    /** Availability used for extraction accounting after planning. */
+    /** Immutable captured availability used for extraction accounting after planning. */
     public Map<K, Long> availability() {
         return available;
     }
@@ -138,7 +139,6 @@ public final class RequestPlanningWork<K> implements PlanningScheduler.Work<Grap
     @Override
     public boolean advance(PlanningScheduler.Slice slice) {
         if (current == null) {
-            if (directEmission && checkpoint == null) available.remove(target);
             current = calculation(amount);
         }
         if (!current.advance(slice)) return false;

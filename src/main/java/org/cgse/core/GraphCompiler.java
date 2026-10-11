@@ -6,6 +6,7 @@ package org.cgse.core;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -179,7 +180,9 @@ public final class GraphCompiler<K> {
     public GraphCompiler(List<GraphRecipe<K>> catalog) {
         this.catalog = List.copyOf(catalog);
         this.producers = new LinkedHashMap<>();
-        for (GraphRecipe<K> recipe : catalog) {
+        Set<String> ids = new HashSet<>();
+        for (GraphRecipe<K> recipe : this.catalog) {
+            if (!ids.add(recipe.id())) throw new IllegalArgumentException("Duplicate recipe ID: " + recipe.id());
             for (K output : recipe.executionOutputs().keySet()) producers.computeIfAbsent(output, key -> new ArrayList<>()).add(recipe);
         }
         producers.replaceAll((key, values) -> List.copyOf(values));

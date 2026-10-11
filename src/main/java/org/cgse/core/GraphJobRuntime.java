@@ -39,7 +39,7 @@ public final class GraphJobRuntime<K> {
         /** Zero means blocked; must not transfer inputs. */
         long capacity(GraphRecipe<K> recipe, long requested);
 
-        /** Inputs are in escrow. False/rejected must mean no input-transfer side effects. */
+        /** Inputs are in escrow. Return a non-null outcome; rejection must mean no input-transfer side effects. */
         Outcome push(GraphRecipe<K> recipe, long runs, Map<K, Long> inputs);
 
         long deliver(K key, long amount);
@@ -329,6 +329,10 @@ public final class GraphJobRuntime<K> {
                 outcome = Outcome.IN_DOUBT;
                 reason = "DISPATCH_IN_DOUBT: " + e.getClass().getSimpleName();
             }
+            // A malformed host response does not prove that escrow was never
+            // transferred. Keep uncertain ownership and finish handoff cleanup
+            // through the same path as a provider exception.
+            if (outcome == null) outcome = Outcome.IN_DOUBT;
             if (outcome == Outcome.REJECTED || outcome == Outcome.BLOCKED) {
                 // Returns owed by an older in-flight DAG batch can arrive during
                 // an unrelated rejected push. Only excess callbacks are ambiguous.

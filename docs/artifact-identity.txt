@@ -1,0 +1,21 @@
+Artifact identity
+=================
+
+Core, sources and view JAR manifests contain Implementation-Revision,
+Implementation-Source-Dirty and Implementation-Source-SHA256. The revision is
+the current checkout's full commit ID. Dirty is true when production sources,
+the build definitions or license inputs differ from that revision, including
+new untracked production files. A commit ID alone does not identify a dirty JAR.
+
+The SHA-256 covers relative paths and UTF-8 contents of src/main,
+tools/view/src/main, build.gradle, settings.gradle, LICENSE and NOTICE, sorted
+by path and with CRLF normalized to LF. It identifies the actual source inputs,
+including files not yet committed. It is not the JAR's own checksum, a signature
+or evidence that a test matrix has run.
+
+Source archives remain buildable without Git. Revision and dirty state are
+"unknown" when this directory is not the repository root, Git is unavailable
+or metadata cannot be read. A checkout surrounding an extracted archive must
+not lend its unrelated HEAD to the archive's artifact. The source digest still
+identifies the archive's production inputs. No generated repository marker or
+vendor file is needed.

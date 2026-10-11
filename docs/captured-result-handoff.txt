@@ -1,0 +1,22 @@
+Captured candidate result handoff
+================================
+
+A work/time/memory limit may arrive after an inner canonical proof has finished
+but before the outer captured catalog publishes it. CapturedCatalog retains an
+INFEASIBLE result only when relevant capture coverage is complete and the active
+solver is the canonical view. Prefix and allocation/flow support results cannot
+prove the full request impossible. Ordinary missing previews are not proofs.
+
+A verified positive witness remains valid even for a restricted view. Handoff
+does not claim its optimality. Cancellation before or during child harvesting
+remains cancellation, including when the shared budget has already timed out.
+Callers continue to own close(); repeated cleanup is safe.
+
+CapturedHandoffTest drives the actual production continuations to their proof
+or verified-witness publication boundary. Reflection only observes internal
+state; no proof flags/results are injected. An independent sibling thread then
+exhausts shared work, refuses a memory reservation, or advances an injected clock.
+It checks complete and incomplete coverage, 256-prefix alternatives with a real
+omitted witness, allocation support and unstartable flow proposals, unproved
+missing previews, stock/new-producer changes, candidate order, cancellation, and
+zero remaining memory reservations after cleanup.

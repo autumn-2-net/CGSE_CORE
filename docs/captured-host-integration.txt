@@ -1,0 +1,27 @@
+Captured domains and host integration
+=====================================
+
+The core's CapturedCatalog can discover dependencies and expand candidates beyond
+CapturedRecipe.MAX_VARIANTS. This does not extend an adapter that captures only
+the legacy prefix. Passing a PreparedCatalog of those concrete variants to a
+GraphCompiler cannot recover the discarded alternatives or their providers.
+
+The GTL adapter reviewed at a1d5a5cab5ea83cc1aa0a0eee95d3db46a1b9fc6 still
+uses CapturedPattern.expand/dependencies and releases captured entries after
+building its legacy PreparedCatalog. The separate core changes do not silently
+switch that adapter to full captured-domain planning.
+
+A host migration must retain immutable CapturedRecipe values and stable provider
+bindings, discover every relevant candidate input and actual remainder producer,
+and explicitly describe incomplete capture. It must version the catalog and
+coverage when patterns/providers change. Expanded concrete recipes must retain
+the binding and legal slot semantics required by actual dispatch. If the host
+cannot capture a complete domain, its restricted failure remains undecided.
+
+Required host regressions include a feasible variant after position 256; a new
+dependency/provider found only in that variant; late container-return producers;
+pattern replacement during preview; rejected stale bindings at submission;
+stock refresh; independent verification of the recovered execution sequence;
+and cancellation/provider loss without a false global infeasibility result.
+These require the adapter and actual provider capture, not just copying core
+source files into the host repository.

@@ -1,0 +1,50 @@
+Public input and result contracts
+=================================
+
+GraphRecipe IDs are unique within one catalog, including identical duplicate
+objects. Bindings may repeat: several input variants can use the same provider.
+GraphCompiler rejects duplicate IDs immediately. CatalogIndex and PreparedCatalog
+reject them during incremental indexing, before a compiler can be published.
+
+GraphPlanner.begin / GraphPlanningWork, RequestPlanningWork and CapturedCatalog
+capture inventories at construction. Later changes to the caller's map do not
+change a running continuation. All keys must be non-null, all counts nonnegative;
+zero counts are normalized away. Keys themselves are not cloned and must retain
+stable equality and hash codes throughout catalog/request/runtime lifetimes.
+The caller must not mutate a source collection concurrently with its capture.
+
+PlanningInventory.availability returns a read-only request snapshot; network and
+forecast amounts saturate at Long.MAX_VALUE for planning estimates. Ownership,
+dispatch and settlement still use checked exact arithmetic. The snapshot is
+shared by internal probes and continuations without another inventory copy.
+RequestPlanningWork.availability is also read-only, including map entries/views.
+Direct-emission requests exclude existing target stock when the snapshot is made.
+
+ResourceLedger.restore validates the complete escrow before changing any balance.
+Invalid keys, negative/null amounts and arithmetic overflow leave it unchanged.
+This does not promise recovery from OutOfMemoryError or user key callbacks that
+throw. ResourceLedger and GraphJobRuntime require the host's owner thread; they
+are not concurrently mutable inventories.
+
+An adapter's push() must return a non-null Outcome. If it violates this contract,
+GraphJobRuntime treats the dispatch as IN_DOUBT. It retains uncertain ownership
+and expected output obligations, including across persistence and cancellation.
+It cannot safely refund inputs or issue the same dispatch again: the provider
+may already have accepted them. Synchronous outputs retain the ordinary guarded
+headroom accounting. The host must resolve uncertain external deliveries.
+
+An exhausted work/time/memory budget is not an infeasibility proof. A completed
+canonical proof may be retained through a later budget exit only with complete
+candidate coverage. A restricted prefix, stock allocation view or auxiliary
+flow view cannot establish global infeasibility. Cancellation still propagates.
+See captured-result-handoff.txt and explicit-plan-reuse.txt for the retained
+proof and revalidated-witness boundaries.
+
+Validation entry points
+-----------------------
+Use Java 17. `gradlew check` runs the standalone core and view main-program
+regressions; `gradlew test` alone is not the regression matrix. The fixture and
+count-model corpora also have Python runners under tests/; see tests/README.md
+and each runner's --help. No Minecraft or Forge runtime is needed for core tests.
+The core library does not capture live AE providers, reserve host inventory or
+validate provider bindings by itself: those are adapter responsibilities.

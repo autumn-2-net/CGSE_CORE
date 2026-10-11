@@ -137,8 +137,8 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         this.compiler = compiler;
         this.target = target;
         this.amount = amount;
-        this.stock = stock;
-        this.requiredSeeds = GraphRecipe.amounts(requiredSeeds);
+        this.stock = PlanningInventory.snapshot(stock);
+        this.requiredSeeds = PlanningInventory.snapshot(requiredSeeds);
         this.external = Set.copyOf(external);
         this.preserve = preserve;
         this.forceCraft = forceCraft;

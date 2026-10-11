@@ -129,9 +129,9 @@ public final class CapturedCatalog<K> {
             if (amount <= 0) throw new IllegalArgumentException("Non-positive order");
             this.target = Objects.requireNonNull(target);
             this.amount = amount;
-            this.stock = GraphRecipe.amounts(stock);
+            this.stock = PlanningInventory.snapshot(stock);
             this.external = Set.copyOf(external);
-            this.requiredSeeds = GraphRecipe.amounts(requiredSeeds);
+            this.requiredSeeds = PlanningInventory.snapshot(requiredSeeds);
             this.preserve = preserve;
             this.forceCraft = forceCraft;
             this.budget = budget;
@@ -483,8 +483,16 @@ public final class CapturedCatalog<K> {
         @Override
         public Result<K> limited(PlanningBudget.Exhausted limit) {
             if (result != null) return result;
+            checkHandoffCancellation();
             GraphPlan<K> retained = solving == null ? null : solving.limited(limit);
+            checkHandoffCancellation();
             if (retained != null && retained.feasible()) finish(retained, GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL);
+            // Only the canonical model with complete relevant capture coverage
+            // can close the order. A completed root proof must survive the same
+            // budget handoff as a verified witness; restricted support/prefix
+            // failures and ordinary missing previews carry no such authority.
+            else if (retained != null && retained.result() == GraphPlan.Result.INFEASIBLE &&
+                    coverage.complete() && !allocationView) finish(retained, GraphPlan.Result.INFEASIBLE);
             else {
                 var reason = GraphPlan.Result.valueOf(limit.limit().name());
                 var empty = new GraphPlan<K>(target, amount, preserve, new PlanStep.Sequence(List.of()), Map.of(), Map.of(),
@@ -492,6 +500,15 @@ public final class CapturedCatalog<K> {
                 finish(empty, reason);
             }
             return result;
+        }
+
+        private void checkHandoffCancellation() {
+            try {
+                budget.checkpoint();
+            } catch (PlanningBudget.Exhausted exhausted) {
+                // This method handles an exhausted budget. Cancellation remains
+                // exceptional, including cancellation during child harvesting.
+            }
         }
 
         private void reserve(long bytes) {
