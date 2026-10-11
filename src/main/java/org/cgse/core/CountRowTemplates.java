@@ -10,12 +10,14 @@ import java.util.*;
 final class CountRowTemplates {
 
     private static final int MAX_PARENTS = 16, MAX_TERMS = 128, MAX_BITS = 1024;
+    private static final long SNAPSHOT_BYTES = 1024;
     private record Parent(Object key, Map<String, BigInteger> supply, BigInteger divisor, BigInteger weight) {}
     private record Template(List<Parent> parents, BigInteger divisor, long bytes) {}
+    private record Snapshot(List<Template> templates, long bytes, long revision) {}
     private record Binding(int row, BigInteger divisor, BigInteger weight) {}
     record Consequence(ExactLinearProgram.Constraint row) {}
     private final Deque<Template> templates = new ArrayDeque<>();
-    private long hits, misses, evictions, memory;
+    private long hits, misses, evictions, memory, revision;
 
     private static final class Stop extends RuntimeException {
         Stop() { super(null, null, false, false); }
@@ -47,13 +49,13 @@ final class CountRowTemplates {
     }
 
     /** Every premise must independently match a complete material row or its exact integer division. */
-    synchronized void remember(RecipeCountModel<?> model, List<ExactLinearProgram.Constraint> source,
-                               CountLpLearning.Cut cut, PlanningBudget budget) {
+    void remember(RecipeCountModel<?> model, List<ExactLinearProgram.Constraint> source,
+                  CountLpLearning.Cut cut, PlanningBudget budget) {
         if (cut.parents().isEmpty() || cut.parents().size() > MAX_PARENTS || cut.divisor().signum() <= 0 ||
                 cut.divisor().bitLength() > MAX_BITS || cut.row().terms().size() > MAX_TERMS) return;
         var work = new Work(budget);
         if (work.allowance < 1024) return;
-        long scratch = 262144;
+        long scratch = 262144 + SNAPSHOT_BYTES;
         for (int id : cut.parents().keySet()) {
             if (id < 0 || id >= source.size() || source.get(id).terms().size() > MAX_TERMS) return;
             scratch += 1024L * source.get(id).terms().size();
@@ -76,17 +78,11 @@ final class CountRowTemplates {
             var reconstructed = rebuild(model, bindings, cut.divisor(), work, false);
             if (reconstructed == null || !reconstructed.row().equals(cut.row())) return;
             var immutable = List.copyOf(parents);
-            for (var old : templates) if (old.parents.equals(immutable) && old.divisor.equals(cut.divisor())) return;
             long bytes = 512L + 256L * parents.size();
             for (var parent : parents) for (var term : parent.supply.entrySet())
                 bytes += 256L + 2L * term.getKey().length() + (term.getValue().bitLength() + 7L) / 8;
             if (bytes > 262144) return;
-            while (!templates.isEmpty() && (templates.size() >= 32 || memory + bytes > (2L << 20))) {
-                memory -= templates.removeLast().bytes;
-                evictions++;
-            }
-            templates.addFirst(new Template(immutable, cut.divisor(), bytes));
-            memory += bytes;
+            if (!publish(new Template(immutable, cut.divisor(), bytes), work)) return;
             long steps = 1 + parents.stream().filter(parent -> !parent.divisor.equals(BigInteger.ONE)).count();
             budget.note("count_row_template", "retained; parents=" + parents.size() + "; material_derivation_steps=" + steps);
         } catch (Stop ignored) {
@@ -94,29 +90,64 @@ final class CountRowTemplates {
         } finally { budget.release(scratch); }
     }
 
-    synchronized List<Consequence> reuse(RecipeCountModel<?> model, PlanningBudget budget) {
-        if (templates.isEmpty()) return List.of();
+    private synchronized Snapshot snapshot() {
+        return new Snapshot(List.copyOf(templates), memory, revision);
+    }
+
+    /** Signature comparisons and budget callbacks are outside the catalog monitor too. */
+    private boolean publish(Template candidate, Work work) {
+        for (int attempt = 0; attempt < 3; attempt++) {
+            var snapshot = snapshot();
+            if (snapshot.bytes > work.budget.availableBytes() / 8 || !work.budget.tryReserve(snapshot.bytes)) return false;
+            try {
+                for (var old : snapshot.templates) {
+                    work.check();
+                    if (old.parents.equals(candidate.parents) && old.divisor.equals(candidate.divisor)) return false;
+                }
+                synchronized (this) {
+                    if (revision != snapshot.revision) continue;
+                    while (!templates.isEmpty() && (templates.size() >= 32 || memory + candidate.bytes > (2L << 20))) {
+                        memory -= templates.removeLast().bytes;
+                        evictions++;
+                    }
+                    templates.addFirst(candidate);
+                    memory += candidate.bytes;
+                    revision++;
+                    return true;
+                }
+            } finally { work.budget.release(snapshot.bytes); }
+        }
+        // Admission is optional: catalog churn cannot create an unbounded retry.
+        return false;
+    }
+
+    List<Consequence> reuse(RecipeCountModel<?> model, PlanningBudget budget) {
         var work = new Work(budget);
         if (work.allowance < 1024) return List.of();
-        long scratch = 262144L + 96L * model.rowKeys.size();
-        long terms = 0, resultTerms = 0;
-        for (var template : templates) {
-            long next = 0;
-            for (var parent : template.parents) next += parent.supply.size();
-            terms = Math.max(terms, next);
-            resultTerms += Math.min(MAX_TERMS, next);
-        }
-        // One proof workspace plus all returned rows coexist. The base scratch
-        // also covers the bounded signature cache and one unmatched full row.
-        scratch += 1024L * terms + 512L * resultTerms;
-        if (scratch > budget.availableBytes() / 8 || !budget.tryReserve(scratch)) return List.of();
+        if (!budget.tryReserve(SNAPSHOT_BYTES)) return List.of();
+        long scratch = SNAPSHOT_BYTES, localHits = 0, localMisses = 0;
         List<Consequence> result = new ArrayList<>();
         try {
+            var snapshot = snapshot();
+            if (snapshot.templates.isEmpty()) return List.of();
+            long terms = 0, resultTerms = 0;
+            for (var template : snapshot.templates) {
+                long next = 0;
+                for (var parent : template.parents) next += parent.supply.size();
+                terms = Math.max(terms, next);
+                resultTerms += Math.min(MAX_TERMS, next);
+            }
+            // One proof workspace plus all returned rows coexist. Charge the
+            // immutable templates too: concurrent eviction may leave this request
+            // as their sole owner. No exact work or host callback holds the lock.
+            long workspace = 262144L + 96L * model.rowKeys.size() + snapshot.bytes + 1024L * terms + 512L * resultTerms;
+            if (workspace > budget.availableBytes() / 8 || !budget.tryReserve(workspace)) return List.of();
+            scratch += workspace;
             Map<Object, Integer> positions = new HashMap<>();
             for (int i = 0; i < model.rowKeys.size(); i++) { work.check(); positions.put(model.rowKeys.get(i), i); }
             Map<Integer, Map<String, BigInteger>> signatures = new HashMap<>();
             long signatureBytes = 0;
-            for (var template : templates) {
+            for (var template : snapshot.templates) {
                 work.check();
                 List<Binding> parents = new ArrayList<>();
                 boolean matched = true;
@@ -140,16 +171,19 @@ final class CountRowTemplates {
                     if (!parent.supply.equals(supply)) { matched = false; break; }
                     parents.add(new Binding(id, parent.divisor, parent.weight));
                 }
-                if (!matched) { misses++; continue; }
+                if (!matched) { localMisses++; continue; }
                 var cut = rebuild(model, parents, template.divisor, work, true);
-                if (cut == null) { misses++; continue; }
+                if (cut == null) { localMisses++; continue; }
                 result.add(cut);
-                hits++;
+                localHits++;
                 if (result.size() == 16) break;
             }
         } catch (Stop ignored) {
             // Already completed exact consequences remain valid.
-        } finally { budget.release(scratch); }
+        } finally {
+            synchronized (this) { hits += localHits; misses += localMisses; }
+            budget.release(scratch);
+        }
         if (!result.isEmpty()) budget.note("count_row_template", "replayed=" + result.size() + "; current_rhs; complete_supply_match");
         return List.copyOf(result);
     }

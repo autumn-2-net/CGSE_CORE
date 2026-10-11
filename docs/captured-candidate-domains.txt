@@ -26,6 +26,32 @@ capture incomplete. Existing GTL CapturedPatternCatalog still flattens captures
 before planning; adopting this entry point requires an adapter update in GTLCore.
 This change does not silently change that host's capture or integration APIs.
 
+Per-slot input meaning
+----------------------
+Input(multiplier, candidates) remains LEGACY: only non-external recipes with a
+multiplier at most nine mix alternatives. This compatibility rule is unchanged.
+New hosts can explicitly construct Input(multiplier, candidates, mode):
+  INDIVISIBLE: every firing selects one candidate for the entire slot.
+  MIXED: every firing may split its positive long multiplier among candidates.
+Explicit modes do not depend on external processing or the nine-copy boundary.
+Different slots can use different modes in the same recipe. These are semantic
+choices, not solver admission limits. Hosts remain responsible for accurately
+capturing which choices their real recipe allows.
+
+MIXED supports Long.MAX_VALUE copies. Cardinality uses exact binomial arithmetic;
+ranking sums composition blocks and unranking locates the block by binary search.
+Neither enumerates every copy. Concrete memory reservations depend on the number
+of nonzero candidate selections, bounded by min(multiplier, candidate count).
+Work/memory/cancellation cutoffs remain explicit; they never replace the exact
+domain size with a smaller complete domain. The 256-variant expansion is still a
+prefix only, with the same singles-then-descending-mixed ordering.
+
+Stock allocation, cross-pattern flow, integral recovery, and portable proof replay
+all carry the same per-slot mode. The auxiliary linear views still decline
+configuration/read-arc semantics, and the canonical path handles those concrete
+variants with their actual returns. Slot modes only describe independent choices;
+cross-slot restrictions still require concrete legal variants from the host.
+
 Expansion and scope
 -------------------
 CapturedRecipeDomain keeps exact BigInteger cardinalities and stable mixed-radix
@@ -180,8 +206,10 @@ alternatives, returns, request stock, external supply, required seeds, domain
 coverage and the optional serial witness are included. This is a mathematical
 snapshot, not a live AE key codec or a claim that the host captured every provider.
 
-The versioned CGD1 codec bounds file size, collections, integer lengths and
-decoded allocations; it rejects duplicate map keys, truncation and trailing data.
+The versioned CGD2 codec preserves per-slot input modes and bounds file size,
+collections, integer lengths and decoded allocations; it rejects duplicate map
+keys, truncation and trailing data. Existing CGD1 archives remain readable with
+their original LEGACY input semantics; new writers emit CGD2.
 The witness is a flat backward-referencing DAG. Shared steps, deeply nested
 programs and Long.MAX_VALUE repetitions never expand into individual firings.
 
@@ -199,7 +227,7 @@ certifies delivery and explicit seed goals, not automatic seed optimality.
 Proof limits remain explicit. Orders that consume target seeds and have positive
 net gain below the requested amount require the planner's stronger turnover
 minimality proof; the independent execution checker returns INCOMPLETE for that
-case. CGD1 does not serialize that extra proof, whole-order infeasibility, or
+case. The captured codec does not serialize that extra proof, whole-order infeasibility, or
 assumption-transfer links from arbitrary earlier CGP count journals. Restricted
 count archives consequently retain their existing incomplete marker.
 

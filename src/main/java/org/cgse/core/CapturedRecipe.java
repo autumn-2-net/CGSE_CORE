@@ -3,6 +3,7 @@
 
 package org.cgse.core;
 
+import java.math.BigInteger;
 import java.util.*;
 
 /** Immutable callback results. Combination expansion never touches a live pattern or inventory. */
@@ -27,10 +28,18 @@ public final class CapturedRecipe<K> {
         }
     }
 
-    public record Input<K>(long multiplier, List<Candidate<K>> candidates) {
+    /** LEGACY preserves the host's historical external / at-most-nine-copy rule. */
+    public enum InputMode { LEGACY, INDIVISIBLE, MIXED }
+
+    public record Input<K>(long multiplier, List<Candidate<K>> candidates, InputMode mode) {
+
+        public Input(long multiplier, List<Candidate<K>> candidates) {
+            this(multiplier, candidates, InputMode.LEGACY);
+        }
 
         public Input {
             candidates = List.copyOf(candidates);
+            Objects.requireNonNull(mode);
         }
     }
 
@@ -52,16 +61,18 @@ public final class CapturedRecipe<K> {
         for (int slot = 0; slot < inputs.size(); slot++) {
             Input<K> input = inputs.get(slot);
             int count = input.candidates().size();
-            if (!external && input.multiplier() <= 9 && count > 1) {
+            if (mixed(input) && count > 1) {
                 // Weak compositions, capped before either enumeration or overflow.
                 // Singles come first; mixed selections fill the remaining slots.
                 if (input.multiplier() > 0) {
-                    long combinations = 1;
-                    for (int n = 1; n <= input.multiplier(); n++) {
-                        combinations = combinations * (count - 1 + n) / n;
-                        if (combinations >= MAX_VARIANTS) break;
+                    BigInteger combinations = BigInteger.ONE;
+                    long terms = Math.min(input.multiplier(), count - 1L);
+                    BigInteger base = BigInteger.valueOf(input.multiplier()).add(BigInteger.valueOf(count - 1L - terms));
+                    for (int n = 1; n <= terms; n++) {
+                        combinations = combinations.multiply(base.add(BigInteger.valueOf(n))).divide(BigInteger.valueOf(n));
+                        if (combinations.compareTo(BigInteger.valueOf(MAX_VARIANTS)) >= 0) break;
                     }
-                    count = (int) Math.min(MAX_VARIANTS, combinations);
+                    count = combinations.min(BigInteger.valueOf(MAX_VARIANTS)).intValueExact();
                 }
                 bounded |= count >= MAX_VARIANTS;
             }
@@ -92,6 +103,14 @@ public final class CapturedRecipe<K> {
     boolean external() { return external; }
 
     boolean captureBounded() { return captureBounded; }
+
+    boolean mixed(Input<K> input) {
+        return switch (input.mode()) {
+            case LEGACY -> !external && input.multiplier() <= 9;
+            case INDIVISIBLE -> false;
+            case MIXED -> true;
+        };
+    }
 
     /**
      * First occurrences in exactly the old Cartesian traversal order, without
@@ -161,14 +180,17 @@ public final class CapturedRecipe<K> {
             if (selections.isEmpty() && !inputs.isEmpty()) {
                 for (int slot = 0; slot < inputs.size(); slot++) {
                     Input<K> input = inputs.get(slot);
-                    budget.reserve(32L * choices[slot] * (1 + Math.min(9, Math.max(1, input.multiplier()))));
+                    long picks = input.mode() == InputMode.LEGACY ? Math.min(9, Math.max(1, input.multiplier())) :
+                            mixed(input) ? Math.min(input.candidates().size(), Math.max(1, input.multiplier())) : 1;
+                    budget.reserve(32L * choices[slot] * (1 + picks));
                     List<List<Picked<K>>> selected = new ArrayList<>();
                     for (Candidate<K> candidate : input.candidates()) {
                         if (selected.size() == choices[slot]) break;
                         selected.add(List.of(new Picked<>(candidate, input.multiplier())));
                     }
-                    if (!external && input.multiplier() <= 9 && input.candidates().size() > 1)
-                        mixed(input.candidates(), 0, input.multiplier(), new ArrayList<>(), selected, budget);
+                    if (mixed(input) && input.candidates().size() > 1)
+                        mixed(input.candidates(), 0, input.multiplier(), new ArrayList<>(), selected, budget,
+                                input.mode() != InputMode.LEGACY);
                     if (selected.size() != choices[slot]) throw new IllegalStateException("Captured alternative count differs");
                     selections.add(selected);
                 }
@@ -201,15 +223,16 @@ public final class CapturedRecipe<K> {
 
     /** Same descending-copy order as the previous DFS, skipping its empty branches. */
     private static <K> void mixed(List<Candidate<K>> candidates, int start, long left, List<Picked<K>> selected,
-                                  List<List<Picked<K>>> out, PlanningBudget budget) {
+                                  List<List<Picked<K>>> out, PlanningBudget budget, boolean skipEmptyTail) {
         for (int at = start; at < candidates.size() && out.size() < MAX_VARIANTS; at++) {
             for (long count = left; count > 0 && out.size() < MAX_VARIANTS; count--) {
                 budget.compilationCheck();
                 selected.add(new Picked<>(candidates.get(at), count));
                 if (count == left) {
                     if (selected.size() > 1) out.add(List.copyOf(selected));
-                } else mixed(candidates, at + 1, left - count, selected, out, budget);
+                } else mixed(candidates, at + 1, left - count, selected, out, budget, skipEmptyTail);
                 selected.remove(selected.size() - 1);
+                if (skipEmptyTail && at == candidates.size() - 1) break;
             }
         }
     }

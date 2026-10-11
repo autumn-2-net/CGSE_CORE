@@ -1,0 +1,104 @@
+Cold integer-LP continuation (2026-10-11)
+
+Scope
+-----
+This is a numerical state-lifecycle improvement, not a new integer solving
+algorithm or an infeasibility proof. Existing Boolean LP and integer models
+with at most 128 ambient variables keep their previous numerical path. The
+larger bounded-integer support channel explicitly opts into cold continuation.
+Its complete-row 128-column projection, exact cut reconstruction, original
+row/domain verification and request budget remain unchanged.
+
+The cold simplex phase, artificial-variable cleanup cursor and per-phase pivot
+limit now survive local visits. A local allowance may pause only after a full
+pivot commits its tableau and basis swap. Work beyond the local allowance is
+at most that pivot and is still charged to the shared request. Cancellation,
+time and global work checks continue inside scalar batches; such terminal
+interruptions discard the whole tableau, including a half-written pivot.
+
+Resuming a partial cold tableau requires the same ordered coefficients,
+objective and RHS. A completed feasible basis retains the existing separately
+validated warm-start behavior. No partial basis is parked in the two-basis
+cache. The LCG owner resumes a pending cold attempt before changing branch
+bounds; no numerical status or point bypasses integer/execution verification.
+
+Cold continuation also owns its completed integer projection while pending.
+Its source rows must retain identity and both bound arrays are snapshotted and
+compared by value; the projected immutable row list can then be matched without
+rescanning all numerical rows on every tiny visit. A completed numerical
+proposal is held until coordinate lifting and exact cut reconstruction finish.
+If interpretation needs a larger uninterrupted visit, the owner accrues
+already-granted local work before retrying; the shared request cap is unchanged.
+A failed maximum-sized interpretation or optional memory refusal discards this
+state, allowing normal search to continue without a fabricated conclusion.
+No projection or unfinished result crosses request ownership.
+
+Official references consulted
+-----------------------------
+https://github.com/google/or-tools/blob/stable/ortools/glop/revised_simplex.cc
+GLOP's primal/dual iteration loops check deterministic limits at iteration
+boundaries; SaveState records basis statuses and its error path marks the
+state for revalidation. This informed safe continuation ownership and phase
+boundaries. CGSE's implementation is independent, uses its existing tableau,
+and does not import GLOP's revised-simplex factorization or pricing algorithms.
+
+https://www.scipopt.org/doc/html/heur__feaspump_8c_source.php
+SCIP's feasibility-pump implementation was inspected as a possible integer
+proposal tool. A local prototype alternating LP distance projection and integer
+rounding did not solve these four equality models (three seeds each, 120 LP
+rounds); it is not included in production. This negative experiment must not be
+described as importing SCIP's algorithm or matching SCIP's implementation.
+
+Evidence and limits
+-------------------
+The generated sparse-equality corpus contains four residual models (144/257
+variables, two seeds) in three complete-corpus orders. Under the original
+20,000,000 work request limit all 12 remain UNRESOLVED. The 257-variable models
+also have incomplete local LP support; cold continuation alone cannot replace
+missing integer propagation/search machinery. UNRESOLVED is not UNSAT.
+The 822-model comparison uses one worker; its unresolved original frontier
+does not trigger the width > 1 early root portfolio. The measured cold LP gain
+is retained-channel evidence, not a demonstrated speedup of those 12 main-path
+cases.
+
+For the unpermuted 144-variable models, eight 65,536-work local LP visits:
+  n144-s2: old 516,189 work, 8 builds, 0 proposals;
+           new 219,849 work, 1 build, 6 proposals (5 warm hits).
+  n144-s1: old 516,187 work, 8 builds, 0 proposals;
+           new 204,731 work, 1 build, 6 proposals (5 warm hits).
+These are continuous proposals, not valid rounded integer witnesses. The
+complete 144-column LP also progresses across visits; the full cold solve and
+the sliced solve return the same numeric trajectory. Full 257-column cold
+relaxation still needs more than 1,000,000 work for its first proposal.
+
+Final integrated production comparison against freshly compiled 2360b7f2,
+with the same 822 count-model inputs and complete-corpus permutations,
+no wall-clock cutoff, 20M work and 256 MiB:
+  792 PASS / 12 UNRESOLVED / 18 UNSUPPORTED / 0 FAIL before and after.
+  No formerly solved case became unresolved. The 18 unsupported conversions
+  remain distinct from search failure; no numerical negative is promoted.
+Recorded by tests/benchmarks/compare_count_models.py in
+build/evc-verified-counts-20261011. The tested production fingerprint is
+3c430f0213e03e5d357cd0814bc21687eedb06b33f49d1085dc8cb196e75f821.
+
+ColdLpContinuationTest checks 24 full/sliced numeric trajectories bit-for-bit
+(203 resumptions), one-pivot local overshoot, worker migration, completed-basis
+warm starts, RHS/matrix/order/objective invalidation, in-pivot cancellation,
+global work cutoff and memory disposal. Two distinct single-thread executors
+alternate every pending visit. A 144-variable projected kernel and its actual
+LCG owner must produce an LP suggestion with continued 4096-work visits; the
+owner additionally exercises an interpretation grant larger than that quantum.
+Maximum 128-column/512-input-row supports include a phase-I contradiction;
+returned cuts are reconstructed independently from their original parents.
+When the request's remaining LP share drops below a pending interpretation's
+requirement, the optional proposal is abandoned so ordinary search can proceed.
+Earlier pending-tableau-only code rebuilt the projection on each visit and
+stalled on this scenario, so tableau retention alone was insufficient.
+Existing RationalLpLearningTest,
+IntegerLpLearningTest, IntegerLpProposalTest and IntegerLpPortfolioTest also
+pass: exact integer witnesses and independent proof replay remain mandatory.
+ColdLpPhaseOneTest independently checks 48 contradictory models with shuffled
+rows, alternating workers and 258 resumptions. Their phase-I duals match the
+uninterrupted numerical reference exactly, and infeasible tableaus are released
+immediately. Numerical infeasibility still does not constitute an integer proof.
+Local raw inputs, probes, logs and baseline comparisons are kept outside Git.

@@ -488,7 +488,13 @@ final class CountLcg implements AutoCloseable {
                 counts = low.clone();
                 return finish("verified_witness");
             }
-            if (learnedRelaxation && (relaxationDecisions != decisions || relaxationConflicts != conflicts) && relax())
+            if (integerRelaxation && integerLpSession.pending()) {
+                long required = integerLpSession.continuationWork();
+                if (required > Math.min(65536, budget.remainingWork() / 8)) integerLpSession.abandonPending();
+                else if (allowance - work < required) return paused = true;
+            }
+            if (learnedRelaxation && (relaxationDecisions != decisions || relaxationConflicts != conflicts ||
+                    integerRelaxation && integerLpSession.pending()) && relax())
                 return counts != null ? finish("verified_lp_rounding") : complete;
             finiteHint();
             CountLockBranch.Decision preferred = null;
@@ -759,7 +765,10 @@ final class CountLcg implements AutoCloseable {
             relaxationCalls++;
             if (result == null) {
                 relaxationMisses++;
-                return false;
+                // Finish the exact same cold numerical problem on the next
+                // visit before branching changes its bounds. A pause is neither
+                // numerical infeasibility nor an integer-search conclusion.
+                return integerRelaxation && integerLpSession.pending();
             }
             relaxationNumericalWork += result.numericalWork;
             relaxationPoint = result.point;
@@ -1490,7 +1499,14 @@ final class CountLcg implements AutoCloseable {
     void resume(long quantum) {
         if (!paused || quantum <= 0) throw new IllegalStateException("Integer search is not paused");
         if (budget.remainingWork() == 0) budget.check();
-        allowance = work + Math.min(quantum, budget.remainingWork());
+        if (integerRelaxation && integerLpSession.pending()) {
+            // Waiting for a complete exact interpretation must accumulate the
+            // unspent part of prior local grants. Resetting it on each resume
+            // would make any requirement above the scheduler's quantum stall.
+            long room = Math.min(budget.remainingWork(), Long.MAX_VALUE - work);
+            long carried = Math.min(room, Math.max(0, allowance - work));
+            allowance = work + carried + Math.min(quantum, room - carried);
+        } else allowance = work + Math.min(quantum, budget.remainingWork());
         paused = false;
         complete = false;
         certificate = null;

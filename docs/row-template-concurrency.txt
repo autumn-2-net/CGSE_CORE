@@ -1,0 +1,44 @@
+Row-template cache concurrency
+==============================
+
+CountRowTemplates retains immutable structural derivations, never a previously
+computed inventory-dependent RHS. Every replay still compares complete material
+row signatures, rebuilds all integer divisions on current rows, and verifies the
+exact proof before importing its consequence. Added producers invalidate the
+affected signature. These validity rules are unchanged by concurrent replay.
+
+The catalog monitor protects only bounded snapshot copies, cache publication /
+eviction and aggregate metrics. Signature construction and comparison, exact
+arithmetic, proof checking, diagnostics and budget callbacks run outside it.
+Concurrent requests operate on distinct models and budgets (or explicitly shared
+thread-safe budgets); callers must not mutate a model during replay.
+
+Admission validates a candidate before publication. A snapshot revision prevents
+two simultaneous admissions from inserting the same template. Comparisons are
+outside the lock; a changed revision permits at most three optional admission
+attempts. Contention can skip caching a valid derivation, never produce a search
+conclusion. Existing newest-admission ordering, 32-entry / 2 MiB limits, and the
+16-consequence replay cap remain unchanged.
+
+Snapshots retain template objects even if another request evicts those objects.
+The requesting budget charges both the bounded reference copy and the estimated
+bytes pinned by its snapshot, in addition to the exact-proof workspace. Refusal,
+work exhaustion and cancellation release the reservation; completed hit/miss
+counters are merged once even on an interrupted replay. Cache metrics describe
+resident cache entries, while the budget includes request-owned pinned snapshots.
+
+Regression
+----------
+CountRowTemplateConcurrencyTest pauses a legitimate budget checkpoint inside
+signature work and verifies that an independent request can read metrics, replay
+its different RHS and publish / evict entries before that checkpoint resumes.
+It also checks duplicate concurrent admission, exact hit/miss counts, changed
+producer rejection, snapshot-memory accounting and cancellation inside proof
+reconstruction. CountRowTemplatesTest and CountNormalizedTemplatesTest retain
+the current-RHS, supply-boundary and portable-proof regression coverage.
+
+The checkpoint gate demonstrates lock ownership, not a production deadlock or a
+claim that the host normally pauses for that duration. The optional
+--benchmark-only mode reports four-worker latency for a tiny synthetic model;
+its timings are diagnostic observations, not correctness thresholds or evidence
+of uniform throughput improvement.
