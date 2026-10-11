@@ -195,7 +195,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             budget.note("integer_counts_tail", "completed_signature_table; allowance=" + allowance);
         }
         if (work >= allowance || work >= improvementUntil) {
-            if (best == null && (!pending.isEmpty() || !deferred.isEmpty())) {
+            if (best == null && (!pending.isEmpty() || !deferred.isEmpty() || scheduleContinuations.hasPending())) {
                 paused = true;
                 if (proofs != null) proofs.publish(model, choiceConflicts.snapshot());
                 budget.note("integer_counts_pause", "work=" + work + "; branches=" + branches + "; pending=" + (pending.size() + deferred.size()));
@@ -210,6 +210,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         if (shell != null) return stepShell();
         if (best == null && executionBlocked && !reachabilityAttempted && work >= 32768) prepareReachability();
         if (reachability != null) return stepReachability();
+        if (best == null) enqueueSchedule();
         if (pending.isEmpty() && deferred.isEmpty()) {
             if (unresolved && best == null && !portfolioScheduled) enqueuePortfolio();
             if (pending.isEmpty()) return finish(!unresolved && best == null);
@@ -457,7 +458,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                         branch.deferredVisit = true;
                         deferred.addLast(branch);
                     } else {
-                        if (branch.auxiliaryMode == 0 && !branch.splitWitness) unresolved = true;
+                        if (branch.auxiliaryMode == 0 && !branch.splitWitness && !branch.autonomousSchedule) unresolved = true;
                         branch.close();
                     }
                 }
@@ -478,6 +479,30 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         for (var other : pending) if (branch.sameAuxiliarySearch(other)) return true;
         for (var other : deferred) if (branch.sameAuxiliarySearch(other)) return true;
         return false;
+    }
+
+    private void enqueueSchedule() {
+        if (!scheduleContinuations.hasPending()) return;
+        long before = budget.threadWork();
+        IntegerCountBranch<K> branch = null;
+        try {
+            budget.charge((long) pending.size() + deferred.size());
+            if (pending.stream().filter(value -> value.autonomousSchedule).count() +
+                    deferred.stream().filter(value -> value.autonomousSchedule).count() >= 4) return;
+            branch = new IntegerCountBranch<>(model, execution, target, amount, stock, seeds, external,
+                    preserve, force, budget, started, List.of());
+            if (branch.state != IntegerCountBranch.State.OPEN) return;
+            branch.shareSchedules(scheduleContinuations);
+            var schedule = scheduleContinuations.takePending();
+            if (schedule == null) return;
+            branch.scheduledCandidate(schedule);
+            pending.addLast(branch);
+            branch = null;
+            branches++;
+        } finally {
+            if (branch != null) branch.close();
+            work += budget.threadWork() - before;
+        }
     }
 
     private void retain(IntegerCountBranch<K> branch) {

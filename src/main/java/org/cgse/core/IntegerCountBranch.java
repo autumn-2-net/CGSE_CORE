@@ -139,6 +139,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     PlanningBudget.Exhausted limit;
     boolean initialized, partitioned, rescue, retried, choicePruned, needsRepair;
     private boolean candidateOnly;
+    boolean autonomousSchedule;
     private CountViewSearch.CandidateOrigin candidateOrigin;
     private long candidateStarted, runStarted, observedWork;
     private boolean measuringRun;
@@ -360,6 +361,12 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 case DEAD -> CountViewSearch.CandidateOutcome.SCHEDULE_DEAD;
                 case UNKNOWN -> CountViewSearch.CandidateOutcome.SCHEDULE_UNKNOWN;
             });
+            if (autonomousSchedule && status != CountSchedule.Result.WITNESS) {
+                // This is a positive-only continuation, not a subtree of the
+                // count domain. It cannot close that domain or publish a cut.
+                state = State.UNRESOLVED;
+                return;
+            }
             if (speculativeCandidate() && status != CountSchedule.Result.WITNESS) {
                 // Failure to schedule a local-search candidate must leave the
                 // original count domain and all the other strategies available.
@@ -1609,6 +1616,14 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         beginAssembly(witness);
     }
 
+    /** Continue the already paid execution search independently of its proposer. */
+    void scheduledCandidate(CountSchedule<K> continuation) {
+        initialized = partitioned = candidateOnly = autonomousSchedule = true;
+        compileRecovery = false;
+        scheduling = continuation;
+        counts = continuation.counts();
+    }
+
     private void unresolved() {
         if (candidateOnly) {
             plan = null;
@@ -1627,6 +1642,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     }
 
     boolean resume() {
+        if (autonomousSchedule) return false;
         // A split root keeps its already-paid searches. Its children cover the
         // full domain; this continuation must never create the same children
         // again or make a local cutoff invalidate their coverage.

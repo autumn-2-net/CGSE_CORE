@@ -620,6 +620,11 @@ final class CountSchedule<K> implements AutoCloseable {
         return true;
     }
 
+    BigInteger[] counts() {
+        budget.charge(original.length);
+        return original.clone();
+    }
+
     /** Assembly can reject an executable ordering without rejecting its count vector. */
     CountSchedule<K> retainWitnessForAssembly() {
         retainWitness = true;
