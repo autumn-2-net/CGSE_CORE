@@ -6,6 +6,7 @@ package org.cgse.core;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 /**
  * Bounded two-phase rational simplex for sparse Ax <= b, x >= 0. Bland's
@@ -32,9 +33,21 @@ final class ExactLinearProgram implements AutoCloseable {
                 // frozen its keys and values. RHS overlays can borrow it.
             } else if (terms.size() < 2) terms = Map.copyOf(terms);
             else {
+                int[] keys = new int[terms.size()];
+                int count = 0;
+                boolean ascending = true;
+                for (int key : terms.keySet()) {
+                    if (count > 0 && keys[count - 1] > key) ascending = false;
+                    keys[count++] = key;
+                }
                 Map<Integer, BigInteger> ordered = new LinkedHashMap<>();
-                terms.entrySet().stream().sorted(Map.Entry.comparingByKey())
-                        .forEach(entry -> ordered.put(entry.getKey(), Objects.requireNonNull(entry.getValue())));
+                if (ascending) {
+                    for (var entry : terms.entrySet())
+                        ordered.put(entry.getKey(), Objects.requireNonNull(entry.getValue()));
+                } else {
+                    Arrays.sort(keys);
+                    for (int key : keys) ordered.put(key, Objects.requireNonNull(terms.get(key)));
+                }
                 terms = new Coefficients(ordered);
             }
         }
@@ -49,6 +62,9 @@ final class ExactLinearProgram implements AutoCloseable {
         }
 
         @Override public Set<Entry<Integer, BigInteger>> entrySet() { return values.entrySet(); }
+        @Override public Set<Integer> keySet() { return values.keySet(); }
+        @Override public Collection<BigInteger> values() { return values.values(); }
+        @Override public void forEach(BiConsumer<? super Integer, ? super BigInteger> action) { values.forEach(action); }
         @Override public BigInteger get(Object key) { return values.get(key); }
         @Override public boolean containsKey(Object key) { return values.containsKey(key); }
         @Override public int size() { return values.size(); }

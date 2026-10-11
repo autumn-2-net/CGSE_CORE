@@ -169,7 +169,8 @@ public final class SummaryComputation<K> implements AutoCloseable {
             }
             return false;
         }
-        SequenceSummary<K> complete = new SequenceSummary<>(frame.need, frame.change, frame.peak);
+        // The completed frame relinquishes these vectors to the immutable summary.
+        SequenceSummary<K> complete = SequenceSummary.owned(frame.need, frame.change, frame.peak);
         complete(complete);
         return result != null;
     }

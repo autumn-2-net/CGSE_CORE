@@ -22,6 +22,7 @@ final class CountSchedule<K> implements AutoCloseable {
     private final Map<String, GraphRecipe<K>> recipes = new LinkedHashMap<>();
     private final List<SequenceSummary<K>> summaries = new ArrayList<>();
     private final Map<K, List<Integer>> consumers = new HashMap<>();
+    private final Map<K, BigInteger> initialHeld = new LinkedHashMap<>();
     private final Map<K, BigInteger> held = new LinkedHashMap<>();
     private final List<PlanStep> program = new ArrayList<>(), pass = new ArrayList<>();
     private final Deque<State> pending = new ArrayDeque<>();
@@ -71,7 +72,7 @@ final class CountSchedule<K> implements AutoCloseable {
             this.balancedFirst = balancedFirst;
             original = counts.clone();
             long incidences = model.recipes.stream().mapToLong(r -> r.inputs().size() + r.outputs().size()).sum();
-            long bytes = 4096 + 512L * model.recipes.size() + 512L * incidences + 128L * model.keys.size();
+            long bytes = 4096 + 512L * model.recipes.size() + 640L * incidences + 128L * model.keys.size();
             if (!budget.tryReserve(bytes)) {
                 result = Result.UNKNOWN;
                 return;
@@ -83,6 +84,14 @@ final class CountSchedule<K> implements AutoCloseable {
                     SequenceSummary<K> summary = SequenceSummary.recipe(recipe);
                     int index = summaries.size();
                     summary.delta().forEach((key, amount) -> {
+                        // A local schedule only observes recipe ports. Keeping
+                        // the whole network inventory here made every order
+                        // retry and exact-search state copy unrelated stock.
+                        // Include returned/coproduct keys even if they are not
+                        // constrained by the backward count-model closure.
+                        long available = model.stock.getOrDefault(key, 0L);
+                        if (available != 0 && !initialHeld.containsKey(key))
+                            initialHeld.put(key, BigInteger.valueOf(available));
                         if (amount.signum() < 0 && !model.external.contains(key))
                             consumers.computeIfAbsent(key, unused -> new ArrayList<>()).add(index);
                     });
@@ -255,7 +264,7 @@ final class CountSchedule<K> implements AutoCloseable {
         used = new BigInteger[original.length];
         Arrays.fill(used, BigInteger.ZERO);
         held.clear();
-        model.stock.forEach((key, amount) -> held.put(key, BigInteger.valueOf(amount)));
+        held.putAll(initialHeld);
         program.clear();
         pass.clear();
         budget.release(programMemory);
@@ -271,8 +280,7 @@ final class CountSchedule<K> implements AutoCloseable {
 
     private boolean blockedStartup() {
         if (model.recipes.stream().anyMatch(GraphRecipe::batchSensitiveInputs)) return false;
-        Map<K, BigInteger> upper = new HashMap<>();
-        model.stock.forEach((key, value) -> upper.put(key, BigInteger.valueOf(value)));
+        Map<K, BigInteger> upper = new HashMap<>(initialHeld);
         BitSet available = new BitSet();
         boolean changed;
         do {
@@ -481,7 +489,7 @@ final class CountSchedule<K> implements AutoCloseable {
             return finish(Result.WITNESS);
         }
         held.clear();
-        model.stock.forEach((key, value) -> held.put(key, BigInteger.valueOf(value)));
+        held.putAll(initialHeld);
         // Undoing from the unique final marking is equivalent for a fixed
         // sequential multiset. It often exposes a forced last firing that is
         // hidden among many possible first firings.

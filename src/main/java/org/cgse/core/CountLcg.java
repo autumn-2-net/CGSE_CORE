@@ -1465,13 +1465,31 @@ final class CountLcg implements AutoCloseable {
 
     private boolean satisfies(BigInteger[] value) {
         for (var row : rows) {
-            BigInteger sum = BigInteger.ZERO;
+            long small = 0;
+            BigInteger sum = null;
             for (var term : row.terms().entrySet()) {
                 charge();
-                integerCost(term.getValue(), value[term.getKey()]);
-                sum = sum.add(term.getValue().multiply(value[term.getKey()]));
+                BigInteger coefficient = term.getValue(), count = value[term.getKey()];
+                integerCost(coefficient, count);
+                // Keep the exact dot product in a machine word while it fits.
+                // Promote the accumulated prefix once on overflow; never
+                // truncate large counts or repeat already charged terms.
+                if (sum == null) {
+                    if (coefficient.bitLength() <= 63 && count.bitLength() <= 63) {
+                        long a = coefficient.longValue(), b = count.longValue();
+                        long product = a * b, total = small + product;
+                        if (Math.multiplyHigh(a, b) == product >> 63 && ((small ^ total) & (product ^ total)) >= 0) {
+                            small = total;
+                            continue;
+                        }
+                    }
+                    sum = BigInteger.valueOf(small);
+                }
+                sum = sum.add(coefficient.multiply(count));
             }
-            if (sum.compareTo(row.upper()) > 0) return false;
+            if (sum == null && row.upper().bitLength() <= 63) {
+                if (small > row.upper().longValue()) return false;
+            } else if ((sum == null ? BigInteger.valueOf(small) : sum).compareTo(row.upper()) > 0) return false;
         }
         // Covering relaxations may admit assignments that original-model
         // nogoods exclude. Checking rows alone would accept such a low point
