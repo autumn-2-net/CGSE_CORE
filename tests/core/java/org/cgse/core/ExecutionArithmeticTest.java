@@ -10,6 +10,7 @@ import java.util.*;
 public final class ExecutionArithmeticTest {
     public static void main(String[] args) throws Exception {
         summaries();
+        ordinaryPrefixes();
         dotProducts();
         localInventory();
         System.out.println("Execution arithmetic: wide prefixes, promotion, exact row boundaries and scoped stock passed");
@@ -83,6 +84,28 @@ public final class ExecutionArithmeticTest {
                 }
                 check(budget.reservedBytes() == 0, "dot product memory leaked");
             }
+        }
+    }
+
+    private static void ordinaryPrefixes() {
+        long[] amounts = {1, 2, 1L << 31, Long.MAX_VALUE};
+        for (long input : amounts) for (long output : amounts) for (long count : amounts) {
+            var recipes = Map.of("in", recipe("in", Map.of("a", input), Map.of("b", output)),
+                    "out", recipe("out", Map.of("b", output), Map.of("a", input)));
+            // The prefix can cross MIN_VALUE/MAX_VALUE and later cancel back
+            // into long. Promotion must preserve the earlier need and peak.
+            var step = new PlanStep.Sequence(List.of(new PlanStep.Batch("in", count),
+                    new PlanStep.Batch("in", 1), new PlanStep.Batch("out", count), new PlanStep.Batch("out", 1)));
+            var expected = SequenceSummary.of(step, recipes);
+            var budget = budget();
+            try (var fold = new SummaryComputation<>(step, recipes, budget)) {
+                while (!fold.step()) {}
+                for (String key : List.of("a", "b"))
+                    check(expected.required(key).equals(fold.result().required(key)) &&
+                            expected.delta(key).equals(fold.result().delta(key)) &&
+                            expected.peak(key).equals(fold.result().peak(key)), "ordinary prefix overflow: " + input + "/" + output + "/" + count);
+            }
+            check(budget.reservedBytes() == 0, "ordinary fold leaked");
         }
     }
 
