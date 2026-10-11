@@ -2321,7 +2321,8 @@
       "campaign": "new-stage-20261004",
       "mode": "probe",
       "baseline_compiled": true,
-      "tier": "standalone"
+      "tier": "historical",
+      "coverage_note": "Negative control intentionally asserts old defects; preserved for old-version reproduction, excluded from passing-current standalone selection."
     },
     {
       "id": "LeafRepairCostSweep-2958e9471943",
@@ -11768,7 +11769,8 @@
       "campaign": "GraphPatchAudit.java",
       "mode": "probe",
       "baseline_compiled": true,
-      "tier": "standalone"
+      "tier": "historical",
+      "coverage_note": "Negative control intentionally asserts old defects; preserved for old-version reproduction, excluded from passing-current standalone selection."
     },
     {
       "id": "DeferredHintProbe-d5d853266adc",

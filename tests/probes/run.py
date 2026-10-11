@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+import zipfile
 
 BASE=Path(__file__).resolve().parent
 TESTS=BASE.parent
@@ -32,6 +33,18 @@ def run(args,java,classes,output,execute,results,save):
     for probe in chosen:
         entry=migrated.get(probe['id'])
         if entry is None:continue
+        if not probe['main']:
+            resource=entry['class'].replace('.','/')+'.class'
+            compiled=False
+            for path in [classes,*[Path(p) for p in args.classpath.split(os.pathsep) if p]]:
+                if path.is_dir():
+                    compiled |= (path/resource).is_file()
+                elif path.is_file() and zipfile.is_zipfile(path):
+                    with zipfile.ZipFile(path) as jar: compiled |= resource in jar.namelist()
+            results.append({'name':probe['id'],'status':'PASS' if compiled else 'COMPILE_FAILED','mode':'helper-compile',
+                            'migration':entry['replacement']})
+            save()
+            continue
         previous=executed.get(entry['class'])
         if previous is None:
             execute(probe['id'],entry['class'])

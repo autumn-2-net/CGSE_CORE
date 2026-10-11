@@ -189,6 +189,213 @@
       "migration": "Retain all six original inputs with cold and two warm requests, exact witness checks and independent subset/CNF oracles. The original 24-warmup/51-sample wall benchmark remains archived.",
       "source_artifact_sha256": "2ef5d76929efa57e2d8d6950046fef612a7bb19fec5a5849ca9d118c5764915a",
       "original_sha256_lf": "7128dd54e1527bee295e7e39a6fa2cbfecae921fd5ac14189aaa93dd59afbade"
+    },
+    {
+      "id": "ProductionLearningSafety-24907917c96c",
+      "original_path": "probes/java/solver-adaptive-20261003/ProductionLearningSafety-24907917c96c/ProductionLearningSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalProductionLearningTest.java",
+      "class": "org.cgse.core.HistoricalProductionLearningTest",
+      "migration": "Preserve original generated cases, exact witnesses and lifecycle checks; replace incidental external JSON/oracle helper dependency and adapt current supported signatures or compact activity accessor.",
+      "source_artifact_sha256": "24907917c96c7bb99f3f3659cdbc8eb62700c58865ded049755c84f80868e517",
+      "original_sha256_lf": "92a3b9c270b8a97f0d9104a84dcc2217506841d1eaa94ed7999f45082d5926d0"
+    },
+    {
+      "id": "JumpFrontierProbe-4d96fbb1a231",
+      "original_path": "probes/java/structural-stage-20261004/JumpFrontierProbe-4d96fbb1a231/JumpFrontierProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalJumpFrontierTest.java",
+      "class": "org.cgse.core.HistoricalJumpFrontierTest",
+      "migration": "Preserve original generated cases, exact witnesses and lifecycle checks; replace incidental external JSON/oracle helper dependency and adapt current supported signatures or compact activity accessor.",
+      "source_artifact_sha256": "4d96fbb1a23127e01297222e76f008257deac53ab8e6527d8893341230d2cc70",
+      "original_sha256_lf": "f35b9b75373b25c8ad25fe5b245a1861d50e0f32dfc98e932794c69d7d1ec3d0"
+    },
+    {
+      "id": "CacheStateSafety-b50be7850de5",
+      "original_path": "probes/java/solver-reuse-20261003/CacheStateSafety-b50be7850de5/CacheStateSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalCacheStateTest.java",
+      "class": "org.cgse.core.HistoricalCacheStateTest",
+      "migration": "Preserve original generated cases, exact witnesses and lifecycle checks; replace incidental external JSON/oracle helper dependency and adapt current supported signatures or compact activity accessor.",
+      "source_artifact_sha256": "b50be7850de538c27008e5643049251d97854d4eb62be4fded42db21f7bc2d2f",
+      "original_sha256_lf": "fe07a111305c64a6ca9a2255cbbe6243a4a1768f3adff3e3768d69913ab20e2d"
+    },
+    {
+      "id": "CycleProofProbe-ef7d8e4d2e06",
+      "original_path": "probes/java/mixed-jei-fix-20261007/CycleProofProbe-ef7d8e4d2e06/CycleProofProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalCycleProofTest.java",
+      "class": "org.cgse.core.HistoricalCycleProofTest",
+      "migration": "Preserve original generated cases, exact witnesses and lifecycle checks; replace incidental external JSON/oracle helper dependency and adapt current supported signatures or compact activity accessor.",
+      "source_artifact_sha256": "ef7d8e4d2e064fb9f82febc928711963bb161c61719cf7766dbc788e917b4c89",
+      "original_sha256_lf": "3625d33bb8fb13e93b3ff3cefdac7ce0d3ac1e905ca141c0ddf61bee48482784"
+    },
+    {
+      "id": "AdaptivePermutationProbe-fc4cf27b0e9b",
+      "original_path": "probes/java/solver-adaptive-20261003/AdaptivePermutationProbe-fc4cf27b0e9b/AdaptivePermutationProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalAdaptivePermutationTest.java",
+      "class": "org.cgse.core.HistoricalAdaptivePermutationTest",
+      "migration": "Preserve original generated cases, exact witnesses and lifecycle checks; replace incidental external JSON/oracle helper dependency and adapt current supported signatures or compact activity accessor.",
+      "source_artifact_sha256": "fc4cf27b0e9b38b8bd980c6d160b1b559165eeaf45c4733ad56c48efd3965c5c",
+      "original_sha256_lf": "36ab81fb85b6cd35d452e01ad3493afc822fe819e363f50c8d6ae167425959f6"
+    },
+    {
+      "id": "CompilerFusionProbe-420a10157a75",
+      "original_path": "probes/java/oracle-front-20261007/CompilerFusionProbe-420a10157a75/CompilerFusionProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalCompilerFusionTest.java",
+      "class": "org.cgse.core.HistoricalCompilerFusionTest",
+      "migration": "Preserve original generated cases, exact witnesses and lifecycle checks; replace incidental external JSON/oracle helper dependency and adapt current supported signatures or compact activity accessor.",
+      "source_artifact_sha256": "420a10157a7596684246e638bb0af227ffbb7ff531cfc85189bfb65f289a4e8a",
+      "original_sha256_lf": "6905387d7eed97ab55764e1c6b64c2e0a9cfe37ba966897e0c46c8e878f62cbf"
+    },
+    {
+      "id": "CoupledReview-46f2de8aab6e",
+      "original_path": "probes/java/cp-sat-recheck-20260926/CoupledReview-46f2de8aab6e/CoupledReview.java",
+      "replacement": "core/java/org/cgse/core/HistoricalCoupledTest.java",
+      "class": "org.cgse.core.HistoricalCoupledTest",
+      "migration": "Preserve original generated cases, exact witnesses and lifecycle checks; replace incidental external JSON/oracle helper dependency and adapt current supported signatures or compact activity accessor.",
+      "source_artifact_sha256": "46f2de8aab6ead240524f0d4907cef28c28e46f2b86c95c165d61c37aaa1e17a",
+      "original_sha256_lf": "a81bbb183658ab4058169f40a40c954c7b06f2e388787c7f243fd20acfeecfe5"
+    },
+    {
+      "id": "LazyLcgProbe-94f5afe56819",
+      "original_path": "probes/java/solver-hardcases-20261003/LazyLcgProbe-94f5afe56819/LazyLcgProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalLazyLcgTest.java",
+      "class": "org.cgse.core.HistoricalLazyLcgTest",
+      "migration": "Preserve both original locked and unlocked branching variants, 4000 bounded plus 250 unbounded systems each, with current compact row-activity accessors and independent brute-force/proof checks.",
+      "source_artifact_sha256": "94f5afe56819804b31ab9cf46cf11b336c519a04a12bcbb0aa43efb1bce927e1",
+      "original_sha256_lf": "0efa9657542871ece54d2bc2b25e8e682ee293413f098bb31c424b4ab64b613f"
+    },
+    {
+      "id": "AuxiliaryRetainedSafety-276e087440cb",
+      "original_path": "probes/java/solver-remaining-20261003/AuxiliaryRetainedSafety-276e087440cb/AuxiliaryRetainedSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalAuxiliaryRetainedTest.java",
+      "class": "org.cgse.core.HistoricalAuxiliaryRetainedTest",
+      "migration": "Retain proof, pause, cancellation, duplicate scope and coordinator cases. Fairness follows charged work instead of obsolete fixed turn numbers; return extracted branch ownership before any assertion.",
+      "source_artifact_sha256": "276e087440cbe9a9aa2ddbb116c1b307a298b0318bfee2c10e9a9a7dcc71cbf4",
+      "original_sha256_lf": "24c3c41fca4f0a2b5585343d3dd8206048e38f3a50dee456c97411c4feaee002"
+    },
+    {
+      "id": "AuxiliaryRetainedSafety-0ebb6e926666",
+      "original_path": "probes/java/solver-reuse-20261003/AuxiliaryRetainedSafety-0ebb6e926666/AuxiliaryRetainedSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalAuxiliaryRetainedTest.java",
+      "class": "org.cgse.core.HistoricalAuxiliaryRetainedTest",
+      "migration": "Earlier variant of maintained generated cases; original internal layout retained only as historical evidence. Current lifecycle and independent proof checks run in the replacement.",
+      "source_artifact_sha256": "0ebb6e926666aa36289b87e41b7dba37de7cb71ad4e474e684390fedc2e37889",
+      "original_sha256_lf": "92ee25b615d865267afdddf9f2c3f6ca4293a1ae6ef8b37f7f9788ddd3a80f72"
+    },
+    {
+      "id": "AuxiliaryRetainedSafety-387edf688c77",
+      "original_path": "probes/java/solver-reuse-20261003/AuxiliaryRetainedSafety-387edf688c77/AuxiliaryRetainedSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalAuxiliaryRetainedTest.java",
+      "class": "org.cgse.core.HistoricalAuxiliaryRetainedTest",
+      "migration": "Earlier variant of maintained generated cases; original internal layout retained only as historical evidence. Current lifecycle and independent proof checks run in the replacement.",
+      "source_artifact_sha256": "387edf688c7707c03aef354b964ea22e1aa06e93f80b085e8bfa33fa023ca05d",
+      "original_sha256_lf": "6ec764d702524688115defa16edb66c8fe2aa361cf02981fe4d96f9592f3c419"
+    },
+    {
+      "id": "AuxiliaryRetainedSafety-509cfb8aa5fc",
+      "original_path": "probes/java/solver-reuse-20261003/AuxiliaryRetainedSafety-509cfb8aa5fc/AuxiliaryRetainedSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalAuxiliaryRetainedTest.java",
+      "class": "org.cgse.core.HistoricalAuxiliaryRetainedTest",
+      "migration": "Earlier variant of maintained generated cases; original internal layout retained only as historical evidence. Current lifecycle and independent proof checks run in the replacement.",
+      "source_artifact_sha256": "509cfb8aa5fc774b9795c38bf11083a97623aa7f0e33c405f4e072d15bb7dbe1",
+      "original_sha256_lf": "1c98b59ce54302938e2df9653a20c9648bb762db40ca600436dc9de93c926679"
+    },
+    {
+      "id": "RetainedViewBatchProbe-8a179be25ddb",
+      "original_path": "probes/java/solver-next-20261004/RetainedViewBatchProbe-8a179be25ddb/RetainedViewBatchProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalRetainedViewTest.java",
+      "class": "org.cgse.core.HistoricalRetainedViewTest",
+      "migration": "Earlier variant of maintained generated cases; original internal layout retained only as historical evidence. Current lifecycle and independent proof checks run in the replacement.",
+      "source_artifact_sha256": "8a179be25ddb3cb49e8fa692340a1a1f318875b76f9d058548c7e937b44d2884",
+      "original_sha256_lf": "33524a88c2b443c2e2312ea78baa290740caf655224fdda985db7d1c64e03383"
+    },
+    {
+      "id": "LazyLcgProbe-e495e8f0fc7a",
+      "original_path": "probes/java/solver-benchmarks-20261003/LazyLcgProbe-e495e8f0fc7a/LazyLcgProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalLazyLcgTest.java",
+      "class": "org.cgse.core.HistoricalLazyLcgTest",
+      "migration": "Preserve both original locked and unlocked branching variants, 4000 bounded plus 250 unbounded systems each, with current compact row-activity accessors and independent brute-force/proof checks.",
+      "source_artifact_sha256": "e495e8f0fc7af5e79b0b102b3f58bfc342a31c90aae9e50b2738beeb58b91f44",
+      "original_sha256_lf": "4d55749aeec1b6c8df28acdb319718a329fb4ceb02793150c1d4463d3fd97ac1"
+    },
+    {
+      "id": "ReferenceLpLearning-564b4b27cd9b",
+      "original_path": "probes/java/solver-reuse-20261003/ReferenceLpLearning-564b4b27cd9b/ReferenceLpLearning.java",
+      "replacement": "core/java/org/cgse/core/HistoricalReferenceLpLearning.java",
+      "class": "org.cgse.core.HistoricalReferenceLpLearning",
+      "migration": "Frozen differential numeric proposal helper, not a standalone executable test.",
+      "source_artifact_sha256": "564b4b27cd9bf539d0046c56367dd7fb995975752e01b5ced5749d049935a278",
+      "original_sha256_lf": "48717612b383bf09ec18df6086540ff414fded8b28dfd7b685c64109ff7830be"
+    },
+    {
+      "id": "LpStructureProbe-39961722a1e3",
+      "original_path": "probes/java/solver-continuation-20261003/LpStructureProbe-39961722a1e3/LpStructureProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalLpStructureTest.java",
+      "class": "org.cgse.core.HistoricalLpStructureTest",
+      "migration": "Preserve 1200 models x 10 cache transitions and frozen-reference numeric point/status checks. Independently verify every current cold/warm cut against current rows and all feasible Boolean assignments. Rational multiplier recovery and retained pivot order may select different valid cuts; they are not byte-identity contracts.",
+      "source_artifact_sha256": "39961722a1e36efd37902d600105381dc961fe3c8654747be4ee0c5770285561",
+      "original_sha256_lf": "850d83a86479a69d44464f360ab97d2f55c6ac104d7d0883bb097aeee7052be3"
+    },
+    {
+      "id": "OrderRegression-b54f81cdd03e",
+      "original_path": "probes/java/cgse-feedback-fixes-20261003/OrderRegression-b54f81cdd03e/OrderRegression.java",
+      "replacement": "core/java/org/cgse/core/HistoricalOrderRegressionTest.java",
+      "class": "org.cgse.core.HistoricalOrderRegressionTest",
+      "migration": "Preserve independent plan/order checks and production certificate boundaries; stocked force-craft models now have both gross-production and positive-net-gain necessary rows.",
+      "source_artifact_sha256": "b54f81cdd03e4b39c69d9c4ffe2aece98631df9fa8ef8db005fb16362a57b206",
+      "original_sha256_lf": "3315f9a0926d4745c711179adefbc6f9faa2204c55848d95b1481a93aa2548eb"
+    },
+    {
+      "id": "BudgetRangeProbe-a7dabe5361ea",
+      "original_path": "probes/java/solver-remaining-20261003/BudgetRangeProbe-a7dabe5361ea/BudgetRangeProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalBudgetRangeTest.java",
+      "class": "org.cgse.core.HistoricalBudgetRangeTest",
+      "migration": "Preserve original assertions with current internal continuation and accounting contracts.",
+      "source_artifact_sha256": "a7dabe5361eadd0653f8fb5d59e02bd1985e21e8507347e4f996bebc02cfa159",
+      "original_sha256_lf": "af9cb50155f4a4920fbe7f17cba7097ac56dd8d8242a464101928528a4c313bf"
+    },
+    {
+      "id": "BudgetSafeProbe-c3aa3d0160e9",
+      "original_path": "probes/java/solver-remaining-20261003/BudgetSafeProbe-c3aa3d0160e9/BudgetSafeProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalBudgetSafeTest.java",
+      "class": "org.cgse.core.HistoricalBudgetSafeTest",
+      "migration": "Preserve work-weight, overflow, concurrent-cap and wraparound deadline checks; seed the current request-owned worker clock rather than the removed JVM-global clock.",
+      "source_artifact_sha256": "c3aa3d0160e9ab12035f392fd8ee04402b6fae3e086122524ca18db195320f8b",
+      "original_sha256_lf": "0539ece2296729d985d4c76493b54910915f1fe81fe65f145555a3944972ab75"
+    },
+    {
+      "id": "AffineReuseProbe-d50ff58d6c07",
+      "original_path": "probes/java/solver-next-20261004/AffineReuseProbe-d50ff58d6c07/AffineReuseProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalAffineReuseTest.java",
+      "class": "org.cgse.core.HistoricalAffineReuseTest",
+      "migration": "Run both original 1200-system distributions (small and 70..139-bit offsets), preserving old solved-case coverage. Reconstruct exact Gram-Schmidt and Babai independently instead of calling removed internals.",
+      "source_artifact_sha256": "d50ff58d6c075337b33123076db07bf87121ed015f2726feda39bc7cd41d8e44",
+      "original_sha256_lf": "038ca190be0d1d95d6a1e983f7a4a669f1060fe8fee4fe76767e92f016d130c0"
+    },
+    {
+      "id": "ReferenceAffineLattice-a7e01e49284c",
+      "original_path": "probes/java/solver-next-20261004/ReferenceAffineLattice-a7e01e49284c/ReferenceAffineLattice.java",
+      "replacement": "core/java/org/cgse/core/HistoricalReferenceAffineLattice.java",
+      "class": "org.cgse.core.HistoricalReferenceAffineLattice",
+      "migration": "Frozen differential affine reference, compiled as a test helper.",
+      "source_artifact_sha256": "a7e01e49284cacf2ef5e9a0d39252782513daa703ad83c454d92b017c25ff24d",
+      "original_sha256_lf": "be7bebaff632ff60dbb2acd2f327465dea9a31997fbffea8ae7d20459a315f3a"
+    },
+    {
+      "id": "AffineReuseProbe-d8adf5419687",
+      "original_path": "probes/java/solver-next-20261004/AffineReuseProbe-d8adf5419687/AffineReuseProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalAffineReuseTest.java",
+      "class": "org.cgse.core.HistoricalAffineReuseTest",
+      "migration": "Run both original 1200-system distributions (small and 70..139-bit offsets), preserving old solved-case coverage. Reconstruct exact Gram-Schmidt and Babai independently instead of calling removed internals.",
+      "source_artifact_sha256": "d8adf5419687cf83d54d7372a1e8a6965dc0775a7b4604647ffbcb07518ccbc0",
+      "original_sha256_lf": "cd89510d7681ebfc5f6ad757216747edd0e2d8990005f21a1d03b6157d1a11d3"
+    },
+    {
+      "id": "CycleStressDetail-254f6d3c19c8",
+      "original_path": "probes/java/cycle-stress/CycleStressDetail-254f6d3c19c8/CycleStressDetail.java",
+      "replacement": "core/java/org/cgse/core/HistoricalCycleDetailTest.java",
+      "class": "org.cgse.core.HistoricalCycleDetailTest",
+      "migration": "Preserve all 20 original quantity/generator pairs and the previously unreachable 128/512/1024 rings; independently verify every known and solver witness. Keep the 100M cap check; duplicate memory-only 1GiB diagnostic and direct reflective AllocationSearch diagnostics remain archival, not asserted main-solver coverage.",
+      "source_artifact_sha256": "254f6d3c19c8416a092ecb991616e41ac2c265e6a21dc57ce56cb192a7960df7",
+      "original_sha256_lf": "d46523534e94c36f1af27a4a9be79a68792033a579e20380985fd4c2496c7c52"
     }
   ]
 }

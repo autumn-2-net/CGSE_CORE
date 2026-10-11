@@ -733,6 +733,10 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 else beginScheduling();
             } else if (impossible) {
                 learnedChoices.add(new CountConflict(current));
+                // Component infeasibility covers the complete reduced domain.
+                // A closed unrestricted root remains a proof even if a sibling
+                // previously paused; guarded component proofs stay local.
+                proofContradiction = current.isEmpty();
                 state = State.DEAD;
             } else {
                 separatorPartial = partial;

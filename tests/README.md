@@ -36,8 +36,9 @@ resource requirements differ. Use `--case <regex>`, `--shard 0/4`, `--millisecon
 
 ## Maintained historical tests
 
-The `Historical*Test` programs migrate 21 formerly broken or unusable probes into
-16 maintained regressions. They run in `standard` and can also be selected with
+The `Historical*Test` programs provide 31 maintained regressions. The migration
+index maps 44 archived sources, including two reference helpers and aliases
+whose distinct generator/branching variants are explicitly retained. They run in `standard` and can also be selected with
 `--suite core --case '^Historical'`. `provenance/migrated-probes.json` records each
 original program, its source-artifact hash, the unchanged portable source hash
 (LF-normalized), its replacement and the exact contract changes.
@@ -60,6 +61,28 @@ particular old strategy did not run. Numerical, execution, memory and proof
 assertions remain enforced. UNKNOWN and exhausted budgets are still unresolved;
 historical failing labels are not rewritten into passing expectations. Local
 player captures and recovered incident inputs remain in the local case registry.
+
+Audit archived programs separately from their input coverage:
+
+```text
+python tests/probes/coverage.py --results build/tests --output build/coverage
+```
+
+Repeat `--results` for additional completed run directories. The JSON/CSV report
+lists every historical program, its previous compile/execution status, maintained
+replacement and actual result evidence. Compilation alone is `COMPILED_ONLY`;
+missing arguments, native dependencies, helpers and obsolete diagnostics remain
+explicit. Related dataset replay is not silently counted as execution of an old
+program. Run directories are evidence for the build used in that run, not proof
+that the current checkout has been tested.
+
+The added historical checks include both affine offset distributions (2,400
+systems), locked/unlocked LCG branching, 12,000 LP cache transitions, sparse
+activity caches, exact proof reconstruction, continuation ownership, compiler
+fusion and the large cycle cases after the old diagnostic's failed reflection.
+`CountComponentRootProofTest` keeps a complete root proof after an inconclusive
+sibling while confining guarded proofs. `SeedVerificationLifecycleTest` closes
+partially retained verification on local-budget exit and cancellation.
 
 The continuation/LP follow-up is documented in `../docs/effort-and-rational-lp.txt`.
 It records the equal-budget three-order comparison and the separate known-SAT
