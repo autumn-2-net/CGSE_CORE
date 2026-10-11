@@ -1,0 +1,70 @@
+Hall analysis on the actual Boolean support (2026-10-11)
+======================================================
+
+Gap and change
+--------------
+The 15a473de review's matching work and the e788d3d3 review's small-active-core
+admission remain relevant after retained matching was implemented. CountHall
+still declined an entire model if it exceeded 512 variables / 2,048 rows, or
+if just one coordinate was not a nonnegative Boolean count. A small matching
+conflict could therefore disappear from analysis when a wide counter was added.
+
+The existing small Boolean path is preserved. For larger or mixed models, a
+bounded scan now collects complete unit rows whose complete supports are Boolean.
+Demand groups are collected first; unrelated positive capacities do not consume
+the support cap. A capacity is admitted only as a complete row, including any
+extra coordinates. Signed, wide, unbounded or oversized crossing rows are skipped
+whole. No omitted coordinate is set to zero and no input constraint is removed.
+
+The matching relaxation retains at most 512 coordinates / 2,048 rows. Ambient
+indexing remains capped at 8,192 coordinates / 32,768 rows; discovery uses at most
+8,192 work and one quarter of the existing Hall allowance. Index construction,
+matching, pair inference and checking all consume the same request account.
+Pair adjacency and its reason matrix use compact support indices, while cuts,
+domain premises and exported certificates keep original model coordinates.
+
+Clique checking now requests domain axioms for every coordinate used by its
+literals and cited pair rows, including boundary coordinates. Unrelated model
+coordinates need no fabricated Boolean domain axioms. The certificate fields
+and archive format are unchanged; bounds are still checked against explicit
+premises wherever the proof relies on them. Original-coordinate domain vectors
+still have a linear ambient allocation cost; this is not a fully sparse archive.
+
+A proved contradiction in this relaxation is a contradiction of the full model.
+Successful matching, rejected admission, partial discovery and local exhaustion
+do not establish feasibility or infeasibility. CountReduction adds only checked
+consequences and retains every other constraint. Execution and force-production
+validation still operate on the original recipes.
+
+Evidence
+--------
+HallSupportTest embeds the same small pair-capacity conflict in 32, 600 and
+4,096-coordinate models, in six orders. All 18 deficits have independently
+replayed original-coordinate certificates; all 18 missing-edge witnesses survive.
+It also enumerates 49,152 finite assignments across 96 randomized kernels,
+checks signed/unbounded boundary rows, unrelated Boolean capacities, incomplete
+scans, cancellation and work/memory refusal. Archive round-trips and forged
+boundary-premise rejection are included.
+
+HallSupportPipelineReview adds a shared demand linking wide counters to the
+matching kernel, so the existing closure compiler cannot simply omit them.
+At 40M work / 256 MiB / one worker, baseline d70a01af leaves all six 96/600-variable
+count-stage cases UNKNOWN. This revision proves all six infeasible in 167,671 to
+308,254 total work. Six independently witnessed feasible neighbors also pass
+count recovery and primitive execution checks. This is a main-count-stage
+comparison, not a new live AE execution or complete GraphPlanner benchmark.
+
+Reproduce the focused checks:
+  python tests/run.py --java-home JDK17 --suite standard --milliseconds 0
+    --case 'HallSupport|HallCapacity|CapacityPipeline|ArchiveOracle'
+
+Final validation passes 117 standard programs, 741 graph fixture runs (247
+graphs in three orders), and offline assemble/testClasses. The frozen 822-entry
+40M count comparison retains 792 PASS, 12 UNRESOLVED and 18 UNSUPPORTED finite
+conversions, with no lost conclusions or contradictions. Its largest solved-case
+work regression is about 3%; work changes are not a wall-time speed claim.
+
+These cases and raw baseline/candidate measurements are retained in the ignored
+local registry. This increment does not remove the full graph closure limit,
+the bounded support limit, the four sparse-equality hard cases, or the separate
+cross-snapshot residency and full candidate-benefit attribution gaps.
