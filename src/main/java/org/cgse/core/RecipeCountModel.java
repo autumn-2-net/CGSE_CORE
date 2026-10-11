@@ -20,6 +20,7 @@ final class RecipeCountModel<K> implements AutoCloseable {
     final List<K> rowKeys = new ArrayList<>();
     final PlanningBudget budget;
     CountRecoveryTemplates<K> recoveryTemplates;
+    CountRowTemplates rowTemplates;
     private long memory;
 
     static <K> RecipeCountModel<K> create(GraphCompiler<K> compiler, K target, long amount, Map<K, Long> stock,
@@ -64,6 +65,7 @@ final class RecipeCountModel<K> implements AutoCloseable {
                 workspace += bytes;
                 var model = new RecipeCountModel<>(cached, stock, external, budget, goals(target, amount, seeds));
                 model.recoveryTemplates = compiler.recoveryTemplates;
+                model.rowTemplates = compiler.rowTemplates;
                 if (force && !external.contains(target)) model.requireProduction(target, amount);
                 model.memory = workspace;
                 workspace = 0;
@@ -85,6 +87,7 @@ final class RecipeCountModel<K> implements AutoCloseable {
             workspace += sparseBytes;
             var model = new RecipeCountModel<>(recipes, keys, stock, external, budget, goals(target, amount, seeds), compiler.catalogIndex());
             model.recoveryTemplates = compiler.recoveryTemplates;
+            model.rowTemplates = compiler.rowTemplates;
             if (force && !external.contains(target)) model.requireProduction(target, amount);
             if (compiler.reuseCountCatalogs() &&
                     GraphCompiler.cacheableCountCatalog(entries + keys.size() + recipes.size(), seeds.size(), excluded.size(), external.size()))

@@ -24,7 +24,7 @@ def main():
     parser.add_argument('--permutations', type=int, default=3)
     parser.add_argument('--milliseconds', type=int, default=3000)
     parser.add_argument('--work', type=int, default=20_000_000)
-    parser.add_argument('--model-engine', choices=['lcg-first', 'lcg-retained', 'lp-retained', 'pb-retained',
+    parser.add_argument('--model-engine', choices=['lcg-first', 'lcg-retained', 'lp-retained', 'integer-lp-retained', 'pb-retained',
                                                  'affine-retained', 'mitm-retained', 'views', 'main-counts'], default='lcg-first',
                         help='Count models only: direct original-coordinate algorithms, views, or main integer-count stage')
     parser.add_argument('--model-trace', action='store_true', help='Include count-model diagnostics, also on budget exits')
@@ -129,7 +129,7 @@ def main():
                 if not isinstance(work, int) or work <= 0:
                     raise ValueError('Invalid count boundary work cap')
                 engine = oracle.get('engine', 'main-counts')
-                if engine not in ('main-counts', 'mitm-retained'):
+                if engine not in ('main-counts', 'mitm-retained', 'integer-lp-retained'):
                     raise ValueError('Invalid count boundary engine')
                 batches.setdefault((engine, work), []).append(case)
             for (engine, work), batch in sorted(batches.items()):

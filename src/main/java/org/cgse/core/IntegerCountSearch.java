@@ -118,6 +118,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                 branchHistory = new CountBranchHistory(model.recipes.size(), budget);
                 scheduleContinuations = new CountScheduleContinuations<>(model, budget);
                 choiceConflicts.add(compiler.countSessions.reuse(model, budget));
+                for (var cut : compiler.rowTemplates.reuse(model, budget)) materialConflicts.offer(cut.row());
                 enqueue(List.of());
             } catch (RuntimeException | Error failure) {
                 close();

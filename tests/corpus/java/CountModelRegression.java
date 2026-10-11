@@ -14,7 +14,7 @@ public final class CountModelRegression {
 
     public static void main(String[] args) throws Exception {
         String engine = args.length > 3 ? args[3] : "lcg-first";
-        if (!Set.of("lcg-first", "lcg-retained", "lp-retained", "pb-retained", "affine-retained", "mitm-retained", "views", "main-counts").contains(engine))
+        if (!Set.of("lcg-first", "lcg-retained", "lp-retained", "integer-lp-retained", "pb-retained", "affine-retained", "mitm-retained", "views", "main-counts").contains(engine))
             throw new IllegalArgumentException("Unknown model engine: " + engine);
         System.out.println("ENGINE " + engine + " milliseconds=" + args[1] + " work=" + args[2] + " memory_bytes=" + (256L << 20));
         int solved = 0, unresolved = 0, unsupported = 0, failed = 0;

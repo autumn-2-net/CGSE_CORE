@@ -25,6 +25,7 @@ final class CountViewSearch implements AutoCloseable {
     private CandidateOrigin candidateOrigin;
     private Search candidateSource;
     private boolean strideScoutAttempted;
+    private boolean integerLpAttempted;
     private long commonWork, reportedCommonWork, restorationWork;
     private CountPortfolioPolicy.Mode candidateMode;
 
@@ -112,6 +113,7 @@ final class CountViewSearch implements AutoCloseable {
                     solver = new CountLcg(view.rows(), domains.lower(), domains.upper(), budget, quantum);
                     if (models.sharesCuts(view)) solver.shareRows();
                     if (engine == Engine.LOCKS) solver.lockBranching();
+                    if (engine == Engine.INTEGER_LP) solver.integerRelaxation();
                 } else solver.resume(quantum);
                 int bounds = models.importProofBounds(view, importedBounds, solver);
                 importedBounds = models.boundVersion();
@@ -173,6 +175,7 @@ final class CountViewSearch implements AutoCloseable {
     private enum Engine {
 
         LCG,
+        INTEGER_LP,
         PB,
         LOCKS,
         JUMP,
@@ -184,7 +187,7 @@ final class CountViewSearch implements AutoCloseable {
         DIOPHANTINE;
 
         boolean provesInfeasibility() {
-            return this == LCG || this == PB || this == LOCKS;
+            return this == LCG || this == INTEGER_LP || this == PB || this == LOCKS;
         }
     }
 
@@ -212,6 +215,57 @@ final class CountViewSearch implements AutoCloseable {
             }
         }
         addStrideScout();
+    }
+
+    /** Do not displace cheap compilation or existing engines' initial visits with another LCG. */
+    private boolean addIntegerLp() {
+        if (integerLpAttempted || !models.compiledAlternatives()) return false;
+        integerLpAttempted = true;
+        var candidates = new ArrayList<>(models.available());
+        candidates.sort(Comparator.comparingLong(view -> view.shape().cost()));
+        for (var view : candidates) if (integerLp(view)) {
+            long limit = Math.min(16384, budget.remainingWork() / 32);
+            if (limit < 4096) return false;
+            var domains = models.domains(view);
+            try (var probe = new CountIntegerLpLearning();
+                 var result = probe.solve(view.rows(), domains.lower(), domains.upper(), -1, budget, limit)) {
+                // A retained second LCG is worthwhile only after this bounded
+                // scout has actually found a new, exact row consequence.
+                if (result == null || result.cut == null || view.rows().contains(result.cut.row())) return false;
+                addSearch(view, Engine.INTEGER_LP);
+                models.publishCuts(view, List.of(result.cut), 0, this);
+                budget.note("count_integer_lp_scout", "certified_cut; retained_arm; view=" + view.name());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** One complementary arm, admitted by bounded row support rather than the whole LP matrix. */
+    private boolean integerLp(CountModelViews.View view) {
+        long start = budget.threadWork(), limit = Math.min(16384, budget.remainingWork() / 64);
+        if (limit < 1024 || budget.remainingWork() < 65536) return false;
+        for (var row : view.rows()) {
+            if (row.terms().size() < 2 || row.terms().size() > 128) continue;
+            boolean bounded = row.upper().bitLength() <= 1024, integer = false, weighted = false;
+            for (var term : row.terms().entrySet()) {
+                if (budget.threadWork() - start >= limit) return false;
+                budget.check();
+                int id = term.getKey();
+                var high = view.upper()[id];
+                var low = view.lower()[id];
+                if (high == null || high.bitLength() > 1024 || low.bitLength() > 1024 || term.getValue().bitLength() > 1024) {
+                    bounded = false;
+                    break;
+                }
+                if (!low.equals(high)) {
+                    integer |= high.compareTo(BigInteger.ONE) > 0 || low.signum() < 0;
+                    weighted |= term.getValue().abs().compareTo(BigInteger.ONE) > 0;
+                }
+            }
+            if (bounded && integer && weighted) return true;
+        }
+        return false;
     }
 
     /** Transfer an already-paid frontier, only in its unchanged reduced coordinate scope. */
@@ -298,6 +352,7 @@ final class CountViewSearch implements AutoCloseable {
         boolean completedSlice = false;
         boolean rejectedRestoration = false;
         long gained = 0;
+        long integerScoutWork = 0;
         try {
             if (active == null) {
                 active = select();
@@ -370,14 +425,26 @@ final class CountViewSearch implements AutoCloseable {
                 if (!search.done && search.scheduling.eligible && idle < 2) stalled = false;
                 if (!search.done && search.scheduling.eligible && policy.selections(search.scheduling) < 2) sampled = false;
             }
-            if ((stalled || sampled) && counts == null && !infeasible && addIntegerJump()) stalled = false;
+            if ((stalled || sampled) && counts == null && !infeasible) {
+                long scoutStarted = budget.threadWork();
+                boolean added;
+                try { added = addIntegerLp(); }
+                finally {
+                    integerScoutWork = budget.threadWork() - scoutStarted;
+                    commonWork(integerScoutWork);
+                }
+                if (added) stalled = false;
+                else if (addIntegerJump()) stalled = false;
+            }
             return counts != null || infeasible || stalled;
         } finally {
             long spent = budget.threadWork() - before;
             work += spent;
             if (active != null) {
-                active.work += spent;
-                active.sliceWork += spent;
+                // A new engine's admission/proof preparation is common work,
+                // not a cost penalty on the engine whose slice just completed.
+                active.work += spent - integerScoutWork;
+                active.sliceWork += spent - integerScoutWork;
                 if (completedSlice) policy.feedback(active.scheduling, active.sliceWork, gained);
                 // Include the decisive solver step; publishing before this
                 // accounting made a one-step proof appear to cost no work.

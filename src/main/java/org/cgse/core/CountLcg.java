@@ -247,6 +247,8 @@ final class CountLcg implements AutoCloseable {
     private double[] finiteHint;
     private int fixedPeak;
     private boolean learnedRelaxation;
+    private boolean integerRelaxation;
+    private int relaxationFocus = -1;
     private int originalRows, relaxationDecisions = -1, relaxationConflicts = -1;
     private long relaxationCalls, relaxationCuts, relaxationMisses, relaxationNumericalWork;
     private double[] relaxationPoint;
@@ -256,6 +258,7 @@ final class CountLcg implements AutoCloseable {
     private int cycleDecisions = -1, cycleConflicts = -1;
     private long cycleNext, cycleWork;
     private CountLpLearning.Session lpSession;
+    private CountIntegerLpLearning integerLpSession;
     private CountLcgReliability reliability;
     private CountLcgRowPool rowPool;
     private int pendingVariable = -1, pendingLevel, pendingTrail;
@@ -281,20 +284,30 @@ final class CountLcg implements AutoCloseable {
     /** Opt-in Boolean LP explanations; ordinary lazy-bound searches retain their old path. */
     CountLcg learnedRelaxation() {
         try {
-            return enableLearnedRelaxation();
+            return enableLearnedRelaxation(false);
         } catch (RuntimeException | Error failure) {
             close();
             throw failure;
         }
     }
 
-    private CountLcg enableLearnedRelaxation() {
-        if (learnedRelaxation || !importedRows.isEmpty() || !cycleRows.isEmpty() || complete || low.length < 2 || low.length > 128 || rows.size() > 512) return this;
-        for (int i = 0; i < low.length; i++) {
+    CountLcg integerRelaxation() {
+        try {
+            return enableLearnedRelaxation(true);
+        } catch (RuntimeException | Error failure) {
+            close();
+            throw failure;
+        }
+    }
+
+    private CountLcg enableLearnedRelaxation(boolean integers) {
+        if (learnedRelaxation || !importedRows.isEmpty() || !cycleRows.isEmpty() || complete || low.length < 2 ||
+                low.length > (integers ? 8192 : 128) || rows.size() > (integers ? 32768 : 512)) return this;
+        for (int i = 0; !integers && i < low.length; i++) {
             charge();
             if (low[i].signum() < 0 || high[i] == null || high[i].compareTo(BigInteger.ONE) > 0) return this;
         }
-        long perCut = 256L + 128L * low.length;
+        long perCut = 256L + 128L * Math.min(128, low.length);
         int capacity = (int) Math.min(2048, Math.min(budget.availableBytes() / 16 / perCut,
                 budget.remainingWork() / Math.max(1, 8L * low.length)));
         if (capacity < 16) return this;
@@ -306,8 +319,10 @@ final class CountLcg implements AutoCloseable {
         originalRows = rows.size();
         rowActivity = Arrays.copyOf(rowActivity, rows.size() + capacity);
         learnedRelaxation = true;
-        lpSession = new CountLpLearning.Session();
-        reliability = new CountLcgReliability(low.length, budget, this::charge, this::integerCost);
+        integerRelaxation = integers;
+        if (integers) integerLpSession = new CountIntegerLpLearning();
+        else lpSession = new CountLpLearning.Session();
+        if (!integers) reliability = new CountLcgReliability(low.length, budget, this::charge, this::integerCost);
         rowPool = new CountLcgRowPool(originalRows, rowActivity.length, low.length, budget, this::charge);
         return this;
     }
@@ -545,7 +560,8 @@ final class CountLcg implements AutoCloseable {
                     up = finiteHint[best] > middle.doubleValue();
             }
             if (savedValues != null && savedValues[best] != null) up = savedValues[best].compareTo(middle) > 0;
-            if (relaxationPoint != null) up = relaxationPoint[best] >= 0.5;
+            if (relaxationPoint != null && Double.isFinite(relaxationPoint[best]))
+                up = integerRelaxation ? relaxationPoint[best] > middle.doubleValue() : relaxationPoint[best] >= 0.5;
             if (reliability != null) {
                 pendingVariable = best;
                 pendingLevel = level;
@@ -731,11 +747,15 @@ final class CountLcg implements AutoCloseable {
 
     /** A numerical result can only propose an exact row combination or a checked integer point. */
     private boolean relax() {
+        long integerAllowance = Math.min(65536, Math.min(budget.remainingWork() / 8, Math.max(0, allowance - work)));
+        if (integerRelaxation && integerAllowance < 2048) return false;
         relaxationDecisions = decisions;
         relaxationConflicts = conflicts;
         long before = budget.threadWork(), oldTicks = workTicks;
-        try (var result = lpSession.solve(rows.subList(0, originalRows), low, high, budget,
-                Math.min(200000, budget.remainingWork() / 4))) {
+        try (var result = integerRelaxation ? integerLpSession.solve(rows.subList(0, originalRows), low, high,
+                relaxationFocus, budget, integerAllowance) :
+                lpSession.solve(rows.subList(0, originalRows), low, high, budget,
+                        Math.min(200000, budget.remainingWork() / 4))) {
             relaxationCalls++;
             if (result == null) {
                 relaxationMisses++;
@@ -777,8 +797,12 @@ final class CountLcg implements AutoCloseable {
                 boolean valid = true;
                 for (int i = 0; i < rounded.length; i++) {
                     charge();
-                    if (!Double.isFinite(relaxationPoint[i])) valid = false;
-                    rounded[i] = Math.round(relaxationPoint[i]) <= 0 ? BigInteger.ZERO : BigInteger.ONE;
+                    if (integerRelaxation) {
+                        rounded[i] = result.integerPoint != null && result.integerPoint[i] != null ? result.integerPoint[i] : low[i];
+                    } else {
+                        if (!Double.isFinite(relaxationPoint[i])) valid = false;
+                        rounded[i] = Math.round(relaxationPoint[i]) <= 0 ? BigInteger.ZERO : BigInteger.ONE;
+                    }
                     if (rounded[i].compareTo(rootLow[i]) < 0 || rootHigh[i] != null && rounded[i].compareTo(rootHigh[i]) > 0) valid = false;
                 }
                 if (valid && satisfies(rounded)) {
@@ -830,7 +854,7 @@ final class CountLcg implements AutoCloseable {
                         rootLow[id].bitLength() <= 63 && rootHigh[id].bitLength() <= 63 &&
                         rootHigh[id].subtract(rootLow[id]).bitLength() <= 63;
         }
-        if (learnedRelaxation && rowId >= originalRows && cached.booleanOrder == null) {
+        if (learnedRelaxation && !integerRelaxation && rowId >= originalRows && cached.booleanOrder == null) {
             reserve(64L + 4L * row.terms().size());
             cached.booleanOrder = row.terms().keySet().stream().sorted((a, b) -> {
                 charge();
@@ -875,6 +899,7 @@ final class CountLcg implements AutoCloseable {
         BigInteger sum = cached.minimum();
         int infinities = cached.infinities, infinite = cached.infiniteXor;
         if (infinities == 0 && sum.compareTo(row.upper()) > 0) {
+            if (integerRelaxation && rowId < originalRows) relaxationFocus = rowId;
             conflict = antecedents(row, -1, sum.subtract(row.upper()).subtract(BigInteger.ONE), trail.size());
             return;
         }
@@ -1514,7 +1539,7 @@ final class CountLcg implements AutoCloseable {
                 "; restarts=" + restarts + "; minimized=" + minimized + "; minimization_work=" + minimizationWork +
                 "; relaxed_reasons=" + relaxedReasons + "; lazy_reasons=" + lazyReasons +
                 "; explained_reasons=" + explainedReasons + "; work=" + work);
-        if (learnedRelaxation) budget.note("count_lp_learning", "calls=" + relaxationCalls + "; cuts=" + relaxationCuts +
+        if (learnedRelaxation) budget.note(integerRelaxation ? "count_integer_lp_learning" : "count_lp_learning", "calls=" + relaxationCalls + "; cuts=" + relaxationCuts +
                 "; proposal_misses=" + relaxationMisses + "; numerical_work=" + relaxationNumericalWork);
         if (!cycleRows.isEmpty()) budget.note("count_lcg_cycles", "cuts=" + cycleRows.size() + "; work=" + cycleWork);
         if (reliability != null) budget.note("count_lcg_reliability", reliability.diagnostic());
@@ -1624,6 +1649,7 @@ final class CountLcg implements AutoCloseable {
     public void close() {
         finiteHint = null;
         if (lpSession != null) lpSession.close();
+        if (integerLpSession != null) integerLpSession.close();
         if (reliability != null) reliability.close();
         if (rowPool != null) rowPool.close();
         budget.release(memory);

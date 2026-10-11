@@ -991,6 +991,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                     return;
                 }
                 modelViews.compileLight();
+                modelViews.retainTemplates(model);
                 modelViews.addReduced(reduction);
                 viewSearch = new CountViewSearch(modelViews, budget);
                 viewSearch.mode(CountPortfolioPolicy.Mode.PROOF);
@@ -1198,6 +1199,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         if (current.isEmpty() && auxiliaryMode == 0) {
             modelViews = CountModelViews.create(linearConstraints, lower, upper, budget);
             if (modelViews != null) {
+                modelViews.retainTemplates(model);
                 reduction.retainStrideView();
                 viewSearch = new CountViewSearch(modelViews, budget);
                 viewSearch.mode(portfolioMode);

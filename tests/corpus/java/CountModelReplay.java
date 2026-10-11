@@ -54,11 +54,12 @@ final class CountModelReplay {
                 }
             }
         }
-        if (engine.equals("lcg-first") || engine.equals("lcg-retained") || engine.equals("lp-retained")) {
+        if (engine.equals("lcg-first") || engine.equals("lcg-retained") || engine.equals("lp-retained") || engine.equals("integer-lp-retained")) {
             boolean retained = !engine.equals("lcg-first");
             try (var search = new CountLcg(rows, low, high, budget, retained ? 262144 : maximumWork)) {
-                if (engine.equals("lp-retained")) {
-                    search.learnedRelaxation();
+                if (engine.equals("lp-retained") || engine.equals("integer-lp-retained")) {
+                    if (engine.equals("integer-lp-retained")) enableIntegerLp(search);
+                    else search.learnedRelaxation();
                     if (!search.learnedRelaxationEnabled()) return new Result(null, false);
                 }
                 do {
@@ -117,6 +118,21 @@ final class CountModelReplay {
                     return new Result(null, search.infeasible());
                 search.resume();
             } while (true);
+        }
+    }
+
+    /** Keep the same replay harness compilable against pre-channel baseline commits. */
+    private static void enableIntegerLp(CountLcg search) {
+        try {
+            CountLcg.class.getDeclaredMethod("integerRelaxation").invoke(search);
+        } catch (NoSuchMethodException absent) {
+            throw new Unsupported("bounded integer LP learning is absent from this baseline");
+        } catch (java.lang.reflect.InvocationTargetException failed) {
+            if (failed.getCause() instanceof RuntimeException error) throw error;
+            if (failed.getCause() instanceof Error error) throw error;
+            throw new IllegalStateException(failed.getCause());
+        } catch (ReflectiveOperationException failed) {
+            throw new IllegalStateException(failed);
         }
     }
 

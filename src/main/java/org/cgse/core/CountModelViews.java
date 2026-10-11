@@ -54,6 +54,9 @@ final class CountModelViews implements AutoCloseable {
     private long factVersion;
     private CountViewConflicts conflicts;
     private CountViewCuts cuts;
+    private RecipeCountModel<?> templateModel;
+
+    void retainTemplates(RecipeCountModel<?> model) { templateModel = model; }
 
     record Domains(BigInteger[] lower, BigInteger[] upper, long version) {}
 
@@ -96,6 +99,8 @@ final class CountModelViews implements AutoCloseable {
     View reduced() {
         return reduced;
     }
+
+    boolean compiledAlternatives() { return lightAttempted || reduced != null; }
 
     /** Integer-equivalent row simplification without changing variable coordinates. */
     void compileLight() {
@@ -232,6 +237,11 @@ final class CountModelViews implements AutoCloseable {
         cuts.publish(view, learned, from, origin);
         if (cuts.version() > before) budget.note("count_view_cuts", "origin=" + view.name() + "; certified=" + (cuts.version() - before) +
                 "; version=" + cuts.version() + "; scope=owned_count_model");
+        // Only the unchanged original rows carry material identities. Reduced,
+        // affine, branch and cutoff premises must not become stock-free templates.
+        if (view == original && templateModel != null && templateModel.rowTemplates != null)
+            for (int i = from; i < learned.size(); i++)
+                templateModel.rowTemplates.remember(templateModel, view.rows(), learned.get(i), budget);
     }
 
     int cutVersion() {

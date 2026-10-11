@@ -2,6 +2,27 @@
   "work": 20000000,
   "cases": [
     {
+      "id": "b27775fba4017cfff15dd5977caa63d8227cd50b0c4ecbc38e480ada4a08d2cf",
+      "names": ["wide-68/integer-lp-original-coordinates"],
+      "expected": "SAT",
+      "engine": "integer-lp-retained",
+      "work": 500000,
+      "reason": "Bounded integer LP learning and exact coordinate rounding find a verified witness in 41934 work; ordinary retained LCG is unresolved at the same 500k cap. This direct-engine boundary is distinct from the main portfolio."
+    },
+    {
+      "id": "b27775fba4017cfff15dd5977caa63d8227cd50b0c4ecbc38e480ada4a08d2cf",
+      "names": ["wide-68/corpus-order-0"],
+      "expected": "SAT",
+      "reason": "Integer LP scouts must preserve the cheap root pipeline. Broad early admission displaced a previously successful main-portfolio ordering."
+    },
+    {
+      "id": "b27775fba4017cfff15dd5977caa63d8227cd50b0c4ecbc38e480ada4a08d2cf",
+      "names": ["wide-68/corpus-order-2"],
+      "corpus_order": 2,
+      "expected": "SAT",
+      "reason": "Protect the other affected ordering at the unchanged main-portfolio 20M cap."
+    },
+    {
       "id": "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e",
       "names": [
         "wide-79/corpus-order-0"

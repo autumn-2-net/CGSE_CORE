@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-11",
+  "baseline": "35662ebb6440cc7b9a8e06a85ebaa89325e9df5d",
+  "source_fingerprint_method": "tests/benchmarks/compare_planning.py fingerprint; paths and working-tree file bytes",
+  "candidate_source_sha256": "610c8b2abeafe84f9fae23599d026a9dfb13ec3c0e6d057afcbd998a98d2eb58",
+  "comparison_harness_sha256": "6c368db9b89c53ac8105bcdfa4712f82b3bc888e06496f876e104a1b44d47732",
+  "canonical_input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+  "main_count_comparison": {
+    "canonical_models": 274,
+    "orders": 3,
+    "shuffle_population": "complete count-model corpus",
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "baseline": {"conclusive": 790, "unresolved": 14, "unsupported": 18, "failed": 0},
+    "candidate": {"conclusive": 790, "unresolved": 14, "unsupported": 18, "failed": 0},
+    "gained": [],
+    "lost": [],
+    "contradictions": [],
+    "local_artifact": "build/integer-lp-cost-final-20261011/summary.json"
+  },
+  "direct_wide_comparison": {
+    "models": 132,
+    "request_work": 2000000,
+    "milliseconds": 0,
+    "ordinary_lcg": {"conclusive": 125, "unresolved": 7, "failed": 0},
+    "integer_lp_lcg": {"conclusive": 122, "unresolved": 10, "failed": 0},
+    "note": "Complementary tool, not a replacement. Default admission requires a bounded exact-cut scout after initial strategies.",
+    "local_artifact": "build/integer-lp-wide-direct-20261011"
+  },
+  "direct_boundary": {
+    "id": "b27775fba4017cfff15dd5977caa63d8227cd50b0c4ecbc38e480ada4a08d2cf",
+    "name": "wide-68",
+    "request_work": 500000,
+    "ordinary_lcg": "UNRESOLVED",
+    "integer_lp_lcg": "SAT",
+    "integer_lp_work": 41934,
+    "witness_checked": "original exact rows and domains",
+    "scope": "direct count engine; not a new main-planner conclusion"
+  },
+  "safety": {
+    "enumerated_integer_models": 400,
+    "branch_domains": 1600,
+    "exact_cut_checks": 496,
+    "primary_lcg_witnesses": 226,
+    "primary_lcg_infeasible": 94,
+    "primary_lcg_cuts": 10,
+    "retained_handoffs": 9,
+    "serialized_integer_cut_proofs": 64,
+    "inventory_demand_permutations": 120,
+    "template_proof_replays": 240,
+    "concurrent_template_requests": 32,
+    "outer_support_variables": 2048,
+    "template_outer_variables": 1502,
+    "cancellation_memory_work_limits": "passed",
+    "local_artifact": "build/integer-lp-release-safety-20261011"
+  },
+  "validation": {
+    "standard_programs_and_batches": 93,
+    "standard_passed": 93,
+    "standard_artifact": "build/integer-lp-cost-standard-20261011/results.json",
+    "latest_additional_safety": "build/integer-lp-release-safety-20261011/results.json",
+    "fixtures": 244,
+    "fixture_orders": 3,
+    "fixture_replays_passed": 732,
+    "fixture_unresolved": 0,
+    "fixture_artifact": "build/integer-lp-cost-fixtures-20261011/results.json",
+    "offline_assemble": "passed",
+    "source_files_matching_sources_jar": 216,
+    "core_jar_sha256": "78f8e54ed4262a9b15268c9233f2a37300b2596d975c29cc5d7c6e58f60de26f"
+  },
+  "limits": [
+    "General integer LP kernels require genuine finite bounds; numerical status is never an infeasibility proof.",
+    "Cross-request templates retain only original material-row premises, not branch/cutoff or unmapped affine derivations.",
+    "Fourteen canonical orders remain undecided; unsupported conversions are not UNSAT.",
+    "Standalone core validation, not a live Minecraft/AE run or a wall-time speed claim."
+  ]
+}

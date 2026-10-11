@@ -1,0 +1,90 @@
+Bounded integer LP learning and current-inventory derivation templates
+====================================================================
+
+CountLcg.integerRelaxation() is separate from learnedRelaxation(). The latter
+retains its Boolean projection, rounding and propagation ordering. Integer
+LP proposals use x = lower + z and the actual upper-lower width, including
+fixed columns. Exact cut activity uses coefficient * endpoint. Numerical
+rounding is performed on z before adding the BigInteger lower endpoint, so
+large offsets do not lose units through a double conversion.
+
+Numerical statuses and multipliers are proposals only. A consequence combines
+original rows with explicit nonnegative integer weights, divides every
+coefficient exactly, and floors the new RHS. Branch bounds select proposals
+but never become hidden premises of a shared cut. Integer witnesses still
+pass exact original-domain/row checks and the existing execution verifier.
+Infinity is never replaced by an invented finite count cap.
+
+CountIntegerLpLearning retains a numerical basis and a sparse working kernel.
+It selects complete rows near a conflicting row, or an intersecting weighted
+row when no conflict is available. Every variable in a selected row remains
+present, including boundary variables and fixed variables. Omitted rows make
+this a relaxation; omitted columns receive no numerical suggestion. A local
+numerical failure cannot prove the full model infeasible. Kernel limits are
+128 columns, 512 rows and 4096 terms inside the existing sparse model limits.
+Unsupported bounds, memory refusal or local work exhaustion discard a hint.
+
+Default portfolio admission waits for the initial strategies and compilation.
+One bounded scout must produce a new exact consequence before retaining an
+INTEGER_LP arm. The scout is not renewed by parent handoffs. Its cost belongs
+to common preparation, not the preceding strategy's feedback. Subsequent LP
+calls share the owning LCG slice's remaining work. Original Boolean LP and
+ordinary LCG paths retain their ordering.
+
+This admission rule matters. Broad early admission displaced all three main
+portfolio orders of wide-68. Delayed, evidence-based admission preserves those
+conclusions. The direct integer LP arm is useful but is not a replacement for
+ordinary LCG: on 132 existing wide models at 2M work, direct integer LP solved
+122 versus ordinary retained LCG's 125. Both agree with recorded truth. On
+wide-68 alone, the new arm needs 41,934 work; ordinary LCG exhausts a 500k cap.
+That direct boundary and all three main-portfolio orderings are maintained in
+tests/regression/count-boundaries.json. This is no claim about JVM throughput
+or a general improvement in the main planner's coverage.
+
+CountRowTemplates belongs to the immutable GraphCompiler catalog. It retains
+how to combine original material rows: material identity, each parent's
+complete recipe-ID/coefficient map, nonnegative weights and a divisor. It does
+not retain an old RHS or an old missing-material verdict. At the next request,
+stock and goal changes are substituted into the current parents, the exact
+combination is rebuilt, and CountProof independently verifies the derivation.
+Recipe reordering is harmless; changed/added/removed producers or an omitted
+external-material row fail the full-row match. There is no hash-only match.
+Completed replayed rows enter the existing request-owned count cut pool.
+
+Only original material premises are retained across requests in this version.
+Branch bounds, objective cutoffs, production-only rows and unmapped affine
+derivations are rejected. Reduced/affine cut sharing continues inside the
+existing request-owned CountViewCuts scope. Supporting conditional or transformed
+cross-request templates later requires explicit premise/mapping reconstruction;
+this implementation never treats those facts as unconditional catalog rules.
+Residency is bounded to 32 templates / 2 MiB and exposed in cache metrics.
+
+Validation
+----------
+
+IntegerLpLearningTest independently enumerates 400 integer models and 1600
+branch domains, checks exact derivations against all original witnesses, and
+replays serialized proofs. It covers large offsets, fixed/negative domains,
+unbounded boundaries, 2048-column outer models, cancellation, memory/work
+refusal, portfolio admission and original-row proof retention.
+
+CountRowTemplatesTest covers 120 stock/demand/recipe-order changes, new and
+changed suppliers, external rows, invalid/branch-local certificates, sparse
+reuse inside 1502 variables, 32 concurrent requests, actual count-stage import,
+workspace refusal and 240 independently replayed current-RHS certificates.
+
+The standard suite, maintained count boundaries, fixture permutations and
+equal-budget main-count comparison accompany this change. Reproduction and
+measured totals are in tests/provenance/integer-lp-templates-20261011.json.
+The full main-count comparison preserves all 790 previously conclusive
+orders; 14 undecided and 18 unsupported conversions remain explicit limits.
+These are standalone solver tests, not live Minecraft/AE validation.
+
+Commands (JDK 17)
+-----------------
+
+python tests/run.py --java-home <jdk17> --suite standard --milliseconds 0
+python tests/run.py --java-home <jdk17> --suite fixtures --milliseconds 0
+python tests/run.py --java-home <jdk17> --suite models --case wide-68 --model-engine integer-lp-retained --milliseconds 0 --work 500000
+python tests/benchmarks/compare_count_models.py --java-home <jdk17> --baseline 35662ebb --permutations 3 --complete-corpus-order
+gradlew --offline assemble

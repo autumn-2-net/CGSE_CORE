@@ -491,3 +491,14 @@ recovery, explicit seed goals, optional admission, cancellation and independent
 CGD replay. Its equal-budget upstream counterexample also records the work
 benefit of reusing recovered counts instead of repeating count search. It is
 included in the same standard `--case Captured` group.
+
+`IntegerLpLearningTest` adds 400 independently enumerated bounded-integer
+models, 1600 branch domains, sparse working supports, exact large offsets and
+portable cut proofs. `CountRowTemplatesTest` checks changed inventories and
+goals, reordered/updated producers, parallel requests and independently
+replayed current-RHS derivations. Both test budget refusal and cleanup.
+The model runner accepts `--model-engine integer-lp-retained`; it exposes the
+new tool separately from its more selective main-portfolio admission. The
+direct 500k `wide-68` boundary and its three protected main-portfolio orderings
+are included in the standard suite. Scope, rejected broader admission and
+remaining limits are in `../docs/integer-lp-and-row-templates.txt`.
