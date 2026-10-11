@@ -90,3 +90,56 @@ a witness. These native time budgets are not CGSE work budgets and establish no
 performance parity. Planted integer witnesses remain the positive oracle;
 UNKNOWN must never be relabeled UNSAT. Exact inputs, structure analysis,
 frontier probes and immutable baseline results are in the local case registry.
+
+Budget and representation cross-check (699f864d)
+----------------------------------------------
+The preceding 20M cap is the historical regression setting, not the host's
+current 40M default. Replaying the identical complete 822-case pack at 40M and
+80M, one worker, 256 MiB and no wall limit, preserves all outcomes: 792 solved,
+12 unresolved (the four models in three orders), and 18 unsupported finite
+recipe conversions. No known solve was lost and neither increase solved a
+residual case. Direct original-coordinate LCG and the original-row view
+portfolio also leave those 12 cases unresolved at 40M.
+
+The regular tests/run.py CLI now defaults to 40M. Historical comparisons must
+pass --work 20000000 explicitly; count-boundaries.json keeps its pinned budgets.
+Use --milliseconds 0 when measuring work-cap effects independently of timeouts.
+The core library still takes the caller's PlanningBudget; this test-default
+change does not override application settings or enable parallel budget growth.
+
+SCIP 10.0.2 was also run on the original integer rows with a 120-second,
+one-thread, 256-MB cap. Default settings left all four unresolved. Feasibility
+emphasis found n144-s1 after about 54 seconds / 134,587 nodes / 1,272,106 LP
+iterations; its integer witness was independently checked against every original
+row and domain. The other three cases stayed unresolved. The statistics attribute
+this positive to a node LP solution, not a primal heuristic. Feasibility emphasis
+changes multiple settings, including node selection and cut limits, so this does
+not identify one causal heuristic. A separate CGSE main-count run on n144-s1
+remained unresolved at 1.6B work (about 92 seconds). This is a concrete remaining
+search gap; simply doubling the default did not close it. These observations are
+not a controlled timing comparison or a solver-wide ranking.
+
+SCIP's heuristic scheduling documentation and RENS implementation were consulted:
+  https://www.scipopt.org/doc/html/HEUR.php
+  https://scipopt.org/doc/html/heur__rens_8c_source.php
+RENS already has a CGSE counterpart in CountNeighborhood. The reference positive
+does not justify adding another copy of that tool: the outstanding investigation
+is the interaction of node LPs, propagation, cuts and branching on the same model.
+
+The main-counts corpus entry is IntegerCountSearch over a synthetic recipe
+embedding. It does not go through GraphPlanner's selected-source compilation.
+Recovered planted witnesses were independently checked against each original
+model, then transported through recipe execution, actual count closure, bound
+propagation, normalized/reduced views and coordinate restoration. All four
+models passed, including two separately seeded row/column permutations. Thus
+these runs do not show a witness lost by that bridge. They do not establish
+equivalence of every possible frontend transformation or live AE behavior.
+
+CountEmbeddingEquivalenceTest maintains a separate exhaustive small-model
+check: 10,854 bounded assignments, signed offsets beyond 64 bits, missing
+coordinates, contradictory/tautological rows and recipe permutations. Every
+feasible original assignment survives the count bridge; every admitted count
+assignment restores to a feasible original point and independently executes
+the primitive recipes. Compiled view coordinates are restored and checked as
+well. This guards the test representation without relying on a solver to find
+its own oracle. It is not a new solving algorithm or a reason to raise defaults.

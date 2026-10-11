@@ -137,7 +137,7 @@ final class CountModelReplay {
     }
 
     /** Finite exact model -> recipes. Outside-domain conversions are never called UNSAT. */
-    private static final class Embedding {
+    static final class Embedding {
         final List<GraphRecipe<String>> recipes = new ArrayList<>();
         final Map<String, Long> stock = new LinkedHashMap<>();
 
