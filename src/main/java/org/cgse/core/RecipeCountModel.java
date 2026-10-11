@@ -85,7 +85,8 @@ final class RecipeCountModel<K> implements AutoCloseable {
                 return null;
             }
             workspace += sparseBytes;
-            var model = new RecipeCountModel<>(recipes, keys, stock, external, budget, goals(target, amount, seeds), compiler.catalogIndex());
+            var model = new RecipeCountModel<>(recipes, keys, stock, external, budget, goals(target, amount, seeds),
+                    compiler.catalogIndex(), compiler.reuseCountCatalogs() ? compiler : null);
             model.recoveryTemplates = compiler.recoveryTemplates;
             model.rowTemplates = compiler.rowTemplates;
             if (force && !external.contains(target)) model.requireProduction(target, amount);
@@ -207,11 +208,12 @@ final class RecipeCountModel<K> implements AutoCloseable {
 
     private RecipeCountModel(List<GraphRecipe<K>> recipes, List<K> keys, Map<K, Long> stock,
                              Set<K> external, PlanningBudget budget, Map<K, BigInteger> goals) {
-        this(recipes, keys, stock, external, budget, goals, null);
+        this(recipes, keys, stock, external, budget, goals, null, null);
     }
 
     private RecipeCountModel(List<GraphRecipe<K>> recipes, List<K> keys, Map<K, Long> stock,
-                             Set<K> external, PlanningBudget budget, Map<K, BigInteger> goals, GraphCatalogIndex<K> index) {
+                             Set<K> external, PlanningBudget budget, Map<K, BigInteger> goals,
+                             GraphCatalogIndex<K> index, GraphCompiler<K> rowOwner) {
         this.recipes = recipes;
         this.keys = keys;
         this.stock = stock;
@@ -221,6 +223,30 @@ final class RecipeCountModel<K> implements AutoCloseable {
         var indices = new LinkedHashMap<K, Integer>();
         for (K key : keys) indices.put(key, indices.size());
         ids = Collections.unmodifiableMap(indices);
+        var donor = rowOwner == null ? null : rowOwner.countRowDonor();
+        if (donor != null) {
+            var shared = donor.unchangedRows(recipes, keys, external, budget);
+            rowOwner.countOverlap(!shared.isEmpty());
+            if (!shared.isEmpty()) {
+                for (K key : keys) {
+                    budget.check();
+                    if (external.contains(key)) continue;
+                    var terms = shared.get(key);
+                    if (terms == null) {
+                        terms = new LinkedHashMap<>();
+                        for (int i = 0; i < recipes.size(); i++) {
+                            budget.check();
+                            BigInteger value = delta(recipes.get(i), key).negate();
+                            if (value.signum() != 0) terms.put(i, value);
+                        }
+                    }
+                    constraints.add(new ExactLinearProgram.Constraint(terms,
+                            BigInteger.valueOf(stock.getOrDefault(key, 0L)).subtract(goal(key))));
+                    rowKeys.add(key);
+                }
+                return;
+            }
+        }
         Map<K, Map<Integer, BigInteger>> rows = new LinkedHashMap<>();
         for (K key : keys) if (!external.contains(key)) rows.put(key, new LinkedHashMap<>());
         // Cold construction and unshared regions keep the original sparse
@@ -249,7 +275,8 @@ final class RecipeCountModel<K> implements AutoCloseable {
         }
         for (var row : rows.entrySet()) {
             K key = row.getKey();
-            constraints.add(new ExactLinearProgram.Constraint(row.getValue(), BigInteger.valueOf(stock.getOrDefault(key, 0L)).subtract(goal(key))));
+            constraints.add(new ExactLinearProgram.Constraint(row.getValue(),
+                    BigInteger.valueOf(stock.getOrDefault(key, 0L)).subtract(goal(key))));
             rowKeys.add(key);
         }
     }

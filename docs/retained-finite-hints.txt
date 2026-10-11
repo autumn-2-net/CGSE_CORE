@@ -1,0 +1,92 @@
+Retained finite LP directions and hard-case diagnosis (2026-10-11)
+
+Direction-only continuation
+---------------------------
+The existing finite-domain LP hint could start a numerical tableau, hit a local
+allowance and be marked attempted without producing a branch direction. An
+explicitly opted-in complementary root LCG arm can now retain the immutable
+projection, original lower offsets, cold tableau and completed numeric result.
+Later visits continue that frozen LP. Integer decisions are allowed to proceed
+in between; a returned point is only a preferred direction within current bounds.
+It is never a domain tightening, integer witness or infeasibility certificate.
+
+The opt-in applies to the existing auxiliary root mode 2 with more than 128
+ambient variables. The normal original/normalized/reduced LCG views retain
+their previous numerical policy. No new portfolio slot or order budget is added.
+A pending hint waits for at least its previous numerical cost in ordinary
+integer search before its next visit. Existing 262,144 lifetime work and
+remaining-request share limits still apply. A full pivot can overshoot a local
+grant; that work remains charged to the shared request. Global cancellation or
+exhaustion disposes the tableau, and an exhausted optional lifetime releases it.
+
+The numerical session no longer needs to re-read the caller's mutable branch
+arrays to resume. Projection and completed-point lifting have separate retained
+ownership; only the returned result transfers its reservation to the caller.
+Memory refusal, numeric failure and continuous infeasibility remain absence of
+a hint, with ordinary exact search responsible for every conclusion.
+
+Official source consulted
+-------------------------
+https://github.com/google/or-tools/blob/stable/ortools/sat/linear_programming_constraint.cc
+CP-SAT's incremental LP propagation and throttling by prior deterministic LP
+cost informed this lifecycle and pacing change. CGSE uses its own existing
+tableau and budget units; this is not an import of CP-SAT's complete LP engine.
+
+Why this is not enabled on every LCG view
+----------------------------------------
+An experimental default integration kept all 792 solved count-corpus outcomes
+but more than doubled work on a previously solved sparse-equality-n257-s0 order
+(2,659,990 -> 5,432,433). Cost throttling alone still worsened two other orders.
+That integration was rejected. The final opt-in preserves the existing default
+single-worker trajectory; it must not be advertised as solving the residual
+four cases or as a demonstrated end-to-end auxiliary-portfolio speedup.
+
+RetainedLpHintTest checks 12 continuous trajectories against uninterrupted
+references bit-for-bit, with 1,766 numeric resumptions alternating two persistent
+workers. Caller arrays/lists are mutated after the first visit to check frozen
+ownership. Tests exercise actual LCG decisions while pending, a completed hint,
+optional lifetime exhaustion, memory refusal, cancellation, global work limits
+and independent exact witness/proof verification on 80 small models padded to
+144 coordinates (53 SAT, 27 UNSAT). Numerical hints never replace exact checks.
+
+Remaining hard models
+---------------------
+Four planted-SAT sparse equality models remain unresolved in three full-corpus
+orders: n144-s1, n144-s2, n257-s1 and n257-s2. They have large connected components,
+eight-value integer domains and exact rational kernel dimensions 72 or 129.
+Merely raising the affine ambient-dimension limit does not make this a small
+kernel, and the bounded local 128-column LP support is incomplete on the larger
+models. The required integer combination is not provided by continuous LP
+feasibility alone.
+
+One-worker main-count profiling at 20M work, 256 MiB and no wall limit measured:
+  model       initial compilation   search work    logical peak bytes
+  n144-s2                  3,284    19,992,249            15,412,992
+  n144-s1                  2,787    19,992,371            18,593,820
+  n257-s2                  5,663    19,992,251            22,770,108
+  n257-s1                  5,171    19,992,226            21,873,020
+
+Over 99.8% of charged work lies in the integer SEARCH phase, not initial
+preparation. That phase includes propagation/sharing and later view preparation;
+it is not all time in one algorithm. Frontier inspection additionally found:
+  - Original, normalized and reduced LCGs remain live, with about 2,200-5,300
+    decisions per arm, 1,000-2,800 conflicts and 7-15 restarts.
+  - Their combined charged work is about 11.5-12.5M per model.
+  - The normalized JUMP arm uses another 1.8-2.4M, makes 522-976 moves, and still
+    has a nonzero violation score. It has not found an integer witness.
+  - The ordinary root frontier remains open. One-worker admission does not run
+    the early width>1 auxiliary portfolio while that frontier exists.
+
+Thus these runs exhaust count search, not the configured memory cap or a stale
+graph cache. They show a hard coupled integer-search/propagation problem, but do
+not by themselves prove that one missing algorithm or scheduler change is the
+cause. A previous attempt to enable the early root portfolio serially lost six
+formerly solved cases and was rejected. Hot row reuse targets a different,
+measured repeated-construction cost.
+
+Separate local SCIP 10.0.2 / CP-SAT 9.15.6755 reference runs also returned time
+limit / UNKNOWN on each of the four models at one thread and 20 seconds, without
+a witness. These native time budgets are not CGSE work budgets and establish no
+performance parity. Planted integer witnesses remain the positive oracle;
+UNKNOWN must never be relabeled UNSAT. Exact inputs, structure analysis,
+frontier probes and immutable baseline results are in the local case registry.

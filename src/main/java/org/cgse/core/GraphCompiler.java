@@ -91,6 +91,8 @@ public final class GraphCompiler<K> {
         values.put("compiled", entry("compiled", cache.size(), graphWeight, graphBytes));
         values.put("topology", entry("topology", topologies.size(), topologyWeight, 64L * topologyWeight));
         values.put("count_catalog", entry("count_catalog", countCatalogs.size(), countCatalogWeight, 128L * countCatalogWeight));
+        // Overlap reuse borrows existing count catalogs; it owns no extra cache.
+        values.put("count_overlap", entry("count_overlap", 0, 0, 0));
         values.put("count_closure", entry("count_closure", countClosures.size(), countClosureWeight, 64L * countClosureWeight));
         long cutoffWeight = countClosureLimits.keySet().stream().mapToLong(k -> 1L + k.additional.size() + k.excluded.size()).sum();
         values.put("closure_cutoff", entry("closure_cutoff", countClosureLimits.size(), cutoffWeight, 128L * cutoffWeight));
@@ -368,6 +370,17 @@ public final class GraphCompiler<K> {
 
     static boolean cacheableCountCatalog(long weight, int seeds, int excluded, int external) {
         return weight <= 32_768 && seeds <= 256 && excluded <= 256 && external <= 256;
+    }
+
+    /** Snapshot the newest retained donor; matching host keys happens outside the monitor. */
+    synchronized CountCatalog<K> countRowDonor() {
+        CountCatalog<K> donor = null;
+        for (var entry : countCatalogs.values()) donor = entry;
+        return donor;
+    }
+
+    synchronized void countOverlap(boolean reused) {
+        lookup("count_overlap", reused ? Boolean.TRUE : null);
     }
 
     synchronized List<QuantityCertificate<K>> quantityCertificates(Set<String> excluded) {

@@ -1,0 +1,95 @@
+Count-row reuse across targets (2026-10-11)
+
+Problem and scope
+-----------------
+CountCatalog already retained immutable coefficients, but the Constraint
+constructor sorted and copied them again for each inventory/demand overlay.
+Different targets also missed the whole-model cache, even when most of their
+dependency recipes and material rows were identical. Increasing cache capacity
+does not address the repeated matrix construction when many closures overlap.
+
+Constraint now recognizes its own private immutable, ordered coefficient map.
+Only that representation can bypass the defensive copy. Caller-supplied maps
+still get copied and sorted; neither entries nor their values can be mutated.
+This eliminates coefficient copying in the existing whole-model overlay path.
+
+For a cold whole-model key, the compiler may borrow unaffected material rows
+from its newest retained CountCatalog. It first constructs the CURRENT complete
+closure. Recipe object identity is compared at every column position; every
+changed, inserted, removed or moved recipe invalidates all its input and output
+materials. A row is borrowed only if it exists in the donor, was not omitted
+as external supply, and no changed recipe touches its material. A new external
+supply mask is applied independently. Affected rows are reconstructed using
+the current recipes, with the same exact configuration/read-arc semantics.
+
+Current row/column order, RHS, inventory, requested quantity, exclusions and
+production obligations remain current-request data. No bounds, infeasibility
+claim, selected-source coverage or execution binding is reused by this path.
+Different targets may share coefficients; their execution still undergoes the
+normal count, scheduling and final plan verification. A new immutable catalog
+has its own caches. Sharing never crosses that ownership boundary.
+
+Admission and accounting
+------------------------
+The optional comparison requires a sufficiently dense donor, enough remaining
+work and at least three quarters of columns at the same positions. A conservative
+incidence estimate also requires more saved terms than the affected-row scan.
+Failure of any heuristic returns to the existing complete sparse construction;
+these are performance gates, not restrictions on candidate coverage.
+Comparison, invalidation and reconstruction all charge the request. Host-key
+comparisons occur outside the compiler monitor. Concurrent requests borrow
+immutable values; they do not patch the donor or retain an older RHS.
+
+There is no additional persistent coefficient cache. The existing 32-entry /
+32,768-weight count-catalog cap remains; the retained external-supply set is
+included in its weight. Cache metric count_overlap reports successful/declined
+donor reuse attempts with zero separately owned entries/bytes. Donors remain
+charged under count_catalog. Estimates are not measured JVM heap limits.
+
+Evidence
+--------
+CountRowReuseTest compares current coefficients, RHS and recipe/material order
+with fresh construction across 80 changed requests and 32 concurrent requests.
+It covers exclusions, external supply entering/leaving, new producers, shuffled
+recipes, resource hash collisions, reusable tokens, per-push configurations,
+cancellation, eviction and request-memory release. A dense overlapping case
+exceeds the whole-model cache capacity; its borrowed construction must use less
+than one quarter of the cold work while producing exactly the same matrices.
+
+A local JDK 17 benchmark used 96 common recipes, 64 input resources and eight
+different final targets. Each mode warmed 120 requests then measured 240, with
+changing stock and quantity, in separate baseline/candidate/candidate/baseline
+processes. Baseline was 86d352f6. Results for model construction only:
+
+  same target:
+    allocated bytes 121.16-121.18M -> 4.26M;
+    measured time 65.3-93.0 ms -> 3.91-4.04 ms;
+    charged work unchanged.
+  eight alternating targets:
+    search + compilation work 1,537,200 -> 164,880 (89.3% less);
+    allocated bytes 375.70-375.94M -> 17.16M (95.4% less);
+    measured time 150.5-151.3 ms -> 43.9-45.9 ms.
+  new compiler each request:
+    charged work unchanged; allocation essentially unchanged;
+    measured time 173.9-182.7 ms -> 177.4-191.3 ms.
+
+These microbenchmarks do not measure complete solve time, Minecraft latency or
+an improvement on the remaining hard count models. Small cold timing changes
+are not a demonstrated speedup. An earlier numeric-row interning experiment
+reduced allocation but rebuilt the matrix before matching and increased both
+work and time on the cross-target case; that implementation was rejected.
+Raw measurements, rejected patch and generators remain in the local registry.
+
+The final combined change passes 111 standard test programs and 741 fixture
+runs (247 graphs in three orders). The main-count comparison against 86d352f6
+has identical outcomes AND charged work for every one of its 822 entries:
+792 PASS, 12 UNRESOLVED, 18 UNSUPPORTED, no contradictions or lost solves.
+The 12 unresolved entries are the four hard models in three orders; unsupported
+finite-embedding conversions are counted separately. This one-worker corpus
+does not demonstrate a speedup of the complementary root LP arm.
+
+Validation commands
+-------------------
+python tests/run.py --suite standard --milliseconds 0 --java-home <jdk17> --output build/evc-overlap-20261011-standard --keep-going
+python tests/run.py --suite fixtures --permutations 3 --milliseconds 0 --java-home <jdk17> --output build/evc-overlap-20261011-fixtures --keep-going
+python tests/benchmarks/compare_count_models.py --baseline 86d352f6 --permutations 3 --complete-corpus-order --timeout 1800 --java-home <jdk17> --output build/evc-overlap-20261011-counts

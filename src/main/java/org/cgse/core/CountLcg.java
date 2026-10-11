@@ -247,6 +247,9 @@ final class CountLcg implements AutoCloseable {
     private boolean finiteHintTried;
     private long finiteHintDeferredAllowance = -1, finiteHintPreparationWork;
     private double[] finiteHint;
+    private CountLpHint.Session finiteHintSession;
+    private long finiteHintNextWork;
+    private boolean retainFiniteHint;
     private int fixedPeak;
     private boolean learnedRelaxation;
     private boolean integerRelaxation;
@@ -344,6 +347,12 @@ final class CountLcg implements AutoCloseable {
     /** The auxiliary portfolio arm uses shorter integer clauses; other arms retain their ordering. */
     CountLcg minimizeIntegerConflicts() {
         minimizationEnabled = true;
+        return this;
+    }
+
+    /** A complementary root arm may retain its numerical direction proposal. */
+    CountLcg retainedFiniteHint() {
+        retainFiniteHint = true;
         return this;
     }
 
@@ -713,6 +722,7 @@ final class CountLcg implements AutoCloseable {
 
     private void finiteHint() {
         if (finiteHintTried || learnedRelaxation || lockBranching || allowance <= finiteHintDeferredAllowance) return;
+        if (finiteHintSession != null && finiteHintSession.pending() && work < finiteHintNextWork) return;
         long remaining = 262144 - finiteHintPreparationWork;
         long maximumWork = Math.min(Math.max(0, allowance - work), Math.min(remaining, budget.remainingWork() / 16));
         if (maximumWork < 1024) {
@@ -720,6 +730,7 @@ final class CountLcg implements AutoCloseable {
             // Retry only after resume changes the local allowance; exhausted
             // lifetime/global budgets cannot improve on a later decision.
             finiteHintTried = remaining < 1024 || budget.remainingWork() / 16 < 1024;
+            if (finiteHintTried && finiteHintSession != null) finiteHintSession.close();
             finiteHintDeferredAllowance = allowance;
             return;
         }
@@ -740,8 +751,14 @@ final class CountLcg implements AutoCloseable {
         }
         long before = budget.threadWork(), oldTicks = workTicks;
         var attempt = new CountLpHint.Attempt();
-        try (var result = CountLpHint.solve(rows, low, high, budget,
-                Math.min(Math.max(0, allowance - work), Math.min(remaining - (before - preparationStarted), budget.remainingWork() / 16)), attempt)) {
+        long grant = Math.min(Math.max(0, allowance - work), Math.min(remaining - (before - preparationStarted), budget.remainingWork() / 16));
+        // The ordinary search keeps its inexpensive trajectory. A complementary
+        // root arm retains large cold hints across visits, without blocking its
+        // integer decisions or treating the old point as a later domain fact.
+        if (retainFiniteHint && low.length > 128 && finiteHintSession == null) finiteHintSession = new CountLpHint.Session();
+        try (var result = finiteHintSession == null ? CountLpHint.solve(rows, low, high, budget, grant, attempt) :
+                finiteHintSession.pending() ? finiteHintSession.resume(grant, attempt) :
+                        finiteHintSession.start(rows, low, high, budget, grant, attempt)) {
             if (attempt.outcome == CountLpHint.Outcome.WORK_LIMIT) {
                 finiteHintTried = false;
                 finiteHintDeferredAllowance = allowance;
@@ -759,6 +776,11 @@ final class CountLcg implements AutoCloseable {
             finiteHintPreparationWork += budget.threadWork() - preparationStarted;
             workTicks = oldTicks + spent * PlanningBudget.WORK_SCALE;
             work = PlanningBudget.units(workTicks);
+            // Charge cold hints against useful integer-search time as well as
+            // their lifetime cap. A scheduler granting many small visits must
+            // not spend every new visit advancing the optional LP.
+            if (finiteHintSession != null && finiteHintSession.pending())
+                finiteHintNextWork = work + Math.max(1024, spent);
         }
     }
 
@@ -1675,6 +1697,7 @@ final class CountLcg implements AutoCloseable {
     @Override
     public void close() {
         finiteHint = null;
+        if (finiteHintSession != null) finiteHintSession.close();
         if (lockScores != null) lockScores.close();
         if (lpSession != null) lpSession.close();
         if (integerLpSession != null) integerLpSession.close();

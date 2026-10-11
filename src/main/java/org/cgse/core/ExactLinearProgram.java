@@ -27,14 +27,32 @@ final class ExactLinearProgram implements AutoCloseable {
             // Propagation and bounded candidate search must not depend on the
             // per-JVM iteration salt of Map.copyOf. Keep coordinate order stable
             // across launches, while retaining immutable constant-time lookup.
-            if (terms.size() < 2) terms = Map.copyOf(terms);
+            if (terms instanceof Coefficients) {
+                // This private representation has already copied, ordered and
+                // frozen its keys and values. RHS overlays can borrow it.
+            } else if (terms.size() < 2) terms = Map.copyOf(terms);
             else {
                 Map<Integer, BigInteger> ordered = new LinkedHashMap<>();
                 terms.entrySet().stream().sorted(Map.Entry.comparingByKey())
                         .forEach(entry -> ordered.put(entry.getKey(), Objects.requireNonNull(entry.getValue())));
-                terms = Collections.unmodifiableMap(ordered);
+                terms = new Coefficients(ordered);
             }
         }
+    }
+
+    /** Only Constraint can construct this immutable, ordered coefficient value. */
+    private static final class Coefficients extends AbstractMap<Integer, BigInteger> {
+        private final Map<Integer, BigInteger> values;
+
+        Coefficients(Map<Integer, BigInteger> owned) {
+            values = Collections.unmodifiableMap(owned);
+        }
+
+        @Override public Set<Entry<Integer, BigInteger>> entrySet() { return values.entrySet(); }
+        @Override public BigInteger get(Object key) { return values.get(key); }
+        @Override public boolean containsKey(Object key) { return values.containsKey(key); }
+        @Override public int size() { return values.size(); }
+        @Override public int hashCode() { return values.hashCode(); }
     }
 
     private final List<Constraint> constraints;

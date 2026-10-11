@@ -1009,6 +1009,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 }
                 auxiliaryLcg = new CountLcg(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072)
                         .minimizeIntegerConflicts();
+                if (auxiliaryMode == 2) auxiliaryLcg.retainedFiniteHint();
                 // Root witness arms own longer retained slices. Give bounded
                 // integer LP proposals an owned frontier rather
                 // than restarting a numerical probe in every short view visit.
