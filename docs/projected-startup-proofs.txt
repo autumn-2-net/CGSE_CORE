@@ -1,0 +1,59 @@
+Projected startup closure (2026-10-11)
+
+Problem
+The reconstructed full-distillation Radox network has 54 original materials,
+15 recipes and only 18 state coordinates needed to prove its startup failure.
+The old root reachability aid refused every model with more than 32 materials,
+even when a candidate scheduler repeatedly exhausted the same 49 states. Its
+candidate failures correctly did not prove global absence, but main search then
+spent its 40 million work allowance enumerating additional recipe counts.
+
+Change and scope
+CountReachability retains the existing exact small-model path. If the number of
+non-external coordinates exceeds its state-vector limit, it projects away pure
+base inputs and unused outputs, while retaining all positive goals and every
+material both consumed and produced. All original recipes remain transitions,
+including alternative producers and their full retained input/output vectors.
+Limits apply to this projected support; state count, work, memory, cancellation
+and consumed-per-push configuration guards are unchanged.
+
+This is a relaxation: omitted inputs have unlimited supply and omitted waste
+cannot block a real firing. No real execution is removed. Therefore an exhausted
+projected frontier can prove absence only after ExecutionProof independently
+verifies closure under every original projected transition and exclusion of the
+goal. Partial traversal, numerical failure and budget exhaustion remain UNKNOWN.
+A projected witness still passes original recipe/count/stock/seed/forced-output
+validation before becoming a plan. There is no new cache of failed candidates.
+
+Inventory and recipe changes
+The projection and frontier belong to one request. Changed tracked stock is read
+again; adding a producer or a consumer rebuilds the transition relation/support.
+For example, waste becomes tracked when a new recipe consumes it. Changes to an
+omitted base input do not invalidate a closed relaxed boundary: the proof already
+grants unlimited supply of that input. Such a proof is deliberately weaker than
+the original inventory problem and is never used to assert a feasible plan.
+Reusable virtual configuration tokens remain exact read arcs. Consumed per-push
+configurations are not admitted to a primitive-firing absence proof.
+
+Verification
+CountProjectedReachabilityTest reproduces the 49-state boundary with independent
+raw-arc BFS and checks 24 recipe permutations, all original projected rows,
+serialized independent proof replay, altered tracked stock, new producers from
+an omitted resource, newly consumed waste, configuration semantics, memory refusal,
+local work exhaustion and cancellation. It also revisits failed/feasible/failed
+stock using one GraphCompiler and exercises the main planner handoff.
+CountReachabilityTest retains its existing 600 small-net BFS comparisons.
+
+The three startup-projection fixtures contain the reconstructed complete recipe
+network and two feasible negative controls (replenished gas and a new base
+production route). All three passed six recipe/input/output permutations under
+20 million work. Successful programs are checked by the independent primitive
+prefix/forced-output fixture verifier. The original local cases.bin was also
+replayed for both consume and preserve startup cases: both now return MISSING_SEED
+instead of SEARCH_LIMIT, with a 49-state independent root certificate. This is a
+reconstructed regression, not a claim about the player's unavailable AE network.
+
+Local validation artifacts (not committed)
+build/radox-projection-regression-20261011/results.json
+build/radox-projection-fixtures-20261011/results.json
+build/radox-projection-first-20261011/radox-probe.log

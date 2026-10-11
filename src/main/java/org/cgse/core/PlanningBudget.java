@@ -58,7 +58,7 @@ public final class PlanningBudget {
 
     /** Origin of an execution witness submitted to the outer plan validator. */
     public enum CandidateOrigin {
-        SOURCE_GRAPH, BOOTSTRAP, STOCK_VIEW, SUPPORT_NEIGHBORHOOD, ALLOCATION, INTEGER_COUNTS, STOCK_WITNESS
+        SOURCE_GRAPH, BOOTSTRAP, STOCK_VIEW, SUPPORT_NEIGHBORHOOD, ALLOCATION, INTEGER_COUNTS, STOCK_WITNESS, PLAN_REUSE
     }
 
     public enum CandidateOutcome { ACCEPTED, REJECTED, INCONCLUSIVE, ABANDONED, INVALID }

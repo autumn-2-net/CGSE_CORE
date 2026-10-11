@@ -1,0 +1,64 @@
+Explicit complete-plan reuse
+============================
+
+RequestPlanningWork can hand a completed, full-quantity feasible result to one
+refresh without rerunning graph/count search. The caller keeps the opaque
+RequestPlanningWork.ReuseCandidate<K> from work.reuseCandidate(), then passes it
+to the new work via work.reuseCandidate(previous). Incomplete, failed and reduced
+quantity requests do not export handles. This is a caller-owned immutable
+handoff; no global success/negative cache was added.
+
+The request handle snapshots target, quantity, preserve mode, strategy,
+craft-less policy, catalyst policy, forced production, replanning status,
+fallback/alternative policies, external supply and mandatory recovery seeds.
+Only stock/forecast availability can change without rejecting this scope.
+Availability is captured again for the new request. A different scope discards
+the candidate and continues ordinary planning.
+
+GraphPlanningWork.reuseCandidate(GraphPlan<K>) and the corresponding lower-level
+RequestPlanningWork overload accept an explicit program proposal. These do not
+infer its old policies: they validate every current request obligation. Prefer
+the opaque request handle for confirmation-page refreshes.
+
+Reuse verification is resumable, charged and cancellable. It checks:
+- The exact requested target/quantity/preserve mode and a feasible, nonmissing
+  candidate, then every BigInteger initial requirement against current stock or
+  explicit external supply. Saturated long compatibility views are not used.
+- Mandatory retained seeds.
+- All used recipes in the current immutable catalog, including IDs, provider
+  bindings, ordered input slots, configuration/read-arc flags and returns.
+- The complete original serial program's exact prefix requirements and final
+  demand through PlanVerification, then the same ForceCraftProof as normal
+  planning. Matching recipe counts alone is insufficient.
+
+Success shares the immutable PlanStep tree and immutable recipes, returning new
+request accounting. It reports FEASIBLE_NOT_PROVEN_OPTIMAL and discards old
+optimality/alternative claims. Host submission must still recheck live provider
+bindings and perform atomic stock reservation/extraction; a portable snapshot
+cannot promise that the external world stays unchanged.
+
+Rejection neither bans counts/orders nor learns a cross-stock failure. The
+ordinary main solver remains eligible. Optional memory admission or workspace
+failure releases reuse state; cancellation and exhausted time/work remain
+request limits. Candidate costs and first verified plan metrics are attributed
+to PLAN_REUSE. Each concurrent request owns its own verification frontier.
+
+Regression coverage: PlanReuseTest includes funded stock decreases, startup
+stock loss/restoration, external inputs, exact requirements above Long.MAX_VALUE,
+recovery seeds, forced production, every binding/slot/configuration/return
+change, independent ordering for equal recipe counts, strict request handles,
+180 cancellation boundaries, low-memory admission and 32 concurrent refreshes.
+
+Local Radox report replay (2026-10-11, 40M work, 128 MiB logical budget):
+The same 100 B full-tower case still needed 2,571,921 search work with only the
+structural compiler cache. Explicit same-request reuse needed 27,992 search
+work and zero compilation work, including full execution/force verification.
+An oxygen-plasma stock decrease of one unit gave the same accepted program;
+zero stock rejected it and produced a missing preview through ordinary search.
+Restored stock with a newly constructed compiler accepted the original program.
+Each feasible output passed an independent BigInteger prefix/final-goal check.
+The measured logical peak was 8,960 bytes for successful reuse versus 14,000,176
+for the structural-only repeat. These are one local reconstruction, not a claim
+that the player's network is reproduced or a general timing benchmark.
+The original report and local inputs remain outside the committed regression
+corpus; replay source, raw logs and measured rounds are in the local case pack.

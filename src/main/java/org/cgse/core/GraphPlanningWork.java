@@ -91,7 +91,23 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     private int sourceAttempts, allocationAfterSources = 8;
     private long allocationTurnStarted, allocationTurnAllowance;
     private CatalystPolicy catalystPolicy = CatalystPolicy.STOCK;
+    private PlanReuseVerification<K> reuseVerification;
+    private boolean startedWork;
     private final java.util.concurrent.atomic.AtomicBoolean registeredSearch = new java.util.concurrent.atomic.AtomicBoolean();
+
+    /**
+     * Recheck one prior complete execution witness before searching. The caller
+     * must retain the actual program, not just counts; failed proposals never
+     * become cached conclusions. Recipe bindings and current request obligations
+     * are checked again, and an accepted plan carries no old optimality claim.
+     */
+    public GraphPlanningWork<K> reuseCandidate(GraphPlan<K> previous) {
+        if (startedWork || phase != 0) throw new IllegalStateException("Planning already started");
+        if (reuseVerification != null) reuseVerification.close();
+        reuseVerification = previous == null ? null : new PlanReuseVerification<>(previous, compiler, target, amount,
+                stock, external, requiredSeeds, preserve, forceCraft, budget, started);
+        return this;
+    }
 
     public GraphPlanningWork<K> catalysts(CatalystPolicy policy) {
         if (phase != 0) throw new IllegalStateException("Planning already started");
@@ -159,6 +175,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     }
 
     private boolean step(PlanningScheduler.Slice slice, PlanningCostTrace.Scope costs) {
+        startedWork = true;
         var observation = phase == 4 ? candidateObservation : null;
         long validationWork = observation == null ? 0 : budget.threadWork();
         long validationNanos = observation == null ? 0 : System.nanoTime();
@@ -169,6 +186,18 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         try {
             if (compilationActive()) budget.compilationCheck();
             else budget.check();
+            if (reuseVerification != null) {
+                if (!reuseVerification.step()) return false;
+                GraphPlan<K> reused = reuseVerification.result();
+                reuseVerification.close();
+                reuseVerification = null;
+                if (reused != null) {
+                    result = verified = reused;
+                    budget.phase(PlanningBudget.Phase.COMPLETE);
+                    phase = 8;
+                    return true;
+                }
+            }
             // A cheap ordinary alternative gets a bounded turn, not ownership
             // of the remaining order budget. Keep its partial compile/solve
             // alive while stock views run, then resume the same state.
@@ -1192,6 +1221,8 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     }
 
     private void closeMeasured() {
+        if (reuseVerification != null) reuseVerification.close();
+        reuseVerification = null;
         if (registeredSearch.compareAndSet(true, false)) compiler.searchClosed();
         finishObservation(PlanningBudget.CandidateOutcome.ABANDONED);
         budget.release(graphMemory);

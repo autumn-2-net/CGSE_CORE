@@ -29,7 +29,11 @@ public final class GraphFallbackIntegrationTest {
         var budget=new PlanningBudget(0,1,()->false);
         var request=new GraphPlanningRequest(budget);
         var constructor=type.getDeclaredConstructors()[0];constructor.setAccessible(true);
-        Object work=constructor.newInstance(null,new CompletableFuture<>(),target,7L,CalculationStrategy.REPORT_MISSING_ITEMS,budget,null,true,request);
+        Object[] arguments={null,new CompletableFuture<>(),target,7L,CalculationStrategy.REPORT_MISSING_ITEMS,budget,null,true,request};
+        var parameters=constructor.getParameterTypes();
+        if(parameters.length==arguments.length+1&&parameters[parameters.length-1].getName().equals("org.cgse.core.RequestPlanningWork$ReuseCandidate"))
+            arguments=Arrays.copyOf(arguments,arguments.length+1);
+        Object work=constructor.newInstance(arguments);
         var recipe=new GraphRecipe<AEKey>("fallback","binding",List.of(new GraphRecipe.Slot<>(input,2)),Map.of(target,3L));
         var compiler=new GraphCompiler<>(List.of(recipe));
         var stock=Map.of(input,5L,target,100L);

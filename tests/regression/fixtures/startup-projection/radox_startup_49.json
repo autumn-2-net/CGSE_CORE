@@ -1,0 +1,240 @@
+{
+  "name": "radox_startup_49",
+  "target": "gtceu:radox",
+  "amount": 100000,
+  "truth": "UNSAT",
+  "stock": {
+    "gtceu:antimony_dust": 1000000000000,
+    "gtceu:antimony_trioxide_dust": 1000000000000,
+    "gtceu:arsenic_trioxide_dust": 1000000000000,
+    "gtceu:boron_trioxide_dust": 1000000000000,
+    "gtceu:chromium_trioxide_dust": 1000000000000,
+    "gtceu:cobalt_oxide_dust": 1000000000000,
+    "gtceu:cubic_zirconia_dust": 1000000000000,
+    "gtceu:cupric_oxide_dust": 1000000000000,
+    "gtceu:ender_eye_dust": 1000000000000,
+    "gtceu:germanium_dioxide_dust": 1000000000000,
+    "gtceu:magnesia_dust": 1000000000000,
+    "gtceu:massicot_dust": 1000000000000,
+    "gtceu:molybdenum_trioxide_dust": 1000000000000,
+    "gtceu:oil": 1000000000000,
+    "gtceu:osmium_dust": 1000000000000,
+    "gtceu:oxygen_plasma": 1000000000000,
+    "gtceu:perlite_dust": 1000000000000,
+    "gtceu:phosphorus_pentoxide_dust": 1000000000000,
+    "gtceu:potash_dust": 1000000000000,
+    "gtceu:rare_earth_oxide_dust": 1000000000000,
+    "gtceu:silicon_dioxide_dust": 1000000000000,
+    "gtceu:silver_oxide_dust": 1000000000000,
+    "gtceu:silver_plasma": 1000000000000,
+    "gtceu:sodium_oxide_dust": 1000000000000,
+    "gtceu:taranium_dust": 1000000000000,
+    "gtceu:titanium_50_tetrachloride": 1000000000000,
+    "gtceu:xenon": 1000000000000,
+    "gtceu:xenoxene": 1000000000000,
+    "gtceu:zincite_dust": 1000000000000,
+    "kubejs:variation_wood": 1000000000000,
+    "virtual:gtceu:ingot_casting_mold": 64,
+    "virtual:gtceu:programmed_circuit": 64,
+    "gtceu:tiny_radox_dust": 1,
+    "gtceu:radox_gas": 100
+  },
+  "recipes": [
+    {
+      "id": "gtceu:cracker/superlightradox",
+      "inputs": {
+        "gtceu:lightradox": 100,
+        "gtceu:silver_plasma": 10,
+        "virtual:gtceu:programmed_circuit": 1
+      },
+      "outputs": {
+        "virtual:gtceu:programmed_circuit": 1,
+        "gtceu:superlightradox": 50
+      }
+    },
+    {
+      "id": "gtceu:cracker/crackedradox",
+      "inputs": {
+        "gtceu:superlightradox": 100,
+        "gtceu:silver_plasma": 10,
+        "virtual:gtceu:programmed_circuit": 1
+      },
+      "outputs": {
+        "virtual:gtceu:programmed_circuit": 1,
+        "gtceu:crackedradox": 100
+      }
+    },
+    {
+      "id": "gtceu:distillation_tower/radox_gas",
+      "inputs": {
+        "gtceu:crackedradox": 1000
+      },
+      "outputs": {
+        "gtceu:radox_gas": 100,
+        "gtceu:lightradox": 200,
+        "gtceu:ash_dust": 1
+      }
+    },
+    {
+      "id": "gtceu:qft/radox",
+      "inputs": {
+        "gtceu:radox_gas": 21600,
+        "gtceu:oxygen_plasma": 75000,
+        "gtceu:titanium_50_tetrachloride": 1000,
+        "gtceu:molybdenum_trioxide_dust": 16,
+        "gtceu:chromium_trioxide_dust": 16,
+        "gtceu:phosphorus_pentoxide_dust": 14,
+        "gtceu:cubic_zirconia_dust": 12,
+        "gtceu:germanium_dioxide_dust": 12,
+        "gtceu:silicon_dioxide_dust": 12,
+        "gtceu:arsenic_trioxide_dust": 10,
+        "gtceu:antimony_trioxide_dust": 10,
+        "gtceu:boron_trioxide_dust": 10,
+        "gtceu:zincite_dust": 8,
+        "gtceu:magnesia_dust": 8,
+        "gtceu:cobalt_oxide_dust": 8,
+        "gtceu:massicot_dust": 8,
+        "gtceu:cupric_oxide_dust": 8,
+        "gtceu:potash_dust": 6,
+        "gtceu:silver_oxide_dust": 6,
+        "gtceu:sodium_oxide_dust": 6,
+        "gtceu:rare_earth_oxide_dust": 4
+      },
+      "outputs": {
+        "gtceu:radox": 10800
+      }
+    },
+    {
+      "id": "gtceu:fluid_solidifier/solidify_radox_to_ingot",
+      "inputs": {
+        "gtceu:radox": 144,
+        "virtual:gtceu:ingot_casting_mold": 1
+      },
+      "outputs": {
+        "virtual:gtceu:ingot_casting_mold": 1,
+        "gtceu:radox_ingot": 1
+      }
+    },
+    {
+      "id": "gtceu:macerator/macerate_radox_ingot",
+      "inputs": {
+        "gtceu:radox_ingot": 1
+      },
+      "outputs": {
+        "gtceu:radox_dust": 1
+      }
+    },
+    {
+      "id": "gtceu:packer/unpackage_radox_tiny_dust",
+      "inputs": {
+        "gtceu:radox_dust": 1,
+        "virtual:gtceu:programmed_circuit": 1
+      },
+      "outputs": {
+        "virtual:gtceu:programmed_circuit": 1,
+        "gtceu:tiny_radox_dust": 9
+      }
+    },
+    {
+      "id": "gtceu:mixer/xenoxene_mixture",
+      "inputs": {
+        "gtceu:xenoxene": 1000,
+        "gtceu:xenon": 9000,
+        "gtceu:tiny_radox_dust": 1,
+        "gtceu:antimony_dust": 1,
+        "gtceu:osmium_dust": 1,
+        "gtceu:ender_eye_dust": 1
+      },
+      "outputs": {
+        "gtceu:xenoxene_mixture": 10000
+      }
+    },
+    {
+      "id": "gtceu:fluid_solidifier/xenoxene_crystal_dust",
+      "inputs": {
+        "gtceu:xenoxene_mixture": 1000,
+        "gtceu:perlite_dust": 3
+      },
+      "outputs": {
+        "gtceu:xenoxene_crystal_dust": 3
+      }
+    },
+    {
+      "id": "gtceu:electrolyzer/purified_xenoxene",
+      "inputs": {
+        "gtceu:oil": 1000,
+        "gtceu:xenoxene_crystal_dust": 4
+      },
+      "outputs": {
+        "gtceu:purified_xenoxene": 1000,
+        "minecraft:water": 1000
+      }
+    },
+    {
+      "id": "gtceu:mixer/enriched_xenoxene",
+      "inputs": {
+        "gtceu:purified_xenoxene": 10000,
+        "gtceu:radox_gas": 100,
+        "gtceu:taranium_dust": 1
+      },
+      "outputs": {
+        "gtceu:enriched_xenoxene": 10000
+      }
+    },
+    {
+      "id": "gtceu:pyrolyse_oven/rawradox1",
+      "inputs": {
+        "gtceu:enriched_xenoxene": 1000,
+        "kubejs:variation_wood": 16,
+        "virtual:gtceu:programmed_circuit": 1
+      },
+      "outputs": {
+        "virtual:gtceu:programmed_circuit": 1,
+        "gtceu:rawradox": 10000,
+        "gtceu:ash_dust": 1
+      }
+    },
+    {
+      "id": "gtceu:distillation_tower/rawradox",
+      "inputs": {
+        "gtceu:rawradox": 5000
+      },
+      "outputs": {
+        "gtceu:oil_heavy": 600,
+        "gtceu:oil": 300,
+        "gtceu:creosote": 1000,
+        "minecraft:water": 1400,
+        "gtceu:bacteria": 50,
+        "gtceu:fermented_biomass": 50,
+        "gtceu:superheavyradox": 100,
+        "gtceu:heavyradox": 100,
+        "gtceu:dilutedxenoxene": 100,
+        "gtceu:lightradox": 100,
+        "gtceu:superlightradox": 100,
+        "gtceu:ash_dust": 5
+      }
+    },
+    {
+      "id": "gtceu:centrifuge/superheavyradox",
+      "inputs": {
+        "gtceu:superheavyradox": 1000
+      },
+      "outputs": {
+        "gtceu:heavyradox": 2000
+      }
+    },
+    {
+      "id": "gtceu:cracker/lightradox",
+      "inputs": {
+        "gtceu:heavyradox": 100,
+        "gtceu:silver_plasma": 10,
+        "virtual:gtceu:programmed_circuit": 1
+      },
+      "outputs": {
+        "virtual:gtceu:programmed_circuit": 1,
+        "gtceu:lightradox": 20
+      }
+    }
+  ],
+  "detail": "Reconstructed 15-recipe full distillation route. Exact relaxed primitive reachability has 49 states; no target production. No claim about an unavailable player AE network. Reusable virtual tokens are ordinary exact read arcs in this fixture."
+}
