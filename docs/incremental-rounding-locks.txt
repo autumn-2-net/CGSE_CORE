@@ -1,0 +1,33 @@
+Incremental rounding scores (2026-10-11)
+
+The existing LCG rounding arm computes dynamic up/down locks from active rows.
+After its first cheap decision it can now retain the row incidence structure,
+current row activity classification, unfixed counts and per-variable scores.
+Only rows touched by changed endpoints are re-evaluated. A changed row updates
+the affected variable scores; unchanged rows keep their previous classification.
+
+This is request-owned heuristic reuse. Both tighter and wider domains are
+detected, including restarts and backtracking. New certified rows are appended
+to the incidence structure. Replacement, deletion or reordering invalidates the
+cache. A refused optional reservation releases the cache and uses the original
+full scan. Snapshot endpoints, incidence storage and row state are charged.
+
+Floating score contributions are re-summed in original row order for each
+affected variable. Subtracting old floating contributions repeatedly could
+drift across score ties; this implementation preserves the original decision
+for identical rows, endpoints and conflict activities. No score creates a cut,
+restricts a count domain or bypasses exact witness validation.
+
+CountLockCacheTest compares 6,470 conditions with fresh scans, including random
+tightening/widening trails, unbounded and 8192-bit endpoints, appended/replaced
+rows, independent requests, worker handoffs, optional memory refusal and cancel.
+Its 256-decision sparse trace uses 185,712 work for fresh scans and 64,066 for
+the retained scores, with identical decisions. This is local charged-work
+evidence, not a whole-planner speedup or a wall-time measurement.
+
+Reference inspected:
+https://github.com/scipopt/scip/blob/master/src/scip/heur_locks.c
+SCIP maintains row activity/fulfilled-row information while updating rounding
+locks during fix-and-propagate. CGSE keeps its own existing branching formula,
+integer row arithmetic, continuation and proof interfaces. No SCIP source,
+native dependency or separate sub-MIP implementation is imported here.

@@ -241,6 +241,8 @@ final class CountLcg implements AutoCloseable {
     private CountProof.Certificate certificate;
     private CountProof.Certificate differenceProof;
     private boolean lockBranching;
+    private CountLockBranch.Session lockScores;
+    private boolean lockVisited;
     private BigInteger[] savedValues;
     private boolean finiteHintTried;
     private long finiteHintDeferredAllowance = -1, finiteHintPreparationWork;
@@ -510,7 +512,16 @@ final class CountLcg implements AutoCloseable {
                 fixedPeak = Math.max(fixedPeak, fixed);
                 long before = budget.threadWork();
                 try {
-                    preferred = CountLockBranch.choose(rows, low, high, activity, budget);
+                    // Keep the first, often sufficient, rounding decision cheap.
+                    // Longer dives retain row/column scores across propagation,
+                    // restarts and local scheduler handoffs.
+                    if (!lockVisited) {
+                        lockVisited = true;
+                        preferred = CountLockBranch.choose(rows, low, high, activity, budget);
+                    } else {
+                        if (lockScores == null) lockScores = new CountLockBranch.Session(low.length, budget);
+                        preferred = lockScores.choose(rows, low, high, activity);
+                    }
                 } finally {
                     workTicks += (budget.threadWork() - before) * PlanningBudget.WORK_SCALE;
                     work = PlanningBudget.units(workTicks);
@@ -1664,6 +1675,7 @@ final class CountLcg implements AutoCloseable {
     @Override
     public void close() {
         finiteHint = null;
+        if (lockScores != null) lockScores.close();
         if (lpSession != null) lpSession.close();
         if (integerLpSession != null) integerLpSession.close();
         if (reliability != null) reliability.close();

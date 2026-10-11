@@ -1,0 +1,44 @@
+Request-local worker clocks (2026-10-11)
+
+Problem
+-------
+PlanningBudget used a process-wide worker clock, including fractional work
+ticks. The shared request totals were isolated, but local algorithms subtracted
+rounded worker timestamps. An earlier request's fractional remainder could
+therefore move a later request's slice boundary by one unit. Heuristic handoffs
+amplified this small difference into a different search trajectory.
+
+The existing wide-22 count model, complete-corpus permutation 1, reproduced
+this without changing any model row, domain, request limit or recipe order.
+Fresh JVM processes performed 0, 1, 2 or 3 SCAN operations in a foreign budget
+before solving. On cb090c7b their search work was respectively:
+  3,700,185 / 371,693 / 371,693 / 3,700,181.
+All four witnesses satisfied the original integer rows and embedded execution.
+These were 20M work, 256 MiB, one-worker runs without a wall-time cutoff.
+This is a scheduling/accounting isolation defect, not evidence of a stale
+recipe or inventory cache, nor an explanation of every reported player issue.
+
+Change
+------
+Each request now owns a separate clock for each worker. Search and compilation
+still have their original shared cumulative caps; local worker clocks continue
+to distinguish total work from search-only work. Switching requests on one
+worker or migrating a retained continuation cannot inherit foreign fractions.
+
+There is still only one static ThreadLocal key. Its fast-path clock holds a
+weak reference to its request, so an idle long-lived worker does not retain
+the completed request. Clock entries belong to the request, not a global map.
+No budget is increased or reset by a handoff. Existing terminal overflow and
+cancellation behavior is unchanged.
+
+Verification
+------------
+PlanningWorkClockTest fails against cb090c7b on a foreign fractional charge.
+It covers nested requests on one thread, concurrent workers with independent
+fractions, shared aggregate totals, compilation/search separation, and actual
+LCG continuations alternating between two persistent workers after foreign work.
+The wide-22 reproduction now uses exactly 3,700,185 search work and the same
+witness for all four foreign prefixes. This removes history dependence; it
+does not claim that the resulting stable trajectory is the fastest trajectory.
+Input, immutable baseline logs and exact witness checks are in the local case
+registry. The canonical model itself remains in the maintained count corpus.

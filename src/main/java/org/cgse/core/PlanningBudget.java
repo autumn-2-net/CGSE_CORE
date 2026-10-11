@@ -5,12 +5,14 @@ package org.cgse.core;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
@@ -75,11 +77,28 @@ public final class PlanningBudget {
     // cumulative across every worker, share memory/time/cancellation, and feed
     // the same local work clock so compilation still yields fairly.
     private final AtomicLong compilationNodes = new AtomicLong();
-    // Branch quanta run contiguously on one worker. A shared thread counter
-    // avoids creating weak ThreadLocal keys for every order on the long-lived
-    // worker pool; per-order cumulative limits remain in nodes below.
-    private static final ThreadLocal<long[]> THREAD_NODES = ThreadLocal.withInitial(() -> new long[4]);
+    // Keep one ThreadLocal key, but never carry a previous order's fractional
+    // ticks into this one's slice boundaries. The request owns the worker clocks;
+    // the last-clock fast path must not retain a completed request on idle pools.
+    private static final ThreadLocal<WorkerWork> THREAD_WORK = new ThreadLocal<>();
+    private final Map<Thread, WorkerWork> workerWork = new ConcurrentHashMap<>();
     private volatile boolean countThreadWork;
+
+    private static final class WorkerWork {
+        final WeakReference<PlanningBudget> owner;
+        long total, fraction, search, searchFraction;
+
+        WorkerWork(PlanningBudget owner) { this.owner = new WeakReference<>(owner); }
+    }
+
+    private WorkerWork workerWork() {
+        WorkerWork counter = THREAD_WORK.get();
+        if (counter == null || counter.owner.get() != this) {
+            counter = workerWork.computeIfAbsent(Thread.currentThread(), ignored -> new WorkerWork(this));
+            THREAD_WORK.set(counter);
+        }
+        return counter;
+    }
     private final AtomicLong reservedBytes = new AtomicLong();
     private final AtomicLong peakBytes = new AtomicLong();
     private final AtomicBoolean cancelRequested = new AtomicBoolean();
@@ -215,16 +234,16 @@ public final class PlanningBudget {
             if (account.compareAndSet(previous, total)) break;
         }
         if (countThreadWork) {
-            long[] counter = THREAD_NODES.get();
-            long fraction = counter[1] + ticks % WORK_SCALE;
+            WorkerWork counter = workerWork();
+            long fraction = counter.fraction + ticks % WORK_SCALE;
             // This clock is read only through bounded differences, like
             // nanoTime. Unit wrap is intentional; fractional ticks never wrap.
-            counter[0] += ticks / WORK_SCALE + fraction / WORK_SCALE;
-            counter[1] = fraction % WORK_SCALE;
+            counter.total += ticks / WORK_SCALE + fraction / WORK_SCALE;
+            counter.fraction = fraction % WORK_SCALE;
             if (!compilation) {
-                long searchFraction = counter[3] + ticks % WORK_SCALE;
-                counter[2] += ticks / WORK_SCALE + searchFraction / WORK_SCALE;
-                counter[3] = searchFraction % WORK_SCALE;
+                long searchFraction = counter.searchFraction + ticks % WORK_SCALE;
+                counter.search += ticks / WORK_SCALE + searchFraction / WORK_SCALE;
+                counter.searchFraction = searchFraction % WORK_SCALE;
             }
         }
         traceCharge(ticks, compilation);
@@ -244,15 +263,15 @@ public final class PlanningBudget {
     /** Per-thread accounting prevents concurrent branches charging one another's work. */
     long threadWork() {
         countThreadWork = true;
-        long[] counter = THREAD_NODES.get();
-        return counter[0] + (counter[1] == 0 ? 0 : 1);
+        WorkerWork counter = workerWork();
+        return counter.total + (counter.fraction == 0 ? 0 : 1);
     }
 
     /** Search continuation quotas exclude structural cache misses as well. */
     long threadSearchWork() {
         countThreadWork = true;
-        long[] counter = THREAD_NODES.get();
-        return counter[2] + (counter[3] == 0 ? 0 : 1);
+        WorkerWork counter = workerWork();
+        return counter.search + (counter.searchFraction == 0 ? 0 : 1);
     }
 
     public Exhausted exhausted(Limit limit, String detail) {
