@@ -77,8 +77,58 @@ public final class GraphStartupViewTest {
             } finally { work.close(); }
             check(budget.reservedBytes() == 0, "Primary planner leaked");
         }
+        crowdedSourcesAndForcedSeeds();
         lifecycle();
         System.out.println("Startup views: " + checked + " restored witnesses, stock changes, primary planning and lifecycle passed");
+    }
+
+    private static void crowdedSourcesAndForcedSeeds() {
+        // Twelve gas batches and eleven separation/solid batches suffice.
+        // Keeping 400 crystals in stock must not turn the required startup
+        // seed into repeated extra production beyond this limited feedstock.
+        var stock = Map.of("crystal", 400L, "gas", 20L, "ore", 1200L, "feed", 11L);
+        for (int distractors : new int[] {0, 16, 128}) {
+            var recipes = new ArrayList<GraphRecipe<String>>();
+            var targets = new ArrayList<GraphRecipe<String>>();
+            for (int i = 0; i < distractors; i++) {
+                var dead = recipe("dead" + i, Map.of("unfunded" + i, 1L), Map.of("crystal", 1L));
+                recipes.add(dead);
+                targets.add(dead);
+                recipes.add(recipe("dead_feed" + i, Map.of("raw" + i, 1L), Map.of("unfunded" + i, 1L)));
+            }
+            var core = recipes();
+            recipes.addAll(core);
+            targets.add(core.get(1));
+            targets.add(core.get(0));
+            Map<String, List<GraphRecipe<String>>> order = new LinkedHashMap<>();
+            for (var recipe : recipes) for (String output : recipe.executionOutputs().keySet())
+                order.computeIfAbsent(output, key -> new ArrayList<>()).add(recipe);
+            order.put("crystal", targets);
+            var compiler = new GraphCompiler<>(recipes, order);
+            for (int source : new int[] {distractors, distractors + 1}) {
+                var budget = budget(64L << 20);
+                GraphCompiler.Compiled<String> graph;
+                try (var compilation = compiler.begin("crystal", Set.of(), Map.of("crystal", source), Set.of(), budget)) {
+                    while (!compilation.step()) {}
+                    graph = compilation.result();
+                }
+                try (var view = new GraphOutputView<>(compiler, graph, "crystal", 10, stock, Map.of(), Set.of(), Set.of(),
+                        true, true, new CatalystPolicy(65, 64), budget, 0)) {
+                    while (!view.step()) {}
+                    check(view.result() != null, "Crowded source or forced seed inflation: " + distractors + "/" + source + " " + budget.diagnostics());
+                    replay(view.result(), stock);
+                }
+                check(budget.reservedBytes() == 0, "Crowded source proposal leaked");
+            }
+            var budget = budget(64L << 20);
+            var work = new GraphPlanningWork<>(compiler, "crystal", 10, stock, true, true, budget).catalysts(new CatalystPolicy(65, 64));
+            try {
+                while (!work.step()) {}
+                check(work.result().feasible(), "An initial acyclic source suppressed later cyclic startup");
+                replay(work.result(), stock);
+            } finally { work.close(); }
+            check(budget.reservedBytes() == 0, "Primary crowded source search leaked");
+        }
     }
 
     private static void lifecycle() {

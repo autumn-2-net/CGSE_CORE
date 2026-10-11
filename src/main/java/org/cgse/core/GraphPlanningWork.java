@@ -1103,12 +1103,15 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 return;
             }
             if (!outputViewTried) {
-                outputViewTried = true;
                 // A chosen parallel-seed contract already has a bootstrap
                 // path and an extra-copy cap. Preserve that path instead of
                 // replacing its missing seed loan by an unrelated bulk plan.
                 if (candidate.seeds().entrySet().stream().allMatch(e ->
-                        external.contains(e.getKey()) || e.getValue() <= stock.getOrDefault(e.getKey(), 0L))) {
+                        external.contains(e.getKey()) || e.getValue() <= stock.getOrDefault(e.getKey(), 0L)) &&
+                        GraphOutputView.eligible(graph, budget)) {
+                    // An acyclic or unfunded source choice has not tried a
+                    // coproduct startup view. Keep it available for later SCCs.
+                    outputViewTried = true;
                     outputView = new GraphOutputView<>(compiler, graph, target, amount, stock, requiredSeeds, external,
                             excluded, preserve, forceCraft, catalystPolicy, budget, started);
                     phase = 20;

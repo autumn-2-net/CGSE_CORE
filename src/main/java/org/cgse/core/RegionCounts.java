@@ -43,9 +43,12 @@ final class RegionCounts<K> implements AutoCloseable {
         long before = budget.threadWork();
         this.recipes = recipes;
         this.demand = new LinkedHashMap<>(demand);
-        if (force && recipes.stream().anyMatch(recipe -> recipe.outputs().containsKey(target)))
-            this.demand.merge(target, BigInteger.valueOf(stock.getOrDefault(target, 0L)).add(BigInteger.valueOf(amount)), BigInteger::max);
         this.goals = new LinkedHashMap<>(this.demand);
+        if (force && recipes.stream().anyMatch(recipe -> recipe.outputs().containsKey(target)))
+            this.goals.merge(target, BigInteger.valueOf(stock.getOrDefault(target, 0L)).add(BigInteger.valueOf(amount)), BigInteger::max);
+        // The force-craft stock offset is a production floor, not another
+        // delivery obligation. Seed refinement adds to the real demand only;
+        // adding it to stock + amount repeatedly manufactures excess stock.
         this.stock = stock;
         this.external = external;
         this.preserve = preserve;

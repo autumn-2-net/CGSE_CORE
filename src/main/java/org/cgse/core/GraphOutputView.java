@@ -35,6 +35,18 @@ final class GraphOutputView<K> implements AutoCloseable {
     private GraphPlan<K> result;
     private boolean complete;
 
+    static <K> boolean eligible(GraphCompiler.Compiled<K> graph, PlanningBudget budget) {
+        for (var region : graph.regions()) {
+            budget.check();
+            if (!region.cyclic()) continue;
+            for (var recipe : region.recipes()) {
+                budget.check();
+                if (recipe.executionOutputs().size() > 1) return true;
+            }
+        }
+        return false;
+    }
+
     GraphOutputView(GraphCompiler<K> compiler, GraphCompiler.Compiled<K> graph, K target, long amount,
                     Map<K, Long> stock, Map<K, Long> seeds, Set<K> external, Set<String> excluded,
                     boolean preserve, boolean force, CatalystPolicy policy, PlanningBudget budget, long started) {
@@ -55,17 +67,7 @@ final class GraphOutputView<K> implements AutoCloseable {
         if (allowance < 8192 || compiler.catalog().size() > 8192) { complete = true; return; }
         long before = budget.threadSearchWork();
         try {
-            boolean eligible = false;
-            for (var region : graph.regions()) {
-                budget.check();
-                if (!region.cyclic()) continue;
-                for (var recipe : region.recipes()) {
-                    budget.check();
-                    if (recipe.executionOutputs().size() > 1) { eligible = true; break; }
-                }
-                if (eligible) break;
-            }
-            if (!eligible) { complete = true; return; }
+            if (!eligible(graph, budget)) { complete = true; return; }
             long bytes = 4096L + 192L * compiler.catalog().size();
             for (var recipe : compiler.catalog()) {
                 budget.check();
@@ -108,14 +110,23 @@ final class GraphOutputView<K> implements AutoCloseable {
                 // positive gain. Keep the selected choices first, then allow
                 // another target producer in the same bounded proposal queue.
                 var initial = List.copyOf(omissions);
-                for (var producer : compiler.producers(target)) {
-                    budget.check();
-                    if (excluded.contains(producer.id()) || producer.equals(selected.get(target))) continue;
-                    for (var omission : initial) {
+                var sources = compiler.producers(target);
+                // A bounded positive scout must not spend all its slots on
+                // unavailable distractors merely because they were listed
+                // first. Reachability only orders these trials; the canonical
+                // source frontier and every producer remain unchanged.
+                boolean crowded = sources.size() > 1 + (8 - initial.size()) / initial.size();
+                try (var ranking = crowded ? GraphSourceRanking.create(compiler, stock, external, target, force,
+                        budget, Math.min(32768, allowance / 4)) : null) {
+                    for (var producer : ranking == null ? sources : ranking.sources(target, false)) {
+                        budget.check();
+                        if (excluded.contains(producer.id()) || producer.equals(selected.get(target))) continue;
+                        for (var omission : initial) {
+                            if (omissions.size() == 8) break;
+                            omissions.add(new Omission<>(omission.recipe(), omission.output(), producer.id()));
+                        }
                         if (omissions.size() == 8) break;
-                        omissions.add(new Omission<>(omission.recipe(), omission.output(), producer.id()));
                     }
-                    if (omissions.size() == 8) break;
                 }
                 for (var recipe : compiler.catalog()) {
                     budget.check();
