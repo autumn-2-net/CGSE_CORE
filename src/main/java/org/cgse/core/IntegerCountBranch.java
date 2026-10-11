@@ -138,6 +138,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     State state = State.OPEN;
     PlanningBudget.Exhausted limit;
     boolean initialized, partitioned, rescue, retried, choicePruned, needsRepair;
+    boolean executionRefined;
     private boolean candidateOnly;
     boolean autonomousSchedule;
     private CountViewSearch.CandidateOrigin candidateOrigin;
@@ -1898,12 +1899,14 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         if (refineMaterials(point)) return true;
         CountGuard condition = execution.violated(point);
         if (condition != null) {
+            executionRefined = true;
             learn(condition);
             branch(condition);
             return true;
         }
         var startup = CountStartup.separateAll(model, counts, budget);
         if (!startup.isEmpty()) {
+            executionRefined = true;
             for (var proof : startup) learn(proof.guard());
             branch(startup.get(0).guard());
             return true;

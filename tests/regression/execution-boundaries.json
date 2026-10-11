@@ -1,0 +1,97 @@
+{
+  "schema": "cgse-execution-boundaries-v1",
+  "cases": [
+    {
+      "source": "cases/graph/c6/c6f6f62a74b3978fbdc696496142c2472606c0c596fd33ab793c2182aecafe8b.json",
+      "sha256_lf": "e3d8f3685cf3f84222c58309d7eea166d6a425122ac8487960d99ca16121cf4b",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "rendezvous-fuel7",
+      "expected": "UNSAT",
+      "evidence": "Independent full 182-state, 325-transition original closure."
+    },
+    {
+      "source": "cases/graph/c6/c6f6f62a74b3978fbdc696496142c2472606c0c596fd33ab793c2182aecafe8b.json",
+      "sha256_lf": "e3d8f3685cf3f84222c58309d7eea166d6a425122ac8487960d99ca16121cf4b",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "rendezvous-fuel10",
+      "expected": "UNSAT",
+      "stock": {
+        "F": 10
+      },
+      "evidence": "Independent exhaustive original 425-state closure."
+    },
+    {
+      "source": "cases/graph/c6/c6f6f62a74b3978fbdc696496142c2472606c0c596fd33ab793c2182aecafe8b.json",
+      "sha256_lf": "e3d8f3685cf3f84222c58309d7eea166d6a425122ac8487960d99ca16121cf4b",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "rendezvous-fuel11",
+      "expected": "SAT",
+      "stock": {
+        "F": 11
+      },
+      "evidence": "Primitive funded sequence t2,t0,t30,t27,t19,t18,t10,t11,t12,t13,finish; 11 fuel, all original arcs."
+    },
+    {
+      "name": "pebble_00238/primary-turn",
+      "source": "cases/graph/0b/0b981cf7ebf7b6848eca474c5ee502db4d3c873fa876e00525c615f37424d38a.json",
+      "sha256_lf": "73975f00d6e0fe695876000b58cd40c35b4e459695367075dc455aa902bb5a40",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 3000000,
+      "expected": "SAT",
+      "evidence": "Existing independent canonical oracle; full default request budget, with a measured-work guard against auxiliary work prematurely evicting the primary count turn."
+    },
+    {
+      "name": "pebble_00811/primary-turn",
+      "source": "cases/graph/40/40354c1edfc2373b29ae11525c09d7802c577619d792de0a7c5d2f147968163e.json",
+      "sha256_lf": "f59b6d0142b1be96d5aa410ad6759a216afca90cf23e59f210fd013a2c0e22a5",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 3000000,
+      "expected": "SAT",
+      "evidence": "Existing independent canonical oracle; full default request budget, with a measured-work guard against auxiliary work prematurely evicting the primary count turn."
+    },
+    {
+      "name": "rendezvous_00762/primary-turn",
+      "source": "cases/graph/00/00ed417e17cbeb6444f3323fd3b32fa574010081a833fb005c0140778a1bf853.json",
+      "sha256_lf": "12501073fe704ff91ea422c624821e78659d66fd0f6b77a9e0b62177b75888ef",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 3000000,
+      "expected": "UNSAT",
+      "evidence": "Existing independent canonical oracle; full default request budget, with a measured-work guard against auxiliary work prematurely evicting the primary count turn."
+    },
+    {
+      "name": "pebble_01486/bounded-scout",
+      "source": "cases/graph/b9/b9adc43ac0e6bcd9c476d4594b36c0d4603c10e6b4169071a2bbbad1dd54a37c.json",
+      "sha256_lf": "fccd9d1a4d327d405d0e1d821da318a4a05109613aaac9f18a1303e4b22c5d1f",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle and independently replayed executable plans. Giving auxiliary credits to short scouts delayed the viable source view past the 40M shared budget."
+    }
+  ]
+}

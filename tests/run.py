@@ -72,7 +72,7 @@ def main():
         (output / 'results.json').write_text(json.dumps({'suite': args.suite, 'model_engine': args.model_engine,
                                                        'work': args.work, 'milliseconds': args.milliseconds,
                                                        'results': results}, indent=2), encoding='utf-8')
-    def run(name, main_class, arguments=(), extra_classpath=''):
+    def run(name, main_class, arguments=(), extra_classpath='', validate=None):
         log_path = output / (re.sub(r'[^a-zA-Z0-9_.-]', '_', name) + '.log')
         started = time.monotonic()
         command = [java('java'), '-ea', '-Dfile.encoding=UTF-8', '-Djava.awt.headless=true', '-Xmx2g', '-cp', os.pathsep.join(x for x in [extra_classpath, str(classes), args.classpath] if x), main_class, *map(str, arguments)]
@@ -82,6 +82,12 @@ def main():
                 status = 'PASS' if result.returncode == 0 else 'INCONCLUSIVE' if result.returncode == 2 else 'FAIL'
             except subprocess.TimeoutExpired:
                 status = 'TIMEOUT'
+        if status == 'PASS' and validate is not None:
+            problem = validate(log_path.read_text(encoding='utf-8', errors='replace'))
+            if problem:
+                with log_path.open('a', encoding='utf-8') as log:
+                    log.write('\nFAIL: ' + problem + '\n')
+                status = 'FAIL'
         results.append({'name': name, 'status': status, 'seconds': round(time.monotonic() - started, 3), 'log': str(log_path.relative_to(output))})
         save()
         print(name + ': ' + status, flush=True)
@@ -153,6 +159,45 @@ def main():
                 path = output / ('graph-boundaries-' + str(work) + '.bin')
                 helper.write_cases(path, cases)
                 run('GraphCandidateBoundaries-' + str(work), 'org.cgse.core.GraphFixtureRegression', [path, 0, work])
+        if shard == 0 and re.search(args.case, 'GraphExecutionBoundaries'):
+            import hashlib
+            import random
+            spec = importlib.util.spec_from_file_location('execution_boundaries', BASE / 'cases/run.py')
+            helper = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(helper)
+            manifest = json.loads((BASE / 'regression/execution-boundaries.json').read_text(encoding='utf-8'))
+            batches = {}
+            cost_limits = {}
+            for entry in manifest['cases']:
+                source = BASE / entry['source']
+                raw = source.read_text(encoding='utf-8')
+                if hashlib.sha256(raw.encode('utf-8')).hexdigest() != entry['sha256_lf']:
+                    raise ValueError('Execution boundary source changed: ' + str(source))
+                for order in entry['orders']:
+                    case = json.loads(raw)
+                    case['id'] += '/' + entry['name'] + '/order=' + str(order)
+                    case['expected'] = entry['expected']
+                    case['model']['stock'].update(entry.get('stock', {}))
+                    if order:
+                        random.Random(order).shuffle(case['model']['recipes'])
+                    if 'maximum_observed_work' in entry:
+                        cost_limits[case['id']] = entry['maximum_observed_work']
+                    batches.setdefault(entry['work'], []).append(case)
+            for work, cases in sorted(batches.items()):
+                path = output / ('execution-boundaries-' + str(work) + '.bin')
+                helper.write_graphs(path, cases)
+                limits = {c['id']: cost_limits[c['id']] for c in cases if c['id'] in cost_limits}
+                def validate_costs(log):
+                    observed = {}
+                    for line in log.splitlines():
+                        parts = line.split('\t')
+                        if len(parts) >= 4 and parts[1] == 'PASS':
+                            values = [int(p[5:]) for p in parts[3:] if p.startswith('work=')]
+                            if values: observed[parts[0]] = values[0]
+                    for name, limit in limits.items():
+                        if name not in observed or observed[name] > limit:
+                            return name + ': observed work ' + str(observed.get(name)) + ' exceeds ' + str(limit)
+                run('GraphExecutionBoundaries-' + str(work), 'org.cgse.core.CorpusRegression', [path, 0, work], validate=validate_costs)
     if args.suite == 'benchmarks' and re.search(args.case, 'GraphBenchmark'):
         run('GraphBenchmark', 'org.cgse.core.GraphBenchmark')
     if args.suite in ('fixtures', 'all'):

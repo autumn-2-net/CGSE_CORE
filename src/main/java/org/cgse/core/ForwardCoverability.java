@@ -10,9 +10,11 @@ import java.util.*;
 final class ForwardCoverability<K> implements AutoCloseable {
 
     private static final class Stop extends RuntimeException {
+        final boolean workLimit;
 
-        Stop() {
+        Stop(boolean workLimit) {
             super(null, null, false, false);
+            this.workLimit = workLimit;
         }
     }
 
@@ -21,6 +23,11 @@ final class ForwardCoverability<K> implements AutoCloseable {
         final List<BigInteger> stock;
         final PlanStep edge;
         BitSet todo;
+        BitSet enabled = new BitSet();
+        int action, coordinate;
+        int goalCoordinate;
+        boolean belowGoal;
+        List<BigInteger> next;
 
         Frame(List<BigInteger> stock, PlanStep edge) {
             this.stock = stock;
@@ -36,9 +43,12 @@ final class ForwardCoverability<K> implements AutoCloseable {
     private final Set<List<BigInteger>> visited = new LinkedHashSet<>(), active = new HashSet<>();
     private final PlanningBudget budget;
     private final PartialOrder<K> order;
-    private final long allowance;
+    private long allowance;
     private long work, memory, omitted, cycleExpansions;
     private long sliceStarted;
+    private boolean retained, paused, closed;
+    private ExecutionProof.Certificate certificate;
+    private ExecutionProof.ForwardCheck checking;
     private BackwardCoverability.Result result;
     private PlanStep witness;
 
@@ -77,7 +87,12 @@ final class ForwardCoverability<K> implements AutoCloseable {
             charge();
             if (stack.isEmpty()) return closeReachability();
             Frame frame = stack.peek();
-            if (covers(frame.stock, goal)) {
+            while (!frame.belowGoal && frame.goalCoordinate < keys.size()) {
+                charge();
+                if (frame.stock.get(frame.goalCoordinate).compareTo(goal.get(frame.goalCoordinate)) < 0) frame.belowGoal = true;
+                frame.goalCoordinate++;
+            }
+            if (!frame.belowGoal) {
                 var path = new ArrayList<PlanStep>();
                 var frames = stack.descendingIterator();
                 while (frames.hasNext()) {
@@ -87,22 +102,48 @@ final class ForwardCoverability<K> implements AutoCloseable {
                 witness = new PlanStep.Sequence(path);
                 return finish(BackwardCoverability.Result.WITNESS);
             }
-            if (frame.todo == null) frame.todo = persistent(frame.stock);
+            if (frame.todo == null) frame.todo = order == null ? enabled(frame) : persistent(frame.stock);
             int id = frame.todo.nextSetBit(0);
             if (id < 0) {
                 stack.pop();
                 active.remove(frame.stock);
                 return false;
             }
-            frame.todo.clear(id);
-            var next = successor(frame.stock, actions.get(id).summary());
+            if (frame.next == null) frame.next = new ArrayList<>(keys.size());
+            while (frame.next.size() < keys.size()) {
+                charge();
+                int k = frame.next.size();
+                frame.next.add(frame.stock.get(k).add(actions.get(id).summary().delta(keys.get(k))));
+            }
+            var next = List.copyOf(frame.next);
             if (!visited.contains(next)) push(next, actions.get(id).program());
+            // Do not consume an edge until its successor has been retained.
+            // A local stop midway through construction must not omit a firing.
+            frame.todo.clear(id);
+            frame.next = null;
             return false;
         } catch (Stop stopped) {
+            paused = retained && stopped.workLimit;
             return finish(BackwardCoverability.Result.UNKNOWN);
         } finally {
             work += budget.threadWork() - before;
         }
+    }
+
+    private BitSet enabled(Frame frame) {
+        while (frame.action < actions.size()) {
+            if (frame.coordinate == keys.size()) {
+                frame.enabled.set(frame.action++);
+                frame.coordinate = 0;
+                continue;
+            }
+            charge();
+            if (frame.stock.get(frame.coordinate).compareTo(actions.get(frame.action).summary().required(keys.get(frame.coordinate))) < 0) {
+                frame.action++;
+                frame.coordinate = 0;
+            } else frame.coordinate++;
+        }
+        return frame.enabled;
     }
 
     private BitSet persistent(List<BigInteger> stock) {
@@ -152,49 +193,46 @@ final class ForwardCoverability<K> implements AutoCloseable {
     }
 
     private void push(List<BigInteger> stock, PlanStep edge) {
-        if (visited.size() >= 4096) throw new Stop();
+        if (visited.size() >= 4096) throw new Stop(false);
         long bytes = 384L + keys.size() * 128L;
-        if (!budget.tryReserve(bytes)) throw new Stop();
+        if (!budget.tryReserve(bytes)) throw new Stop(false);
         memory += bytes;
         visited.add(stock);
         active.add(stock);
         stack.push(new Frame(stock, edge));
     }
 
-    private boolean covers(List<BigInteger> stock, List<BigInteger> required) {
-        for (int k = 0; k < keys.size(); k++) {
-            charge();
-            if (stock.get(k).compareTo(required.get(k)) < 0) return false;
-        }
-        return true;
-    }
-
     private boolean closeReachability() {
-        var in = new ArrayList<List<BigInteger>>();
-        var out = new ArrayList<List<BigInteger>>();
-        for (var recipe : recipes) {
-            in.add(keys.stream().map(key -> BigInteger.valueOf(recipe.inputs().getOrDefault(key, 0L))).toList());
-            out.add(keys.stream().map(key -> BigInteger.valueOf(recipe.outputs().getOrDefault(key, 0L))).toList());
+        if (checking == null) {
+            var in = new ArrayList<List<BigInteger>>();
+            var out = new ArrayList<List<BigInteger>>();
+            for (var recipe : recipes) {
+                in.add(keys.stream().map(key -> BigInteger.valueOf(recipe.inputs().getOrDefault(key, 0L))).toList());
+                out.add(keys.stream().map(key -> BigInteger.valueOf(recipe.outputs().getOrDefault(key, 0L))).toList());
+            }
+            certificate = new ExecutionProof.Certificate(order == null ? "forward_original_closure" : "forward_por_original_closure",
+                    ExecutionProof.Kind.FORWARD_BOUNDARY, initial, goal, in, out, List.copyOf(visited), Set.of());
+            checking = new ExecutionProof.ForwardCheck(certificate);
         }
-        var proof = new ExecutionProof.Certificate(order == null ? "forward_original_closure" : "forward_por_original_closure",
-                ExecutionProof.Kind.FORWARD_BOUNDARY, initial, goal, in, out, List.copyOf(visited), Set.of());
         // A reduced traversal alone is never an absence certificate. Require
         // explicit closure under all original transitions before exporting DEAD.
         long remaining = allowance - work - (budget.threadWork() - sliceStarted);
-        if (remaining <= 0 || ExecutionProof.verify(proof, remaining, budget::charge) != CountProof.Verdict.VERIFIED)
+        if (remaining <= 0) throw new Stop(true);
+        if (!checking.step(Math.min(1024, remaining), budget::charge)) return false;
+        if (checking.result() != CountProof.Verdict.VERIFIED)
             return finish(BackwardCoverability.Result.UNKNOWN);
-        if (budget.proofJournal() != null) budget.proofJournal().add(proof);
+        if (budget.proofJournal() != null) budget.proofJournal().add(certificate);
         return finish(BackwardCoverability.Result.CLOSED);
     }
 
     private void charge() {
+        if (work + budget.threadWork() - sliceStarted >= allowance) throw new Stop(true);
         budget.check();
-        if (work + budget.threadWork() - sliceStarted >= allowance) throw new Stop();
     }
 
     private boolean finish(BackwardCoverability.Result value) {
         result = value;
-        budget.note(order == null ? "forward_original" : "forward_por", "result=" + value + "; states=" + visited.size() + "; omitted=" + omitted + "; cycle_expansions=" + cycleExpansions + "; work=" + work);
+        budget.note(order == null ? "forward_original" : "forward_por", "result=" + value + "; states=" + visited.size() + "; omitted=" + omitted + "; cycle_expansions=" + cycleExpansions + "; work=" + work + "; retained=" + paused + "; checking=" + (checking != null));
         return true;
     }
 
@@ -206,8 +244,28 @@ final class ForwardCoverability<K> implements AutoCloseable {
         return witness;
     }
 
+    ForwardCoverability<K> retained() {
+        if (order != null) throw new IllegalStateException("Only full original-state traversal retains its frontier");
+        retained = true;
+        return this;
+    }
+
+    boolean paused() { return paused && !closed; }
+
+    void resume(long additionalWork) {
+        if (!paused() || additionalWork <= 0) throw new IllegalStateException("No retained forward frontier");
+        long extra = Math.min(additionalWork, budget.remainingWork());
+        allowance = work + Math.min(extra, Long.MAX_VALUE - work);
+        paused = false;
+        result = null;
+        budget.note("forward_resume", "states=" + visited.size() + "; work=" + work + "; allowance=" + allowance + "; checking=" + (checking != null));
+    }
+
     @Override
     public void close() {
+        closed = true;
+        certificate = null;
+        checking = null;
         stack.clear();
         visited.clear();
         active.clear();

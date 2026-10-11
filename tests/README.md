@@ -28,7 +28,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | AEDUMP | `python tests/ae-dump/check_migration.py --java-home <jdk17>` | Archive format/validation plus extracted request-service handoff |
 | Live adapter | `adapter/live/` | Forge/server probes requiring the actual host installation |
 
-`standard` runs core, view, the stable oracles and the pinned count/graph boundaries. `all` also selects every fixed
+`standard` runs core, view, the stable oracles and the pinned count/graph/execution boundaries. `all` also selects every fixed
 fixture, portable probe and corpus case; it can take substantially longer and includes
 known hard inputs. Benchmark/dataset/AE/live suites are explicit separate entries because their
 resource requirements differ. Use `--case <regex>`, `--shard 0/4`, `--milliseconds`,
@@ -83,6 +83,19 @@ fusion and the large cycle cases after the old diagnostic's failed reflection.
 `CountComponentRootProofTest` keeps a complete root proof after an inconclusive
 sibling while confining guarded proofs. `SeedVerificationLifecycleTest` closes
 partially retained verification on local-budget exit and cancellation.
+
+`ForwardContinuationTest` checks retained original-state traversal and incremental
+independent closure verification, including incomplete grants, failed frontier
+insertions and cancellation. `regression/execution-boundaries.json` pins the
+previously UNKNOWN 182-state rendezvous network, its 425-state impossible neighbor
+and a funded 11-firing neighbor, each in three recipe orders. The complete original
+recipes and stock are preserved; a local state/work cutoff is never an UNSAT oracle.
+Three additional archived boundaries cap observed work at the default 40M request
+budget. They catch auxiliary search evicting an almost completed primary count
+turn. A smaller request budget changes strategy grants and is tested separately;
+it is not interchangeable with an observed-work assertion.
+The archived `pebble_01486` boundary also keeps short scout grants bounded so
+auxiliary work cannot delay the next viable source view past the shared budget.
 
 The continuation/LP follow-up is documented in `../docs/effort-and-rational-lp.txt`.
 It records the equal-budget three-order comparison and the separate known-SAT

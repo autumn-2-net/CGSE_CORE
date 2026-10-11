@@ -55,7 +55,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private boolean executionBlocked, reachabilityAttempted;
     private CountReachability<K> reachability;
     private IntegerCountBranch<K> reachabilityProbe;
-    private long reachabilityWork, reachabilityAllowance;
+    private long reachabilityWork, reachabilityAllowance, reachabilityMaximum;
     private long work, improvementUntil = Long.MAX_VALUE, firstWitnessWork = -1, firstWitnessNanos;
     private long frontierWork, continuationWork;
     private int branches, rounds, suspensions, boundPrunes, choicePrunes, peakWidth;
@@ -195,7 +195,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             budget.note("integer_counts_tail", "completed_signature_table; allowance=" + allowance);
         }
         if (work >= allowance || work >= improvementUntil) {
-            if (best == null && (!pending.isEmpty() || !deferred.isEmpty() || scheduleContinuations.hasPending())) {
+            if (best == null && (!pending.isEmpty() || !deferred.isEmpty() || scheduleContinuations.hasPending() || reachability != null)) {
                 paused = true;
                 if (proofs != null) proofs.publish(model, choiceConflicts.snapshot());
                 budget.note("integer_counts_pause", "work=" + work + "; branches=" + branches + "; pending=" + (pending.size() + deferred.size()));
@@ -208,7 +208,8 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             prepareShell();
         }
         if (shell != null) return stepShell();
-        if (best == null && executionBlocked && !reachabilityAttempted && work >= 32768) prepareReachability();
+        if (best == null && !reachabilityAttempted && work >= 32768 &&
+                (executionBlocked || unresolved && pending.isEmpty() && deferred.isEmpty())) prepareReachability();
         if (reachability != null) return stepReachability();
         if (best == null) enqueueSchedule();
         if (pending.isEmpty() && deferred.isEmpty()) {
@@ -395,7 +396,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                 branch.close();
                 continue;
             }
-            executionBlocked |= branch.needsRepair;
+            executionBlocked |= branch.needsRepair || branch.executionRefined;
             if (branch.needsRepair && !repairScheduled) enqueueRepair();
             for (var conflict : branch.learnedMaterials) {
                 if (materialConflicts.offer(conflict)) {
@@ -627,11 +628,24 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         if (!compileRecovery) return;
         long before = budget.threadWork();
         try {
+            reachabilityMaximum = Math.min(524288, budget.remainingWork() / 16);
             reachabilityAllowance = Math.min(32768, Math.min(budget.remainingWork() / 32, allowance - work));
             reachability = CountReachability.create(model, reachabilityAllowance);
+            if (reachability != null) reachability.retained();
         } finally {
-            work += budget.threadWork() - before;
+            accountReachability(budget.threadWork() - before);
         }
+    }
+
+    private void accountReachability(long spent) {
+        reachabilityWork += spent;
+        work += spent;
+        // This separately bounded side task must not evict a nearly completed
+        // primary branch from its current turn. Preserve that branch's grant;
+        // every auxiliary operation still consumes the shared request budget.
+        // Short recovery/scouting views must keep their original handoff cap;
+        // extending those can crowd out the next source view entirely.
+        if (!scouting) allowance += Math.min(spent, Long.MAX_VALUE - allowance);
     }
 
     private boolean stepReachability() {
@@ -657,12 +671,23 @@ final class IntegerCountSearch<K> implements AutoCloseable {
                     List.of(), List.of(), List.of(), null, CountPortfolioPolicy.Mode.FIRST_WITNESS, stopped::get);
         } finally {
             long spent = budget.threadWork() - before;
-            reachabilityWork += spent;
-            work += spent;
+            accountReachability(spent);
         }
         boolean found = reachabilityProbe != null && reachabilityProbe.state == IntegerCountBranch.State.FOUND;
         if (found) retain(reachabilityProbe);
-        if (rootProved || found || reachabilityWork >= reachabilityAllowance ||
+        if (reachabilityProbe == null && reachability.paused() && reachabilityWork < reachabilityMaximum) {
+            // Keep both the original-state frontier and independent checker.
+            // More work buys new transitions/checks, not another cold traversal.
+            // This optional task still shares the original order's hard cap.
+            long extra = Math.min(Math.max(32768, reachabilityWork),
+                    Math.min(reachabilityMaximum - reachabilityWork, budget.remainingWork() / 16));
+            if (extra >= 1024) {
+                reachability.resume(extra);
+                reachabilityAllowance = reachabilityWork + extra;
+                return false;
+            }
+        }
+        if (rootProved || found || reachabilityProbe != null && reachabilityWork >= reachabilityAllowance ||
                 reachabilityProbe == null && reachability.result() != null ||
                 reachabilityProbe != null && reachabilityProbe.state != IntegerCountBranch.State.OPEN) {
             budget.note("count_reachability", "closed=" + rootProved + "; verified_witness=" + found + "; work=" + reachabilityWork);

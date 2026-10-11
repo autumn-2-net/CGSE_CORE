@@ -106,6 +106,15 @@ final class CountReachability<K> implements AutoCloseable {
 
     BigInteger[] counts() { return counts; }
 
+    CountReachability<K> retained() { search.retained(); return this; }
+
+    boolean paused() { return complete && search.paused(); }
+
+    void resume(long additionalWork) {
+        search.resume(additionalWork);
+        complete = false;
+    }
+
     @Override
     public void close() {
         search.close();
