@@ -34,6 +34,7 @@ final class QuantityAnalysis<K> {
     private ConservationAnalysis<K> conservation;
     private CountBounds bounds;
     private MissingStockAnalysis<K> startup;
+    private QuantityPotential<K> potential;
     private final boolean forceCraft;
 
     private static boolean finiteChoices(BigInteger[] lower, BigInteger[] upper) {
@@ -189,14 +190,20 @@ final class QuantityAnalysis<K> {
                     Arrays.stream(high).anyMatch(value -> value != null && value.bitLength() >= 16);
             bounds.close();
             bounds = null;
-            if ((model.recipes.size() > 192 || model.keys.size() > 128) && !binaryChoices && !largeChoices) return finish(false);
+            if ((model.recipes.size() > 192 || model.keys.size() > 128) && !binaryChoices && !largeChoices &&
+                    !QuantityPotential.applicable(model, target, budget)) return finish(false);
             // Keep the exact model, but let the caller try cheap executable
             // witnesses before paying for simplex and continuous coverability.
             phase = 8;
             return false;
         }
         if (phase == 8) {
-            if (model.recipes.size() > 192 || model.keys.size() > 128) return finish(false);
+            if (model.recipes.size() > 192 || model.keys.size() > 128) {
+                if (!QuantityPotential.applicable(model, target, budget)) return finish(false);
+                potential = new QuantityPotential<>(model, target, recipes, budget);
+                phase = 9;
+                return false;
+            }
             linear = new ExactLinearProgram(model.recipes.size(), model.constraints, model.objective(false), budget);
             phase = 2;
             return false;
@@ -219,6 +226,15 @@ final class QuantityAnalysis<K> {
         if (phase == 3) {
             if (!continuous.step()) return false;
             return finish(continuous.result() == ContinuousCoverability.Result.BLOCKED);
+        }
+        if (phase == 9) {
+            if (!potential.step()) return false;
+            var weights = potential.certificate();
+            if (!weights.isEmpty() && deficit(weights)) {
+                compiler.rememberQuantityCertificate(excluded, weights);
+                return finish(true);
+            }
+            return finish(false);
         }
         return true;
     }
@@ -274,6 +290,7 @@ final class QuantityAnalysis<K> {
         if (model != null) model.close();
         if (bounds != null) bounds.close();
         if (startup != null) startup.close();
+        if (potential != null) potential.close();
         startup = null;
         budget.release(memory);
         memory = 0;
@@ -289,8 +306,25 @@ final class QuantityAnalysis<K> {
         return phase == 8;
     }
 
+    boolean scoutCountsBeforeHeavyAnalysis() {
+        // The sparse resource proof is optional. Its admission must not recruit
+        // an unrelated count scout ahead of an executable stock path.
+        return phase == 8 && (binaryChoices || largeChoices || model.recipes.size() <= 192 && model.keys.size() <= 128);
+    }
+
+    long quickSearchAllowance() {
+        // Give inexpensive executable paths the work we would otherwise spend
+        // on this optional proof before beginning its bounded search.
+        return scoutCountsBeforeHeavyAnalysis() ? Math.min(16_384L, budget.remainingWork() / 8) : QuantityPotential.workAllowance(budget);
+    }
+
+    boolean sparsePotential() {
+        return phase == 9 || phase == 8 && !binaryChoices && !largeChoices &&
+                (model.recipes.size() > 192 || model.keys.size() > 128);
+    }
+
     boolean heavyAnalysisActive() {
-        return phase == 8 || phase == 2 || phase == 3;
+        return phase == 8 || phase == 2 || phase == 3 || phase == 9;
     }
 
     boolean hasBinaryChoices() {

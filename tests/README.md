@@ -105,6 +105,22 @@ bound excludes mutable read arcs, inconsistent units, indivisible target batches
 growth/joint-input recipes and a second mandatory flow goal; target-consuming
 startup witnesses remain accepted under the general production check.
 
+`QuantityPotentialTest` checks sparse material-weight certificates on large
+conversion catalogs, with recipe permutations and changing stock, mandatory
+seeds, excluded producers and external supply. Numerical pricing only proposes
+weights; every original producer and the current deficit require exact checks.
+The regressions include an omitted producer, per-push configuration semantics,
+one-unit boundaries at `Long.MAX_VALUE`, cancellation and optional memory denial.
+A funded 2000-link alternative must also finish within its original 900k budget;
+optional proof pricing yields its own work allowance to executable paths first.
+Certificates reuse the immutable catalog cache; failed auxiliary searches do
+not publish an infeasibility result or retain a stock-dependent failure.
+`HistoricalAdmissionTest` also guards the sparse proof's admission: it must not
+recruit an unrelated count scout ahead of the funded 7000-link stock path.
+`GraphExecutionBoundaries` limits work on two existing source/seed examples:
+the optional proof consumes the request budget without spending a paused
+frontier's local turn or waking parked views before primary search resumes.
+
 The continuation/LP follow-up is documented in `../docs/effort-and-rational-lp.txt`.
 It records the equal-budget three-order comparison and the separate known-SAT
 miracle-crystal full-catalog cutoffs. Those cutoffs are not counted as passes.
