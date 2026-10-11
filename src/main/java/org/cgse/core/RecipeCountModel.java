@@ -178,13 +178,21 @@ final class RecipeCountModel<K> implements AutoCloseable {
      */
     private void requireProduction(K target, long amount) {
         boolean positiveGain = BigInteger.valueOf(stock.getOrDefault(target, 0L)).compareTo(goal(target)) >= 0;
+        // Unit flows decompose into paths and cycles. Omit cycles, paths that
+        // export existing target stock into optional products, and matching
+        // surplus target paths: the same target gain then needs only that many
+        // fresh outputs. All read arcs are fixed funded tools and no second
+        // flow goal may require an exported target token. This is not true for
+        // general startup/growth recipes; check the complete model's sources.
+        boolean unitProduction = amount > 1 && stock.getOrDefault(target, 0L) > 0 &&
+                CountUnitFlow.requiresNetProduction(this, target);
         Map<Integer, BigInteger> terms = new LinkedHashMap<>();
-        Map<Integer, BigInteger> gain = positiveGain ? new LinkedHashMap<>() : null;
+        Map<Integer, BigInteger> gain = positiveGain || unitProduction ? new LinkedHashMap<>() : null;
         for (int i = 0; i < recipes.size(); i++) {
             budget.check();
             long output = recipes.get(i).executionOutputs().getOrDefault(target, 0L);
             if (output != 0) terms.put(i, BigInteger.valueOf(output).negate());
-            if (positiveGain) {
+            if (gain != null) {
                 budget.check();
                 // Match the final ForceCraftProof's strictly positive gain.
                 // delta() deliberately omits per-push configuration charges:
@@ -198,12 +206,13 @@ final class RecipeCountModel<K> implements AutoCloseable {
         // If stock is below the final goal, the material row already requires
         // positive gain. Otherwise reject unproductive turnover here instead
         // of enumerating counts that candidate verification always rejects.
-        if (positiveGain) constraints.add(new ExactLinearProgram.Constraint(gain, BigInteger.ONE.negate()));
+        if (gain != null) constraints.add(new ExactLinearProgram.Constraint(gain,
+                unitProduction ? BigInteger.valueOf(amount).negate() : BigInteger.ONE.negate()));
     }
 
     private static long productionBytes(int recipes, long stock, long amount, long seed) {
         boolean positiveGain = stock >= amount && stock - amount >= seed;
-        return (128L + 96L * recipes) * (positiveGain ? 2 : 1);
+        return (128L + 96L * recipes) * (positiveGain || amount > 1 && stock > 0 ? 2 : 1);
     }
 
     private RecipeCountModel(List<GraphRecipe<K>> recipes, List<K> keys, Map<K, Long> stock,

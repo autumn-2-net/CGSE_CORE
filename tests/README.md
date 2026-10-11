@@ -97,6 +97,14 @@ it is not interchangeable with an observed-work assertion.
 The archived `pebble_01486` boundary also keeps short scout grants bounded so
 auxiliary work cannot delay the next viable source view past the shared budget.
 
+`CountUnitFlowTest` checks forced production in pure conversion networks against
+an independent token-capacity oracle, including changed stock on a reused compiler,
+recipe permutations and quantities through `Long.MAX_VALUE`. Existing target stock
+cannot become fresh production by circulating through conversions. The stronger
+bound excludes mutable read arcs, inconsistent units, indivisible target batches,
+growth/joint-input recipes and a second mandatory flow goal; target-consuming
+startup witnesses remain accepted under the general production check.
+
 The continuation/LP follow-up is documented in `../docs/effort-and-rational-lp.txt`.
 It records the equal-budget three-order comparison and the separate known-SAT
 miracle-crystal full-catalog cutoffs. Those cutoffs are not counted as passes.
