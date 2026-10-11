@@ -523,7 +523,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     // also return to untried source combinations. Otherwise an
                     // unlucky first batch can consume the entire order budget
                     // while a cheap executable source graph is still queued.
-                    if (!pending.isEmpty() && frontierWork() - allocationTurnStarted >= allocationTurnAllowance) {
+                    if (!pending.isEmpty() && allocating.searchWork() - allocationTurnStarted >= allocationTurnAllowance) {
                         budget.note("allocation_handoff", "pending_sources=" + pending.size() + "; seen=" + seen.size());
                         phase = 0;
                         return false;
@@ -806,7 +806,11 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
 
     private void beginAllocationTurn() {
         allocationAfterSources = sourceAttempts + 8;
-        allocationTurnStarted = frontierWork();
+        // Stock views and proof/count strategies may interrupt this turn. They
+        // consume the shared request budget, not the paused allocator's quota.
+        // Otherwise a long interruption repeatedly hands back an unadvanced
+        // frontier before it can admit the complete count model.
+        allocationTurnStarted = allocating.searchWork();
         allocationTurnAllowance = Math.min(1_048_576, budget.remainingWork() / 8);
         phase = 6;
     }

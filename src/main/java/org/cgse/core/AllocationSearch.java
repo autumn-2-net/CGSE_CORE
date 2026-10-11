@@ -55,6 +55,7 @@ final class AllocationSearch<K> {
     private final List<GraphCompiler.QuantityCertificate<K>> certificates;
     private long allocationStarted;
     private long work, stepStarted;
+    private long searchWork;
     private OrderProofs<K> proofs;
 
     AllocationSearch<K> proofs(OrderProofs<K> value) {
@@ -90,6 +91,7 @@ final class AllocationSearch<K> {
 
     boolean step() {
         stepStarted = budget.threadWork();
+        long searchBefore = budget.threadSearchWork();
         String previousFailure = budget.failureDetail();
         try {
             return advance();
@@ -104,8 +106,12 @@ final class AllocationSearch<K> {
             return true;
         } finally {
             work += budget.threadWork() - stepStarted;
+            searchWork += budget.threadSearchWork() - searchBefore;
         }
     }
+
+    /** Work performed by this retained frontier, excluding other strategies' turns. */
+    long searchWork() { return searchWork; }
 
     private long usedWork() {
         return work + budget.threadWork() - stepStarted;

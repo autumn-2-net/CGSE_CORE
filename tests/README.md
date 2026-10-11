@@ -96,6 +96,10 @@ turn. A smaller request budget changes strategy grants and is tested separately;
 it is not interchangeable with an observed-work assertion.
 The archived `pebble_01486` boundary also keeps short scout grants bounded so
 auxiliary work cannot delay the next viable source view past the shared budget.
+Two deep choice-chain boundaries require the complete count model to retain its
+turn after stock-view interruptions. `AllocationWorkTest` checks that a paused
+allocator only charges its own work to its local quota, while all intervening
+strategy work still consumes the shared request budget, including cancellation.
 
 `CountUnitFlowTest` checks forced production in pure conversion networks against
 an independent token-capacity oracle, including changed stock on a reused compiler,

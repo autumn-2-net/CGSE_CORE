@@ -116,6 +116,34 @@
       "name": "manual-fuel/paused-proof",
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle and independently replayed plans. An inconclusive optional quantity proof must retain paused source/seed turns without spending their local quota or waking parked views."
+    },
+    {
+      "source": "cases/graph/cb/cbdc269cad442ac5dbee7ac72975993e9b51321217e2506e98cc524812de898e.json",
+      "sha256_lf": "41d09be37b13f5bbbe0c10b1ed4f3a23fc3b22decdc33f12f7122ac90f787ad9",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 38000000,
+      "name": "choice-deep24/owned-allocation-turn",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle and independently replayed original primitive prefixes. Stock-view interruptions must not consume a paused allocation turn before the complete count model is admitted."
+    },
+    {
+      "source": "cases/graph/ce/ce1eede4f811bd4511ca770dccb7f582ca05442b71811f17af44f16397420632.json",
+      "sha256_lf": "b781a5fbd2ea400f825a68988d14135e11c2edf75049983141d7643686d9118d",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 38000000,
+      "name": "choice-deep48/owned-allocation-turn",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle and independently replayed original primitive prefixes. Stock-view interruptions must not consume a paused allocation turn before the complete count model is admitted."
     }
   ]
 }
