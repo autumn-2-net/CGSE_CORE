@@ -176,7 +176,7 @@ final class CountLpLearning {
             clearStructure();
             if (budget != null) budget.note("count_lp_basis", "reused=" + reused() + "; rebuilt=" + rebuilt() +
                     "; invalidated=" + invalidated() + "; restored=" + numerical.restored() + "; fallbacks=" + fallbacks() +
-                    "; cold_resumes=" + numerical.resumed());
+                    "; cold_resumes=" + numerical.resumed() + "; warm_resumes=" + numerical.warmResumed());
             if (budget != null) budget.note("count_lp_structure", "prepared=" + prepared + "; hits=" + structureHits);
             budget = null;
         }

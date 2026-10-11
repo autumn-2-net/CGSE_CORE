@@ -143,3 +143,77 @@ assignment restores to a feasible original point and independently executes
 the primitive recipes. Compiled view coordinates are restored and checked as
 well. This guards the test representation without relying on a solver to find
 its own oracle. It is not a new solving algorithm or a reason to raise defaults.
+
+Dual LP continuation and additional native references (2026-10-11)
+----------------------------------------------------------------
+The retained numerical session previously kept cold primal progress, but a warm
+dual-simplex call exhausted its local allowance by discarding the tableau and
+starting cold again. Retained sessions now preserve the RHS transformation,
+complete dual pivots and final row-validation cursor. A pending tableau requires
+the identical matrix, objective, RHS and request budget. Replacement inputs,
+terminal limits and cancellation discard that state. Numerical infeasibility is
+still only a proposal; learned consequences are reconstructed from exact global
+rows and candidate integer counts are independently verified.
+
+Warm continuation also needs a retreat policy. An unrestricted prototype spent
+most of n144-s1's budget revisiting a degenerate dual basis and reduced search
+progress. Continued warm work is now bounded relative to the measured cost of
+constructing its cold basis. An expensive or numerically invalid attempt gives
+the remaining visit back to cold construction, without minting request work.
+This does not change the established non-retained small-model path.
+
+WarmLpContinuationTest compares 24 deterministic models across 72 RHS changes,
+including numerical infeasibility. At 512-work slices, the retained trajectories
+produce the same points and dual multipliers as uninterrupted warm solves, with
+2,345 continuations, one construction per model and no unnecessary fallback.
+It additionally checks worker handoffs, changed rows/RHS/objectives/requests,
+cancellation and retreat from an expensive basis. Existing integer-LP tests
+continue to check exact consequences and independently replayed certificates.
+
+A separate local before/after benchmark uses the same models and slices. Total
+constructions fall from 96 to 24; charged work after the initial constructions
+falls from 2,516,011 to 1,344,799 (46.6%). This is a numerical reuse benchmark, not
+a claim of 46.6% faster complete crafting requests. The complete 822-case pack
+at 40M retains 792 solved, 12 unresolved and 18 unsupported outcomes. All 113
+standard test entries and 741 graph fixture/order checks pass.
+
+SCIP ablation on n144-s1 finds a checked witness with only restart-DFS priority
+raised: 128,705 nodes / 1,556,117 LP iterations, about 48 seconds. Adding the
+feasibility-emphasis cut limits to that change instead reaches the 160,000-node
+cap without a witness. Fractional LP branching, wider LP support and a fixed
+projection matrix were also tested separately; none solved this case within
+40M, so those experimental changes were not adopted.
+
+CP-SAT 9.15.6755 leaves all four original models unresolved at 120 seconds,
+one worker, no witness hints. The same four models after CGSE count compilation
+and reduction also remain unresolved. Disabling CP-SAT presolve on n144-s1 does
+not produce a witness at that cap either. Its default presolve is not simply a
+variable-count reduction: n144-s1 changes from 144 original variables to 204
+variables (139 primary), adding integer representations of the equalities.
+These observations do not establish a universal best solver or presolve mode.
+
+The CGSE bridge retains all transported planted witnesses. For n144-s1 its
+original count view has 142 variables / 441 rows, its normalized view has 142 /
+144, and its reduced view has 141 / 426. The other three models likewise lose
+many redundant rows but retain a large coupled integer kernel. CountReduction
+already provides safe doubleton substitutions; CountAffineLattice already has
+a separate integer affine/LLL candidate path. A future representation change
+should be tested with recovery and coefficient-density costs, not justified
+solely by a smaller row count. This audit does not change the graph compiler.
+
+Local registry: .local/cases/lp-search-20261011/manifest.json. It retains rejected
+experiments, oracle inputs, versions, limits, complete commands and hashes. Z3
+Python API timeout anomalies are recorded separately from solver verdicts; the
+CLI comparison uses an additional process-level timer. Raw oracle logs and
+player-independent experimental artifacts remain local.
+
+Z3 4.15.4 CLI, one thread, 256-MB setting and -T:120, times out on all four
+original models without a witness. Those are bounded unknown results. Python
+5.1.0/4.15.4 solver-timeout anomalies are retained as harness evidence, not used
+to rank solvers; external process limits protect every such comparison.
+
+Additional primary references consulted:
+  https://scipopt.org/doc/html/nodesel__restartdfs_8c_source.php
+  https://scipopt.org/doc/html/branch__relpscost_8c_source.php
+  https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model
+  https://microsoft.github.io/z3guide/programming/Parameters/
