@@ -2,6 +2,7 @@
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 import json
+import hashlib
 import os
 import re
 import shutil
@@ -13,11 +14,36 @@ TESTS=BASE.parent
 
 def run(args,java,classes,output,execute,results,save):
     probes=json.loads((BASE/'manifest.json').read_text(encoding='utf-8'))['probes']
+    migrated={}
+    if not args.original_probes and not args.compile_only and not args.argument:
+        for entry in json.loads((TESTS/'provenance/migrated-probes.json').read_text(encoding='utf-8'))['entries']:
+            original=(TESTS/entry['original_path']).read_bytes().replace(b'\r\n',b'\n')
+            if hashlib.sha256(original).hexdigest()!=entry['original_sha256_lf']:
+                raise ValueError('Archived probe changed: '+entry['id'])
+            if not (TESTS/entry['replacement']).is_file():
+                raise ValueError('Missing maintained probe: '+entry['id'])
+            migrated[entry['id']]=entry
     shard,shards=map(int,args.shard.split('/'))
     eligible=[p for p in probes if args.compile_only or args.include_historical or p.get('tier')=='standalone']
     if not args.classpath and not args.compile_only and not args.include_historical:
         eligible=[p for p in eligible if not p['external_imports']]
     chosen=[p for i,p in enumerate(eligible) if i%shards==shard and re.search(args.case,p['id'])]
+    executed={}
+    for probe in chosen:
+        entry=migrated.get(probe['id'])
+        if entry is None:continue
+        previous=executed.get(entry['class'])
+        if previous is None:
+            execute(probe['id'],entry['class'])
+            results[-1]['migration']=entry['replacement']
+            executed[entry['class']]=results[-1].copy()
+        else:
+            results.append({'name':probe['id'],'status':previous['status'],'mode':'migration-alias',
+                            'checked_by':previous['name'],'log':previous['log'],'migration':entry['replacement']})
+            print(probe['id']+': '+previous['status']+' (covered by '+previous['name']+')',flush=True)
+        save()
+    chosen=[p for p in chosen if p['id'] not in migrated]
+    if not chosen:return
     helpers=output/'probe-helper-sources'
     helpers.mkdir(parents=True,exist_ok=True)
     seen_helpers=set()

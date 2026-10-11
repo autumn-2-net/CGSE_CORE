@@ -16,9 +16,9 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Suite | Command / location | Coverage |
 | --- | --- | --- |
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
-| Stable oracles | `--suite oracles` | 23 independent oracle programs plus 21 pinned count-model boundaries at explicit 20M/80M caps |
+| Stable oracles | `--suite oracles` | 25 independent oracle programs plus 61 pinned count-model boundaries at explicit work caps |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
-| Fixed counterexamples | `--suite fixtures --keep-going` | All 244 curated fixtures, three deterministic order permutations by default |
+| Fixed counterexamples | `--suite fixtures --keep-going` | All 247 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
 | Count models | `--suite models --keep-going` | 274 exact integer models; historical first LCG allowance by default, explicit retained/view/main-count entries |
 | Planner/runtime benchmark | `--suite benchmarks --timeout 600` | Original `GraphBenchmark`: chain, shared diamond, coproducts, growth/cycles and runtime batch dispatch |
@@ -28,11 +28,38 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | AEDUMP | `python tests/ae-dump/check_migration.py --java-home <jdk17>` | Archive format/validation plus extracted request-service handoff |
 | Live adapter | `adapter/live/` | Forge/server probes requiring the actual host installation |
 
-`standard` runs core, view, the 23 stable oracles and the pinned count-model boundaries. `all` also selects every fixed
+`standard` runs core, view, the stable oracles and the pinned count-model boundaries. `all` also selects every fixed
 fixture, portable probe and corpus case; it can take substantially longer and includes
 known hard inputs. Benchmark/dataset/AE/live suites are explicit separate entries because their
 resource requirements differ. Use `--case <regex>`, `--shard 0/4`, `--milliseconds`,
 `--work`, and `--timeout` to control a repeatable selection and its budgets.
+
+## Maintained historical tests
+
+The `Historical*Test` programs migrate 21 formerly broken or unusable probes into
+16 maintained regressions. They run in `standard` and can also be selected with
+`--suite core --case '^Historical'`. `provenance/migrated-probes.json` records each
+original program, its source-artifact hash, the unchanged portable source hash
+(LF-normalized), its replacement and the exact contract changes.
+
+Coverage includes budget overflow and concurrent reservations, 700 reduction,
+1,200 Boolean, 1,000 MITM, 1,000 LCG and 1,500 neighborhood finite-domain oracles,
+400 view oracles, 384 conserved-graph order replays, 300,000 scheduling decisions,
+deep nested execution above long, cancellation, continuation ownership and all
+six original warm-request inputs. The warm tests use independent subset/CNF
+checks and original generators without loading the old native benchmark libraries.
+
+The probe runner follows these migration mappings by default. Original sources
+remain under `probes/java`; use `--original-probes` to reproduce the old program,
+including its original arguments/dependencies and obsolete assertions. Explicit
+`--argument` and `--compile-only` also select the original source. A shared
+replacement executes once per invocation; alias result rows name the actual check.
+
+Successful early proofs and valid witnesses no longer fail merely because a
+particular old strategy did not run. Numerical, execution, memory and proof
+assertions remain enforced. UNKNOWN and exhausted budgets are still unresolved;
+historical failing labels are not rewritten into passing expectations. Local
+player captures and recovered incident inputs remain in the local case registry.
 
 The continuation/LP follow-up is documented in `../docs/effort-and-rational-lp.txt`.
 It records the equal-budget three-order comparison and the separate known-SAT

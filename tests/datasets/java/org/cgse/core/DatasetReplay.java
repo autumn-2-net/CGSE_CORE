@@ -49,6 +49,10 @@ public final class DatasetReplay {
     }
 
     static Catalog catalog(DataInputStream input) throws Exception {
+        return catalog(input, false);
+    }
+
+    static Catalog catalog(DataInputStream input, boolean legacyEmptyProducers) throws Exception {
         Map<String, Long> stock = amounts(input);
         Set<String> external = new LinkedHashSet<>();
         for (int count = input.readInt(); count > 0; count--) external.add(key(input));
@@ -67,6 +71,8 @@ public final class DatasetReplay {
             recipes.add(recipe);
         }
         Map<String, List<GraphRecipe<String>>> producers = new LinkedHashMap<>();
+        // V1 used zero for an omitted index. V2 introduced -1 so an explicit
+        // empty map can stay empty. Preserve the original format's semantics.
         int producerCount = input.readInt();
         for (int index = 0; index < producerCount; index++) {
             String resource = key(input);
@@ -75,7 +81,7 @@ public final class DatasetReplay {
                 values.add(Objects.requireNonNull(byId.get(text(input)), "Unknown captured producer"));
             producers.put(resource, values);
         }
-        if (producerCount == -1) for (var recipe : recipes) for (String resource : recipe.executionOutputs().keySet())
+        if (producerCount == -1 || legacyEmptyProducers && producerCount == 0) for (var recipe : recipes) for (String resource : recipe.executionOutputs().keySet())
             producers.computeIfAbsent(resource, unused -> new ArrayList<>()).add(recipe);
         return new Catalog(recipes, producers, stock, external, preserve, force, parallelism, extraCopies);
     }
@@ -190,8 +196,11 @@ public final class DatasetReplay {
     public static void main(String[] args) throws Exception {
         try (DataInputStream input = new DataInputStream(new BufferedInputStream(Files.newInputStream(Path.of(args[0]))));
              BufferedWriter writer = Files.newBufferedWriter(Path.of(args[1]), StandardCharsets.UTF_8)) {
-            if (!text(input).equals("CGSE_DATASET_V2")) throw new IllegalArgumentException("Unknown dataset transfer format");
-            Catalog manual = catalog(input), extra = catalog(input);
+            String format = text(input);
+            if (!format.equals("CGSE_DATASET_V1") && !format.equals("CGSE_DATASET_V2"))
+                throw new IllegalArgumentException("Unknown dataset transfer format");
+            boolean legacyEmptyProducers = format.equals("CGSE_DATASET_V1");
+            Catalog manual = catalog(input, legacyEmptyProducers), extra = catalog(input, legacyEmptyProducers);
             long timeout = input.readLong(), workLimit = input.readLong(), memory = input.readLong(), seed = input.readLong();
             List<String> modes = new ArrayList<>();
             for (int count = input.readInt(); count > 0; count--) modes.add(text(input));

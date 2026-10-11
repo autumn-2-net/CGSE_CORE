@@ -153,6 +153,13 @@ replaces the primary result. Feasible primary and fallback plans both undergo
 exact stock and runtime-inventory verification. Fresh compilation also runs
 `DatasetTransportTest` to guard slot and catalyst serialization.
 
+The replay reader also accepts archived `CGSE_DATASET_V1` streams. V1's zero
+producer count meant “derive producers from recipe order”; V2 uses `-1` for that
+case and preserves an explicit empty index. Migration keeps these meanings,
+physical slots, quantities and original request budgets intact. The transport
+check covers both formats and verifies that reading one catalog leaves the next
+request's bytes untouched.
+
 Use `--milliseconds`, `--work` or `--memory-mib` only for deliberate budget
 overrides, which are recorded in `run.json`. Expectations stay `UNKNOWN` by
 default; `--assert-known-feasible` enables the original `known_feasible_max`

@@ -36,6 +36,7 @@ def main():
     parser.add_argument('--keep-going', action='store_true')
     parser.add_argument('--compile-only', action='store_true', help='Audit isolated historical probe compatibility')
     parser.add_argument('--include-historical', action='store_true', help='Also select versioned/argument-dependent probe sources')
+    parser.add_argument('--original-probes', action='store_true', help='Run archived probe code instead of its maintained migration')
     parser.add_argument('--argument', action='append', default=[], help='Argument for an explicitly selected historical probe')
     parser.add_argument('--classpath', default='', help='Optional test-only jars for historical probes')
     args = parser.parse_args()

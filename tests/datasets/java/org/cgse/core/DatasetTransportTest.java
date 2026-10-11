@@ -16,6 +16,10 @@ public final class DatasetTransportTest {
     }
 
     private static DatasetReplay.Catalog fixture(int producers) throws Exception {
+        return fixture(producers, false);
+    }
+
+    private static DatasetReplay.Catalog fixture(int producers, boolean legacyEmptyProducers) throws Exception {
         var bytes = new ByteArrayOutputStream();
         try (var output = new DataOutputStream(bytes)) {
             output.writeInt(1); text(output, "seed"); output.writeLong(Long.MAX_VALUE);
@@ -32,8 +36,12 @@ public final class DatasetTransportTest {
             text(output, "seed"); output.writeLong(3);
             output.writeInt(producers);
             if (producers > 0) { text(output, "product"); output.writeInt(1); text(output, "recipe"); }
+            output.writeInt(0x44559933);
         }
-        return DatasetReplay.catalog(new DataInputStream(new ByteArrayInputStream(bytes.toByteArray())));
+        var input = new DataInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+        var catalog = DatasetReplay.catalog(input, legacyEmptyProducers);
+        if (input.readInt() != 0x44559933 || input.read() != -1) throw new AssertionError("Catalog consumed the next request's bytes");
+        return catalog;
     }
 
     public static void main(String[] args) throws Exception {
@@ -49,6 +57,8 @@ public final class DatasetTransportTest {
         if (!data.producers().get("product").equals(List.of(recipe))) throw new AssertionError("Producer order lost");
         if (!fixture(0).producers().isEmpty()) throw new AssertionError("Explicit empty producers must stay empty");
         if (fixture(-1).producers().get("product").size() != 1) throw new AssertionError("Absent producers must be derived");
+        if (!fixture(0, true).equals(fixture(-1))) throw new AssertionError("Historical V1 missing-index semantics changed");
+        if (!fixture(1, true).equals(fixture(1))) throw new AssertionError("Historical V1 producer order changed");
         System.out.println("DatasetTransportTest PASS");
     }
 }

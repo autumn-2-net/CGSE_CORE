@@ -1,0 +1,194 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "BudgetMemoryProbe-4aeca0d03aa2",
+      "original_path": "probes/java/solver-remaining-20261003/BudgetMemoryProbe-4aeca0d03aa2/BudgetMemoryProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalBudgetMemoryTest.java",
+      "class": "org.cgse.core.HistoricalBudgetMemoryTest",
+      "migration": "Preserve overflow, wraparound and concurrent admission checks; invalid release must leave the ledger unchanged. Concurrency rounds are bounded and failures asserted.",
+      "source_artifact_sha256": "4aeca0d03aa243645f1c139b47bc94232825ba8335100071ce033047d00ad7e5",
+      "original_sha256_lf": "ab7cdd9e91fc466bae614000701442c4c4148d8df7fb02f8e889967e5d6de3d7"
+    },
+    {
+      "id": "QuantityStagingChecks-bfb876d5d5c0",
+      "original_path": "probes/java/strategy-scheduling/QuantityStagingChecks-bfb876d5d5c0/QuantityStagingChecks.java",
+      "replacement": "core/java/org/cgse/core/HistoricalQuantityStagingTest.java",
+      "class": "org.cgse.core.HistoricalQuantityStagingTest",
+      "migration": "Preserve deferred/resumed/discarded analysis, large exact shortages and late affordable sources; no mandatory diagnostic strategy name.",
+      "source_artifact_sha256": "bfb876d5d5c09ccb571de3a74e48ee78ce85f82a20bf9037338f68cf7b053fb8",
+      "original_sha256_lf": "2c9e30a3c00aa7dcaf5f03cfbbf329c3b591978d468c59f5f77556126a89ce3c"
+    },
+    {
+      "id": "ViewProbe-78cd4505cd31",
+      "original_path": "probes/java/solver-adaptive-20261003/ViewProbe-78cd4505cd31/ViewProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalViewOracleTest.java",
+      "class": "org.cgse.core.HistoricalViewOracleTest",
+      "migration": "Preserve all 400 finite truth tables and unbounded contradiction; stop resuming completed views.",
+      "source_artifact_sha256": "78cd4505cd31e70c8fa6f6ea7b8e8c55028521e35b1093d5a387e37e7f49b68c",
+      "original_sha256_lf": "e65c45454794e281420476837f7fad17862049c6eeb6bcab6a8c34474c5e5023"
+    },
+    {
+      "id": "PhaseSavingSafety-3b9a9b242197",
+      "original_path": "probes/java/solver-remaining-20261003/PhaseSavingSafety-3b9a9b242197/PhaseSavingSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalPhaseSavingTest.java",
+      "class": "org.cgse.core.HistoricalPhaseSavingTest",
+      "migration": "Use the superset 1000-model campaign and current locks arm, which owns saved phases. Keep domain, proof, cancellation, work and memory checks.",
+      "source_artifact_sha256": "3b9a9b24219780f5b8b309cbf6524a6886a625786c2a53e623bcdaf8d1be4d87",
+      "original_sha256_lf": "adb2891b9266946be1fb8a06efcb8295b43310516cd7f6928b02626733a6d993"
+    },
+    {
+      "id": "PhaseSavingSafety-a42b4e8abc06",
+      "original_path": "probes/java/solver-remaining-20261003/PhaseSavingSafety-a42b4e8abc06/PhaseSavingSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalPhaseSavingTest.java",
+      "class": "org.cgse.core.HistoricalPhaseSavingTest",
+      "migration": "Use the superset 1000-model campaign and current locks arm, which owns saved phases. Keep domain, proof, cancellation, work and memory checks.",
+      "source_artifact_sha256": "a42b4e8abc06dab6ae42f26a53d5d97a978d9cc600ed0b972088985016ff6a9d",
+      "original_sha256_lf": "659c177ba468a1f55c9dd1e4a6d27484a83d654d80836eca853e8e278d9da69b"
+    },
+    {
+      "id": "NeighborhoodIndependentSafety-f1b9c547eeef",
+      "original_path": "probes/java/solver-remaining-20261003/NeighborhoodIndependentSafety-f1b9c547eeef/NeighborhoodIndependentSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalNeighborhoodTest.java",
+      "class": "org.cgse.core.HistoricalNeighborhoodTest",
+      "migration": "Preserve 1500 finite oracles and all lifecycle cases; zero memory is an invalid constructor argument, not a runtime decline.",
+      "source_artifact_sha256": "f1b9c547eeef047a9f67dde2d86eb86e87f721b85d3bab691d9695acedc9ada2",
+      "original_sha256_lf": "e7d384a8c8171739099621ae98dcf2be6ce9797b2c30358ec803c7e96462f381"
+    },
+    {
+      "id": "AdmissionLifecycleChecks-57a0f0140426",
+      "original_path": "probes/java/mixed-jei-fix-20261007/AdmissionLifecycleChecks-57a0f0140426/AdmissionLifecycleChecks.java",
+      "replacement": "core/java/org/cgse/core/HistoricalAdmissionTest.java",
+      "class": "org.cgse.core.HistoricalAdmissionTest",
+      "migration": "Preserve the 800/2000/7000 chains and all cancellation/memory boundaries; verified early completion is allowed.",
+      "source_artifact_sha256": "57a0f01404261e435078a6782f59b07cdc47ab399c71ef2677efba107ea45848",
+      "original_sha256_lf": "b6c3e9e3b34113c93b9c37feb31b9bf9fc45f58fbf8059afd0a6a98be59e2db9"
+    },
+    {
+      "id": "BranchSchedulingChecks-4ba7a52e3282",
+      "original_path": "probes/java/strategy-scheduling/BranchSchedulingChecks-4ba7a52e3282/BranchSchedulingChecks.java",
+      "replacement": "core/java/org/cgse/core/HistoricalBranchSchedulingTest.java",
+      "class": "org.cgse.core.HistoricalBranchSchedulingTest",
+      "migration": "Retain repair siblings, objectives, 1/4/8/16 workers, cutoff incumbent, failure and shutdown tests. Accept the now complete dead-startup proof.",
+      "source_artifact_sha256": "4ba7a52e3282856df97e110f0c689a66158eb4316b7e2a09820a296abc98b78a",
+      "original_sha256_lf": "aa59a097bad99c042b70a98c7f0d9040eb9335451fa4b458bbbf43d29e2578ed"
+    },
+    {
+      "id": "RestartSafety-d2a049fe09fd",
+      "original_path": "probes/java/solver-expansion-20261003/RestartSafety-d2a049fe09fd/RestartSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalRestartTest.java",
+      "class": "org.cgse.core.HistoricalRestartTest",
+      "migration": "Retain priority, incomplete reachability, external/reusable inputs and lifecycle cases; a completed reverse-chain closure is allowed.",
+      "source_artifact_sha256": "d2a049fe09fd4eca808836c5533bd5ba7e0242056bf77ea636597c073baf79c1",
+      "original_sha256_lf": "342949afcbf54259d7de2e2e7fcaa754b7732f192acf92d6d2f540500aa581b1"
+    },
+    {
+      "id": "RetainedViewBatchProbe-67929fb3e4a4",
+      "original_path": "probes/java/solver-next-20261004/RetainedViewBatchProbe-67929fb3e4a4/RetainedViewBatchProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalRetainedViewTest.java",
+      "class": "org.cgse.core.HistoricalRetainedViewTest",
+      "migration": "Check pending batch identity at actual step boundaries and charged parent work, including shared admission costs; preserve independent proof replay and 240 interruption cases.",
+      "source_artifact_sha256": "67929fb3e4a4b4131131d1cccbfeefe27d1711e90f8283c6477e949b7449b74a",
+      "original_sha256_lf": "eb3ca54bd4e49a2ab2dbf0d16075810cc056964c32a74743696c14c4db7ead4c"
+    },
+    {
+      "id": "CountCounterReview-93ddfc069ad3",
+      "original_path": "probes/java/general-search-20260926/CountCounterReview-93ddfc069ad3/CountCounterReview.java",
+      "replacement": "core/java/org/cgse/core/HistoricalCountCounterTest.java",
+      "class": "org.cgse.core.HistoricalCountCounterTest",
+      "migration": "Remove native imports from finite enumeration: 700 reductions, 1200 Boolean models, 1000 MITM models. A valid full-domain witness may replace UNKNOWN. Proof-retention case is in HistoricalWarmReplayTest.",
+      "source_artifact_sha256": "93ddfc069ad363f1dce395b7d564d1104e67f2370c0e9e20f78d42a61151ca24",
+      "original_sha256_lf": "4704af84e7a20389d126dc586eaf9a54653caca552230c5409986d9246d2d301"
+    },
+    {
+      "id": "NestedCompilerChecks-e3dde4ae2b8a",
+      "original_path": "probes/java/extreme-cycle/NestedCompilerChecks-e3dde4ae2b8a/NestedCompilerChecks.java",
+      "replacement": "core/java/org/cgse/core/HistoricalNestedCompilerTest.java",
+      "class": "org.cgse.core.HistoricalNestedCompilerTest",
+      "migration": "Preserve 45 deep/order/quantity plans, 14 runtime/reload cases, exact shortages and resource limits. Independently verify prefix arithmetic and causal count floors; surplus is allowed. Large total production executes in bounded batches; oversized initial reservations still reject.",
+      "source_artifact_sha256": "e3dde4ae2b8a17d29115701d4b1485964aebafa4ae25801addd1b773da48da9f",
+      "original_sha256_lf": "15b98d862e06f2c9c45b2b4b926ed9e1a29e608e2b0f691eb71c502d3c9d11dd"
+    },
+    {
+      "id": "WideBranchRepro-2df6a2048ff9",
+      "original_path": "probes/java/constraint-review-20260926/WideBranchRepro-2df6a2048ff9/WideBranchRepro.java",
+      "replacement": "core/java/org/cgse/core/HistoricalConservativeGraphTest.java",
+      "class": "org.cgse.core.HistoricalConservativeGraphTest",
+      "migration": "Run the first 64 inputs from each of the two original seeded generators, with three orders and an independent exhaustive state oracle; original arbitrary argument selection remains available with --original-probes.",
+      "source_artifact_sha256": "2df6a2048ff9947d608d2d9caeeaf1ef44d227c243778bb25cef6d3072ee93ab",
+      "original_sha256_lf": "0e4fbc4460482bec9fa5176baf3b3dda93d528d1bff3d20baaecd43a1f207448"
+    },
+    {
+      "id": "WidePortfolioReview-7a6c298eb858",
+      "original_path": "probes/java/count-order-review-20260926/WidePortfolioReview-7a6c298eb858/WidePortfolioReview.java",
+      "replacement": "core/java/org/cgse/core/HistoricalConservativeGraphTest.java",
+      "class": "org.cgse.core.HistoricalConservativeGraphTest",
+      "migration": "Run the first 64 inputs from each of the two original seeded generators, with three orders and an independent exhaustive state oracle; original arbitrary argument selection remains available with --original-probes.",
+      "source_artifact_sha256": "7a6c298eb8587835b047c08cb4e9ea1ba797c849df3a787a748b8f9b6a34e838",
+      "original_sha256_lf": "27dc7e75a0178c9132a9f554669bef61dace6dae761def2f8692299ace2b46ca"
+    },
+    {
+      "id": "DefaultPortfolioReview-a89825234bcf",
+      "original_path": "probes/java/count-order-review-20260926/DefaultPortfolioReview-a89825234bcf/DefaultPortfolioReview.java",
+      "replacement": "core/java/org/cgse/core/HistoricalConservativeGraphTest.java",
+      "class": "org.cgse.core.HistoricalConservativeGraphTest",
+      "migration": "Run the first 64 inputs from each of the two original seeded generators, with three orders and an independent exhaustive state oracle; original arbitrary argument selection remains available with --original-probes.",
+      "source_artifact_sha256": "a89825234bcfea4ca7848d87a78558fb334b1c39ef7d7107e3ba358c9a28126c",
+      "original_sha256_lf": "54e777f3de46ed7806177c067f1f1e40836abb08d76f0d5f18aa6d0176456589"
+    },
+    {
+      "id": "BranchRepro-951dbbb3e796",
+      "original_path": "probes/java/constraint-review-20260926/BranchRepro-951dbbb3e796/BranchRepro.java",
+      "replacement": "core/java/org/cgse/core/HistoricalConservativeGraphTest.java",
+      "class": "org.cgse.core.HistoricalConservativeGraphTest",
+      "migration": "Run the first 64 inputs from each of the two original seeded generators, with three orders and an independent exhaustive state oracle; original arbitrary argument selection remains available with --original-probes.",
+      "source_artifact_sha256": "951dbbb3e7964290a92b48d3298c9239bee46a8fe1c736a7b5d8a963e30d5728",
+      "original_sha256_lf": "713b1da27d58cdc269cae837e432c3e2c3dc66cda373d48f6fa75a3c02f2171d"
+    },
+    {
+      "id": "DeferredUnboundedHintProbe-a625f1558265",
+      "original_path": "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-a625f1558265/DeferredUnboundedHintProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalUnboundedHintTest.java",
+      "class": "org.cgse.core.HistoricalUnboundedHintTest",
+      "migration": "Retain the six-vertex/five-color escape problem; exercise four finite/unbounded domains and four continuation grants, verifying witnesses and certificates instead of requiring an old reflection seam.",
+      "source_artifact_sha256": "a625f15582654f5b86a56adc8edf09287da7a15df502c5ace9fce05f4efba7d7",
+      "original_sha256_lf": "2284e96829f8073427af34ba4c782dcbe1d18e5b60bc1122a21421b51e209356"
+    },
+    {
+      "id": "DeferredUnboundedHintProbe-d0051cbd4939",
+      "original_path": "probes/java/solver-remaining-20261003/DeferredUnboundedHintProbe-d0051cbd4939/DeferredUnboundedHintProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalUnboundedHintTest.java",
+      "class": "org.cgse.core.HistoricalUnboundedHintTest",
+      "migration": "Retain the six-vertex/five-color escape problem; exercise four finite/unbounded domains and four continuation grants, verifying witnesses and certificates instead of requiring an old reflection seam.",
+      "source_artifact_sha256": "d0051cbd493948f79dc805308d7bc942da57a073588d7a9312fd0f5ba7952b2b",
+      "original_sha256_lf": "f3f00f835e007a80193f6faffe823bd6a759834da9929052ab549824b9a2cf72"
+    },
+    {
+      "id": "FinalPolicyParity-7907c27c063d",
+      "original_path": "probes/java/solver-adaptive-20261003/FinalPolicyParity-7907c27c063d/FinalPolicyParity.java",
+      "replacement": "core/java/org/cgse/core/HistoricalPortfolioTest.java",
+      "class": "org.cgse.core.HistoricalPortfolioTest",
+      "migration": "Replace equality to an obsolete policy implementation with 300000 progress-unit invariance, budget, three-goal, eligibility and retirement checks.",
+      "source_artifact_sha256": "7907c27c063d70de198c315c1b185653ffa59f1b7b0c659ce28c740d811358d7",
+      "original_sha256_lf": "6988498684b8623ab434a128babc2b86ada8874c9a68273a238e1d8a4a40c8b6"
+    },
+    {
+      "id": "BatchQuantumSafety-99a5d6015757",
+      "original_path": "probes/java/solver-remaining-20261003/BatchQuantumSafety-99a5d6015757/BatchQuantumSafety.java",
+      "replacement": "core/java/org/cgse/core/HistoricalBatchQuantumTest.java",
+      "class": "org.cgse.core.HistoricalBatchQuantumTest",
+      "migration": "Retain all 19 original slice/stop/auxiliary boundaries using the existing stop callback, without the removed production debug hook.",
+      "source_artifact_sha256": "99a5d60157571f9b9af713912660e30f3a421c7ee578967362839ed489d42c10",
+      "original_sha256_lf": "bf2f48fb18988e4623ba3a4c7877148ef4d281d41a8e7b7e0fbebeac2fd41513"
+    },
+    {
+      "id": "FocusedWarm-2ef5d76929ef",
+      "original_path": "probes/java/general-search-20260926/FocusedWarm-2ef5d76929ef/FocusedWarm.java",
+      "replacement": "core/java/org/cgse/core/HistoricalWarmReplayTest.java",
+      "class": "org.cgse.core.HistoricalWarmReplayTest",
+      "migration": "Retain all six original inputs with cold and two warm requests, exact witness checks and independent subset/CNF oracles. The original 24-warmup/51-sample wall benchmark remains archived.",
+      "source_artifact_sha256": "2ef5d76929efa57e2d8d6950046fef612a7bb19fec5a5849ca9d118c5764915a",
+      "original_sha256_lf": "7128dd54e1527bee295e7e39a6fa2cbfecae921fd5ac14189aaa93dd59afbade"
+    }
+  ]
+}
