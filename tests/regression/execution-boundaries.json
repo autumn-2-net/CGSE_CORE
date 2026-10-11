@@ -144,6 +144,76 @@
       "name": "choice-deep48/owned-allocation-turn",
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle and independently replayed original primitive prefixes. Stock-view interruptions must not consume a paused allocation turn before the complete count model is admitted."
+    },
+    {
+      "source": "cases/graph/23/23ba2d837b652602bd56c0299be9750906346115f59b4f3f99be740ae0d50841.json",
+      "sha256_lf": "b90c2525efc67e1836ca17327dbcccdb2445e99afafd802b81da991fe261c87f",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 25000000,
+      "name": "choice_n12_c3_cap1_s617_deep48_alias_all/private-chain-admission",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; recovered primitive executions independently replayed. Raw aliases/private stages must not hide compact bounded choices from count admission."
+    },
+    {
+      "source": "cases/graph/3e/3ea5181c245c165b7c16429467653dd2c6e400ee50a65146946fec21b5677c74.json",
+      "sha256_lf": "c8abd50cdb542d39ffe3665e3e954b0a0132b12fcc665db8375a91136cabdf76",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 25000000,
+      "name": "choice_n12_c2_cap3_s617_deep48_alias_all/private-chain-admission",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; recovered primitive executions independently replayed. Raw aliases/private stages must not hide compact bounded choices from count admission."
+    },
+    {
+      "source": "cases/graph/1b/1b4f738d62a89a4d154153e925ed3d039c9fd7a32a06cded4e33f1987ad34cb8.json",
+      "sha256_lf": "644d04cee12be419c8a48b162aff2120044fb4aa65ad84c1adc9a92953d822a9",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 25000000,
+      "name": "choice_n12_c3_cap1_s509_deep48_burn_all/private-chain-admission",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; recovered primitive executions independently replayed. Raw aliases/private stages must not hide compact bounded choices from count admission."
+    },
+    {
+      "source": "cases/graph/68/685d11ae262a669e4580f2cdaaaa6beb5b082f5ed39fd738e06ca49398425474.json",
+      "sha256_lf": "8149e095115153d8a9e191b3a176cd5db8a45cc6d794e666b4196d65530c6fc4",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 25000000,
+      "name": "choice_n12_c3_cap1_s509_deep48_alias_all/private-chain-admission",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; recovered primitive executions independently replayed. Raw aliases/private stages must not hide compact bounded choices from count admission."
+    },
+    {
+      "source": "cases/graph/9a/9a353d2b8773c78f8b04b68ae8489e8ccb90cd5d7f0e871667742a45957c0bc2.json",
+      "sha256_lf": "144ff04c57c1bf6fe7e6f45f1f46c7afd275ee1b58d3423461a937c2164e9ab0",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 25000000,
+      "name": "choice_n12_c2_cap3_s509_deep48_alias_all/private-chain-admission",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; recovered primitive executions independently replayed. Raw aliases/private stages must not hide compact bounded choices from count admission."
     }
   ]
 }

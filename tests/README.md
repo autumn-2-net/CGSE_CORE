@@ -601,3 +601,10 @@ are checked independently. `IntegerLpProposalTest` exercises no-cut numerical
 witnesses through the normal candidate feedback path, rejection followed by
 continued exact search, omitted boundary rows and proof-mode exclusion. Run
 these together with `--suite standard --case 'TemplatesTest|IntegerLp'`.
+
+`CountRecoveryAdmissionTest` covers bounded choice kernels behind aliases and
+private chains, boundary byproducts outside the count closure, changed stock,
+large finite domains, deterministic-chain refusal, configuration semantics,
+optional memory refusal and cancellation. `GraphExecutionBoundaries` pins five
+previously unresolved deep-chain inputs in three orders at the default budget;
+every returned plan is independently replayed against the primitive recipes.

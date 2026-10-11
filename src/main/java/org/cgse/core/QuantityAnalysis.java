@@ -27,6 +27,7 @@ final class QuantityAnalysis<K> {
     private boolean blocked;
     private boolean binaryChoices;
     private boolean largeChoices;
+    private boolean recoveryChoices;
     private long memory;
     private RecipeCountModel<K> model;
     private ExactLinearProgram linear;
@@ -188,9 +189,10 @@ final class QuantityAnalysis<K> {
             // through recovery macros before the dense solver's size limits.
             largeChoices = finiteChoices(low, high, null) &&
                     Arrays.stream(high).anyMatch(value -> value != null && value.bitLength() >= 16);
+            recoveryChoices = !binaryChoices && !largeChoices && CountRecoveryShape.compact(model, low, high, budget);
             bounds.close();
             bounds = null;
-            if ((model.recipes.size() > 192 || model.keys.size() > 128) && !binaryChoices && !largeChoices &&
+            if ((model.recipes.size() > 192 || model.keys.size() > 128) && !binaryChoices && !largeChoices && !recoveryChoices &&
                     !QuantityPotential.applicable(model, target, budget)) return finish(false);
             // Keep the exact model, but let the caller try cheap executable
             // witnesses before paying for simplex and continuous coverability.
@@ -309,7 +311,7 @@ final class QuantityAnalysis<K> {
     boolean scoutCountsBeforeHeavyAnalysis() {
         // The sparse resource proof is optional. Its admission must not recruit
         // an unrelated count scout ahead of an executable stock path.
-        return phase == 8 && (binaryChoices || largeChoices || model.recipes.size() <= 192 && model.keys.size() <= 128);
+        return phase == 8 && (binaryChoices || largeChoices || recoveryChoices || model.recipes.size() <= 192 && model.keys.size() <= 128);
     }
 
     long quickSearchAllowance() {
@@ -319,7 +321,7 @@ final class QuantityAnalysis<K> {
     }
 
     boolean sparsePotential() {
-        return phase == 9 || phase == 8 && !binaryChoices && !largeChoices &&
+        return phase == 9 || phase == 8 && !binaryChoices && !largeChoices && !recoveryChoices &&
                 (model.recipes.size() > 192 || model.keys.size() > 128);
     }
 
