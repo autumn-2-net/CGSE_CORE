@@ -101,11 +101,17 @@ public final class CapturedCatalog<K> {
         private List<BigInteger> allocated = List.of();
         private int allocatedIndex;
         private boolean addedAllocation;
+        private CapturedFlowAllocation<K> flow;
+        private boolean flowTried;
+        private List<CapturedFlowAllocation.Variant> flowVariants = List.of();
+        private int flowVariant;
+        private final Map<String, BigInteger> flowCounts = new LinkedHashMap<>();
+        private CapturedFlowWitness<K> flowWitness;
         private DomainState expanding;
         private List<Integer> providers = List.of();
         private int provider;
         private int entry, output, input, candidate;
-        private int phase; // 0 index producers, 1 expand/discover, 2 freeze, 3 solve, 4 factorized stock view
+        private int phase; // 0 index, 1 discover, 2 freeze, 3 solve, 4 stock, 5 flow, 6 recovered counts
         private int flattenEntry, flattenVariant;
         private List<GraphRecipe<K>> concrete = new ArrayList<>();
         private List<GraphRecipe<K>> allocationRecipes = new ArrayList<>();
@@ -174,6 +180,14 @@ public final class CapturedCatalog<K> {
                 freeze();
             } else if (phase == 4) {
                 allocateInput();
+            } else if (phase == 5) {
+                allocateFlow();
+            } else if (phase == 6) {
+                if (flowWitness.step()) {
+                    var plan = flowWitness.result(); flowWitness.close(); flowWitness = null;
+                    if (plan != null) finish(plan, GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL);
+                    else { allocationView = false; phase = 2; }
+                }
             } else {
                 boolean done = slice == null ? solving.step() : solving.advance(slice);
                 if (done) acceptOrExpand(solving.result());
@@ -288,7 +302,11 @@ public final class CapturedCatalog<K> {
         private void freeze() {
             budget.compilationCheck();
             if (indexing == null) {
-                if (!allocationRecipes.isEmpty()) {
+                if (!flowCounts.isEmpty()) {
+                    flowWitness = new CapturedFlowWitness<>(allocationRecipes, flowCounts, target, amount, stock, external,
+                            requiredSeeds, preserve, forceCraft, budget);
+                    flowCounts.clear(); allocationView = true; phase = 6;
+                } else if (!allocationRecipes.isEmpty()) {
                     // The recovered support is a positive-only trial. Even with
                     // all its variants present, the full catalog can spend its
                     // short turn revisiting hundreds of unfunded alternatives.
@@ -385,16 +403,51 @@ public final class CapturedCatalog<K> {
                         .subtract(BigInteger.valueOf(stock.getOrDefault(target, 0L))).max(BigInteger.ONE);
                 allocationFirings = output.signum() > 0 ? needed.subtract(BigInteger.ONE).divide(output).add(BigInteger.ONE).min(BigInteger.valueOf(Long.MAX_VALUE)).longValueExact() : 1;
                 allocation = new CapturedInputAllocation<>(recipe, allocating.domain, stock, external, allocationFirings, budget);
-            } else {
-                if (!addedAllocation && allocationRecipes.isEmpty()) for (var state : active.values()) {
-                    budget.compilationCheck();
-                    if (!state.domain.hasNext()) continue;
-                    state.through = state.domain.coveredPrefix().max(BigInteger.valueOf(CapturedRecipe.MAX_VARIANTS))
-                            .shiftLeft(1).min(state.domain.size());
-                    pendingDomains.addLast(state);
+            } else if (!flowTried && allocationRecipes.isEmpty()) {
+                flowTried = true;
+                flow = new CapturedFlowAllocation<>(entries, producers, target, amount, stock, external, requiredSeeds, forceCraft, budget);
+                phase = 5;
+            } else continueExpansion();
+        }
+
+        private void allocateFlow() {
+            if (flow != null) {
+                if (!flow.step()) return;
+                flowVariants = flow.results(); reserve(128L * flowVariants.size()); flow.close(); flow = null;
+            } else if (flowVariant < flowVariants.size()) {
+                var selected = flowVariants.get(flowVariant++);
+                var state = active.get(selected.entry());
+                if (state == null) {
+                    reserve(160);
+                    state = new DomainState(selected.entry()); active.put(selected.entry(), state);
+                    // A sparse support trial need not instantiate an unrelated
+                    // prefix of a newly reached upstream domain first.
                 }
-                phase = 1;
+                var value = state.domain.resolve(selected.ordinal());
+                var source = entries.get(selected.entry());
+                var recipe = new GraphRecipe<>(source.id() + "#" + selected.ordinal(), source.binding(), value.slots(), value.outputs());
+                allocationRecipes.add(recipe);
+                reserve(128);
+                flowCounts.put(recipe.id(), selected.firings());
+                if (selected.ordinal().compareTo(state.domain.coveredPrefix()) >= 0 && state.additional.add(selected.ordinal())) {
+                    state.recipes.add(0, recipe); addedAllocation = true;
+                }
+                for (var slot : value.slots()) discover(slot.key());
+            } else {
+                flowVariants = List.of(); flowVariant = 0;
+                continueExpansion();
             }
+        }
+
+        private void continueExpansion() {
+            if (!addedAllocation && allocationRecipes.isEmpty()) for (var state : active.values()) {
+                budget.compilationCheck();
+                if (!state.domain.hasNext()) continue;
+                state.through = state.domain.coveredPrefix().max(BigInteger.valueOf(CapturedRecipe.MAX_VARIANTS))
+                        .shiftLeft(1).min(state.domain.size());
+                pendingDomains.addLast(state);
+            }
+            phase = 1;
         }
 
         private boolean expandable(GraphPlan.Result reason) {
@@ -455,6 +508,12 @@ public final class CapturedCatalog<K> {
             indexing = null;
             if (allocation != null) allocation.close();
             allocation = null;
+            if (flow != null) flow.close();
+            flow = null;
+            flowVariants = List.of();
+            if (flowWitness != null) flowWitness.close();
+            flowWitness = null;
+            flowCounts.clear();
             allocating = null;
             allocated = List.of();
             expanding = null;

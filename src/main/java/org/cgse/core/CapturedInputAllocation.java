@@ -7,7 +7,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,13 +35,8 @@ final class CapturedInputAllocation<K> implements AutoCloseable {
     private int slot, candidate;
     private long memory;
     private boolean built, done;
-    private final List<BigInteger> results = new ArrayList<>();
-    private final Set<BigInteger> emitted = new LinkedHashSet<>();
-    private BigInteger[] counts, groupRemaining;
-    private List<List<Integer>> slotVariables;
-    private List<Map<Integer, Long>> groups;
-    private int[] position;
-    private BigInteger decomposed = BigInteger.ZERO;
+    private List<BigInteger> results = List.of();
+    private CapturedAllocationRecovery<K> recovery;
 
     CapturedInputAllocation(CapturedRecipe<K> recipe, CapturedRecipeDomain<K> domain, Map<K, Long> stock,
                            Set<K> external, PlanningBudget budget) {
@@ -63,20 +57,26 @@ final class CapturedInputAllocation<K> implements AutoCloseable {
 
     boolean step() {
         if (done) return true;
-        if (counts != null) {
-            decompose();
+        if (recovery != null) {
+            if (recovery.step()) {
+                results = recovery.results(); recovery.close(); recovery = null; done = true;
+            }
         } else if (search != null) {
             budget.phase(PlanningBudget.Phase.SOLVE);
             if (!search.step()) return false;
-            counts = search.counts();
+            var counts = search.counts();
             if (counts != null) {
-                if (!reserve(512L * recipe.inputs().size() + 128L * counts.length)) { counts = null; done = true; return true; }
-                slotVariables = new ArrayList<>(); groups = new ArrayList<>();
-                groupRemaining = new BigInteger[recipe.inputs().size()]; position = new int[recipe.inputs().size()];
+                if (!reserve(256L * recipe.inputs().size() + 128L * counts.length)) { done = true; return true; }
+                var slots = new ArrayList<Map<Integer, BigInteger>>();
                 for (int i = 0; i < recipe.inputs().size(); i++) {
-                    budget.compilationCheck(); slotVariables.add(new ArrayList<>()); groups.add(Map.of()); groupRemaining[i] = BigInteger.ZERO;
+                    budget.compilationCheck(); slots.add(new LinkedHashMap<>());
                 }
-                for (int i = 0; i < counts.length; i++) { budget.compilationCheck(); slotVariables.get(variables.get(i).slot()).add(i); }
+                for (int i = 0; i < counts.length; i++) {
+                    budget.compilationCheck(); var variable = variables.get(i);
+                    slots.get(variable.slot()).put(variable.candidate(), counts[i]);
+                }
+                search.close(); search = null;
+                recovery = new CapturedAllocationRecovery<>(recipe, domain, BigInteger.valueOf(firings), slots, budget);
             } else done = true;
         } else if (!built) {
             budget.compilationCheck();
@@ -132,68 +132,6 @@ final class CapturedInputAllocation<K> implements AutoCloseable {
         }
     }
 
-    /**
-     * Sweep integral per-slot allocations into concrete firings. Whole-candidate
-     * slots use run counts; mixed slots pack exactly multiplier copies per run.
-     * Run lengths are compressed, so Long.MAX_VALUE orders don't create that
-     * many assignments. There are only O(nonzero candidate counts) boundaries.
-     */
-    private void decompose() {
-        budget.compilationCheck();
-        BigInteger batch = BigInteger.valueOf(firings).subtract(decomposed);
-        for (int slot = 0; slot < recipe.inputs().size(); slot++) {
-            budget.compilationCheck();
-            if (groupRemaining[slot].signum() == 0) nextGroup(slot);
-            batch = batch.min(groupRemaining[slot]);
-        }
-        if (batch.signum() <= 0) throw new IllegalStateException("Incomplete integral slot allocation");
-        BigInteger ordinal = domain.ordinal(groups);
-        if (!emitted.contains(ordinal)) {
-            if (!reserve(192L + (ordinal.bitLength() + 7L) / 8)) { done = true; return; }
-            emitted.add(ordinal);
-            results.add(ordinal);
-        }
-        for (int slot = 0; slot < groupRemaining.length; slot++) {
-            budget.compilationCheck(); groupRemaining[slot] = groupRemaining[slot].subtract(batch);
-        }
-        decomposed = decomposed.add(batch);
-        done = decomposed.equals(BigInteger.valueOf(firings));
-    }
-
-    private void nextGroup(int slot) {
-        var input = recipe.inputs().get(slot);
-        boolean mix = !recipe.external() && input.multiplier() <= 9;
-        int first = nextVariable(slot);
-        Map<Integer, Long> group = new LinkedHashMap<>();
-        BigInteger multiplier = BigInteger.valueOf(input.multiplier());
-        BigInteger runs = mix ? counts[first].divide(multiplier) : counts[first];
-        if (runs.signum() > 0) {
-            group.put(variables.get(first).candidate(), input.multiplier());
-            counts[first] = mix ? counts[first].remainder(multiplier) : BigInteger.ZERO;
-        } else {
-            runs = BigInteger.ONE;
-            long left = input.multiplier();
-            while (left > 0) {
-                budget.compilationCheck();
-                int at = nextVariable(slot);
-                long copies = counts[at].min(BigInteger.valueOf(left)).longValueExact();
-                group.put(variables.get(at).candidate(), copies);
-                counts[at] = counts[at].subtract(BigInteger.valueOf(copies)); left -= copies;
-            }
-        }
-        groups.set(slot, group); groupRemaining[slot] = runs;
-    }
-
-    private int nextVariable(int slot) {
-        var ids = slotVariables.get(slot);
-        while (position[slot] < ids.size()) {
-            budget.compilationCheck(); int id = ids.get(position[slot]);
-            if (counts[id].signum() > 0) return id;
-            position[slot]++;
-        }
-        throw new IllegalStateException("Unfunded slot in integral allocation");
-    }
-
     BigInteger result() { return results.isEmpty() ? null : results.get(0); }
 
     List<BigInteger> results() { return List.copyOf(results); }
@@ -208,6 +146,8 @@ final class CapturedInputAllocation<K> implements AutoCloseable {
     public void close() {
         if (search != null) search.close();
         search = null;
+        if (recovery != null) recovery.close();
+        recovery = null;
         budget.release(memory);
         memory = 0;
         done = true;
@@ -216,10 +156,5 @@ final class CapturedInputAllocation<K> implements AutoCloseable {
         rows.clear();
         resources.clear();
         slotTerms.clear();
-        counts = groupRemaining = null;
-        slotVariables = null;
-        groups = null;
-        position = null;
-        emitted.clear();
     }
 }

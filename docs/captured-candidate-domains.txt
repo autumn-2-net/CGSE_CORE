@@ -101,20 +101,69 @@ The full view also tries sparse repairs first within their original pattern.
 
 Only positive proposals escape this auxiliary search. Missing initial stock for
 one firing does not rule out upstream production, recycling, or a combination
-of several variants, so failure falls back to paged discovery. Every final plan
+of several variants, so failure can try cross-pattern flow before paged discovery. Every final plan
 goes through the normal original-recipe verification and shared inventory checks.
 Read/configuration slots are excluded from this auxiliary model and retain the
 concrete path. Likewise, a host with coupled input semantics must supply concrete
 variants; CapturedRecipe's Cartesian representation assumes independent slots.
 
-This is a fixed-firing stock repair per pattern, not a full factorized
-multi-recipe count model with a variable for every recipe's firing count. It cannot by itself discover
-allocations needing resources first produced elsewhere. Pages and the ordinary
-main solver handle those cases. The auxiliary search has at most 256 slots,
+This first repair still fixes the firing count of one pattern and cannot by
+itself discover allocations needing resources first produced elsewhere.
+Its auxiliary search has at most 256 slots,
 1024 eligible variables and min(32768, remaining search work / 8) work. Admission
 refusal or a local cutoff never means infeasible. Each reached domain gets at
 most one whole-order attempt and its smaller one-firing recovery; it does not
 repeatedly spend work on the same failed stock view.
+
+Cross-pattern flow and count reuse
+---------------------------------
+CapturedFlowAllocation adds a second positive-only view when the stock repairs
+do not produce a successful plan. It reaches potential providers through ALL
+eligible slot candidates, including candidates beyond the 256-prefix and
+candidate-specific physical return producers. It uses one integer x per pattern
+and integer u per slot/candidate: sum(u) = multiplier*x for mixed-copy slots,
+sum(u) = x for indivisible slots. Base outputs multiply x; actual input amounts
+and physical returns multiply u. All patterns spend and replenish the same
+physical resource row, so shared raw materials cannot be independently credited
+to several upstream branches. No floating-point arithmetic is used.
+
+This is an optional restricted view, not a new canonical graph or a proof
+compiler. Configuration consumption, reusable read arcs and coupled semantics
+are not linearized. Admission can omit unavailable candidates and unsupported
+providers; at most 512 provider patterns, 256 slots per pattern and 4096 variables
+are admitted. Model construction and LCG each have a short cumulative turn,
+capped at 32768 work and additionally limited by the request's remaining budget.
+One request makes at most one cross-pattern attempt. Reaching a cap, a negative
+row proof, or an unschedulable allocation returns to canonical discovery without
+exporting any negative knowledge.
+
+Forced-order flow proposals conservatively require net growth at least equal
+to the request; explicit reserves still account for existing target stock.
+This leaves productive target-seed turnover with smaller net growth to the
+ordinary main solver. A net-balanced unseeded ring may satisfy the flow model;
+that is a proposal, not executable production.
+
+CapturedAllocationRecovery is shared with the stock repair. It restores the
+integral slot marginals to canonical ordinals AND their exact BigInteger firing
+counts in compressed groups. Counts may exceed Long.MAX_VALUE internally. The
+number of restored variants depends on allocation boundaries rather than the
+order size. Per-firing mixing rules and candidate-specific returns are preserved.
+
+Keeping the counts is essential: forwarding only the support makes the main
+planner repeat count search. CapturedFlowWitness passes the restored counts to
+the existing CountSchedule, AllocationSearch.Candidate, PlanVerification and
+ForceCraftProof. Assembly may reject an ordering and resume another ordering
+of the SAME counts. Startup inventory, shared consumption, inferred/explicit
+seed reserves and forced production are checked before accepting a witness.
+If this short recovery fails, the support and then the full refined catalog
+remain eligible for ordinary planning. Accepted witnesses, validation work and
+first-verified latency enter the existing candidate metrics; construction,
+search and restoration costs are attributed to allocation in the cost trace.
+
+New upstream domains can enter coverage through sparse ordinals without first
+instantiating their unrelated 256-prefix. They remain incomplete until canonical
+coverage catches up. Only concrete restored variants enter the result and CGD
+replay, never abstract slot-choice variables or a cross-view infeasibility claim.
 
 Portable coverage and execution replay
 --------------------------------------
@@ -223,3 +272,50 @@ production files in the source jar match the tested tree, with fingerprint
 Local results are in build/captured-batch-20261011 and
 build/captured-batch-fixtures-20261011. This remains a standalone-core change;
 the GTL adapter has not adopted CapturedCatalog or CGD export in this boundary.
+
+Cross-pattern validation boundary
+---------------------------------
+The upstream counterexample keeps the 12 slots x 300 candidates and order 2000,
+but replaces each stocked last candidate with a raw material and a 1:1 upstream
+provider. Each slot has two independently stocked raw materials of 1000 units.
+At the same 200k search / 200k compilation caps and 64 MiB logical memory,
+865e0732 returns SEARCH_LIMIT: 339634 combined work, 18371607 peak logical bytes,
+and 4096 main-domain variants expanded. Cross-pattern allocation plus count reuse
+returns FEASIBLE_NOT_PROVEN_OPTIMAL: 56486 combined work and 1880053 peak logical
+bytes. It instantiates 256 prefix variants, two recovered main variants and
+24 upstream variants. These are deterministic work/reservation measurements,
+not a wall-clock speedup claim.
+
+CapturedFlowAllocationTest adds 600 independent acyclic exhaustive comparisons:
+enumerate concrete downstream firings, ceil the exact upstream deficits, and
+compare all upstream consumption against common raw stocks. Every positive flow
+is restored, scheduled and checked against the actual stock. Another 24 wide
+candidate/provider permutations cover one/four-worker scheduling and expanded
+budgets, with independent CGD replay. Long.MAX_VALUE upstream orders, aggregate
+counts above long, physical returns, explicit reserves, forced existing-target
+stock, external supply, startup-dead rings, stock replenishment, optional memory
+refusal and cancellation are covered. The prior sparse-prefix absorption test
+now uses a declined dispatch-input provider so that it continues to exercise
+canonical paging instead of being bypassed by the new successful flow view.
+
+Dispatch-group optimization remains outside this view. In particular the old
+configuration-input boundary with 300 alternatives, only a299 produced from
+one consumed configuration raw, and an order of two outputs can still exhaust
+20M work on both 865e0732 and this version. dispatchInputs(2) consumes one raw
+per provider call, but a Batch can be split across calls: the current serial
+verifier reserves two raws and rejects a one-raw witness. The regression checks
+that distinction; it is NOT a verified feasible-order counterexample. Supporting
+that optimization would require a stronger dispatch contract as well as recovery,
+not simply relaxing the stock row. The per-firing flow model declines it.
+Likewise this change does not provide whole-order negative CGD certificates or
+connect the GTL adapter to the captured-domain entry point.
+
+Validation: all 90 standard programs/batches and all 732 fixed fixture/order
+cases pass. The seven Captured programs also pass after adding the final
+dispatch-reservation guard. Offline Gradle assemble passes. All 214 production
+files in the source jar match the validated tree; production fingerprint:
+03d161e689b969a0616441cc44ea1e258645d0ca25993bda101413f971e3d2f2.
+Local results are in build/captured-flow-20261011,
+build/captured-flow-fixtures-20261011 and
+build/captured-flow-focused-final-20261011. This is standalone core validation,
+not an updated GTL adapter or a live-server rollout.

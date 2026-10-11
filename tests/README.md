@@ -483,3 +483,11 @@ tampering, overlapping inventory, physical returns and large/deep programs.
 Both are in the standard suite. Reproduce the focused boundary with
 `--suite standard --case Captured`; implementation scope and the equal-budget
 split-stock counterexample are in `../docs/captured-candidate-domains.txt`.
+
+`CapturedFlowAllocationTest` adds 600 independent exhaustive upstream/downstream
+allocation comparisons and 24 wide candidate/provider permutations. It checks
+shared raw stock, physical returns, startup-dead rings, exact large-count
+recovery, explicit seed goals, optional admission, cancellation and independent
+CGD replay. Its equal-budget upstream counterexample also records the work
+benefit of reusing recovered counts instead of repeating count search. It is
+included in the same standard `--case Captured` group.

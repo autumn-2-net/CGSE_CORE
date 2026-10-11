@@ -132,8 +132,15 @@ public final class CapturedCatalogTest {
         var upstreamStock = Map.of("raw", 1L, "a299", 1L);
         var caughtUp = produced.plan("out", 2, upstreamStock, false, true, budget());
         feasible(caughtUp, upstreamStock);
-        check(caughtUp.coverage().complete() && caughtUp.coverage().domains().stream().allMatch(d -> d.additional().isEmpty()),
-                "sparse repair not absorbed when upstream supply needs the full prefix");
+        check(!caughtUp.coverage().complete(), "upstream flow recovery needlessly enumerated the full prefix");
+        var dispatchSupply = new CapturedRecipe<>(List.of(new CapturedRecipe.Input<>(1,
+                List.of(new CapturedRecipe.Candidate<>(new CapturedRecipe.Amount<>("raw", 1), null, true)))),
+                List.of(new CapturedRecipe.Amount<>("a298", 1)), true, false);
+        var dispatched = new CapturedCatalog<>(List.of(entry("r", captured(List.of(input("a", 300, 1)), "out")), entry("supply", dispatchSupply)))
+                .plan("out", 2, upstreamStock, false, true, budget());
+        feasible(dispatched, upstreamStock);
+        check(dispatched.coverage().complete() && dispatched.coverage().domains().stream().allMatch(d -> d.additional().isEmpty()),
+                "declined dispatch flow lost sparse-to-prefix absorption");
         for (long amount : new long[]{1, 1000, Long.MAX_VALUE}) {
             var stocked = Map.of("a299", amount);
             var large = catalog.plan("out", amount, stocked, false, true, budget());
