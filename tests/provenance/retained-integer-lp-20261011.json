@@ -1,0 +1,104 @@
+{
+  "date": "2026-10-11",
+  "baseline": "19afbe9b817de25598012b72cea968c600d7d337",
+  "source_fingerprint_method": "tests/benchmarks/compare_planning.py fingerprint; paths and working-tree file bytes",
+  "candidate_source_sha256": "8f7613ea7b30f2abc228e6e44dd4cc382ca71fdbbfac0227aed5d1c217f9dbcf",
+  "comparison_harness_sha256": "6c368db9b89c53ac8105bcdfa4712f82b3bc888e06496f876e104a1b44d47732",
+  "canonical_input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+  "main_count_comparison": {
+    "canonical_models": 274,
+    "orders": 3,
+    "shuffle_population": "complete count-model corpus",
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "baseline": {
+      "PASS": 790,
+      "UNRESOLVED": 14,
+      "UNSUPPORTED": 18
+    },
+    "candidate": {
+      "PASS": 792,
+      "UNRESOLVED": 12,
+      "UNSUPPORTED": 18
+    },
+    "gained": [
+      "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e/order=1",
+      "c28b807b80f5179c5f9dc9e17762cec2f20617608a4c1c2d17232ac43ff53a5e/order=2"
+    ],
+    "lost": [],
+    "contradictions": [],
+    "common_conclusive_work_baseline": 599039561,
+    "common_conclusive_work_candidate": 604524003,
+    "largest_increase": {
+      "case": "wide-52/order=1",
+      "baseline": 9690287,
+      "candidate": 14128865
+    },
+    "largest_relative_increase": {
+      "case": "wide-52/order=2",
+      "baseline": 6570839,
+      "candidate": 10817238
+    },
+    "note": "Coverage improves at the same cap. Work is not uniformly lower. Twelve large equality orders remain unknown; eighteen conversions remain unsupported. Not live AE.",
+    "local_artifact": "build/retained-integer-lp-comparison-20261011/summary.json"
+  },
+  "standard_regression": {
+    "programs_and_batches": 96,
+    "passed": 96,
+    "local_artifact": "build/retained-integer-lp-standard-20261011/results.json"
+  },
+  "fixtures": {
+    "fixtures": 244,
+    "orders": 3,
+    "validated": 732,
+    "unresolved": 0,
+    "local_artifact": "build/retained-integer-lp-fixtures-20261011/results.json"
+  },
+  "new_safety_cases": {
+    "finite_models": 180,
+    "sat": 123,
+    "unsat": 57,
+    "independently_verified_certificates": 180,
+    "learned_cuts": 10,
+    "cross_worker_pauses": 4,
+    "cancellation_points": 240,
+    "work_limits": [
+      128,
+      1000000
+    ],
+    "memory_limits": [
+      4096,
+      16384,
+      65536,
+      262144
+    ],
+    "local_artifact": "build/retained-integer-lp-final-safety-20261011/IntegerLpPortfolioTest.log"
+  },
+  "negative_controls": {
+    "replace_ordinary_auxiliary_with_lp": {
+      "lost": "wide-52/order=2",
+      "work": 20000000,
+      "local_artifact": "build/remaining-investigation-20261011/auxiliary-full.log"
+    },
+    "deduplicate_lp_and_ordinary_frontiers": {
+      "lost": "wide-52/order=2",
+      "work": 20000000,
+      "local_artifact": "build/remaining-investigation-20261011/negative-dedup.log"
+    }
+  },
+  "build": {
+    "command": "gradlew.bat --offline assemble",
+    "status": "PASS",
+    "matching_source_entries": 216,
+    "core_jar": "build/libs/cgse-core-0.1.0-SNAPSHOT.jar",
+    "sha256": "1c084fb9616f87586ffa3092665f557af49cc43148fa868fef5181c7e964ac85"
+  },
+  "commands": [
+    "python tests/benchmarks/compare_count_models.py --java-home <jdk17> --baseline 19afbe9b --permutations 3 --complete-corpus-order --timeout 2400 --output build/retained-integer-lp-comparison-20261011",
+    "python tests/run.py --suite standard --milliseconds 0 --java-home <jdk17> --output build/retained-integer-lp-standard-20261011 --keep-going",
+    "python tests/run.py --suite fixtures --permutations 3 --milliseconds 0 --java-home <jdk17> --output build/retained-integer-lp-fixtures-20261011 --keep-going",
+    "python tests/run.py --suite core --case IntegerLpPortfolioTest --milliseconds 0 --java-home <jdk17> --output build/retained-integer-lp-final-safety-20261011 --keep-going"
+  ]
+}

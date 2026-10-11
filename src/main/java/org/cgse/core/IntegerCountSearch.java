@@ -672,7 +672,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private void enqueuePortfolio() {
         portfolioScheduled = true;
         if (model.recipes.size() < 8 || model.recipes.size() > 192 || budget.remainingWork() < 262144) return;
-        for (int mode = 1; mode <= 3; mode++) {
+        for (int mode = 1; mode <= 4; mode++) {
             var branch = new IntegerCountBranch<>(model, execution, target, amount, stock, seeds, external,
                     preserve, force, budget, started, List.of()).shareSchedules(scheduleContinuations);
             if (branch.state != IntegerCountBranch.State.OPEN) {
@@ -695,7 +695,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             pending.addLast(branch);
             branches++;
         }
-        budget.note("count_portfolio", "admitted=learning_rate_order,lazy_integer,root_proof; shared_order_budget; original_view_retained");
+        budget.note("count_portfolio", "admitted=learning_rate_order,lazy_integer,root_proof,bounded_integer_lp; shared_order_budget; original_view_retained");
     }
 
     private void enqueue(List<ExactLinearProgram.Constraint> constraints, IntegerCountBranch<K> parent) {

@@ -21,6 +21,35 @@ final class CountIntegerLpLearning implements AutoCloseable {
         Stop() { super(null, null, false, false); }
     }
 
+    /** Cheap admission for the integer portfolio, not a claim that the LP is feasible. */
+    static boolean hasBoundedIntegerSupport(List<ExactLinearProgram.Constraint> rows, BigInteger[] low,
+                                            BigInteger[] high, PlanningBudget budget) {
+        long started = budget.threadWork(), limit = Math.min(16384, budget.remainingWork() / 64);
+        if (limit < 1024 || budget.remainingWork() < 65536 || low.length != high.length ||
+                low.length < 2 || low.length > 8192 || rows.size() > 32768) return false;
+        for (var row : rows) {
+            if (budget.threadWork() - started >= limit) return false;
+            budget.check();
+            if (row.terms().size() < 2 || row.terms().size() > MAX_COLUMNS) continue;
+            boolean finite = row.upper().bitLength() <= 1024, integer = false, weighted = false;
+            for (var term : row.terms().entrySet()) {
+                if (budget.threadWork() - started >= limit) return false;
+                budget.check();
+                int id = term.getKey();
+                if (id < 0 || id >= low.length || !bounded(low[id], high[id]) || term.getValue().bitLength() > 1024) {
+                    finite = false;
+                    break;
+                }
+                if (!low[id].equals(high[id])) {
+                    integer |= high[id].compareTo(BigInteger.ONE) > 0 || low[id].signum() < 0;
+                    weighted |= term.getValue().abs().compareTo(BigInteger.ONE) > 0;
+                }
+            }
+            if (finite && integer && weighted) return true;
+        }
+        return false;
+    }
+
     CountLpLearning.Result solve(List<ExactLinearProgram.Constraint> rows, BigInteger[] low, BigInteger[] high,
                                  int focus, PlanningBudget budget, long maximumWork) {
         if (this.budget != budget) {

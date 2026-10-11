@@ -1001,7 +1001,25 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 viewSearch.resume(Math.max(1, auxiliaryUntil - auxiliaryWork - (budget.threadWork() - runStarted)));
                 viewStage = 6;
             } else if (auxiliaryMode == 1) cdcl = new CountDomainSearch(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072, CountCdcl.Branching.LEARNING_RATE).retained();
-            else if (auxiliaryMode >= 2) auxiliaryLcg = new CountLcg(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072).minimizeIntegerConflicts();
+            else if (auxiliaryMode >= 2) {
+                if (auxiliaryMode == 4 && !CountIntegerLpLearning.hasBoundedIntegerSupport(
+                        reduction.rows(), reduction.lower(), reduction.upper(), budget)) {
+                    state = State.UNRESOLVED;
+                    return;
+                }
+                auxiliaryLcg = new CountLcg(reduction.rows(), reduction.lower(), reduction.upper(), budget, 131072)
+                        .minimizeIntegerConflicts();
+                // Root witness arms own longer retained slices. Give bounded
+                // integer LP proposals an owned frontier rather
+                // than restarting a numerical probe in every short view visit.
+                // Preserve the ordinary LCG too: numerical phases complement
+                // its decision order, and cannot safely replace it.
+                if (auxiliaryMode == 4) {
+                    auxiliaryLcg.integerRelaxation();
+                    if (auxiliaryLcg.learnedRelaxationEnabled())
+                        budget.note("count_integer_lp_auxiliary", "bounded_integer_support; retained_root_witness; shared_request_budget");
+                }
+            }
             else {
                 if (!matchingScouted && current.isEmpty()) {
                     matchingScouted = true;
@@ -1725,6 +1743,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     boolean sameAuxiliarySearch(IntegerCountBranch<K> other) {
         if (other == this || auxiliaryMode < 2 || other.auxiliaryMode < 2 || model != other.model ||
                 auxiliaryLcg == null || other.auxiliaryLcg == null || limit != null || other.limit != null ||
+                auxiliaryLcg.learnedRelaxationEnabled() != other.auxiliaryLcg.learnedRelaxationEnabled() ||
                 !auxiliaryLive || !other.auxiliaryLive || memory == 0 || workspace == 0 ||
                 other.memory == 0 || other.workspace == 0 || other.state != State.OPEN ||
                 state != State.OPEN && state != State.UNRESOLVED ||

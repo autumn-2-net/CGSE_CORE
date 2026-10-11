@@ -1,0 +1,81 @@
+Retained bounded-integer LP in the root portfolio (2026-10-11)
+===========================================================
+
+Boundary and diagnosis
+----------------------
+Against 19afbe9b, the maintained main-count corpus had 14 undecided orders:
+four large sparse-equality models in three orders, plus wide-79 orders 1/2.
+Direct bounded-integer LP/LCG could solve wide-79 order 1. The main pipeline
+did not give that combination a comparable retained search: its view scout
+stopped at 16K work, while this model's first numerical proposal needed about
+39K. Merely enlarging the scout or admitting another short-sliced view arm
+did not solve the two orders. Interrupted cold numerical pivots were discarded.
+
+The root auxiliary portfolio now offers an additional integer-LP/LCG arm with
+the existing 131072-work retained LCG slices and 262144-work owner visits.
+It retains its bound trail, clauses, activities, cuts and completed numerical
+bases. All work and memory remain charged to the same request. There is no
+larger request cap, fresh budget per visit, or fallback-tree modification.
+
+Admission uses a bounded scan for a complete finite integer row support with
+a nonunit coefficient. Boolean-only, fixed-only, unbounded-boundary and small
+remaining-budget inputs do not enter the extra LP search. An unrelated outer
+unbounded column does not exclude a complete finite local support. No omitted
+term is assigned zero. The existing local LP independently checks its limits.
+
+Keep both decision orders
+-------------------------
+The ordinary minimized-conflict LCG remains active alongside the LP variant.
+Replacing it solved wide-79 but lost wide-52 order 2. Auxiliary deduplication
+therefore checks whether learned relaxation is enabled in addition to exact
+model/domain identity. Removing that distinction loses wide-52 order 2 again
+at the same 20M cap. These are complementary strategies, not identical work.
+
+The extra arm has the same explicit root scope as the existing witness arms.
+The proof task keeps its separate goal. A local pause, numerical infeasibility,
+admission refusal or exhausted allowance cannot close the primary search.
+Only exact row combinations and independently checked integer witnesses enter
+the existing proof/execution validation path. No numerical status is promoted
+to an exact negative conclusion.
+
+Validation at an unchanged request cap
+-------------------------------------
+274 canonical models x three complete-corpus permutations, 20M work per
+request, 256 MiB, one worker, no wall deadline:
+
+                       Baseline      Candidate
+  Conclusive              790            792
+  Undecided                14             12
+  Unsupported conversion   18             18
+  Invalid result            0              0
+
+No previously conclusive case is lost. wide-79 order 1 now uses 14,759,981
+work and order 2 uses 5,283,105; both independently validate in original count
+coordinates and as primitive recipe execution. All three wide-52 orders stay
+conclusive. The gained orders and the replacement/deduplication counterexample
+are maintained in tests/regression/count-boundaries.json.
+
+There is a measured cost tradeoff. Work on the 790 common conclusive cases
+increases from 599,039,561 to 604,524,003 (about 0.9%). wide-52 orders 1 and 2
+increase from 9,690,287 / 6,570,839 to 14,128,865 / 10,817,238. This adds
+coverage at the same cap; it is not a claim of uniform speed improvement.
+
+The standard suite passes 96 programs/batches, including the updated maintained
+count boundaries. All 244 graph fixtures pass in three permutations (732).
+IntegerLpPortfolioTest independently enumerates 180 finite models (123 SAT,
+57 UNSAT), verifies their certificates, exercises 10 learned cuts, cross-worker
+continuation, 240 cancellation points and eight work/memory limit combinations.
+Its final strengthened safety run accompanies the standard campaign. The
+existing RootPortfolioTest also covers concurrent requests with and without
+parallel budget expansion. Offline assemble and source-JAR equality pass.
+
+Remaining limits
+----------------
+The 12 undecided orders are the 144/257-variable sparse-equality s1/s2 models;
+this change does not prove them infeasible. A cold numerical tableau interrupted
+inside a pivot is still discarded, not resumed from partial mutation. The
+retained root arm provides usable slices and reuses completed numerical bases;
+arbitrary partial-pivot continuation is a separate, unimplemented extension.
+This campaign validates standalone CGSE, not a live Minecraft/AE server.
+
+Reproduction and hashes: tests/provenance/retained-integer-lp-20261011.json.
