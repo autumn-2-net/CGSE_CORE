@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-11",
+  "baseline": "d5b35330d9475b97d0d6540ae4fb8f3a763bd707",
+  "source_fingerprint_method": "tests/benchmarks/compare_planning.py fingerprint; paths and working-tree file bytes",
+  "candidate_source_sha256": "6671a40bfdc9c911dba65729604243dd16ace210a6dae52753199fda0871a3f6",
+  "comparison_harness_sha256": "6c368db9b89c53ac8105bcdfa4712f82b3bc888e06496f876e104a1b44d47732",
+  "canonical_input_sha256": "79e886edf2eee42921ee98efaabad5a4907c9c05ae6ea5834408b28e7c0b7d24",
+  "main_count_comparison": {
+    "canonical_models": 274,
+    "orders": 3,
+    "shuffle_population": "complete count-model corpus",
+    "request_work": 20000000,
+    "milliseconds": 0,
+    "memory_bytes": 268435456,
+    "workers": 1,
+    "baseline": {"conclusive": 790, "unresolved": 14, "unsupported": 18, "failed": 0},
+    "candidate": {"conclusive": 790, "unresolved": 14, "unsupported": 18, "failed": 0},
+    "gained": [],
+    "lost": [],
+    "contradictions": [],
+    "conclusive_work_baseline": 599073175,
+    "conclusive_work_candidate": 599039561,
+    "largest_work_increase": {
+      "case": "generated/wide-equality-n64-w10000",
+      "id": "f6a80d29462d7d63b3207e494fffece4c3c451ced8a5d291448576e051d13fb6/order=1",
+      "baseline": 1423113,
+      "candidate": 1504092
+    },
+    "largest_work_decrease": {
+      "case": "scip/p0548-objective-12466",
+      "id": "d8ae8dfd678ae85633ee7e438dcb93bef68295243945deef6105bf00c9243530/order=1",
+      "baseline": 7855743,
+      "candidate": 7733088
+    },
+    "note": "Main integer-count stage, not live AE. No additional solved corpus case or general speedup is claimed. Individual work changes are mixed.",
+    "local_artifact": "build/normalized-lp-final-comparison-20261011/summary.json"
+  },
+  "standard_regression": {
+    "programs_and_batches": 95,
+    "passed": 95,
+    "failed": 0,
+    "local_artifact": "build/normalized-lp-final-standard-20261011/results.json"
+  },
+  "fixtures": {
+    "fixtures": 244,
+    "orders": 3,
+    "validated": 732,
+    "unresolved": 0,
+    "local_artifact": "build/normalized-lp-final-fixtures-20261011/results.json"
+  },
+  "new_safety_cases": {
+    "normalized_templates": {
+      "inventory_demand_order_permutations": 180,
+      "independently_replayed_multi_step_proofs": 360,
+      "sparse_outer_variables": 1502,
+      "cancellation_points": 160,
+      "catalog_capacity_admissions": 48,
+      "expected_retained_templates": 32,
+      "expected_evictions": 16,
+      "memory_limits": [131072, 262144, 2097152, 8388608, 134217728],
+      "work_limits": [1, 32, 1024, 32768, 65536],
+      "latest_test_only_assertion": "A coefficient-capped row without a matching unconditional material derivation must not be cached.",
+      "latest_local_artifact": "build/normalized-lp-final-fixtures-20261011/normalized-release-safety.log"
+    },
+    "lp_proposals": {
+      "no_cut_integer_witness": true,
+      "downstream_outcomes": ["REJECTED", "SCHEDULE_DEAD", "UNRESOLVED", "VERIFIED"],
+      "exact_search_survives_candidate_consumption": true,
+      "omitted_rows_checked": true,
+      "proof_mode_excluded": true,
+      "cancellation_points": 240
+    }
+  },
+  "build": {
+    "command": "gradlew --offline assemble",
+    "passed": true,
+    "production_source_files": 216,
+    "sources_jar_matches_working_tree": true,
+    "jar": "build/libs/cgse-core-0.1.0-SNAPSHOT.jar",
+    "jar_sha256": "acd9fbba508953877fb0df58c81903e04a4c5e993b45daa281bf26c6b0acd224"
+  },
+  "remaining_limits": [
+    "Fourteen corpus orderings remain unresolved at 20M work; eighteen model conversions remain unsupported.",
+    "Cross-request templates require identity coordinates and independently reconstructible complete material premises; conditional bounds and unmapped affine derivations are not covered.",
+    "LP proposals are candidate-only and still need execution and seed verification. An unsuccessful scout is not a global negative proof.",
+    "Standalone core validation only; no live Minecraft or AE run in this change."
+  ]
+}

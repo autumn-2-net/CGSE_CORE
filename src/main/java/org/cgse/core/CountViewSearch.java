@@ -66,6 +66,9 @@ final class CountViewSearch implements AutoCloseable {
         CountCdcl cdcl;
         CountJump jump;
         CountContinuation specialist;
+        BigInteger[] proposal;
+        PlanningBudget proposalBudget;
+        long proposalBytes;
         long sliceWork, progress, work, candidates, verified, dead, unknown, downstreamWork;
         long continuationLimit, continuationProgress, continuationCheckpoint;
         long publishedRoots;
@@ -82,7 +85,7 @@ final class CountViewSearch implements AutoCloseable {
         }
 
         boolean started() {
-            return solver != null || cdcl != null || jump != null || specialist != null;
+            return solver != null || cdcl != null || jump != null || specialist != null || proposal != null;
         }
 
         boolean paused() {
@@ -90,6 +93,7 @@ final class CountViewSearch implements AutoCloseable {
         }
 
         void resume(long quantum, PlanningBudget budget, CountModelViews models) {
+            if (proposal != null) return;
             var domains = started() ? null : models.domains(view);
             if (domains != null) scope = domains;
             if (domains != null && domains.version() > 0)
@@ -143,6 +147,10 @@ final class CountViewSearch implements AutoCloseable {
             if (cdcl != null) cdcl.close();
             if (jump != null) jump.close();
             if (specialist != null) specialist.close();
+            if (proposalBudget != null) proposalBudget.release(proposalBytes);
+            proposalBudget = null;
+            proposalBytes = 0;
+            proposal = null;
             solver = null;
             cdcl = null;
             jump = null;
@@ -150,16 +158,19 @@ final class CountViewSearch implements AutoCloseable {
         }
 
         boolean step() {
+            if (proposal != null) return true;
             if (specialist != null) return specialist.step();
             return cdcl != null ? cdcl.step() : jump != null ? jump.step() : solver.step();
         }
 
         long progress() {
+            if (proposal != null) return 1;
             if (specialist != null) return specialist.progress();
             return cdcl != null ? cdcl.progress() : jump != null ? jump.progress() : solver.progress();
         }
 
         BigInteger[] counts() {
+            if (proposal != null) return proposal;
             if (specialist != null) return specialist.counts();
             return cdcl != null ? cdcl.counts() : jump != null ? jump.counts() : solver.counts();
         }
@@ -176,6 +187,7 @@ final class CountViewSearch implements AutoCloseable {
 
         LCG,
         INTEGER_LP,
+        INTEGER_LP_HINT,
         PB,
         LOCKS,
         JUMP,
@@ -227,18 +239,72 @@ final class CountViewSearch implements AutoCloseable {
             long limit = Math.min(16384, budget.remainingWork() / 32);
             if (limit < 4096) return false;
             var domains = models.domains(view);
+            long started = budget.threadWork();
             try (var probe = new CountIntegerLpLearning();
                  var result = probe.solve(view.rows(), domains.lower(), domains.upper(), -1, budget, limit)) {
-                // A retained second LCG is worthwhile only after this bounded
-                // scout has actually found a new, exact row consequence.
-                if (result == null || result.cut == null || view.rows().contains(result.cut.row())) return false;
-                addSearch(view, Engine.INTEGER_LP);
-                models.publishCuts(view, List.of(result.cut), 0, this);
-                budget.note("count_integer_lp_scout", "certified_cut; retained_arm; view=" + view.name());
-                return true;
+                if (result == null) return false;
+                boolean added = false;
+                // An exact count witness is useful even when no new cut exists.
+                // Checking it consumes the scout's existing allowance, and the
+                // one-shot proposal cannot prove infeasibility or restart LCG.
+                if (policy.mode() != CountPortfolioPolicy.Mode.PROOF)
+                    added = retainLpProposal(view, domains, result.integerPoint, limit - (budget.threadWork() - started));
+                if (result.cut != null && !view.rows().contains(result.cut.row())) {
+                    addSearch(view, Engine.INTEGER_LP);
+                    models.publishCuts(view, List.of(result.cut), 0, this);
+                    budget.note("count_integer_lp_scout", "certified_cut; retained_arm; view=" + view.name());
+                    added = true;
+                }
+                return added;
             }
         }
         return false;
+    }
+
+    /** Complete missing coordinates only as a candidate, then check every original view row and domain. */
+    private boolean retainLpProposal(CountModelViews.View view, CountModelViews.Domains domains,
+                                     BigInteger[] suggested, long limit) {
+        if (suggested == null || suggested.length != domains.lower().length || limit <= 0) return false;
+        long started = budget.threadWork(), bytes = 256L + 8L * suggested.length;
+        for (int i = 0; i < suggested.length; i++) {
+            if (budget.threadWork() - started >= limit) return false;
+            budget.check();
+            var value = suggested[i] == null ? domains.lower()[i] : suggested[i];
+            bytes += 48L + (value.bitLength() + 7L) / 8;
+        }
+        if (bytes > budget.availableBytes() / 8 || !budget.tryReserve(bytes)) return false;
+        try {
+            var point = suggested.clone();
+            for (int i = 0; i < point.length; i++) {
+                if (budget.threadWork() - started >= limit) return false;
+                budget.check();
+                if (point[i] == null) point[i] = domains.lower()[i];
+                if (point[i].compareTo(domains.lower()[i]) < 0 ||
+                        domains.upper()[i] != null && point[i].compareTo(domains.upper()[i]) > 0) return false;
+            }
+            for (var row : view.rows()) {
+                if (budget.threadWork() - started >= limit) return false;
+                budget.check();
+                var total = BigInteger.ZERO;
+                for (var term : row.terms().entrySet()) {
+                    if (budget.threadWork() - started >= limit) return false;
+                    budget.check();
+                    var value = point[term.getKey()];
+                    budget.operation(PlanningBudget.Operation.INTEGER, Math.max(value.bitLength(), term.getValue().bitLength()));
+                    total = total.add(value.multiply(term.getValue()));
+                }
+                if (total.compareTo(row.upper()) > 0) return false;
+            }
+            Search search = new Search(view, policy.add(view.shape().cost(), Engine.INTEGER_LP_HINT), Engine.INTEGER_LP_HINT);
+            search.scope = domains;
+            search.proposal = point;
+            search.proposalBudget = budget;
+            search.proposalBytes = bytes;
+            searches.add(search);
+            bytes = 0;
+            budget.note("count_integer_lp_scout", "checked_point; candidate_only; view=" + view.name());
+            return true;
+        } finally { budget.release(bytes); }
     }
 
     /** One complementary arm, admitted by bounded row support rather than the whole LP matrix. */

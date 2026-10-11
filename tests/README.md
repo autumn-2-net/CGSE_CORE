@@ -502,3 +502,11 @@ new tool separately from its more selective main-portfolio admission. The
 direct 500k `wide-68` boundary and its three protected main-portfolio orderings
 are included in the standard suite. Scope, rejected broader admission and
 remaining limits are in `../docs/integer-lp-and-row-templates.txt`.
+
+`CountNormalizedTemplatesTest` adds 180 changing-inventory/demand/order
+comparisons and 360 portable multi-step proofs. Intermediate normalization
+floors remain explicit; new suppliers, conditional premises and cancellation
+are checked independently. `IntegerLpProposalTest` exercises no-cut numerical
+witnesses through the normal candidate feedback path, rejection followed by
+continued exact search, omitted boundary rows and proof-mode exclusion. Run
+these together with `--suite standard --case 'TemplatesTest|IntegerLp'`.

@@ -31,6 +31,15 @@ to common preparation, not the preceding strategy's feedback. Subsequent LP
 calls share the owning LCG slice's remaining work. Original Boolean LP and
 ordinary LCG paths retain their ordering.
 
+A rounded integer point from that same scout now has a separate one-shot
+INTEGER_LP_HINT entry, even when no cut is found. Its validation uses the
+scout's remaining allowance. Unrepresented coordinates are completed at the
+current lower endpoint only as a proposed assignment; every view row and
+domain is checked exactly before admission. The normal original-coordinate
+restoration and execution/seed validation still follow. Rejection consumes
+the hint once and leaves retained exact engines available. The hint never
+proves infeasibility, restarts another LCG, or runs in proof-only mode.
+
 This admission rule matters. Broad early admission displaced all three main
 portfolio orders of wide-68. Delayed, evidence-based admission preserves those
 conclusions. The direct integer LP arm is useful but is not a replacement for
@@ -51,13 +60,26 @@ Recipe reordering is harmless; changed/added/removed producers or an omitted
 external-material row fail the full-row match. There is no hash-only match.
 Completed replayed rows enter the existing request-owned count cut pool.
 
-Only original material premises are retained across requests in this version.
-Branch bounds, objective cutoffs, production-only rows and unmapped affine
-derivations are rejected. Reduced/affine cut sharing continues inside the
-existing request-owned CountViewCuts scope. Supporting conditional or transformed
-cross-request templates later requires explicit premise/mapping reconstruction;
-this implementation never treats those facts as unconditional catalog rules.
+Identity-coordinate normalized views can now retain derivations too. Each
+premise must independently match the ENTIRE original material row divided by
+a positive integer, including exact coefficient division and a floored RHS.
+The template saves that divisor separately from the final combination/divisor.
+Replay reconstructs all intermediate floors on current RHS values and emits
+a multi-step CountProof derivation. Combining denominators and flooring only
+at the end would weaken some consequences, so replay does not flatten them.
+
+Fixed-variable substitution, coefficient capping, branch bounds, objective
+cutoffs and production-only rows are not accepted merely because they belong
+to an equivalent view. They need a matching unconditional material proof;
+otherwise template admission fails. Unmapped affine derivations remain out
+of scope. Reduced/affine cut sharing continues inside the existing request-owned
+CountViewCuts scope. Conditional/transformed cross-request templates still
+require explicit premise/mapping reconstruction.
 Residency is bounded to 32 templates / 2 MiB and exposed in cache metrics.
+Replay also reserves simultaneous result rows and proof workspace. Its
+request-local signature cache is capped at 64 KiB; a changed supply row cannot
+silently grow an unbounded validation cache. Small-budget refusal preserves
+the catalog templates and never becomes a negative search conclusion.
 
 Validation
 ----------
@@ -73,12 +95,28 @@ changed suppliers, external rows, invalid/branch-local certificates, sparse
 reuse inside 1502 variables, 32 concurrent requests, actual count-stage import,
 workspace refusal and 240 independently replayed current-RHS certificates.
 
+CountNormalizedTemplatesTest adds 180 inventory/demand/order permutations and
+360 independent serialized multi-step proofs, including negative RHS values,
+a strict nested-floor example, full supplier changes, sparse 1502-column
+models and cancellation. IntegerLpProposalTest checks no-cut witnesses through
+downstream feedback, exact-engine survival after rejection, omitted boundary
+rows, proof-mode admission and 240 cancellation points.
+
 The standard suite, maintained count boundaries, fixture permutations and
 equal-budget main-count comparison accompany this change. Reproduction and
 measured totals are in tests/provenance/integer-lp-templates-20261011.json.
 The full main-count comparison preserves all 790 previously conclusive
 orders; 14 undecided and 18 unsupported conversions remain explicit limits.
 These are standalone solver tests, not live Minecraft/AE validation.
+
+The normalized-template and no-cut-witness follow-up is recorded separately in
+tests/provenance/normalized-lp-reuse-20261011.json, against d5b35330. It passes
+95 standard programs/batches and 732 fixture replays; all 822 main-count
+orderings preserve their previous conclusions. This adds safe reuse coverage,
+not additional solved cases in that corpus. Charged-work changes are mixed:
+one wide-equality ordering increases from 1,423,113 to 1,504,092, while one
+p0548 ordering decreases from 7,855,743 to 7,733,088. No general speedup or
+live-game performance claim follows from those measurements.
 
 Commands (JDK 17)
 -----------------

@@ -237,9 +237,11 @@ final class CountModelViews implements AutoCloseable {
         cuts.publish(view, learned, from, origin);
         if (cuts.version() > before) budget.note("count_view_cuts", "origin=" + view.name() + "; certified=" + (cuts.version() - before) +
                 "; version=" + cuts.version() + "; scope=owned_count_model");
-        // Only the unchanged original rows carry material identities. Reduced,
-        // affine, branch and cutoff premises must not become stock-free templates.
-        if (view == original && templateModel != null && templateModel.rowTemplates != null)
+        // Identity-coordinate views may cite normalized material rows. The cache
+        // independently reconstructs each premise from the complete material row;
+        // bound-dependent simplifications and unmapped affine rows are rejected.
+        if (view.inverse == null && view.substitution == null && view.semantics == Semantics.EQUIVALENT &&
+                templateModel != null && templateModel.rowTemplates != null)
             for (int i = from; i < learned.size(); i++)
                 templateModel.rowTemplates.remember(templateModel, view.rows(), learned.get(i), budget);
     }

@@ -155,8 +155,8 @@ public final class IntegerLpLearningTest {
             check(!(Boolean) scout.invoke(search), "Integer LP displaced preliminary compilation");
             models.compileLight();
             if ((Boolean) scout.invoke(search)) {
-                admissions++;
-                check(models.cutVersion() > 0, "Another LCG was admitted without a certified consequence");
+                if (models.cutVersion() > 0) admissions++;
+                else check(budget.diagnostics().contains("checked_point; candidate_only"), "Scout admitted neither a consequence nor a checked candidate");
             }
             check(!(Boolean) scout.invoke(search), "A parent handoff renewed the one-time scout");
             search.resume(65536);

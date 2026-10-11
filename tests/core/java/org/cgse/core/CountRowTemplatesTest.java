@@ -53,7 +53,8 @@ public final class CountRowTemplatesTest {
                     Map.of("ore", ore, "out", storedOut), Set.of(), budget)) {
                 var cuts = cache.reuse(model, budget);
                 check(cuts.size() == 2, "Reordered recipes or changed RHS lost a reusable derivation");
-                check(cuts.contains(divide(model, "ore", 2)) && cuts.contains(divide(model, "out", 2)), "A stale RHS or ordinal was reused");
+                check(cuts.stream().anyMatch(cut -> cut.row().equals(divide(model, "ore", 2).row())) &&
+                        cuts.stream().anyMatch(cut -> cut.row().equals(divide(model, "out", 2).row())), "A stale RHS or ordinal was reused");
                 // Independent enumeration checks both relaxed and strengthened requests.
                 for (int a = 0; a <= 12; a++) for (int b = 0; b <= 12; b++) {
                     var values = new BigInteger[] {BigInteger.valueOf(a), BigInteger.valueOf(b)};
@@ -77,7 +78,7 @@ public final class CountRowTemplatesTest {
                 var cuts = cache.reuse(model, budget);
                 check(cuts.size() == (variant == 3 ? 0 : 1), "Changed supply boundary was ignored: " + variant);
                 String surviving = variant == 4 ? "ore" : "out";
-                if (variant != 3) check(cuts.get(0).equals(divide(model, surviving, 2)), "Wrong surviving template");
+                if (variant != 3) check(cuts.get(0).row().equals(divide(model, surviving, 2).row()), "Wrong surviving template");
             }
             check(budget.reservedBytes() == 0, "Boundary replay leak");
         }
@@ -109,7 +110,7 @@ public final class CountRowTemplatesTest {
                     var budget = budget();
                     try (var model = RecipeCountModel.forShell(recipes, Map.of("out", BigInteger.TEN), Map.of("ore", (long) stock), Set.of(), budget)) {
                         var cuts = cache.reuse(model, budget);
-                        check(cuts.size() == 2 && cuts.contains(divide(model, "ore", 2)), "Concurrent requests exchanged RHS");
+                        check(cuts.size() == 2 && cuts.stream().anyMatch(cut -> cut.row().equals(divide(model, "ore", 2).row())), "Concurrent requests exchanged RHS");
                     }
                     check(budget.reservedBytes() == 0, "Concurrent replay leak");
                 }));
