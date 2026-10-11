@@ -1,0 +1,25 @@
+{
+  "schema": "cgse-candidate-handoff-regression-v1",
+  "baseline_revision": "7a9278ab79cb11c15ee15f1f7ac24b13c7e25a20",
+  "problem": "Recovery progress disappeared when the final independent count component handed its witness to execution scheduling, assembly or validation. The local quota then discarded an in-flight candidate.",
+  "boundary": "regression/graph-boundaries.json",
+  "synthetic_fixture": "regression/fixtures/fused/recycle_mix7.json",
+  "work_limit": 40000000,
+  "baseline": {
+    "result": "SEARCH_LIMIT",
+    "search_work": 40000001,
+    "compilation_work": 1734111
+  },
+  "fixed": {
+    "result": "FEASIBLE_NOT_PROVEN_OPTIMAL",
+    "search_work": 7421248,
+    "compilation_work": 1204928
+  },
+  "validation": [
+    "Independent primitive-prefix replay of archived recipe/slot/output ordering",
+    "CountCandidateContinuationTest: real scheduling/assembly/verification at a spent local allowance; fixed ceiling and cancellation",
+    "140 standard entries passed",
+    "Gradle offline assemble and testClasses passed"
+  ],
+  "scope": "Only bounded scheduling preference changes. Partial quantities remain unverified proposals; no budget cap or proof rule is enlarged."
+}

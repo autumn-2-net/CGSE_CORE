@@ -1,6 +1,7 @@
 """Dependency-free regression entry point for the graph planner (Python 3 + JDK 17)."""
 from pathlib import Path
 import argparse
+import hashlib
 import json
 import os
 import random
@@ -11,6 +12,31 @@ import subprocess
 
 BASE = Path(__file__).resolve().parent
 ROOT = BASE.parent.parent
+
+
+def graph_boundaries():
+    """Replay pinned historical orderings without duplicating their recipe data."""
+    manifest = json.loads((BASE / 'graph-boundaries.json').read_text(encoding='utf-8'))
+    def reordered(values, order):
+        if sorted(order) != list(range(len(values))):
+            raise ValueError('Invalid graph boundary permutation')
+        return [values[i] for i in order]
+    for entry in manifest['cases']:
+        text = (BASE / entry['fixture']).read_text(encoding='utf-8')
+        if hashlib.sha256(text.encode('utf-8')).hexdigest() != entry['fixture_sha256_lf']:
+            raise ValueError('Graph boundary source changed: ' + entry['fixture'])
+        case = json.loads(text)
+        if case['truth'] != entry['expected']:
+            raise ValueError('Graph boundary disagrees with the fixture oracle')
+        for field in ('inputs', 'outputs'):
+            for index, order in entry[field[:-1] + '_orders'].items():
+                recipe = case['recipes'][int(index)]
+                recipe[field] = dict(reordered(list(recipe[field].items()), order))
+        case['recipes'] = reordered(case['recipes'], entry['recipe_order'])
+        case['name'] = entry['name']
+        if not isinstance(entry['work'], int) or entry['work'] <= 0:
+            raise ValueError('Invalid graph boundary work cap')
+        yield case, entry['work']
 
 
 def write_cases(path, cases):

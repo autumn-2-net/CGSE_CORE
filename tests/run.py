@@ -142,6 +142,17 @@ def main():
                 boundaries_helper.write_models(path, batch)
                 run('CountModelBoundaries' + suffix, 'org.cgse.core.CountModelRegression',
                     [path, 0, work, engine, 'true'])
+        if shard == 0 and re.search(args.case, 'GraphCandidateBoundaries'):
+            spec = importlib.util.spec_from_file_location('graph_boundaries', BASE / 'regression/run.py')
+            helper = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(helper)
+            batches = {}
+            for case, work in helper.graph_boundaries():
+                batches.setdefault(work, []).append(case)
+            for work, cases in sorted(batches.items()):
+                path = output / ('graph-boundaries-' + str(work) + '.bin')
+                helper.write_cases(path, cases)
+                run('GraphCandidateBoundaries-' + str(work), 'org.cgse.core.GraphFixtureRegression', [path, 0, work])
     if args.suite == 'benchmarks' and re.search(args.case, 'GraphBenchmark'):
         run('GraphBenchmark', 'org.cgse.core.GraphBenchmark')
     if args.suite in ('fixtures', 'all'):

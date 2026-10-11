@@ -169,12 +169,12 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         }
         if (rootProved) return finish(true);
         budget.check();
-        // A live finite-domain enumeration retains its table and prefix stack.
-        // Let it use another bounded slice of the same order budget instead of
-        // discarding it at the general branch-search quota and redoing sources.
-        if (scouting && work >= allowance && allowance < scoutMaximum && hasIndependentProgress()) {
+        // Keep useful component work and its downstream candidate pipeline
+        // alive for another bounded slice of the same order budget, instead of
+        // discarding it at the branch-search quota and redoing sources.
+        if (scouting && work >= allowance && allowance < scoutMaximum && hasCandidateProgress()) {
             allowance += Math.min(524_288, scoutMaximum - allowance);
-            budget.note("integer_counts_scout", "independent_components_progress; allowance=" + allowance);
+            budget.note("integer_counts_scout", "candidate_progress; allowance=" + allowance);
         }
         if (scouting && !repairScoutExtended && work >= allowance && allowance < scoutMaximum &&
                 pending.size() == 1 && deferred.isEmpty() && pending.peekFirst().repair != null && pending.peekFirst().repair.competingViews()) {
@@ -271,11 +271,19 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     }
 
     /** Budget scheduling hint only; partial quantities are not an executable plan. */
-    boolean hasIndependentProgress() {
+    boolean hasCandidateProgress() {
         if (running != null || pending.size() != 1 || !deferred.isEmpty()) return false;
         var branch = pending.peekFirst();
-        return branch.components != null && branch.components.hasSolvedComponent() ||
-                branch.recovery != null && branch.recovery.hasIndependentProgress();
+        // Completing the last component clears its solver before scheduling,
+        // assembly and validation finish. Keep the bounded continuation through
+        // that handoff; a faster count witness must not lose its existing turn.
+        // Inspect live stages, not a sticky success flag or an old count vector:
+        // rejecting a candidate must also stop granting it this preference.
+        return branch.state == IntegerCountBranch.State.OPEN &&
+                (branch.components != null && branch.components.hasSolvedComponent() ||
+                        branch.scheduling != null || branch.program != null ||
+                        branch.assembling != null || branch.verifying != null ||
+                        branch.recovery != null && branch.recovery.hasCandidateProgress());
     }
 
     /** A retained scaled subproblem can finish without the original large-number relaxation. */

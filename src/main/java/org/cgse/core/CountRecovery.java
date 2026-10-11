@@ -269,10 +269,10 @@ final class CountRecovery<K> implements AutoCloseable {
         boolean done = false;
         if (viewWork < viewAllowance) done = search.step();
         viewWork += budget.threadWork() - before;
-        if (search.hasIndependentProgress()) {
+        if (search.hasCandidateProgress()) {
             if (viewWork >= viewAllowance && viewAllowance < viewMaximum) {
                 viewAllowance = Math.min(viewMaximum, viewAllowance + 1_000_000);
-                budget.note("count_recovery", "independent_components_progress; allowance=" + viewAllowance);
+                budget.note("count_recovery", "candidate_progress; allowance=" + viewAllowance);
             }
             if (done && search.paused() && viewWork < viewAllowance) {
                 search.resume();
@@ -313,8 +313,8 @@ final class CountRecovery<K> implements AutoCloseable {
         return witness;
     }
 
-    boolean hasIndependentProgress() {
-        return search != null && search.hasIndependentProgress();
+    boolean hasCandidateProgress() {
+        return search != null && search.hasCandidateProgress();
     }
 
     @Override

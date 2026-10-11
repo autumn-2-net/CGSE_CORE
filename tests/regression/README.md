@@ -14,6 +14,20 @@ runs independent integer/BFS/seed/proof checks. `--milliseconds` and `--work`
 control the per-order fixture budget; exhaustion is an unresolved result with exit
 status 2, never an UNSAT conclusion. Assertion or setup failures use exit status 1.
 Local runs default to three seconds and 20 million cumulative work checks.
+
+`graph-boundaries.json` pins archived recipe, slot and output orderings against
+the SHA-256 of an existing fixture (LF-normalized), without duplicating its
+recipe data. The standard runner includes these boundaries with an explicit
+search-work cap and the same independent primitive-prefix witness checker:
+
+```text
+python tests/run.py --suite standard --case 'CountCandidateContinuationTest|GraphCandidateBoundaries' --milliseconds 0
+```
+
+The first boundary preserves the `recycle_mix7` order that exhausted 40 million
+search work after its component solver had already found a complete count
+vector. A bounded continuation now survives the handoff to execution scheduling,
+assembly and verification; cancellation and the fixed scout ceiling still apply.
 Timing comparisons should use the same machine and runtime. Run the script
 explicitly; no remote workflow is installed by this regression suite.
 

@@ -16,7 +16,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Suite | Command / location | Coverage |
 | --- | --- | --- |
 | Stable core | `--suite core` | Compiler, planning, exact amounts, cancellation, retained requests, runtime, scheduling, pipeline, recovery, geometry and extracted services |
-| Stable oracles | `--suite oracles` | 25 independent oracle programs plus 61 pinned count-model boundaries at explicit work caps |
+| Stable oracles | `--suite oracles` | 25 independent oracle programs, 61 pinned count-model boundaries and one archived graph-order boundary at explicit work caps |
 | View | `--suite view` | Exact summary/ring data plus optional headless SVG/PNG exporter |
 | Fixed counterexamples | `--suite fixtures --keep-going` | All 247 curated fixtures, three deterministic order permutations by default |
 | Full graph corpus | `--suite corpus --keep-going` | All graph and count-model records listed in `cases/manifest.json` |
@@ -28,7 +28,7 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | AEDUMP | `python tests/ae-dump/check_migration.py --java-home <jdk17>` | Archive format/validation plus extracted request-service handoff |
 | Live adapter | `adapter/live/` | Forge/server probes requiring the actual host installation |
 
-`standard` runs core, view, the stable oracles and the pinned count-model boundaries. `all` also selects every fixed
+`standard` runs core, view, the stable oracles and the pinned count/graph boundaries. `all` also selects every fixed
 fixture, portable probe and corpus case; it can take substantially longer and includes
 known hard inputs. Benchmark/dataset/AE/live suites are explicit separate entries because their
 resource requirements differ. Use `--case <regex>`, `--shard 0/4`, `--milliseconds`,
