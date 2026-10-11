@@ -1,0 +1,90 @@
+Equivalent equality sparsification (2026-10-11)
+
+Shared integer balances can hide simple bounds inside dense rows. For example,
+keeping sum(x)=k allows 5*sum(x)+x_i<=5*k+b_i to become x_i<=b_i. Ordinary
+per-row normalization cannot expose that bound. CountRowSparsifier now supplies
+an additional equivalent representation to CountModelViews when it removes at
+least one eighth of the nonzero terms. Original and normalized views remain.
+
+The compiler detects exact opposite inequality pairs, processes shorter
+equalities first and indexes the retained pivots by variable. A histogram of
+exact coefficient ratios counts cancellations before allocating a combined
+row. Each accepted operation strictly reduces the target's support. It keeps
+the pivot's two faces and multiplies the target inequality by a positive
+integer. Equalities divide exactly; inequality division rounds the complete
+combined right-hand side down. No tolerance, artificial variable bound,
+producer pruning or recipe-coordinate substitution is introduced.
+
+An equation reduced by an earlier pivot becomes another retained pivot. This
+ordering keeps every cancellation premise in the resulting system. Candidates
+still pass the existing original-row, original-domain and execution checks.
+An interval with distinct endpoints is not an equality. Noncanonical zero
+entries are declined; production light normalization removes them first.
+
+This is optional bounded compilation, not a retained search algorithm. Its
+attempt is capped at min(65536, remaining request work / 64), with reserved
+scratch and separately reserved result memory. Oversized support, coefficients
+beyond the 1024-bit scratch admission, coefficient growth, inadequate gain or
+local exhaustion keeps the original representation.
+Cancellation and request exhaustion propagate normally. No partial row set is
+published. The constructor does not cache inventory, row identities or proofs
+across requests.
+
+With a proof journal, accepted operations form a DAG of nonnegative integer
+row combinations over the exact input axioms. Negative equality multipliers
+use the retained opposite face. The independent CountProof checker verifies
+the DAG before adoption, and the existing archive format serializes it. Proof
+checking, including its last refused work tick, stays within the compiler's
+local allowance. This records row implications; it does not claim a final
+infeasibility proof when an ordinary search only runs out of work.
+
+The general sparsification idea is also used by SCIP:
+https://github.com/scipopt/scip/blob/master/src/scip/presol_sparsify.c
+CP-SAT's integer equality reformulation was also reviewed:
+https://or-tools.github.io/docs/cpp/cp__model__presolve_8cc_source.html
+The CGSE implementation uses its own exact integer rows, budget accounting,
+proof checker and view portfolio. A general Diophantine coordinate rewrite is
+not part of this change; fewer variables is not automatically a better model.
+
+Validation
+
+CountRowSparsifierTest checks 205756 integer assignments across 160 randomized
+signed and 100-bit-offset models plus a chained-equality model. All 160 random
+models are actually transformed, with 80 independently replayed certificates.
+It also checks archive round trips, altered axioms, duplicate/contradictory
+equalities, non-equality bands, cancellation, local work and memory refusals,
+original-coordinate recovery. SparseEqualityReview additionally checks three
+main-counts recipe permutations through the portable corpus harness.
+
+In the 32-variable shared-equality test, direct LCG remains UNKNOWN after a
+262356-work visit. Sparse-row LCG finds a checked witness in 367 work; light
+compilation plus the new representation uses 14439 work. This compares one
+bounded LCG visit, not the entire planner or game latency.
+
+The local main-counts campaign has 21 planted models, sizes 8..64 with three
+row/column orders. All pass before and after. The 64-variable cases drop from
+2172014..2340944 work to 254321..255113, including compilation and primitive
+execution validation. Main-counts embeds bounded linear models into recipes;
+it does not exercise the live AE adapter or GraphPlanner source selection.
+
+The frozen full corpus retains its outcomes at 40M work: 792 PASS,
+12 UNRESOLVED and 18 unsupported finite recipe conversions, with no lost
+solutions. The four known-SAT sparse equality families remain unresolved in
+each of the three orders. Sparse cancellation does not solve these large
+coupled kernels. Compilation adds 357664 total charged work across the 822
+runs (including changes to search trajectories); the largest relative increase
+among previously solved cases is about 4.2%. The ratio histogram substantially
+reduces failed compilation work compared with constructing every trial row.
+
+The standard 115-entry suite and all 741 graph-fixture checks pass. Final
+certificate-accounting and noncanonical-input adjustments are additionally
+checked with the compilation, archive, view-sharing and pinned boundary tests.
+Local manifests retain all measured commands, source fingerprints, generated
+inputs and earlier test-harness corrections without adding native binaries,
+incident logs or audit files to Git.
+
+Build verification also exposed an existing source-set discrepancy: Gradle
+test compilation omitted the regression/corpus helpers used by core tests,
+although the Python entry already compiled them. The Gradle test source set
+now includes those helper directories. Offline assemble, testClasses and
+runCountRowSparsifierTest succeed without an adapter or a Minecraft dependency.

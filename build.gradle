@@ -58,7 +58,9 @@ tasks.withType(Jar).configureEach {
 }
 
 sourceSets {
-    test.java.setSrcDirs(['tests/core/java', 'tests/shared/java'])
+    // Standalone core checks also use the portable replay/fixture helpers.
+    // Keep their compilation scope aligned with tests/run.py.
+    test.java.setSrcDirs(['tests/core/java', 'tests/shared/java', 'tests/regression/java', 'tests/corpus/java'])
     view {
         java.srcDir 'tools/view/src/main/java'
         compileClasspath += sourceSets.main.output
