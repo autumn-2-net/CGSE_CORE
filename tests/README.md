@@ -125,6 +125,23 @@ recruit an unrelated count scout ahead of the funded 7000-link stock path.
 the optional proof consumes the request budget without spending a paused
 frontier's local turn or waking parked views before primary search resumes.
 
+`CountBoundCoverTest` compares 400 complete finite assignment sets before and
+after reduction. It covers uneven resource incidence, duplicate rows and genuine
+non-unit upper bounds; a missing singleton resource must not become an invented
+unit capacity. `CountRangedKernelTest` checks 2,400 signed and large-offset boxes
+against exhaustive enumeration. Its retained affine cases require identical
+work and witnesses across small and large grants, full restoration, optional
+memory refusal and cancellation. Two existing corpus inputs are pinned in
+`regression/execution-boundaries.json`, each in three recipe orders.
+
+The narrow-band search is a candidate strategy after exact affine elimination:
+in a two-dimensional kernel it enumerates at most 128 integer row activities
+and intersects every original projected constraint along each Diophantine line.
+Its refusal or failure does not prove infeasibility. This complements the ranged
+row/GCD reasoning documented in
+[SCIP's linear constraint handler](https://github.com/scipopt/scip/blob/master/src/scip/cons_linear.c)
+with an exact witness search; it adds no native dependency or floating tolerance.
+
 The continuation/LP follow-up is documented in `../docs/effort-and-rational-lp.txt`.
 It records the equal-budget three-order comparison and the separate known-SAT
 miracle-crystal full-catalog cutoffs. Those cutoffs are not counted as passes.

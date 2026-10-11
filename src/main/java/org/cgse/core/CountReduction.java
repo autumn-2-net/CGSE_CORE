@@ -584,16 +584,38 @@ final class CountReduction implements AutoCloseable {
                     total.merge(id, BigInteger.ONE, BigInteger::add);
                 }
             }
-            if (!total.keySet().equals(need.terms().keySet())) continue;
-            BigInteger factor = total.values().iterator().next();
-            if (total.values().stream().anyMatch(v -> !v.equals(factor)) || !factor.multiply(need.upper().negate()).equals(BigInteger.valueOf(used.size()))) continue;
+            if (total.isEmpty()) continue;
+            BigInteger factor = total.values().stream().max(BigInteger::compareTo).orElseThrow();
+            BigInteger capacity = BigInteger.valueOf(used.size());
+            var padding = new LinkedHashMap<Integer, BigInteger>();
+            boolean bounded = true;
+            boolean uniform = total.size() == need.terms().size() && total.values().stream().allMatch(factor::equals);
+            // A singleton resource is often represented only by a variable
+            // bound. Complete the uneven cover with those proved bounds, not
+            // an assumed at-most-one row for every uncovered coordinate.
+            if (!uniform) for (int id : need.terms().keySet()) {
+                charge();
+                BigInteger missing = factor.subtract(total.getOrDefault(id, BigInteger.ZERO));
+                if (missing.signum() == 0) continue;
+                if (sourceUpper[id] == null) {
+                    bounded = false;
+                    break;
+                }
+                capacity = capacity.add(missing.multiply(sourceUpper[id]));
+                padding.put(id, sourceUpper[id]);
+            }
+            if (!bounded || !factor.multiply(need.upper().negate()).equals(capacity)) continue;
             for (var cap : used) {
                 Map<Integer, BigInteger> terms = new LinkedHashMap<>();
                 cap.terms().forEach((key, value) -> terms.put(key, value.negate()));
                 var reverse = new ExactLinearProgram.Constraint(terms, BigInteger.ONE.negate());
                 if (distinct.add(reverse)) source.add(reverse);
             }
-            budget.note("count_cover", "saturated_capacities=" + used.size());
+            for (var bound : padding.entrySet()) {
+                var reverse = new ExactLinearProgram.Constraint(Map.of(bound.getKey(), BigInteger.ONE.negate()), bound.getValue().negate());
+                if (distinct.add(reverse)) source.add(reverse);
+            }
+            budget.note("count_cover", "saturated_capacities=" + used.size() + "; bound_rows=" + padding.size());
         }
     }
 

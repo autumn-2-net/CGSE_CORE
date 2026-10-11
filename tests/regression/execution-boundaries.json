@@ -214,6 +214,34 @@
       "name": "choice_n12_c2_cap3_s509_deep48_alias_all/private-chain-admission",
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle; recovered primitive executions independently replayed. Raw aliases/private stages must not hide compact bounded choices from count admission."
+    },
+    {
+      "source": "cases/graph/65/65d8f6a22ba403c27ee9c1f1d7e6a3b9d75b3e9712d8441558ac4bd1eaf45907.json",
+      "sha256_lf": "9c8801eea84b3123c61f9dba22e78701ebf7e490c6846fea2d619db3aed51459",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 4000000,
+      "name": "hypermatch_01059/singleton-capacity-cover",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT case; independent exact integer row and primitive execution checks. Narrow row activity and singleton capacity recovery must stay inside the shared request budget."
+    },
+    {
+      "source": "cases/graph/5d/5d72adb8449eebd726c5953aa348545959de2f27ee1aab1d9868550fa23b2498.json",
+      "sha256_lf": "632d1c2f574b597a4d328dbf8cd732c2a90d7ea4011c7580ba0701f7793488f3",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 4000000,
+      "name": "min_manual_large_n4_c2_d3_a1_s107_shuffle_1_intermediate/thin-integer-kernel",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT case; independent exact integer row and primitive execution checks. Narrow row activity and singleton capacity recovery must stay inside the shared request budget."
     }
   ]
 }
