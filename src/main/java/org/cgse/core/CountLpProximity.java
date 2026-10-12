@@ -10,6 +10,8 @@ import java.util.*;
  * Candidate-only Boolean proximity search, inspired by local branching in SCIP.
  * Keep every fractional choice and permit up to three changes to rounded integral
  * coordinates. A dominance tree joins one change with a pair, checking every row.
+ * A subsequent priced neighborhood reuses the same join machinery for up to five
+ * changes, guided by the LP aggregate rather than enumerating a larger radius.
  * Exhausting this neighborhood never proves the original problem infeasible.
  */
 final class CountLpProximity implements AutoCloseable {
@@ -43,6 +45,7 @@ final class CountLpProximity implements AutoCloseable {
     private long[] points;
     private final int[] order;
     private int[] equalityRows, buckets;
+    private CountLpPriceQueue priced;
     private final Deque<Node> building = new ArrayDeque<>();
     private Node root;
     private BigInteger[] counts;
@@ -59,23 +62,67 @@ final class CountLpProximity implements AutoCloseable {
     static CountLpProximity create(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
                                    BigInteger[] upper, double[] point, ExactLinearProgram.Constraint preference,
                                    PlanningBudget budget) {
+        return create(rows, lower, upper, point, preference, budget, false);
+    }
+
+    static CountLpProximity createPriced(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
+                                         BigInteger[] upper, double[] point, ExactLinearProgram.Constraint preference,
+                                         PlanningBudget budget) {
+        return create(rows, lower, upper, point, preference, budget, true);
+    }
+
+    private static CountLpProximity create(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
+                                           BigInteger[] upper, double[] point, ExactLinearProgram.Constraint preference,
+                                           PlanningBudget budget, boolean priceOrdered) {
         budget.checkpoint();
         int n = lower.length;
         if (point == null || n < 2 || n > 128 || upper.length != n || point.length != n ||
-                rows.isEmpty() || rows.size() > 16) return null;
-        long started = budget.threadWork(), allowance = Math.min(131072, budget.remainingWork() / 16);
+                rows.isEmpty() || rows.size() > 16 || priceOrdered && preference == null) return null;
+        long started = budget.threadWork();
+        long allowance = Math.min(priceOrdered ? 524288 : 131072, budget.remainingWork() / (priceOrdered ? 32 : 16));
         if (allowance < 4096) return null;
         long bytes = 2048L + 192L * n + 128L * rows.size();
         if (!budget.tryReserve(bytes)) return null;
         try {
+            if (priceOrdered) for (int i = 0; i < n; i++) {
+                budget.operation(PlanningBudget.Operation.SCAN, 0);
+                if (lower[i] == null || upper[i] == null || lower[i].signum() < 0 ||
+                        lower[i].compareTo(upper[i]) > 0 || upper[i].compareTo(BigInteger.ONE) > 0 ||
+                        !Double.isFinite(point[i])) return null;
+            }
+            BigInteger slack = null;
+            if (priceOrdered) {
+                // These restrictions belong only to this optional candidate
+                // neighborhood. They are never published as global bounds or
+                // proofs, even if a caller supplies a merely heuristic row.
+                lower = lower.clone(); upper = upper.clone();
+                BigInteger minimum = BigInteger.ZERO;
+                if (preference.upper().bitLength() > 1024) return null;
+                for (var term : preference.terms().entrySet()) {
+                    int id = term.getKey(); var a = term.getValue();
+                    if (id < 0 || id >= n || a.bitLength() > 1024) return null;
+                    budget.operation(PlanningBudget.Operation.INTEGER, Math.max(a.bitLength(), minimum.bitLength()));
+                    if ((a.signum() > 0 ? lower[id] : upper[id]).signum() != 0) minimum = minimum.add(a);
+                }
+                budget.operation(PlanningBudget.Operation.INTEGER, Math.max(minimum.bitLength(), preference.upper().bitLength()));
+                slack = preference.upper().subtract(minimum);
+                if (slack.signum() < 0) return null;
+                for (var term : preference.terms().entrySet()) {
+                    budget.operation(PlanningBudget.Operation.INTEGER, Math.max(slack.bitLength(), term.getValue().bitLength()));
+                    if (term.getValue().abs().compareTo(slack) > 0) {
+                        int id = term.getKey();
+                        if (term.getValue().signum() > 0) upper[id] = lower[id]; else lower[id] = upper[id];
+                    }
+                }
+            }
             var fractional = new ArrayList<Integer>();
             var integral = new ArrayList<Integer>();
             var seed = new BigInteger[n];
             for (int i = 0; i < n; i++) {
                 budget.operation(PlanningBudget.Operation.SCAN, 0);
-                if (lower[i] == null || upper[i] == null || lower[i].signum() < 0 ||
+                if (!priceOrdered && (lower[i] == null || upper[i] == null || lower[i].signum() < 0 ||
                         lower[i].compareTo(upper[i]) > 0 || upper[i].compareTo(BigInteger.ONE) > 0 ||
-                        !Double.isFinite(point[i])) return null;
+                        !Double.isFinite(point[i]))) return null;
                 seed[i] = (point[i] >= 0.5 ? BigInteger.ONE : BigInteger.ZERO).max(lower[i]).min(upper[i]);
                 if (lower[i].equals(upper[i])) continue;
                 if (point[i] > 1e-6 && point[i] < 1 - 1e-6) {
@@ -95,6 +142,24 @@ final class CountLpProximity implements AutoCloseable {
                     return x.abs().compareTo(y.abs());
                 });
             }
+            long[] prices = null;
+            long priceCapacity = 0;
+            if (priceOrdered) {
+                int shift = Math.max(0, slack.bitLength() - 48);
+                priceCapacity = slack.shiftRight(shift).longValueExact();
+                prices = new long[integral.size()];
+                for (int i = 0; i < integral.size(); i++) {
+                    int id = integral.get(i);
+                    var a = preference.terms().getOrDefault(id, BigInteger.ZERO);
+                    budget.operation(PlanningBudget.Operation.INTEGER, Math.max(slack.bitLength(), a.bitLength()));
+                    if (a.signum() != 0 && (seed[id].signum() == 0) != (a.signum() > 0)) return null;
+                    // Flooring nonnegative prices and ignoring fractional-choice
+                    // costs only relaxes the necessary price bound. At most five
+                    // 48-bit prices are added, so queue arithmetic cannot overflow.
+                    prices[i] = a.abs().shiftRight(shift).longValueExact();
+                }
+            }
+            if (budget.threadWork() - started >= allowance) return null;
             int states = (1 << fractional.size()) * (integral.size() + 1);
             if (states > MAX_STATES) return null;
             int leaves = 1;
@@ -107,6 +172,7 @@ final class CountLpProximity implements AutoCloseable {
             bytes += workspace;
             var result = new CountLpProximity(rows, lower, upper, seed, fractional, integral,
                     states, budget, started, allowance, bytes);
+            if (priceOrdered) result.priced = new CountLpPriceQueue(prices, priceCapacity, budget, result::check);
             bytes = 0;
             return result;
         } finally {
@@ -173,11 +239,15 @@ final class CountLpProximity implements AutoCloseable {
                 if (building.isEmpty()) phase++;
                 return false;
             }
-            if (first >= integral.length) return finish("neighborhood_exhausted");
+            if (priced == null ? first >= integral.length : priced.complete())
+                return finish(priced != null && priced.limited() ? "queue_limit" : "neighborhood_exhausted");
             int a = first < 0 ? -1 : integral[first], b = second < 0 ? -1 : integral[second];
             for (int r = 0; r < dimensions; r++) {
                 scalar();
                 goal[r] = capacity[r] - delta(a, r) - delta(b, r);
+                if (priced != null) for (int k = 0; k < priced.length(); k++) {
+                    scalar(); goal[r] -= delta(integral[priced.at(k)], r);
+                }
             }
             queries++;
             int hit = buckets == null ? find(root, a, b) : findEquality(a, b);
@@ -190,6 +260,9 @@ final class CountLpProximity implements AutoCloseable {
                 }
                 if (a >= 0) value[a] = BigInteger.ONE.subtract(value[a]);
                 if (b >= 0) value[b] = BigInteger.ONE.subtract(value[b]);
+                if (priced != null) for (int k = 0; k < priced.length(); k++) {
+                    scan(); int id = integral[priced.at(k)]; value[id] = BigInteger.ONE.subtract(value[id]);
+                }
                 if (extra >= 0) {
                     int id = integral[extra];
                     value[id] = BigInteger.ONE.subtract(value[id]);
@@ -198,6 +271,7 @@ final class CountLpProximity implements AutoCloseable {
                 counts = value;
                 return finish("verified_witness");
             }
+            if (priced != null) { priced.advance(); return false; }
             // Empty right side, each singleton, then each distinct unordered pair.
             second++;
             if (second >= integral.length) {
@@ -234,7 +308,7 @@ final class CountLpProximity implements AutoCloseable {
             var coefficient = term.getValue().divide(gcd);
             integer(magnitude, coefficient);
             magnitude = magnitude.add(coefficient.abs());
-            // This bounds every subset sum, spread and two-sided query. It
+            // This bounds every subset sum, spread and up-to-five-flip query. It
             // also excludes Long.MIN_VALUE before negation or subtraction.
             if (magnitude.bitLength() > 60) return false;
             int id = term.getKey();
@@ -425,6 +499,7 @@ final class CountLpProximity implements AutoCloseable {
         int extra = entry % stride - 1;
         // Two occurrences of one flip would be an invalid additive join.
         if (extra >= 0 && (integral[extra] == first || integral[extra] == second)) return false;
+        if (extra >= 0 && priced != null && !priced.permits(extra)) return false;
         for (int r = 0; r < dimensions; r++) {
             scan();
             if (buckets != null) scalar();
@@ -472,6 +547,8 @@ final class CountLpProximity implements AutoCloseable {
     private boolean finish(String detail) {
         complete = true;
         budget.note("count_lp_proximity", detail + "; states=" + states + "; fractional=" + fractional.length +
+                "; neighborhood=" + (priced == null ? "three_changes" : "priced_five_changes") +
+                "; pending_peak=" + (priced == null ? 0 : priced.peak()) +
                 "; index=" + (buckets == null ? "dominance" : "equality") +
                 "; phase=" + phase + "; queries=" + queries + "; work=" + (work + budget.threadWork() - visitStarted));
         return true;
@@ -483,6 +560,7 @@ final class CountLpProximity implements AutoCloseable {
     @Override
     public void close() {
         complete = true;
+        if (priced != null) priced.close();
         building.clear();
         root = null;
         budget.release(memory);

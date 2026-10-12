@@ -681,3 +681,20 @@ different row scales, fixed variables, hash collisions and remaining inequalitie
 A feasible model outside the neighborhood checks that exhaustion stays local.
 Cancellation and retained workspace checks cover partial equality tables; a
 32-choice graph guards the previously wasted dominance-index construction budget.
+
+`CountLpPricedTest` adds 600 independent five-change Boolean neighborhood oracles
+in two row orders and 200 exhaustive price-ordered subset checks. The deeper
+candidate search follows the existing shallow opportunity, restricts its own
+domain with an LP aggregate, and explores inexpensive changes first using a
+retained primitive heap. No failed neighborhood exports an infeasibility proof.
+Checks include signed/fixed/scaled rows, 200-bit price proposals, four and five
+required changes, unchanged caller domains, memory and queue admission, charged
+heap resizing, cancellation, and worker handoffs. Canonical knapsack guards replay
+three formerly unresolved graphs in four recipe orders at the unchanged 40M budget.
+Two fast infeasibility guards ensure the deeper neighborhood preserves the initial
+LP sample. Its original LP point and index remain retained for a later visit;
+candidate work must not prematurely park a nearly complete proof behind other
+expensive strategies.
+`CountStrategyTraceTest` checks that real LP/LCG and neighborhood visits appear
+under their actual strategy names, with identical results and work when metrics
+are enabled or disabled; a retained LP is not reported as model compilation.

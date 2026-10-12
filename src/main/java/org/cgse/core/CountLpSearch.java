@@ -24,6 +24,8 @@ final class CountLpSearch implements AutoCloseable {
     private int publishedCuts;
     private CountLpProximity proximity;
     private boolean proximityTried;
+    private boolean pricedProximityTried;
+    private long pricedAfter = Long.MAX_VALUE;
     private long proximityWork;
 
     private CountLpSearch(PlanningBudget budget, CountCanonicalModel canonical, CountLcg search,
@@ -122,13 +124,26 @@ final class CountLpSearch implements AutoCloseable {
         long before = budget.threadWork();
         boolean proximityVisit = false;
         try {
-            if (proximity != null) {
+            if (proximity != null && (!pricedProximityTried || work >= pricedAfter)) {
                 proximityVisit = true;
                 if (!proximity.step()) return false;
                 var candidate = proximity.counts();
                 proximity.close();
                 proximity = null;
                 if (search.offerCandidate(candidate)) return complete = true;
+                // Only the owner of the original request-wide scout may extend
+                // it. Preserve the shallow opportunity before trying the LP
+                // aggregate's cheaper, deeper changes; never regrant on resume.
+                if (!pricedProximityTried) {
+                    pricedProximityTried = true;
+                    // Retain this LP point, but leave the rest of the initial
+                    // LP sample available for a cheap proof/witness. Spending
+                    // the deeper neighborhood here could park that proof and
+                    // dispatch millions of work to unrelated scouts first.
+                    pricedAfter = until;
+                    proximity = CountLpProximity.createPriced(canonical.rows(), canonical.lower(), canonical.upper(),
+                            search.relaxationPoint(), search.relaxationPreference(), budget);
+                }
                 return false;
             }
             if (!proximityTried && search.relaxationPoint() != null) {
@@ -182,6 +197,10 @@ final class CountLpSearch implements AutoCloseable {
 
     boolean retained() {
         return !complete;
+    }
+
+    String activeStrategy() {
+        return proximity == null || pricedProximityTried && work < pricedAfter ? "count_lp_lcg" : "count_lp_proximity";
     }
 
     void shareRows() {

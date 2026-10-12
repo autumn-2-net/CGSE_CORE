@@ -1082,26 +1082,42 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     }
 
     private String activeStrategy() {
+        // Match the dispatch precedence in advance(), including parked tools.
+        // In particular lpSearch is retained while other tools run; lpActive
+        // selects its visits. An unlisted tool must not masquerade as compiling.
         if (verifying != null) return "count_verify";
         if (assembling != null || program != null) return "count_assemble";
-        if (scheduling != null || supportSearch != null) return "count_schedule";
-        if (matching != null) return "count_mitm";
-        if (binary != null) return "count_boolean";
+        if (scheduling != null) return "count_schedule";
+        if (failureNeighborhood != null && !failureCandidate) return "count_failure_repair";
+        if (supportSearch != null) return "count_support";
+        if (rescue) return "count_assemble";
+        if (lpActive) return lpSearch.activeStrategy();
         if (viewStage != 0) return "count_views";
-        if (cdcl != null) return "count_cdcl";
-        if (auxiliaryLcg != null) return "count_portfolio_lcg";
-        if (linear != null) return "count_lp";
-        if (propagating != null) return "count_bounds";
+        if (congruence != null) return "count_congruence";
+        if (diophantine != null) return "count_diophantine";
+        if (structural != null) return "count_structure";
+        if (sourceFace != null) return "count_source_face";
+        if (packing != null) return "count_dp";
+        if (covering != null || cliques != null || rounding != null || zeroHalf != null) return "count_cuts";
+        if (neighborhood != null) return "count_heuristics";
+        if (branchProbe != null) return "count_probing";
+        if (jumping != null) return "count_heuristics";
+        if (probing != null) return "count_probing";
+        if (recovery != null || scaling != null) return "count_recovery";
+        if (groups != null || components != null) return "count_decompose";
         if (separator != null) return "count_separator";
         if (network != null) return "count_network";
-        if (covering != null || cliques != null || rounding != null || zeroHalf != null) return "count_cuts";
-        if (probing != null || branchProbe != null) return "count_probing";
-        if (neighborhood != null || repair != null || jumping != null) return "count_heuristics";
-        if (recovery != null || scaling != null) return "count_recovery";
-        if (components != null || groups != null || conditioning != null || sourceFace != null) return "count_decompose";
-        if (structural != null) return "count_structure";
-        if (partition != null || packing != null) return "count_dp";
-        return "count_compile";
+        if (conditioning != null) return "count_decompose";
+        if (partition != null) return "count_dp";
+        if (matching != null) return "count_mitm";
+        if (binary != null) return "count_boolean";
+        if (auxiliaryLcg != null) return "count_portfolio_lcg";
+        if (cdcl != null) return "count_cdcl";
+        if (obbt != null) return "count_obbt";
+        if (diagram != null) return "count_diagram";
+        if (repair != null) return "count_heuristics";
+        if (propagating != null) return "count_bounds";
+        return compiled ? "count_lp" : "count_compile";
     }
 
     private void useRelaxation(ExactRational[] point) {

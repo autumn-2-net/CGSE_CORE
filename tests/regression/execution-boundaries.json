@@ -410,6 +410,68 @@
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle with independently replayed primitive plans. Equality residual indexing must reach candidate queries within its local allowance instead of exhausting the allowance constructing a dominance tree.",
       "maximum_observed_work": 510000
+    },
+    {
+      "name": "mknapcb1_04_bks/priced-LP-neighborhood",
+      "source": "cases/graph/ff/ffe37a7de85dd2821cf83c025f9083be3399982894c8577ddddfd70e185774b5.json",
+      "sha256_lf": "48ce8c097821d0281023e0775fc47c943969e8ecc2594dc92b464060639b4da1",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle, independently replayed primitive plans, and exact-row CP-SAT/SCIP controls. Three changes to the first LP point cannot find a witness; bounded aggregate-priced deeper choices must complement the retained shallow scout without enlarging the request budget."
+    },
+    {
+      "name": "mknapcb1_22_bks/priced-LP-neighborhood",
+      "source": "cases/graph/e7/e7a15e47c26840477d7bf161f219087ce5971f867eafe39508cfec4b5e413ddd.json",
+      "sha256_lf": "664f220e4fee512f2ea988a1e96f674ff068e442212922f37844dd8771ff94a0",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle, independently replayed primitive plans, and exact-row CP-SAT/SCIP controls. Three changes to the first LP point cannot find a witness; bounded aggregate-priced deeper choices must complement the retained shallow scout without enlarging the request budget."
+    },
+    {
+      "name": "mknapcb1_29_bks/priced-LP-neighborhood",
+      "source": "cases/graph/89/89819147d712522cf6ce1a9ba0725a31a869e21ca7a03c990f48d9ea444d902b.json",
+      "sha256_lf": "b7e89e4c069bd26b97b0c5f8f4470e5325bfe5c10919ebc306fadf5737119a48",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Previously unresolved canonical SAT case recovered by the aggregate-priced neighborhood during the full dynamic-path sweep. Independent primitive replay verifies the result with the original stock and request; it must remain solved within the default budget."
+    },
+    {
+      "name": "mknap1_05_opt_plus_one/initial-LP-proof",
+      "source": "cases/graph/13/13a06da0e4b0a7eece155a72044a7900f513dc3ca11c76ab7d4f5561def9a3a3.json",
+      "sha256_lf": "2dcea0f946822c0f3d1a83d8fe84f3d22fda231ece20e793f34a1bafb2a62d5d",
+      "orders": [0, 1, 2, 3],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "maximum_observed_work": 750000,
+      "evidence": "Canonical independent UNSAT oracle. Dynamic replay showed the priced scout preempting a nearly complete initial LP proof, increasing work from 424026 to 9277249 by dispatching other strategies. Retain the deeper neighborhood without consuming this first LP opportunity."
+    },
+    {
+      "name": "mknap1_06_opt_plus_one/initial-LP-proof",
+      "source": "cases/graph/e8/e810fbb7ccfad1bc25d46ba3f73ed7925c980cf1e46bb3fa36b4c6abc3fd2ac8.json",
+      "sha256_lf": "a7e03238fee01708428c0f26375692661b47739e4767f6078a4610cdb6be12fc",
+      "orders": [0, 1, 2, 3],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "maximum_observed_work": 750000,
+      "evidence": "Canonical independent UNSAT oracle and original-input dynamic work comparison. A deeper candidate attempt must not turn this roughly 504000-work proof into a five-million-work search by prematurely exhausting the initial LP sample."
     }
   ]
 }
