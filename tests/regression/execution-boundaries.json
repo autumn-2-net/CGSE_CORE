@@ -242,6 +242,86 @@
       "name": "min_manual_large_n4_c2_d3_a1_s107_shuffle_1_intermediate/thin-integer-kernel",
       "expected": "SAT",
       "evidence": "Existing canonical SAT case; independent exact integer row and primitive execution checks. Narrow row activity and singleton capacity recovery must stay inside the shared request budget."
+    },
+    {
+      "name": "rendezvous_00986/stock-count-handoff",
+      "source": "cases/graph/40/40a73c83acb540e1a18641a0d9015b130afc5b2b44c31bff436efe0bfe92fa1f.json",
+      "sha256_lf": "4c5e2628b4711c617e29d42b31e466a1194f4a48bf4f063fe49cf258b6b16a45",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "Independent exhaustive original closure: 12 states, 16 transitions, every recipe consumes one non-produced fuel. Default-budget cost guard for retained stock/count scheduling.",
+      "maximum_observed_work": 1000000
+    },
+    {
+      "name": "rendezvous_00864/stock-count-handoff",
+      "source": "cases/graph/27/27f1ec29cdf42cc4e7c3303545c8f2c563713417ef7a00834b493560d212189b.json",
+      "sha256_lf": "aaeb375bbc76e2e6f34c0bdea2994d0339a7288b692f5ce80463314bdb4508a1",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "Independent exhaustive original closure: 1129 states, 3485 transitions, every recipe consumes one non-produced fuel. Default-budget cost guard for retained stock/count scheduling."
+    },
+    {
+      "name": "rendezvous_00314/stock-count-handoff",
+      "source": "cases/graph/ca/caab321de66bea6349d16bc9313d0a8ab3546f28f60916d3bbba8ed860569f72.json",
+      "sha256_lf": "fa53f41d9f2833b79de93a321978d0ca4a8c1a53453926a60ed445e8c34c0343",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "Independent exhaustive original closure: 1726 states, 5665 transitions, every recipe consumes one non-produced fuel. Default-budget cost guard for retained stock/count scheduling."
+    },
+    {
+      "name": "rendezvous_00980/stock-count-handoff",
+      "source": "cases/graph/3e/3ea36ff2a2a2413fa04f9ead9d52e8c5f6ddca2d71a248cde9e61fc89388476a.json",
+      "sha256_lf": "710b2ef539c3010c18aac2e8f009186a8f1089901eae71dac3646dfcc4fe68a2",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "Independent exhaustive original closure: 334 states, 660 transitions, every recipe consumes one non-produced fuel. Default-budget cost guard for retained stock/count scheduling.",
+      "maximum_observed_work": 7000000
+    },
+    {
+      "name": "evolved_rendezvous_00013/stock-count-handoff",
+      "source": "cases/graph/91/91dfa79aeef10f62cc1af10191f044aa517ebde73c1e945115263d5ad2b9235a.json",
+      "sha256_lf": "6cd251e438a41d8d2636ae8286db587641793c99af29ca182d03b55f5e90fed5",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "Independent exhaustive original closure: 94 states, 112 transitions, every recipe consumes one non-produced fuel. Default-budget cost guard for retained stock/count scheduling.",
+      "maximum_observed_work": 7000000
+    },
+    {
+      "name": "pebble_01975/stock-count-handoff",
+      "source": "cases/graph/0f/0fa112402771f0599f50502ce38042941631259a0ce1e53113233d17ca6bf3a4.json",
+      "sha256_lf": "20921e1e68deaa77728e73b704816f806bccc08461a1ddbccda9ea8637431b76",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical oracle; feasible plans independently replayed against original primitive arcs. Guards complete-model access during retained stock repair without starving executable stock/allocation paths."
+    },
+    {
+      "name": "manual_fuel_n24_c2_d2_a3_s313_shuffle/stock-count-handoff",
+      "source": "cases/graph/be/be206fa07544efa58afd7ca7986e5e56888ea815b2de476627724bc868162fed.json",
+      "sha256_lf": "52286bc41b2b9c151639d0799cc088f0c944a23f435cbeff392b8f8bb6231d81",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical oracle; feasible plans independently replayed against original primitive arcs. Guards complete-model access during retained stock repair without starving executable stock/allocation paths."
     }
   ]
 }

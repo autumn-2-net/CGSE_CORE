@@ -632,3 +632,10 @@ and exclusions. Cold, warmed, packed and four-worker compilation must preserve
 ordered SCCs. Co-output chains and rings also cover repeated dependency edges,
 bounded memory, cancellation and incomplete-cache cleanup. Twelve additional
 catalogs exercise equal-but-distinct resource keys in hash-collision tree bins.
+
+`StockCountHandoffTest` checks initial and retained complete-model turns during
+stock-view repair, cold/warm work caps, independent finite-state enumeration,
+changed stock, 24 recipe permutations and one/four-worker handoffs. Cancellation
+must release both live frontiers. Seven additional `GraphExecutionBoundaries`
+retain the default 40M request budget, including two feasible cases that prevent
+extra count turns from starving stock/allocation witnesses.

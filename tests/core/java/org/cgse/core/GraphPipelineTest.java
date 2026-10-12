@@ -15,7 +15,8 @@ public final class GraphPipelineTest {
         reserveOnlyRequiredAmount();
         prefixPeak();
         delayedSideOutput();
-        independentBlockedBranch();
+        independentBlockedBranch(false);
+        independentBlockedBranch(true);
         cancellation();
         largeCompressedPlan();
         randomWitnesses();
@@ -24,9 +25,9 @@ public final class GraphPipelineTest {
 
     /** Can also run against the previous production JAR to compare identical simulated machines. */
     public static void main(String[] args) {
-        for (int i = 0; i < 5; i++) ring(4, 20).finish();
+        for (int i = 0; i < 5; i++) ring(4, 20).useRealClock().finish();
         for (int seeds : new int[] { 1, 2, 4, 8 }) {
-            var machines = ring(seeds, 100);
+            var machines = ring(seeds, 100).useRealClock();
             long start = System.nanoTime();
             machines.finish();
             System.out.printf(Locale.ROOT, "Pipeline benchmark seeds=%d amount=%d ticks=%d pushes=%d overlaps=%d runtime_ms=%.3f wall_ms=%.3f%n",
@@ -74,7 +75,7 @@ public final class GraphPipelineTest {
         eq(Map.of("a", 1L, "b", 1L, "take-seed", 1L), m.accepted, "Unblocking the provider resumes the preserved witness exactly once");
     }
 
-    private static void independentBlockedBranch() {
+    private static void independentBlockedBranch(boolean sliced) {
         var a = recipe("a", Map.of("C", 1L, "R", 1L), Map.of("C", 1L, "A", 1L));
         var b = recipe("b", Map.of("S", 1L), Map.of("B", 1L));
         var c = recipe("c", Map.of("A", 1L, "B", 1L), Map.of("P", 1L));
@@ -82,6 +83,13 @@ public final class GraphPipelineTest {
                 new PlanStep.Batch("a", 4), new PlanStep.Batch("b", 4), new PlanStep.Batch("c", 4))),
                 4, Map.of("C", 2L, "R", 4L, "S", 4L), Map.of("C", 2L)), 3);
         m.blocked.add("a");
+        if (sliced) {
+            var clock = new java.util.concurrent.atomic.AtomicLong();
+            m.clock = () -> clock.getAndAdd(2_000_000L);
+            m.step();
+            eq(null, m.accepted.get("b"), "A time slice can yield before visiting an independent stage");
+            m.clock = () -> 0L;
+        }
         m.step();
         eq(4L, m.accepted.get("b"), "An independent stage can run while a cyclic provider is blocked");
         eq(null, m.accepted.get("c"), "Predicted upstream output cannot feed the join");
@@ -210,6 +218,15 @@ public final class GraphPipelineTest {
 
     private static final class Machines implements GraphJobRuntime.Adapter<String> {
 
+        // Logical assertions use the operation budget, not host/JIT latency.
+        // The standalone benchmark still exercises the real runtime time slice.
+        private java.util.function.LongSupplier clock = () -> 0L;
+
+        Machines useRealClock() {
+            clock = System::nanoTime;
+            return this;
+        }
+
         GraphJobRuntime<String> runtime;
         final Map<String, Long> physical = new LinkedHashMap<>(), accepted = new LinkedHashMap<>();
         final Map<String, Long> delivered = new LinkedHashMap<>(), refunded = new LinkedHashMap<>();
@@ -239,7 +256,7 @@ public final class GraphPipelineTest {
                 iterator.remove();
             }
             long start = System.nanoTime();
-            runtime.tick(this, tick++, 8);
+            runtime.tick(this, tick++, 8, clock);
             nanos += System.nanoTime() - start;
             physical.values().removeIf(v -> v == 0);
             eq(physical, runtime.owned(), "Independent physical ledger agrees with runtime");

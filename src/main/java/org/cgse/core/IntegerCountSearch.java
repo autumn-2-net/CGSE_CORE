@@ -319,9 +319,21 @@ final class IntegerCountSearch<K> implements AutoCloseable {
 
     /** The coordinator returns unused order work, never refunds work already charged. */
     void resume() {
+        resume(2_000_000, false);
+    }
+
+    /** A competing frontier funds this turn; local progress cannot enlarge its grant. */
+    void resumeBounded(long maximumWork) {
+        if (maximumWork <= 0) throw new IllegalArgumentException("Non-positive count grant");
+        resume(Math.min(2_000_000, maximumWork), true);
+    }
+
+    private void resume(long maximumWork, boolean bounded) {
         if (!paused || complete) throw new IllegalStateException("Count search is not suspended");
-        allowance = work + Math.max(1, Math.min(2_000_000, budget.remainingWork() / 2));
-        scouting = false;
+        long extra = Math.max(1, Math.min(maximumWork, budget.remainingWork() / 2));
+        allowance = work > Long.MAX_VALUE - extra ? Long.MAX_VALUE : work + extra;
+        scouting = bounded;
+        scoutMaximum = allowance;
         finiteTailAttempted = false;
         paused = false;
         if (proofs != null) choiceConflicts.add(proofs.forModel(model));

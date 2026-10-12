@@ -60,6 +60,8 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     private IntegerCountSearch<K> countSearch;
     private IntegerCountSearch<K> parkedCounts;
     private long countPausedAt;
+    private long stockCountWork, stockCountStarted;
+    private boolean stockCountTurn;
     private int countResumePhase = -1;
     private int allocationResumePhase;
     private long allocationScoutStarted, allocationScoutAllowance;
@@ -252,19 +254,34 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
             // Queued source alternatives need the same turn as allocation:
             // repeatedly resuming counts after a few proof-pruned choices can
             // fill memory before a cheap, still-pending source gets examined.
+            // Stock-view repair is a retained frontier too. A long repair turn
+            // must not prevent a complete-model continuation from receiving its
+            // already-earned turn; it resumes the same view after handing back.
             if (!optionalQuantityTurn() && parkedCounts != null && (phase == 0 || phase == 5 || phase == 6 || phase == 9 ||
+                    phase == 19 && stockCountCredit() >= 32_768 ||
                     phase == 12 && quantities != null && quantities.heavyAnalysisActive() &&
                             (parkedCounts.hasScaledProgress() || parkedCounts.hasRetainedViews())) &&
                     (frontierWork() - countPausedAt >= Math.min(
-                            phase == 12 ? 131_072 : phase == 6 || !pending.isEmpty() ? 1_048_576 : 32_768,
+                            phase == 12 ? 131_072 : phase == 6 || phase == 19 || !pending.isEmpty() ? 1_048_576 : 32_768,
                             Math.max(4096, budget.remainingWork() / 8)) || phase == 0 && pending.isEmpty() || phase == 9)) {
                 countResumePhase = phase;
                 countSearch = parkedCounts;
                 parkedCounts = null;
-                countSearch.resume();
+                if (phase == 19) {
+                    // Extra visits during an active view earn at most a quarter
+                    // of that view's charged work. Repeated full grants here
+                    // starved stock/allocation witnesses when counts plateaued.
+                    stockCountTurn = true;
+                    stockCountStarted = budget.searchWork();
+                    countSearch.resumeBounded(stockCountCredit());
+                } else countSearch.resume();
                 phase = 14;
             }
-            if (quantityDeferred && phase != 4 && phase != 8 && phase != 10 && phase != 18 && phase != 19 && phase != 20 &&
+            // Deferred analysis also counts work spent in stock views. Excluding
+            // that phase let a small complete-model proof wait behind millions of
+            // restricted repair steps. An active count turn, however, must finish
+            // or yield before deferred quantity analysis can resume.
+            if (quantityDeferred && phase != 4 && phase != 8 && phase != 10 && phase != 14 && phase != 18 && phase != 20 &&
                     !(phase == 3 && candidate.feasible()) &&
                     (phase == 9 || frontierWork() - quickSearchStarted >= quickSearchAllowance)) {
                 if (!countAttempted && quantities.scoutCountsBeforeHeavyAnalysis() &&
@@ -629,6 +646,10 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 }
                 case 14 -> {
                     if (!countSearch.step(slice)) return false;
+                    if (stockCountTurn) {
+                        stockCountWork += budget.searchWork() - stockCountStarted;
+                        stockCountTurn = false;
+                    }
                     GraphPlan<K> counted = countSearch.result();
                     boolean proved = countSearch.infeasible();
                     budget.note("integer_counts", "witness=" + (counted != null) + "; proven_infeasible=" + proved);
@@ -1184,6 +1205,10 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     }
 
     private long frontierWork() { return budget.searchWork() - pausedSearchWork; }
+
+    private long stockCountCredit() {
+        return stockView == null ? 0 : Math.max(0, stockView.searchWork() / 4 - stockCountWork);
+    }
 
     private boolean optionalQuantityTurn() {
         return phase == 12 && quantities != null && quantities.sparsePotential();

@@ -242,6 +242,8 @@ final class GraphStockViewPortfolio<K> implements AutoCloseable {
         return paused;
     }
 
+    long searchWork() { return work; }
+
     int missingKeys() {
         return pausedMissingKeys;
     }
