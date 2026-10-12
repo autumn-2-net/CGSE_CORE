@@ -661,3 +661,18 @@ and memory release are covered. Canonical Latin-16/20 cases additionally guard
 the complete planner at its unchanged default budget. Two existing recipe
 orders of `recycle_mix7` retain executable-witness coverage at the same 40M
 request budget, so faster equality analysis cannot hide a lost feasible path.
+
+`CountLpProximityTest` compares the Boolean LP neighborhood with independent
+enumeration on 1,200 models in two row orders. Every fractional coordinate stays
+free, and at most three rounded integral choices change. The indexed join must
+check all material rows and reject overlapping flips. Tests include signed and
+90-bit scaled rows, a required third change, feasible points outside the searched
+neighborhood, changed domains, imported exclusions, worker handoffs, unrelated
+work between visits, cancellation and optional memory refusal. Restricted
+exhaustion exports no negative conclusion. The main LP arm retains one bounded
+attempt per request across branches and workers, and independently validates its
+candidate in the original search scope. All work is charged to the request;
+the scout and productive LP continuation retain separate local allowances.
+Canonical knapsack guards cover a recovered witness in four recipe orders and
+an existing plan near the 40M limit that initially exposed duplicated scout work
+and premature loss of the LP frontier's allocation.

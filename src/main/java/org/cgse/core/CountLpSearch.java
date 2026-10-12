@@ -22,6 +22,9 @@ final class CountLpSearch implements AutoCloseable {
     private boolean progressFinished;
     private CountModelViews.View sharingView;
     private int publishedCuts;
+    private CountLpProximity proximity;
+    private boolean proximityTried;
+    private long proximityWork;
 
     private CountLpSearch(PlanningBudget budget, CountCanonicalModel canonical, CountLcg search,
                           CountReduction.Coordinates coordinates, int[] representatives, long memory) {
@@ -117,19 +120,52 @@ final class CountLpSearch implements AutoCloseable {
     boolean step() {
         if (complete || work >= until) return true;
         long before = budget.threadWork();
+        boolean proximityVisit = false;
         try {
+            if (proximity != null) {
+                proximityVisit = true;
+                if (!proximity.step()) return false;
+                var candidate = proximity.counts();
+                proximity.close();
+                proximity = null;
+                if (search.offerCandidate(candidate)) return complete = true;
+                return false;
+            }
+            if (!proximityTried && search.relaxationPoint() != null) {
+                proximityVisit = true;
+                proximityTried = true;
+                proximity = CountLpProximity.create(canonical.rows(), canonical.lower(), canonical.upper(),
+                        search.relaxationPoint(), search.relaxationPreference(), budget);
+                if (proximity != null && !budget.claimLpProximity()) {
+                    proximity.close();
+                    proximity = null;
+                }
+                return false;
+            }
             if (search.paused()) search.resume(Math.min(262144, until - work));
             if (!search.step()) return false;
             complete = !search.paused();
             return complete || work + budget.threadWork() - before >= until;
         } finally {
-            work += budget.threadWork() - before;
+            long spent = budget.threadWork() - before;
+            work += spent;
+            if (proximityVisit) proximityWork += spent;
         }
     }
 
     /** Extend a completed sample only while it is producing certified new cuts. */
     boolean continueOnCuts() {
-        if (progressFinished || !retained() || work >= progressLimit) return false;
+        // The candidate scout has its own small request-wide cap. Its work is
+        // charged globally and in every visit, but must not also consume the
+        // productive LP frontier's separate preferential-search allowance.
+        long searchWork = work - proximityWork;
+        if (progressFinished || !retained() || searchWork >= progressLimit) return false;
+        // Finish at most one bounded root neighborhood. This is retained work,
+        // not a fresh grant on each resume or a claimed cut/proof improvement.
+        if (proximity != null && !proximity.complete()) {
+            resume(Math.min(262144, progressLimit - searchWork));
+            return true;
+        }
         long cuts = search.cutProgress();
         if (cuts > lastCuts) idleProgressTurns = 0;
         else idleProgressTurns++;
@@ -140,7 +176,7 @@ final class CountLpSearch implements AutoCloseable {
             progressFinished = true;
             return false;
         }
-        resume(Math.min(262144, progressLimit - work));
+        resume(Math.min(262144, progressLimit - searchWork));
         return true;
     }
 
@@ -184,6 +220,8 @@ final class CountLpSearch implements AutoCloseable {
 
     @Override
     public void close() {
+        if (proximity != null) proximity.close();
+        proximity = null;
         search.close();
         canonical.close();
         budget.release(memory);

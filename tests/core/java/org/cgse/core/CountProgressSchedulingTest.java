@@ -97,9 +97,11 @@ public final class CountProgressSchedulingTest {
                 var lcg = (CountLcg) get(search, "search");
                 check(lcg.cutProgress() > 0, "Fixture did not produce certified cuts");
                 check(search.continueOnCuts(), "Certified cuts lost their continuation");
-                long before = budget.nodes();
+                long before = budget.nodes(), ownedBefore = number(search, "work"), chargedBefore = budget.threadWork();
                 while (!search.step()) {}
                 check(budget.nodes() > before, "LP continuation did no charged work");
+                check(number(search, "work") - ownedBefore == budget.threadWork() - chargedBefore,
+                        "Separating local allowances changed global work ownership");
                 if (search.counts() != null) check(valid(rows, low, high, search.counts()), "Invalid LP witness");
                 check(search.retained(), "Fixture completed before plateau test");
 
@@ -116,7 +118,13 @@ public final class CountProgressSchedulingTest {
                 // Isolate the cumulative ceiling independently of cut progress.
                 set(search, "progressFinished", false);
                 set(search, "lastCuts", 0L);
-                set(search, "work", ceiling);
+                long scoutWork = number(search, "proximityWork");
+                check(scoutWork > 0 && scoutWork < 200000, "Fixture did not charge one bounded scout");
+                // The global owner includes both tools. Only the productive LP
+                // portion consumes this separate, nonrenewable ceiling.
+                set(search, "work", ceiling + scoutWork - 1);
+                check(search.continueOnCuts(), "Scout work consumed the productive LP ceiling twice");
+                set(search, "work", ceiling + scoutWork);
                 check(!search.continueOnCuts(), "Productive cuts bypassed the fixed ceiling");
             }
         }

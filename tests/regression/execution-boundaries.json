@@ -372,6 +372,32 @@
       "work": 40000000,
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle. The complete planner must produce a primitive-executable witness in the original recipe order and stock. Repeated isolated JVM comparisons guard recovered feasibility after reducing equality elimination work; compile and search retain their default budgets."
+    },
+    {
+      "name": "mknapcb1_17_bks/lp-proximity",
+      "source": "cases/graph/7a/7ac50a95124ef23b116023060d465c5d559c37d821c969ad77e487edc99c3bb2.json",
+      "sha256_lf": "15b6846d12df8304a9bb99343133f91d3e569efd8fcdd635ca28d01dcd4d55bc",
+      "orders": [
+        0,
+        1,
+        7,
+        16
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT case. Independent native original-row witnesses establish feasibility; the maintained guard independently replays CGSE primitive execution under unchanged stock, recipe contents and default budgets. Recipe permutations test the LP-guided candidate neighborhood.",
+      "maximum_observed_work": 12000000
+    },
+    {
+      "name": "mknapcb1_03_bks/lp-scout-budget",
+      "source": "cases/graph/b6/b68d466ea044f683f1c668bd4646d1a370b529b50b3d0e561132c4ac06058930.json",
+      "sha256_lf": "b6c4353a1ffb9b92b0f0f7669b733e60ef5a282aa97ca8f0f50976afa16bbab5",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle with independently replayed primitive plans near the default work limit. A preliminary proximity implementation lost this pass by spending on repeated equivalent scouts and subtracting scout work from the productive LP allowance. The final policy must retain this original-order witness without increasing either request budget."
     }
   ]
 }

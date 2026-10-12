@@ -257,6 +257,7 @@ final class CountLcg implements AutoCloseable {
     private int originalRows, relaxationDecisions = -1, relaxationConflicts = -1;
     private long relaxationCalls, relaxationCuts, relaxationMisses, relaxationNumericalWork;
     private double[] relaxationPoint;
+    private ExactLinearProgram.Constraint relaxationPreference;
     private Set<ExactLinearProgram.Constraint> relaxationKnown;
     private final List<CountProof.Combination> derivedRows = new ArrayList<>();
     private final Set<ExactLinearProgram.Constraint> cycleRows = new HashSet<>();
@@ -805,6 +806,7 @@ final class CountLcg implements AutoCloseable {
             }
             relaxationNumericalWork += result.numericalWork;
             relaxationPoint = result.point;
+            relaxationPreference = null;
             if (result.numericalInfeasible && result.cut == null) relaxationMisses++;
             if (result.cut != null && rows.size() < rowActivity.length && !relaxationKnown.contains(result.cut.row())) {
                 var cut = result.cut.row();
@@ -815,6 +817,7 @@ final class CountLcg implements AutoCloseable {
                 reserve(bytes);
                 int id = rows.size();
                 rows.add(cut);
+                relaxationPreference = cut;
                 if (rowPool != null) rowPool.added(id, decisions);
                 relaxationKnown.add(cut);
                 relaxationCuts++;
@@ -1565,6 +1568,24 @@ final class CountLcg implements AutoCloseable {
 
     /** Only distinct, exactly certified LP consequences count toward continued sampling. */
     long cutProgress() { return relaxationCuts; }
+
+    /** Borrowed until the next step; a proximity owner snapshots the chosen coordinates. */
+    double[] relaxationPoint() { return relaxationPoint; }
+    ExactLinearProgram.Constraint relaxationPreference() { return relaxationPreference; }
+
+    /** A detached neighborhood may offer a witness, never a negative or a branch bound. */
+    boolean offerCandidate(BigInteger[] value) {
+        if (complete && !paused || value == null || value.length != rootLow.length) return false;
+        for (int i = 0; i < value.length; i++) {
+            charge();
+            if (value[i] == null || value[i].compareTo(rootLow[i]) < 0 ||
+                    rootHigh[i] != null && value[i].compareTo(rootHigh[i]) > 0) return false;
+        }
+        if (!satisfies(value)) return false;
+        counts = value.clone();
+        finish("verified_lp_proximity");
+        return true;
+    }
 
     /** Search feedback, never a proof or a reason to exclude a model. */
     long progress() {
