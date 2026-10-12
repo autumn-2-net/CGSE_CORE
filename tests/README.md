@@ -639,3 +639,13 @@ changed stock, 24 recipe permutations and one/four-worker handoffs. Cancellation
 must release both live frontiers. Seven additional `GraphExecutionBoundaries`
 retain the default 40M request budget, including two feasible cases that prevent
 extra count turns from starving stock/allocation witnesses.
+
+`CountSparseCongruenceTest` checks integer equality elimination against 1,200
+independent determinant oracles, cyclic Latin systems of even and odd order,
+changed right-hand sides with explicit witnesses, and sparse supports embedded
+in 8,000 unrelated coordinates. Every negative keeps a replayable original-row
+divisibility certificate. Shuffling, low budgets, cancellation, magnitude refusal
+and memory release are covered. Canonical Latin-16/20 cases additionally guard
+the complete planner at its unchanged default budget. Two existing recipe
+orders of `recycle_mix7` retain executable-witness coverage at the same 40M
+request budget, so faster equality analysis cannot hide a lost feasible path.

@@ -545,6 +545,10 @@ public final class CountProof {
     }
 
     public static Verdict verify(Divisibility proof, long maximumWork) {
+        return verify(proof, maximumWork, ignored -> {});
+    }
+
+    static Verdict verify(Divisibility proof, long maximumWork, java.util.function.LongConsumer charged) {
         if (proof.variables < 0 || proof.variables > 16384 || maximumWork <= 0 ||
                 proof.axioms.size() != proof.multipliers.size())
             return Verdict.INVALID;
@@ -577,6 +581,8 @@ public final class CountProof {
                     Verdict.VERIFIED : Verdict.INVALID;
         } catch (CheckLimit limit) {
             return Verdict.INCOMPLETE;
+        } finally {
+            charged.accept(maximumWork - work[0]);
         }
     }
 

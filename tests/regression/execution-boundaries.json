@@ -322,6 +322,56 @@
       "work": 40000000,
       "expected": "SAT",
       "evidence": "Existing canonical oracle; feasible plans independently replayed against original primitive arcs. Guards complete-model access during retained stock repair without starving executable stock/allocation paths."
+    },
+    {
+      "name": "manual_latin_even_16/sparse-congruence",
+      "source": "cases/graph/f6/f6811882b4ef2f526ac00014441db0636288168ea0c9176378034e146fdac8bf.json",
+      "sha256_lf": "1d7b7c53e1db063ae73b573962d694d0d4d3b83749de6420b2a7ccbe641a4025",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "All recipes consume one unit each of R, C and S and produce one GOAL. Requesting n with each resource stocked once saturates all three families. Each recipe has R_index+C_index-S_index divisible by n, but the saturated RHS n*(n-1)/2 is not divisible by even n. Independent modular obstruction; every emitted CGSE certificate is separately replayed.",
+      "maximum_observed_work": 1000000
+    },
+    {
+      "name": "manual_latin_even_20/sparse-congruence",
+      "source": "cases/graph/12/12d13173a579447988c94095e38e7d71a7f394d6d00fbf003f73244c88992d47.json",
+      "sha256_lf": "f9826d3b9fb35658d0a4de8a98e8974e8cff0d83825166df85c85a3247807e17",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "All recipes consume one unit each of R, C and S and produce one GOAL. Requesting n with each resource stocked once saturates all three families. Each recipe has R_index+C_index-S_index divisible by n, but the saturated RHS n*(n-1)/2 is not divisible by even n. Independent modular obstruction; every emitted CGSE certificate is separately replayed.",
+      "maximum_observed_work": 1000000
+    },
+    {
+      "name": "recycle_mix7__perm0/sparse-congruence-budget",
+      "source": "cases/graph/ac/ac806d8a40f5902d92f4904ace4844dd4130270a4733e5f3cd3f801b372e9356.json",
+      "sha256_lf": "aa80c9bad286447e76495bf911e24ec9960e22cf9032d400b21aead075191413",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle. The complete planner must produce a primitive-executable witness in the original recipe order and stock. Repeated isolated JVM comparisons guard recovered feasibility after reducing equality elimination work; compile and search retain their default budgets."
+    },
+    {
+      "name": "recycle_mix7__perm2/sparse-congruence-budget",
+      "source": "cases/graph/ca/ca5b6103164b824517640d8e5415d450020da1b7307037bf4f5fa04182c641cf.json",
+      "sha256_lf": "0397868db30e909454f80032d0f2d597553ceb5af71694141695c3803d6aa684",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle. The complete planner must produce a primitive-executable witness in the original recipe order and stock. Repeated isolated JVM comparisons guard recovered feasibility after reducing equality elimination work; compile and search retain their default budgets."
     }
   ]
 }
