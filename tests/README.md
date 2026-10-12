@@ -134,6 +134,18 @@ work and witnesses across small and large grants, full restoration, optional
 memory refusal and cancellation. Two existing corpus inputs are pinned in
 `regression/execution-boundaries.json`, each in three recipe orders.
 
+`CountEquationSlicesTest` checks 1,200 original-coordinate finite boxes against
+exhaustive enumeration, with signed coefficients, 90-bit fixed offsets and row
+permutations. Three-variable equation search compiles fixed terms and the pivot
+substitution once, advances modular residues without rebuilding the inverse,
+and reuses that state across small work grants. Projected constraints can skip
+an impossible interval before enumeration. Every witness is checked against the
+original rows; stopping this candidate strategy never proves infeasibility.
+Memory refusal, cancellation and disposal are also covered.
+`CountEquationResidueTest` keeps a separate 9,000-residue witness whose earlier
+slices cannot be skipped by interval tightening; four row orders and paired
+whole/small grants guard both exact restoration and repeated-work overhead.
+
 The narrow-band search is a candidate strategy after exact affine elimination:
 in a two-dimensional kernel it enumerates at most 128 integer row activities
 and intersects every original projected constraint along each Diophantine line.
