@@ -625,3 +625,10 @@ large finite domains, deterministic-chain refusal, configuration semantics,
 optional memory refusal and cancellation. `GraphExecutionBoundaries` pins five
 previously unresolved deep-chain inputs in three orders at the default budget;
 every returned plan is independently replayed against the primitive recipes.
+
+`GraphEdgeCompactionTest` checks 600 seeded catalogs against an independent
+physical-reachability oracle, including configuration returns, stock boundaries
+and exclusions. Cold, warmed, packed and four-worker compilation must preserve
+ordered SCCs. Co-output chains and rings also cover repeated dependency edges,
+bounded memory, cancellation and incomplete-cache cleanup. Twelve additional
+catalogs exercise equal-but-distinct resource keys in hash-collision tree bins.
