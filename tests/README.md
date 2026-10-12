@@ -663,7 +663,7 @@ orders of `recycle_mix7` retain executable-witness coverage at the same 40M
 request budget, so faster equality analysis cannot hide a lost feasible path.
 
 `CountLpProximityTest` compares the Boolean LP neighborhood with independent
-enumeration on 1,200 models in two row orders. Every fractional coordinate stays
+enumeration on 1,800 models in two row orders. Every fractional coordinate stays
 free, and at most three rounded integral choices change. The indexed join must
 check all material rows and reject overlapping flips. Tests include signed and
 90-bit scaled rows, a required third change, feasible points outside the searched
@@ -676,3 +676,8 @@ the scout and productive LP continuation retain separate local allowances.
 Canonical knapsack guards cover a recovered witness in four recipe orders and
 an existing plan near the 40M limit that initially exposed duplicated scout work
 and premature loss of the LP frontier's allocation.
+Exact opposite rows additionally exercise a factored equality hash join, including
+different row scales, fixed variables, hash collisions and remaining inequalities.
+A feasible model outside the neighborhood checks that exhaustion stays local.
+Cancellation and retained workspace checks cover partial equality tables; a
+32-choice graph guards the previously wasted dominance-index construction budget.

@@ -14,14 +14,123 @@ public final class CountLpProximityTest {
 
     public static void main(String[] args) throws Exception {
         for (int sample = 0; sample < 1200; sample++) random(sample);
+        for (int sample = 0; sample < 600; sample++) equalities(sample);
+        equalityCollisions();
+        factoredEqualities();
         threeFlips();
         limits();
         changedScope();
         handoffs();
         sharedAdmission();
         check(witnesses > 300 && exhausted > 200, "Insufficient oracle coverage");
-        System.out.println("LP proximity: 1200 exact Boolean oracles, row orders, scaled rows, three-flip joins, " +
+        System.out.println("LP proximity: 1800 exact Boolean oracles, row orders, scaled rows, equality collisions, three-flip joins, " +
                 "scope changes, worker handoffs, limits and cleanup; witnesses=" + witnesses + "; exhausted=" + exhausted);
+    }
+
+    private static void equalities(int sample) {
+        var random = new Random(121220000L + sample);
+        int n = 4 + random.nextInt(7), plant = random.nextInt(1 << n);
+        var low = filled(n, 0); var high = filled(n, 1);
+        var point = new double[n];
+        for (int i = 0; i < n; i++) {
+            point[i] = random.nextInt(3) == 0 ? .5 : random.nextInt(2);
+            if (sample % 4 == 0 && random.nextInt(4) == 0) low[i] = high[i] = BigInteger.valueOf((plant >>> i) & 1);
+        }
+        var rows = new ArrayList<ExactLinearProgram.Constraint>();
+        for (int r = 0, m = 1 + random.nextInt(4); r < m; r++) {
+            var terms = new TreeMap<Integer, BigInteger>();
+            var opposite = new TreeMap<Integer, BigInteger>();
+            long rhs = 0;
+            for (int i = 0; i < n; i++) {
+                long coefficient = random.nextInt(19) - 9;
+                terms.put(i, BigInteger.valueOf(coefficient));
+                if ((plant & (1 << i)) != 0) rhs += coefficient;
+            }
+            var scale = BigInteger.ONE.shiftLeft(sample % 7 == 0 ? 90 : 0);
+            terms.forEach((i, a) -> opposite.put(i, a.negate().multiply(scale)));
+            rows.add(new ExactLinearProgram.Constraint(terms, BigInteger.valueOf(rhs)));
+            // Different scaling on the opposite row must not change its equality.
+            rows.add(new ExactLinearProgram.Constraint(opposite, BigInteger.valueOf(-rhs).multiply(scale)));
+        }
+        // Equal signatures still have to satisfy every remaining inequality.
+        for (int r = 0; r < 3; r++) rows.add(row(random.nextInt(5) - 2, random.nextInt(n), random.nextInt(11) - 5));
+        boolean expected = false;
+        for (int bits = 0; bits < 1 << n; bits++) {
+            var value = decode(bits, n);
+            expected |= inNeighborhood(value, low, high, point) && valid(rows, low, high, value);
+        }
+        for (int order = 0; order < 2; order++) {
+            if (order != 0) Collections.shuffle(rows, random);
+            var budget = budget(8_000_000, 64L << 20);
+            try (var search = CountLpProximity.create(rows, low, high, point, budget)) {
+                if (search == null) continue; // More than eight fractional coordinates are outside this tool.
+                while (!search.step()) {}
+                var value = search.counts();
+                check((value != null) == expected, "Equality neighborhood mismatch " + sample + " " + budget.diagnostics());
+                if (value != null) check(valid(rows, low, high, value) && inNeighborhood(value, low, high, point), "Invalid equality witness");
+            }
+            check(budget.reservedBytes() == 0, "Equality run leaked");
+        }
+    }
+
+    private static void equalityCollisions() {
+        // Long.hashCode(1) == Long.hashCode(2^32). A bucket hit is not evidence
+        // that the equality holds, nor that the other inequalities hold.
+        var terms = Map.of(0, BigInteger.ONE, 1, BigInteger.ONE.shiftLeft(32));
+        var negative = new TreeMap<Integer, BigInteger>();
+        terms.forEach((i, a) -> negative.put(i, a.negate()));
+        var rows = new ArrayList<>(List.of(new ExactLinearProgram.Constraint(terms, BigInteger.ONE),
+                new ExactLinearProgram.Constraint(negative, BigInteger.ONE.negate())));
+        for (int allowed = 0; allowed <= 1; allowed++) {
+            var constrained = new ArrayList<>(rows); constrained.add(row(allowed, 0, 1));
+            var budget = budget(8_000_000, 64L << 20);
+            try (var search = CountLpProximity.create(constrained, filled(2, 0), filled(2, 1), new double[] {.5,.5}, budget)) {
+                while (!search.step()) {}
+                check((search.counts() != null) == (allowed == 1), "Collision bypassed a material row");
+                if (allowed == 1) check(Arrays.equals(search.counts(), new BigInteger[] {BigInteger.ONE, BigInteger.ZERO}), "Collision selected wrong witness");
+            }
+            check(budget.reservedBytes() == 0, "Collision run leaked");
+        }
+        // Opposite coefficients with different endpoints form a band, not an equality.
+        var band = List.of(row(2, 0, 1, 1, 1), row(-1, 0, -1, 1, -1), row(-2, 0, -1, 1, -1));
+        var budget = budget(8_000_000, 64L << 20);
+        try (var search = CountLpProximity.create(band, filled(2, 0), filled(2, 1), new double[] {.5,.5}, budget)) {
+            while (!search.step()) {}
+            check(Arrays.equals(search.counts(), filled(2, 1)), "A band was collapsed to its wrong endpoint");
+        }
+        check(budget.reservedBytes() == 0, "Band run leaked");
+    }
+
+    private static void factoredEqualities() {
+        var rows = new ArrayList<ExactLinearProgram.Constraint>();
+        for (int r = 0; r < 8; r++) {
+            var terms = new TreeMap<Integer, BigInteger>();
+            var opposite = new TreeMap<Integer, BigInteger>();
+            for (int i = r; i < 32; i += 8) {
+                terms.put(i, BigInteger.ONE); opposite.put(i, BigInteger.ONE.negate());
+            }
+            rows.add(new ExactLinearProgram.Constraint(terms, BigInteger.valueOf(4)));
+            rows.add(new ExactLinearProgram.Constraint(opposite, BigInteger.valueOf(-4)));
+        }
+        double[] point = new double[32]; Arrays.fill(point, 0, 8, .5);
+        var budget = budget(8_000_000, 64L << 20);
+        try (var search = CountLpProximity.create(rows, filled(32, 0), filled(32, 1), point, budget)) {
+            while (!search.step()) {}
+            check(search.counts() == null && budget.diagnostics().contains("neighborhood_exhausted"), "Equality join never reached its queries");
+            check(budget.nodes() < 65000, "Repeated equality combinations consumed the scout cap");
+            check(budget.reservedBytes() < 250000, "Factored equality table retained Cartesian workspace");
+        }
+        // The original model is feasible (all ones), outside this neighborhood.
+        check(valid(rows, filled(32, 0), filled(32, 1), filled(32, 1)), "Bad restricted-exhaustion oracle");
+        check(budget.reservedBytes() == 0, "Factored equality run leaked");
+        for (int stop = 25; stop <= 2500; stop += 25) {
+            int until = stop; var calls = new AtomicInteger();
+            var cancelled = new PlanningBudget(0, 8_000_000, 64L << 20, () -> calls.incrementAndGet() >= until, System::nanoTime);
+            try (var search = CountLpProximity.create(rows, filled(32, 0), filled(32, 1), point, cancelled)) {
+                if (search != null) while (!search.step()) {}
+            } catch (CancellationException expected) {}
+            check(cancelled.reservedBytes() == 0, "Partial equality index leaked on cancellation");
+        }
     }
 
     private static void random(int sample) {

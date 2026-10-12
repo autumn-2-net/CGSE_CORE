@@ -39,8 +39,10 @@ final class CountLpProximity implements AutoCloseable {
     private final int[] fractional, integral;
     private final int dimensions, states, stride;
     private final long[][] coefficients;
-    private final long[] capacity, points, goal;
-    private final Integer[] order;
+    private final long[] capacity, goal;
+    private long[] points;
+    private final int[] order;
+    private int[] equalityRows, buckets;
     private final Deque<Node> building = new ArrayDeque<>();
     private Node root;
     private BigInteger[] counts;
@@ -97,10 +99,10 @@ final class CountLpProximity implements AutoCloseable {
             if (states > MAX_STATES) return null;
             int leaves = 1;
             while (leaves * LEAF_SIZE < states) leaves *= 2;
-            // Flat point table, boxed sorting indices and sort scratch, bounded
-            // tree nodes/minima, construction stack, exact row conversion scratch.
+            // Flat point table and primitive indices, optional equality buckets,
+            // bounded tree nodes/minima, stack and exact row conversion scratch.
             long workspace = 4096L + 8L * n * rows.size() + 32L * rows.size() +
-                    states * (48L + 8L * rows.size()) + (2L * leaves - 1) * (160L + 8L * rows.size());
+                    states * (24L + 8L * rows.size()) + (2L * leaves - 1) * (160L + 8L * rows.size());
             if (workspace > budget.availableBytes() / 4 || !budget.tryReserve(workspace)) return null;
             bytes += workspace;
             var result = new CountLpProximity(rows, lower, upper, seed, fractional, integral,
@@ -130,9 +132,8 @@ final class CountLpProximity implements AutoCloseable {
         dimensions = rows.size();
         coefficients = new long[lower.length][dimensions];
         capacity = new long[dimensions];
-        points = new long[states * dimensions];
         goal = new long[dimensions];
-        order = new Integer[states];
+        order = new int[states];
     }
 
     /** Completed steps retain conversion, enumeration, tree and query cursors. */
@@ -147,6 +148,10 @@ final class CountLpProximity implements AutoCloseable {
                     if (!convert(rowCursor++)) return finish("magnitude_declined");
                     return false;
                 }
+                prepareEqualities();
+                // Equality joins retain each fractional sum once. Integral
+                // changes are added on lookup, without copying a Cartesian table.
+                points = new long[(buckets == null ? states : states / stride) * dimensions];
                 phase++;
             }
             if (phase == 1) {
@@ -154,6 +159,10 @@ final class CountLpProximity implements AutoCloseable {
                 int until = Math.min(states, entryCursor + 128);
                 while (entryCursor < until) enumerate(entryCursor++);
                 if (entryCursor < states) return false;
+                if (buckets != null) {
+                    phase = 3;
+                    return false;
+                }
                 root = new Node(0, states, dimensions);
                 building.addLast(root);
                 phase++;
@@ -171,7 +180,7 @@ final class CountLpProximity implements AutoCloseable {
                 goal[r] = capacity[r] - delta(a, r) - delta(b, r);
             }
             queries++;
-            int hit = find(root, a, b);
+            int hit = buckets == null ? find(root, a, b) : findEquality(a, b);
             if (hit >= 0) {
                 var value = seed.clone();
                 int mask = hit / stride, extra = hit % stride - 1;
@@ -244,8 +253,60 @@ final class CountLpProximity implements AutoCloseable {
         return id < 0 ? 0 : seed[id].signum() == 0 ? coefficients[id][row] : -coefficients[id][row];
     }
 
+    /** Opposite exact rows fix a residual, so a hash join can replace the tree. */
+    private void prepareEqualities() {
+        var selected = new int[dimensions];
+        var paired = new boolean[dimensions];
+        int size = 0;
+        for (int a = 0; a < dimensions; a++) {
+            if (paired[a]) continue;
+            boolean active = false;
+            for (int i = 0; i < seed.length; i++) {
+                scan();
+                if (coefficients[i][a] != 0 && !lower[i].equals(upper[i])) active = true;
+            }
+            if (!active) continue;
+            pairs: for (int b = a + 1; b < dimensions; b++) {
+                scan();
+                if (paired[b] || capacity[a] != -capacity[b]) continue;
+                for (int i = 0; i < seed.length; i++) {
+                    scalar();
+                    if (coefficients[i][a] != -coefficients[i][b]) continue pairs;
+                }
+                selected[size++] = a;
+                paired[a] = paired[b] = true;
+                break;
+            }
+        }
+        if (size == 0) return;
+        equalityRows = Arrays.copyOf(selected, size);
+        int slots = 1;
+        while (slots < states * 2) slots <<= 1;
+        buckets = new int[slots];
+        int leaves = 1;
+        while (leaves * LEAF_SIZE < states) leaves *= 2;
+        long unused = 8L * (states - states / stride) * dimensions +
+                (2L * leaves - 1) * (160L + 8L * dimensions);
+        budget.release(unused);
+        memory -= unused;
+    }
+
     private void enumerate(int entry) {
         int mask = entry / stride, extra = entry % stride - 1, base = entry * dimensions;
+        if (buckets != null) {
+            if (extra < 0) {
+                int previous = (mask & (mask - 1)) * dimensions;
+                int added = mask == 0 ? -1 : fractional[Integer.numberOfTrailingZeros(mask)];
+                for (int r = 0; r < dimensions; r++) {
+                    scalar();
+                    points[mask * dimensions + r] = added < 0 ? 0 : points[previous + r] + coefficients[added][r];
+                }
+            }
+            int bucket = signature(entry);
+            order[entry] = buckets[bucket] - 1;
+            buckets[bucket] = entry + 1;
+            return;
+        }
         // Each mask's fractional sum is compiled once. Every integral option
         // reuses it, instead of resumming all fractional coordinates per point.
         int previous = extra >= 0 ? (entry - extra - 1) * dimensions :
@@ -257,6 +318,29 @@ final class CountLpProximity implements AutoCloseable {
                     added < 0 ? 0 : points[previous + r] + coefficients[added][r];
         }
         order[entry] = entry;
+    }
+
+    /** Hash overflow/collisions affect indexing only; every hit checks all rows. */
+    private int signature(int entry) {
+        int hash = 1;
+        for (int row : equalityRows) {
+            scalar();
+            hash = 31 * hash + Long.hashCode(entry < 0 ? goal[row] : point(entry, row));
+        }
+        return hash & (buckets.length - 1);
+    }
+
+    private long point(int entry, int row) {
+        if (buckets == null) return points[entry * dimensions + row];
+        int extra = entry % stride - 1;
+        return points[(entry / stride) * dimensions + row] + delta(extra < 0 ? -1 : integral[extra], row);
+    }
+
+    private int findEquality(int first, int second) {
+        for (int entry = buckets[signature(-1)] - 1; entry >= 0; entry = order[entry]) {
+            if (matches(entry, first, second)) return entry;
+        }
+        return -1;
     }
 
     private void build(Node node) {
@@ -331,18 +415,22 @@ final class CountLpProximity implements AutoCloseable {
             int hit = find(node.left, first, second);
             return hit >= 0 ? hit : find(node.right, first, second);
         }
-        entries: for (int i = node.from; i < node.to; i++) {
-            scan();
-            int entry = order[i], extra = entry % stride - 1;
-            // Two occurrences of one flip would be an invalid additive join.
-            if (extra >= 0 && (integral[extra] == first || integral[extra] == second)) continue;
-            for (int r = 0; r < dimensions; r++) {
-                scan();
-                if (points[entry * dimensions + r] > goal[r]) continue entries;
-            }
-            return entry;
-        }
+        for (int i = node.from; i < node.to; i++)
+            if (matches(order[i], first, second)) return order[i];
         return -1;
+    }
+
+    private boolean matches(int entry, int first, int second) {
+        scan();
+        int extra = entry % stride - 1;
+        // Two occurrences of one flip would be an invalid additive join.
+        if (extra >= 0 && (integral[extra] == first || integral[extra] == second)) return false;
+        for (int r = 0; r < dimensions; r++) {
+            scan();
+            if (buckets != null) scalar();
+            if (point(entry, r) > goal[r]) return false;
+        }
+        return true;
     }
 
     private boolean valid(BigInteger[] value) {
@@ -384,7 +472,8 @@ final class CountLpProximity implements AutoCloseable {
     private boolean finish(String detail) {
         complete = true;
         budget.note("count_lp_proximity", detail + "; states=" + states + "; fractional=" + fractional.length +
-                "; queries=" + queries + "; work=" + (work + budget.threadWork() - visitStarted));
+                "; index=" + (buckets == null ? "dominance" : "equality") +
+                "; phase=" + phase + "; queries=" + queries + "; work=" + (work + budget.threadWork() - visitStarted));
         return true;
     }
 

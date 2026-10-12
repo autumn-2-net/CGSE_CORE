@@ -398,6 +398,18 @@
       "work": 40000000,
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle with independently replayed primitive plans near the default work limit. A preliminary proximity implementation lost this pass by spending on repeated equivalent scouts and subtracting scout work from the productive LP allowance. The final policy must retain this original-order witness without increasing either request budget."
+    },
+    {
+      "name": "multi_n32_d8_w1000_s7_shift0/factored-equality-neighborhood",
+      "source": "cases/graph/e4/e47bec0575797f8741a6418bc93a6ddda128c94c2f28e52b4ed7f79e4b1f94d7.json",
+      "sha256_lf": "02717939ae2c3aee7595948dc3a1a461934e6ee426589820cd5abc837d3149aa",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle with independently replayed primitive plans. Equality residual indexing must reach candidate queries within its local allowance instead of exhausting the allowance constructing a dominance tree.",
+      "maximum_observed_work": 510000
     }
   ]
 }
