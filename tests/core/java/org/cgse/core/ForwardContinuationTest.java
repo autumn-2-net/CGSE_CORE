@@ -11,12 +11,13 @@ import java.util.concurrent.CancellationException;
 public final class ForwardContinuationTest {
     public static void main(String[] args) {
         long coldWork = replay(500_000, false);
-        for (int grant : new int[]{1024, 4096, 32768}) {
+        for (int grant : new int[]{1024, 4096, 8192}) {
             long retainedWork = replay(grant, true);
             check(retainedWork <= coldWork + 4096, "grants restarted already completed traversal/checking");
         }
         limits();
         checker();
+        sparseCertificates();
         System.out.println("Forward continuation: exact primitive closure, partial successor/proof replay, bounded grants, memory and cancellation passed");
     }
 
@@ -55,7 +56,7 @@ public final class ForwardContinuationTest {
             check(retained == (pauses > 0), "test failed to exercise local stops");
             check(journal.executions().size() == 1, "expected one completed root certificate");
             var proof = journal.executions().get(0);
-            check(proof.states().size() == 117, "wrong finite state space: " + proof.states().size());
+            check(proof.states().size() <= 117, "expanded finite state space: " + proof.states().size());
             check(rawClosure(proof), "independent raw-transition closure rejected the proof");
             check(ExecutionProof.verify(proof, 1_000_000) == CountProof.Verdict.VERIFIED, "serialized checker contract changed");
             search.close();
@@ -134,6 +135,44 @@ public final class ForwardContinuationTest {
         catch (CancellationException expected) { /* cancellation reaches every bounded checker step */ }
     }
 
+    private static void sparseCertificates() {
+        // Beyond a machine word, with zero-input/read arcs, a large amount and
+        // requirements at both ends. Compare the sparse checker with a dense
+        // raw-arc oracle, including omitted successors and changed supply.
+        int size = 130;
+        BigInteger amount = BigInteger.ONE.shiftLeft(90);
+        var a = new ArrayList<>(Collections.nCopies(size, BigInteger.ZERO));
+        a.set(0, amount); a.set(64, BigInteger.ONE);
+        var b = new ArrayList<>(a);
+        b.set(64, BigInteger.ZERO); b.set(129, BigInteger.ONE);
+        var goal = new ArrayList<>(Collections.nCopies(size, BigInteger.ZERO));
+        goal.set(128, BigInteger.ONE);
+        var read = new ArrayList<>(Collections.nCopies(size, BigInteger.ZERO));
+        read.set(0, amount);
+        var zero = Collections.nCopies(size, BigInteger.ZERO);
+        var inputs = List.of(a, b, read, zero);
+        var outputs = List.of(b, a, read, zero);
+        var good = proof(a, goal, inputs, outputs, List.of(a, b));
+        var changed = new ArrayList<List<BigInteger>>(outputs);
+        var reachable = new ArrayList<>(a); reachable.set(128, BigInteger.ONE);
+        changed.set(0, reachable);
+        var negative = new ArrayList<>(zero); negative.set(127, BigInteger.ONE.negate());
+        var badInputs = new ArrayList<List<BigInteger>>(inputs); badInputs.set(3, negative);
+        for (var value : List.of(good, proof(a, goal, inputs, outputs, List.of(a)),
+                proof(a, goal, inputs, changed, List.of(a, b)),
+                proof(a, a, inputs, outputs, List.of(a, b)))) {
+            var check = new ExecutionProof.ForwardCheck(value);
+            int work = 0;
+            while (!check.step(1, unused -> {})) check(++work < 20_000, "sparse proof stalled");
+            check((check.result() == CountProof.Verdict.VERIFIED) == rawClosure(value), "sparse/dense proof mismatch");
+        }
+        check(ExecutionProof.verify(proof(a, goal, badInputs, outputs, List.of(a, b)), 20_000) ==
+                CountProof.Verdict.INVALID, "negative zero-looking requirement escaped validation");
+        var marked = new ExecutionProof.Certificate("test", ExecutionProof.Kind.FORWARD_BOUNDARY,
+                a, goal, inputs, changed, List.of(a, b), Set.of(0));
+        check(ExecutionProof.verify(marked, 20_000) == CountProof.Verdict.VERIFIED, "marked escape changed semantics");
+    }
+
     /** Independent enumeration over raw certificate arcs; no solver/checker helpers. */
     private static boolean rawClosure(ExecutionProof.Certificate proof) {
         var states = new HashSet<>(proof.states());
@@ -149,7 +188,17 @@ public final class ForwardContinuationTest {
                     if (state.get(k).compareTo(proof.inputs().get(r).get(k)) < 0) enabled = false;
                     next.add(state.get(k).subtract(proof.inputs().get(r).get(k)).add(proof.outputs().get(r).get(k)));
                 }
-                if (enabled && !states.contains(next)) return false;
+                if (enabled && !states.contains(next)) {
+                    if (proof.kind() != ExecutionProof.Kind.FORWARD_DOMINANCE) return false;
+                    boolean covered = false;
+                    for (var maximum : states) {
+                        boolean leq = true;
+                        for (int k = 0; k < next.size(); k++)
+                            if (next.get(k).compareTo(maximum.get(k)) > 0) leq = false;
+                        covered |= leq;
+                    }
+                    if (!covered) return false;
+                }
             }
         }
         return true;

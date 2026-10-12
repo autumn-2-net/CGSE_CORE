@@ -9,6 +9,11 @@ import java.util.*;
 public final class CorpusRegression {
     public static void main(String[] args) throws Exception {
         int solved = 0, unresolved = 0, failed = 0;
+        int workers = args.length > 3 ? Integer.parseInt(args[3]) : 0;
+        boolean expanded = args.length > 4 && Boolean.parseBoolean(args[4]);
+        if (workers < 0) throw new IllegalArgumentException("Negative worker count");
+        long maximumWork = workers == 0 ? Long.parseLong(args[2]) :
+                PlanningBudget.parallelWorkLimit(Long.parseLong(args[2]), workers, expanded);
         try (var input = new DataInputStream(new BufferedInputStream(Files.newInputStream(Path.of(args[0]))))) {
             int size = input.readInt();
             for (int index = 0; index < size; index++) {
@@ -29,15 +34,22 @@ public final class CorpusRegression {
                     var outputs = GraphFixtureRegression.amounts(input);
                     primitives.put(id, new GraphRecipe<>(id, binding, slots, outputs));
                 }
-                var budget = new PlanningBudget(Long.parseLong(args[1]), Long.parseLong(args[2]), 256L << 20, () -> false, System::nanoTime);
+                var budget = new PlanningBudget(Long.parseLong(args[1]), maximumWork, 256L << 20, () -> false, System::nanoTime);
+                if (workers > 0) budget.enableMetrics();
                 try {
                     GraphPlan<String> plan;
                     var work = new GraphPlanner<>(new GraphCompiler<>(new ArrayList<>(primitives.values())))
                             .begin(target, amount, stock, external, preserve, force, budget);
                     try {
-                        while (!work.step()) {}
-                        plan = work.result();
+                        if (workers == 0) {
+                            while (!work.step()) {}
+                            plan = work.result();
+                        } else try (var scheduler = new PlanningScheduler(workers, 16, 4096, 2_000_000L)) {
+                            plan = scheduler.submit(work, budget).get();
+                        }
                     } finally { work.close(); }
+                    if (workers > 0 && budget.reservedBytes() != 0)
+                        throw new AssertionError("Parallel request retained memory " + budget.reservedBytes());
                     boolean conclusion = switch (plan.result()) {
                         case FEASIBLE, FEASIBLE_NOT_PROVEN_OPTIMAL, MISSING_INPUT, MISSING_SEED, INFEASIBLE -> true;
                         default -> false;

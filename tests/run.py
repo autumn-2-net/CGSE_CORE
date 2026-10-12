@@ -182,9 +182,10 @@ def main():
                         random.Random(order).shuffle(case['model']['recipes'])
                     if 'maximum_observed_work' in entry:
                         cost_limits[case['id']] = entry['maximum_observed_work']
-                    batches.setdefault(entry['work'], []).append(case)
-            for work, cases in sorted(batches.items()):
-                path = output / ('execution-boundaries-' + str(work) + '.bin')
+                    batches.setdefault((entry['work'], entry.get('workers', 0), entry.get('expanded_budget', False)), []).append(case)
+            for (work, workers, expanded), cases in sorted(batches.items()):
+                suffix = str(work) + (('-w' + str(workers) + ('-expanded' if expanded else '-fixed')) if workers else '')
+                path = output / ('execution-boundaries-' + suffix + '.bin')
                 helper.write_graphs(path, cases)
                 limits = {c['id']: cost_limits[c['id']] for c in cases if c['id'] in cost_limits}
                 def validate_costs(log):
@@ -197,7 +198,8 @@ def main():
                     for name, limit in limits.items():
                         if name not in observed or observed[name] > limit:
                             return name + ': observed work ' + str(observed.get(name)) + ' exceeds ' + str(limit)
-                run('GraphExecutionBoundaries-' + str(work), 'org.cgse.core.CorpusRegression', [path, 0, work], validate=validate_costs)
+                run('GraphExecutionBoundaries-' + suffix, 'org.cgse.core.CorpusRegression',
+                    [path, 0, work, workers, str(expanded).lower()], validate=validate_costs)
     if args.suite == 'benchmarks' and re.search(args.case, 'GraphBenchmark'):
         run('GraphBenchmark', 'org.cgse.core.GraphBenchmark')
     if args.suite in ('fixtures', 'all'):

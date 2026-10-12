@@ -14,7 +14,9 @@ public final class ExecutionProof {
     public enum Kind {
         BACKWARD_CLOSURE,
         FORWARD_BOUNDARY,
-        STARTUP_BOX
+        STARTUP_BOX,
+        // Append: ordinals of existing serialized proof kinds remain stable.
+        FORWARD_DOMINANCE
     }
 
     public record Certificate(String scope, Kind kind, List<BigInteger> initial, List<BigInteger> goal,
@@ -37,7 +39,7 @@ public final class ExecutionProof {
 
     static CountProof.Verdict verify(Certificate proof, long maximumWork, java.util.function.LongConsumer charged) {
         if (proof.kind == null) return CountProof.Verdict.INVALID;
-        if (proof.kind == Kind.FORWARD_BOUNDARY) {
+        if (proof.kind == Kind.FORWARD_BOUNDARY || proof.kind == Kind.FORWARD_DOMINANCE) {
             if (maximumWork <= 0) return CountProof.Verdict.INVALID;
             var check = new ForwardCheck(proof);
             check.step(maximumWork, charged);
@@ -103,6 +105,12 @@ public final class ExecutionProof {
         private final Set<List<BigInteger>> states = new HashSet<>();
         private final Iterator<Integer> marked;
         private final int size;
+        private final BitSet[] required;
+        private final BitSet nonIncreasing = new BitSet(), decreasing = new BitSet();
+        private final Map<List<BigInteger>, BigInteger> covered = new HashMap<>();
+        private int dominanceCoordinate = -1;
+        private List<BigInteger> group;
+        private BigInteger value;
         private int phase, vector, coordinate, state, recipe;
         private List<BigInteger> next;
         private CountProof.Verdict result;
@@ -110,8 +118,9 @@ public final class ExecutionProof {
         ForwardCheck(Certificate proof) {
             this.proof = proof;
             size = proof.initial.size();
+            required = new BitSet[proof.inputs.size()];
             marked = proof.marked.iterator();
-            if (proof.kind != Kind.FORWARD_BOUNDARY || size != proof.goal.size() ||
+            if (proof.kind != Kind.FORWARD_BOUNDARY && proof.kind != Kind.FORWARD_DOMINANCE || size != proof.goal.size() ||
                     proof.inputs.size() != proof.outputs.size()) result = CountProof.Verdict.INVALID;
         }
 
@@ -141,6 +150,8 @@ public final class ExecutionProof {
             switch (phase) {
                 case 0 -> {
                     if (vector == 2 + proof.inputs.size() + proof.outputs.size() + proof.states.size()) {
+                        nonIncreasing.and(decreasing);
+                        if (proof.kind == Kind.FORWARD_DOMINANCE) dominanceCoordinate = nonIncreasing.nextSetBit(0);
                         phase = 1;
                         return;
                     }
@@ -148,6 +159,21 @@ public final class ExecutionProof {
                     if (values.size() != size || coordinate < size && values.get(coordinate).signum() < 0) {
                         result = CountProof.Verdict.INVALID;
                         return;
+                    }
+                    // Rebuild from the original certificate while independently
+                    // validating every entry. Never trust the search's index.
+                    if (vector >= 2 && vector < 2 + proof.inputs.size()) {
+                        int input = vector - 2;
+                        if (coordinate == 0) required[input] = new BitSet();
+                        if (coordinate < size && values.get(coordinate).signum() > 0) required[input].set(coordinate);
+                    }
+                    if (proof.kind == Kind.FORWARD_DOMINANCE && coordinate < size &&
+                            vector >= 2 + proof.inputs.size() && vector < 2 + proof.inputs.size() + proof.outputs.size()) {
+                        int output = vector - 2 - proof.inputs.size();
+                        int sign = values.get(coordinate).compareTo(proof.inputs.get(output).get(coordinate));
+                        if (output == 0) nonIncreasing.set(coordinate);
+                        if (sign > 0) nonIncreasing.clear(coordinate);
+                        else if (sign < 0) decreasing.set(coordinate);
                     }
                     if (++coordinate >= size) { coordinate = 0; vector++; }
                 }
@@ -158,7 +184,18 @@ public final class ExecutionProof {
                     } else phase = 2;
                 }
                 case 2 -> {
-                    if (state < proof.states.size()) states.add(proof.states.get(state++));
+                    if (state < proof.states.size()) {
+                        var marking = proof.states.get(state);
+                        if (dominanceCoordinate < 0) { states.add(marking); state++; }
+                        else if (coordinate < size) {
+                            if (group == null) group = new ArrayList<>(size - 1);
+                            if (coordinate != dominanceCoordinate) group.add(marking.get(coordinate));
+                            coordinate++;
+                        } else {
+                            covered.merge(List.copyOf(group), marking.get(dominanceCoordinate), BigInteger::max);
+                            states.add(marking); state++; coordinate = 0; group = null;
+                        }
+                    }
                     else if (!states.contains(proof.initial)) result = CountProof.Verdict.INVALID;
                     else { state = 0; phase = 3; }
                 }
@@ -173,22 +210,40 @@ public final class ExecutionProof {
                 }
                 case 4 -> {
                     if (recipe == proof.inputs.size()) { state++; coordinate = 0; phase = 3; }
-                    else if (coordinate == size) { next = new ArrayList<>(size); coordinate = 0; phase = 5; }
-                    else if (proof.inputs.get(recipe).get(coordinate).compareTo(proof.states.get(state).get(coordinate)) > 0) {
-                        recipe++;
-                        coordinate = 0;
-                    } else coordinate++;
+                    else {
+                        int input = required[recipe].nextSetBit(coordinate);
+                        if (input < 0) { next = new ArrayList<>(size); coordinate = 0; phase = 5; }
+                        else if (proof.inputs.get(recipe).get(input).compareTo(proof.states.get(state).get(input)) > 0) {
+                            recipe++;
+                            coordinate = 0;
+                        } else coordinate = input + 1;
+                    }
                 }
                 case 5 -> {
                     if (coordinate < size) {
                         next.add(proof.states.get(state).get(coordinate).subtract(proof.inputs.get(recipe).get(coordinate))
                                 .add(proof.outputs.get(recipe).get(coordinate)));
                         coordinate++;
-                    } else if (!states.contains(next) && !proof.marked.contains(recipe)) result = CountProof.Verdict.INVALID;
-                    else { next = null; coordinate = 0; recipe++; phase = 4; }
+                    } else if (states.contains(next) || proof.marked.contains(recipe)) nextRecipe();
+                    else if (dominanceCoordinate < 0) result = CountProof.Verdict.INVALID;
+                    else { group = new ArrayList<>(size - 1); value = next.get(dominanceCoordinate); coordinate = 0; phase = 6; }
+                }
+                case 6 -> {
+                    if (coordinate < size) {
+                        if (coordinate != dominanceCoordinate) group.add(next.get(coordinate));
+                        coordinate++;
+                    } else {
+                        var maximum = covered.get(group);
+                        if (maximum == null || maximum.compareTo(value) < 0) result = CountProof.Verdict.INVALID;
+                        else { group = null; value = null; nextRecipe(); }
+                    }
                 }
                 default -> throw new IllegalStateException("Invalid forward proof phase");
             }
+        }
+
+        private void nextRecipe() {
+            next = null; coordinate = 0; recipe++; phase = 4;
         }
     }
 

@@ -457,7 +457,12 @@
       "name": "mknap1_05_opt_plus_one/initial-LP-proof",
       "source": "cases/graph/13/13a06da0e4b0a7eece155a72044a7900f513dc3ca11c76ab7d4f5561def9a3a3.json",
       "sha256_lf": "2dcea0f946822c0f3d1a83d8fe84f3d22fda231ece20e793f34a1bafb2a62d5d",
-      "orders": [0, 1, 2, 3],
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
       "work": 40000000,
       "expected": "UNSAT",
       "maximum_observed_work": 750000,
@@ -467,11 +472,99 @@
       "name": "mknap1_06_opt_plus_one/initial-LP-proof",
       "source": "cases/graph/e8/e810fbb7ccfad1bc25d46ba3f73ed7925c980cf1e46bb3fa36b4c6abc3fd2ac8.json",
       "sha256_lf": "a7e03238fee01708428c0f26375692661b47739e4767f6078a4610cdb6be12fc",
-      "orders": [0, 1, 2, 3],
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
       "work": 40000000,
       "expected": "UNSAT",
       "maximum_observed_work": 750000,
       "evidence": "Canonical independent UNSAT oracle and original-input dynamic work comparison. A deeper candidate attempt must not turn this roughly 504000-work proof into a five-million-work search by prematurely exhausting the initial LP sample."
+    },
+    {
+      "name": "pebble_01021/consumable-state-cover",
+      "source": "cases/graph/19/19489cf5b489a81735a1663b7c621e632df55e09f414a1201e1e7405b6b7218b.json",
+      "sha256_lf": "922e6ede4ea6f0f117e0fe45cc6357100491b7b6716ebf38b940b77840833a1e",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "Existing canonical oracle, dense primitive-state and prefix verification controls. Formerly exhausted 40M work; retain exact execution exclusions without preempting the original search, and independently verify covered-state closure. Seventeen original/shuffled orders passed.",
+      "maximum_observed_work": 1000000
+    },
+    {
+      "name": "hard_random_0201/execution-learning",
+      "source": "cases/graph/3b/3b3f4e40f4498f11b8435cb95913895100e4371b31bfe70e11717b47f53e6b29.json",
+      "sha256_lf": "370ed2f7476a034aa326b471262a166365b8af7e37f8e6903613183d7a9413de",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical oracle, dense primitive-state and prefix verification controls. Formerly exhausted 40M work; retain exact execution exclusions without preempting the original search, and independently verify covered-state closure. Seventeen original/shuffled orders passed."
+    },
+    {
+      "name": "pebble_01021/consumable-state-cover/four-workers-fixed",
+      "source": "cases/graph/19/19489cf5b489a81735a1663b7c621e632df55e09f414a1201e1e7405b6b7218b.json",
+      "sha256_lf": "922e6ede4ea6f0f117e0fe45cc6357100491b7b6716ebf38b940b77840833a1e",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "Existing canonical oracle, dense primitive-state and prefix verification controls. Formerly exhausted 40M work; retain exact execution exclusions without preempting the original search, and independently verify covered-state closure. Seventeen original/shuffled orders passed. Four-worker 40M/80M control guards against eager global-reachability dispatch preempting a useful retained frontier.",
+      "maximum_observed_work": 1000000,
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "pebble_01021/consumable-state-cover/four-workers-expanded",
+      "source": "cases/graph/19/19489cf5b489a81735a1663b7c621e632df55e09f414a1201e1e7405b6b7218b.json",
+      "sha256_lf": "922e6ede4ea6f0f117e0fe45cc6357100491b7b6716ebf38b940b77840833a1e",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "evidence": "Existing canonical oracle, dense primitive-state and prefix verification controls. Formerly exhausted 40M work; retain exact execution exclusions without preempting the original search, and independently verify covered-state closure. Seventeen original/shuffled orders passed. Four-worker 40M/80M control guards against eager global-reachability dispatch preempting a useful retained frontier.",
+      "maximum_observed_work": 1000000,
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "hard_random_0201/execution-learning/four-workers-fixed",
+      "source": "cases/graph/3b/3b3f4e40f4498f11b8435cb95913895100e4371b31bfe70e11717b47f53e6b29.json",
+      "sha256_lf": "370ed2f7476a034aa326b471262a166365b8af7e37f8e6903613183d7a9413de",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical oracle, dense primitive-state and prefix verification controls. Formerly exhausted 40M work; retain exact execution exclusions without preempting the original search, and independently verify covered-state closure. Seventeen original/shuffled orders passed. Four-worker 40M/80M control guards against eager global-reachability dispatch preempting a useful retained frontier.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "hard_random_0201/execution-learning/four-workers-expanded",
+      "source": "cases/graph/3b/3b3f4e40f4498f11b8435cb95913895100e4371b31bfe70e11717b47f53e6b29.json",
+      "sha256_lf": "370ed2f7476a034aa326b471262a166365b8af7e37f8e6903613183d7a9413de",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical oracle, dense primitive-state and prefix verification controls. Formerly exhausted 40M work; retain exact execution exclusions without preempting the original search, and independently verify covered-state closure. Seventeen original/shuffled orders passed. Four-worker 40M/80M control guards against eager global-reachability dispatch preempting a useful retained frontier.",
+      "workers": 4,
+      "expanded_budget": true
     }
   ]
 }

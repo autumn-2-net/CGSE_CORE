@@ -436,6 +436,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             // entries evict one another again, without new proof or usage.
             // Optional cache refusal/eviction loses pruning, never coverage.
             branch.learnedChoices.clear();
+            branch.releaseExecutionConflicts();
             choiceConflicts.used(branch.usedChoices);
             branch.usedChoices.clear();
             // A proof scout may discover a useful count vector whose execution

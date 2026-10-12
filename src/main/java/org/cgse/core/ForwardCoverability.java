@@ -22,16 +22,20 @@ final class ForwardCoverability<K> implements AutoCloseable {
 
         final List<BigInteger> stock;
         final PlanStep edge;
+        final Frame parent;
         BitSet todo;
         BitSet enabled = new BitSet();
         int action, coordinate;
         int goalCoordinate;
         boolean belowGoal;
         List<BigInteger> next;
+        List<BigInteger> nextGroup;
+        int groupCoordinate;
 
-        Frame(List<BigInteger> stock, PlanStep edge) {
+        Frame(List<BigInteger> stock, PlanStep edge, Frame parent) {
             this.stock = stock;
             this.edge = edge;
+            this.parent = parent;
         }
     }
 
@@ -43,6 +47,15 @@ final class ForwardCoverability<K> implements AutoCloseable {
     private final Set<List<BigInteger>> visited = new LinkedHashSet<>(), active = new HashSet<>();
     private final PlanningBudget budget;
     private final PartialOrder<K> order;
+    private long[] requiredCoordinates;
+    private int indexedAction, indexedCoordinate;
+    private long nonIncreasing, decreasing;
+    private int dominanceCoordinate = -1;
+    private final Map<List<BigInteger>, BigInteger> covered = new HashMap<>();
+    private final List<BigInteger> initialGroup = new ArrayList<>();
+    private int initialCoordinate;
+    private boolean indexed;
+    private long dominated;
     private long allowance;
     private long work, memory, omitted, cycleExpansions;
     private long sliceStarted;
@@ -73,6 +86,13 @@ final class ForwardCoverability<K> implements AutoCloseable {
             return;
         }
         try {
+            // The bounded search has at most 32 coordinates. Index requirements
+            // once; zero requirements cannot disable a nonnegative state.
+            long bytes = 64L + actions.size() * 8L + recipes.size() * 64L;
+            if (!budget.tryReserve(bytes)) throw new Stop(false);
+            memory += bytes;
+            requiredCoordinates = new long[actions.size()];
+            nonIncreasing = (1L << keys.size()) - 1;
             push(initial, null);
         } catch (Stop stopped) {
             result = BackwardCoverability.Result.UNKNOWN;
@@ -85,6 +105,8 @@ final class ForwardCoverability<K> implements AutoCloseable {
         sliceStarted = before;
         try {
             charge();
+            indexRequirements();
+            indexInitial();
             if (stack.isEmpty()) return closeReachability();
             Frame frame = stack.peek();
             while (!frame.belowGoal && frame.goalCoordinate < keys.size()) {
@@ -94,11 +116,9 @@ final class ForwardCoverability<K> implements AutoCloseable {
             }
             if (!frame.belowGoal) {
                 var path = new ArrayList<PlanStep>();
-                var frames = stack.descendingIterator();
-                while (frames.hasNext()) {
-                    var next = frames.next();
+                for (Frame next = frame; next != null; next = next.parent)
                     if (next.edge != null) path.add(next.edge);
-                }
+                Collections.reverse(path);
                 witness = new PlanStep.Sequence(path);
                 return finish(BackwardCoverability.Result.WITNESS);
             }
@@ -116,11 +136,31 @@ final class ForwardCoverability<K> implements AutoCloseable {
                 frame.next.add(frame.stock.get(k).add(actions.get(id).summary().delta(keys.get(k))));
             }
             var next = List.copyOf(frame.next);
-            if (!visited.contains(next)) push(next, actions.get(id).program());
+            if (!visited.contains(next)) {
+                if (dominanceCoordinate < 0) push(next, actions.get(id).program());
+                else {
+                    if (frame.nextGroup == null) frame.nextGroup = new ArrayList<>(keys.size() - 1);
+                    while (frame.groupCoordinate < keys.size()) {
+                        charge();
+                        int k = frame.groupCoordinate++;
+                        if (k != dominanceCoordinate) frame.nextGroup.add(next.get(k));
+                    }
+                    charge();
+                    var maximum = covered.get(frame.nextGroup);
+                    var value = next.get(dominanceCoordinate);
+                    if (maximum != null && maximum.compareTo(value) >= 0) dominated++;
+                    else {
+                        push(next, actions.get(id).program());
+                        covered.put(List.copyOf(frame.nextGroup), value);
+                    }
+                }
+            }
             // Do not consume an edge until its successor has been retained.
             // A local stop midway through construction must not omit a firing.
             frame.todo.clear(id);
             frame.next = null;
+            frame.nextGroup = null;
+            frame.groupCoordinate = 0;
             return false;
         } catch (Stop stopped) {
             paused = retained && stopped.workLimit;
@@ -130,18 +170,56 @@ final class ForwardCoverability<K> implements AutoCloseable {
         }
     }
 
+    private void indexRequirements() {
+        while (indexedAction < actions.size()) {
+            while (indexedCoordinate < keys.size()) {
+                charge();
+                if (actions.get(indexedAction).summary().required(keys.get(indexedCoordinate)).signum() > 0)
+                    requiredCoordinates[indexedAction] |= 1L << indexedCoordinate;
+                int sign = actions.get(indexedAction).summary().delta(keys.get(indexedCoordinate)).signum();
+                if (sign > 0) nonIncreasing &= ~(1L << indexedCoordinate);
+                else if (sign < 0) decreasing |= 1L << indexedCoordinate;
+                indexedCoordinate++;
+            }
+            indexedCoordinate = 0;
+            indexedAction++;
+        }
+        if (!indexed) {
+            // Equal control states with more of one consumable resource cover
+            // states with less. Keep actual reachable states (never fabricate
+            // an accelerated witness); replay proves the downward closure.
+            long candidates = order == null ? nonIncreasing & decreasing : 0;
+            if (candidates != 0) dominanceCoordinate = Long.numberOfTrailingZeros(candidates);
+            indexed = true;
+        }
+    }
+
+    private void indexInitial() {
+        if (dominanceCoordinate < 0 || initialCoordinate > keys.size()) return;
+        while (initialCoordinate < keys.size()) {
+            charge();
+            int k = initialCoordinate++;
+            if (k != dominanceCoordinate) initialGroup.add(initial.get(k));
+        }
+        charge();
+        covered.put(List.copyOf(initialGroup), initial.get(dominanceCoordinate));
+        initialCoordinate++;
+    }
+
     private BitSet enabled(Frame frame) {
         while (frame.action < actions.size()) {
-            if (frame.coordinate == keys.size()) {
+            int coordinate = Long.numberOfTrailingZeros(requiredCoordinates[frame.action] & (-1L << frame.coordinate));
+            if (coordinate >= keys.size()) {
+                charge();
                 frame.enabled.set(frame.action++);
                 frame.coordinate = 0;
                 continue;
             }
             charge();
-            if (frame.stock.get(frame.coordinate).compareTo(actions.get(frame.action).summary().required(keys.get(frame.coordinate))) < 0) {
+            if (frame.stock.get(coordinate).compareTo(actions.get(frame.action).summary().required(keys.get(coordinate))) < 0) {
                 frame.action++;
                 frame.coordinate = 0;
-            } else frame.coordinate++;
+            } else frame.coordinate = coordinate + 1;
         }
         return frame.enabled;
     }
@@ -150,13 +228,17 @@ final class ForwardCoverability<K> implements AutoCloseable {
         var enabled = new BitSet();
         for (int a = 0; a < actions.size(); a++) {
             boolean can = true;
-            for (int k = 0; k < keys.size(); k++) {
+            long required = requiredCoordinates[a];
+            while (required != 0) {
                 charge();
+                int k = Long.numberOfTrailingZeros(required);
                 if (stock.get(k).compareTo(actions.get(a).summary().required(keys.get(k))) < 0) {
                     can = false;
                     break;
                 }
+                required &= required - 1;
             }
+            charge();
             if (can) enabled.set(a);
         }
         // Full traversal is useful when looking for an independently replayable
@@ -194,12 +276,17 @@ final class ForwardCoverability<K> implements AutoCloseable {
 
     private void push(List<BigInteger> stock, PlanStep edge) {
         if (visited.size() >= 4096) throw new Stop(false);
-        long bytes = 384L + keys.size() * 128L;
+        long bytes = 384L + keys.size() * 128L + (order == null ? 256L + keys.size() * 32L : 0);
         if (!budget.tryReserve(bytes)) throw new Stop(false);
         memory += bytes;
         visited.add(stock);
         active.add(stock);
-        stack.push(new Frame(stock, edge));
+        var frame = new Frame(stock, edge, stack.peek());
+        // Short prefixes tend to preserve more consumable stock. In the common
+        // unit-fuel case, breadth-first discovery reaches each control state
+        // with its maximum fuel first, avoiding a ladder of improved revisits.
+        if (dominanceCoordinate >= 0) stack.addLast(frame);
+        else stack.push(frame);
     }
 
     private boolean closeReachability() {
@@ -211,7 +298,8 @@ final class ForwardCoverability<K> implements AutoCloseable {
                 out.add(keys.stream().map(key -> BigInteger.valueOf(recipe.outputs().getOrDefault(key, 0L))).toList());
             }
             certificate = new ExecutionProof.Certificate(order == null ? "forward_original_closure" : "forward_por_original_closure",
-                    ExecutionProof.Kind.FORWARD_BOUNDARY, initial, goal, in, out, List.copyOf(visited), Set.of());
+                    dominanceCoordinate < 0 ? ExecutionProof.Kind.FORWARD_BOUNDARY : ExecutionProof.Kind.FORWARD_DOMINANCE,
+                    initial, goal, in, out, List.copyOf(visited), Set.of());
             checking = new ExecutionProof.ForwardCheck(certificate);
         }
         // A reduced traversal alone is never an absence certificate. Require
@@ -232,7 +320,7 @@ final class ForwardCoverability<K> implements AutoCloseable {
 
     private boolean finish(BackwardCoverability.Result value) {
         result = value;
-        budget.note(order == null ? "forward_original" : "forward_por", "result=" + value + "; states=" + visited.size() + "; omitted=" + omitted + "; cycle_expansions=" + cycleExpansions + "; work=" + work + "; retained=" + paused + "; checking=" + (checking != null));
+        budget.note(order == null ? "forward_original" : "forward_por", "result=" + value + "; states=" + visited.size() + "; dominated=" + dominated + "; omitted=" + omitted + "; cycle_expansions=" + cycleExpansions + "; work=" + work + "; retained=" + paused + "; checking=" + (checking != null));
         return true;
     }
 
@@ -266,6 +354,9 @@ final class ForwardCoverability<K> implements AutoCloseable {
         closed = true;
         certificate = null;
         checking = null;
+        requiredCoordinates = null;
+        covered.clear();
+        initialGroup.clear();
         stack.clear();
         visited.clear();
         active.clear();

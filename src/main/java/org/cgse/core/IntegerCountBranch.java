@@ -35,6 +35,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     final List<CountGuard> supportConflicts = new ArrayList<>();
     /** Newly proved original-coordinate clauses awaiting coordinator publication. */
     final Set<CountConflict> learnedChoices = new LinkedHashSet<>();
+    private long executionConflictMemory;
     private List<CountConflict> knownChoices = List.of();
     private List<ExactLinearProgram.Constraint> knownMaterials = List.of();
     List<ExactLinearProgram.Constraint> linearConstraints;
@@ -368,6 +369,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 state = State.UNRESOLVED;
                 return;
             }
+            if (status == CountSchedule.Result.DEAD) learnUnexecutableCounts();
             if (speculativeCandidate() && status != CountSchedule.Result.WITNESS) {
                 // Failure to schedule a local-search candidate must leave the
                 // original count domain and all the other strategies available.
@@ -382,15 +384,6 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             if (status == CountSchedule.Result.DEAD) {
                 execution.refine(model);
                 for (var proof : execution.proofs()) if (!supportConflicts.contains(proof.guard())) supportConflicts.add(proof.guard());
-                // This fixed vector was exhausted or rejected by a checked
-                // optimistic startup proof. Share the exact exclusion; an
-                // UNKNOWN scheduling result must never create this clause.
-                var fixed = new ArrayList<ExactLinearProgram.Constraint>();
-                for (int i = 0; i < counts.length; i++) {
-                    fixed.add(bound(i, counts[i], false));
-                    if (counts[i].signum() > 0) fixed.add(bound(i, counts[i], true));
-                }
-                learnedChoices.add(new CountConflict(fixed));
                 needsRepair = true;
                 supportSearch = new CountSupportSearch<>(model, counts, budget);
             } else if (status == CountSchedule.Result.UNKNOWN) unresolved();
@@ -1448,6 +1441,36 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         return failureCandidate || jumpCandidate || neighborhoodCandidate || domainCandidate || separatorCandidate || structuralCandidate || viewCandidateStage != 0;
     }
 
+    private void learnUnexecutableCounts() {
+        // DEAD exhausts this original multiset (or checks an optimistic startup
+        // obstruction). It is equally useful when a primal heuristic supplied
+        // the counts. Publish before discarding that candidate, never on UNKNOWN
+        // or after rejecting just one executable order during seed assembly.
+        long bytes = 256L + 768L * counts.length;
+        for (var count : counts) {
+            budget.check();
+            bytes += (count.bitLength() + 7L) / 8;
+        }
+        if (!budget.tryReserve(bytes)) return;
+        executionConflictMemory += bytes;
+        var fixed = new ArrayList<ExactLinearProgram.Constraint>();
+        for (int i = 0; i < counts.length; i++) {
+            budget.check();
+            fixed.add(bound(i, counts[i], false));
+            if (counts[i].signum() > 0) fixed.add(bound(i, counts[i], true));
+        }
+        learnedChoices.add(new CountConflict(fixed));
+        // A fixed-count exclusion is not a generalized startup explanation.
+        // Keep its publication separate from the trigger for a global state
+        // search; launching that search here preempts productive continuations.
+        budget.note("count_execution_conflict", "exact_original_multiset; speculative=" + speculativeCandidate());
+    }
+
+    void releaseExecutionConflicts() {
+        budget.release(executionConflictMemory);
+        executionConflictMemory = 0;
+    }
+
     private void rejectSpeculativeCandidate() {
         rejectSpeculativeCandidate(false);
     }
@@ -2061,6 +2084,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
 
     @Override
     public void close() {
+        releaseExecutionConflicts();
         candidateFeedback(CountViewSearch.CandidateOutcome.UNRESOLVED);
         if (auxiliaryLcg != null) auxiliaryLcg.close();
         auxiliaryLcg = null;
