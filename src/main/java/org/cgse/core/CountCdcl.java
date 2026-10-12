@@ -495,16 +495,22 @@ final class CountCdcl implements AutoCloseable {
 
     private int[] explanation(Row row, int forced, int prefix) {
         List<Integer> reason = new ArrayList<>();
-        BigInteger total = forced < 0 ? BigInteger.ZERO : row.weights[forced];
+        // Compilation has already certified that the sum of all positive
+        // weights fits a signed long. Reuse that certificate for lazy reasons;
+        // literal order and charged work remain identical to the wide path.
+        BigInteger total = row.finiteLong ? null : forced < 0 ? BigInteger.ZERO : row.weights[forced];
+        long totalLong = row.finiteLong && forced >= 0 ? row.weights[forced].longValue() : 0;
         if (forced >= 0) reason.add(row.literals[forced] ^ 1);
         for (int i = 0; i < row.literals.length; i++) {
             charge();
-            if (total.compareTo(row.capacity) > 0) break;
+            if (row.finiteLong ? totalLong > row.capacity.longValue() : total.compareTo(row.capacity) > 0) break;
             if (value(row.literals[i]) != 1 || positions[row.literals[i] / 2] >= prefix) continue;
-            total = total.add(row.weights[i]);
+            if (row.finiteLong) totalLong += row.weights[i].longValue();
+            else total = total.add(row.weights[i]);
             reason.add(row.literals[i] ^ 1);
         }
-        if (total.compareTo(row.capacity) <= 0) throw new IllegalStateException("Incomplete weighted reason");
+        if (row.finiteLong ? totalLong <= row.capacity.longValue() : total.compareTo(row.capacity) <= 0)
+            throw new IllegalStateException("Incomplete weighted reason");
         return reason.stream().mapToInt(Integer::intValue).toArray();
     }
 
