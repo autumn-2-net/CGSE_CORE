@@ -27,6 +27,8 @@ final class CountLpSearch implements AutoCloseable {
     private boolean pricedProximityTried;
     private long pricedAfter = Long.MAX_VALUE;
     private long proximityWork;
+    private CountLpCoreSearch core;
+    private long coreAfter = Long.MAX_VALUE;
 
     private CountLpSearch(PlanningBudget budget, CountCanonicalModel canonical, CountLcg search,
                           CountReduction.Coordinates coordinates, int[] representatives, long memory) {
@@ -146,6 +148,15 @@ final class CountLpSearch implements AutoCloseable {
                 }
                 return false;
             }
+            if (core != null && work >= coreAfter) {
+                proximityVisit = true;
+                if (!core.step()) return false;
+                var candidate = core.counts();
+                core.close();
+                core = null;
+                if (search.offerCandidate(candidate)) return complete = true;
+                return false;
+            }
             if (!proximityTried && search.relaxationPoint() != null) {
                 proximityVisit = true;
                 proximityTried = true;
@@ -155,6 +166,12 @@ final class CountLpSearch implements AutoCloseable {
                     proximity.close();
                     proximity = null;
                 }
+                core = CountLpCoreSearch.create(canonical.rows(), canonical.lower(), canonical.upper(),
+                        search.relaxationPoint(), search.relaxationPreference(), budget);
+                if (core != null && !budget.claimLpCore()) { core.close(); core = null; }
+                // Keep the initial LP proof/witness sample ahead of the larger
+                // candidate core, just as for the price-ordered neighborhood.
+                coreAfter = until;
                 return false;
             }
             if (search.paused()) search.resume(Math.min(262144, until - work));
@@ -177,7 +194,7 @@ final class CountLpSearch implements AutoCloseable {
         if (progressFinished || !retained() || searchWork >= progressLimit) return false;
         // Finish at most one bounded root neighborhood. This is retained work,
         // not a fresh grant on each resume or a claimed cut/proof improvement.
-        if (proximity != null && !proximity.complete()) {
+        if (proximity != null && !proximity.complete() || core != null && !core.complete()) {
             resume(Math.min(262144, progressLimit - searchWork));
             return true;
         }
@@ -200,6 +217,7 @@ final class CountLpSearch implements AutoCloseable {
     }
 
     String activeStrategy() {
+        if (core != null && work >= coreAfter && proximity == null) return "count_lp_core";
         return proximity == null || pricedProximityTried && work < pricedAfter ? "count_lp_lcg" : "count_lp_proximity";
     }
 
@@ -239,6 +257,8 @@ final class CountLpSearch implements AutoCloseable {
 
     @Override
     public void close() {
+        if (core != null) core.close();
+        core = null;
         if (proximity != null) proximity.close();
         proximity = null;
         search.close();

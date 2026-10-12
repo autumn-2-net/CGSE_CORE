@@ -103,6 +103,7 @@ public final class PlanningBudget {
     private final AtomicLong peakBytes = new AtomicLong();
     private final AtomicBoolean cancelRequested = new AtomicBoolean();
     private final AtomicBoolean lpProximityClaimed = new AtomicBoolean();
+    private final AtomicBoolean lpCoreClaimed = new AtomicBoolean();
     private volatile Phase phase = Phase.QUEUED;
     private volatile String failureDetail = "";
     private final Deque<String> diagnostics = new ArrayDeque<>();
@@ -129,6 +130,9 @@ public final class PlanningBudget {
 
     /** One optional root neighborhood per request, shared by views, branches and workers. */
     boolean claimLpProximity() { return lpProximityClaimed.compareAndSet(false, true); }
+
+    /** One bounded conflict-learning core across all representations and workers. */
+    boolean claimLpCore() { return lpCoreClaimed.compareAndSet(false, true); }
 
     public PlanningBudget(long milliseconds, long maxNodes, BooleanSupplier cancelled) {
         this(milliseconds, maxNodes, 64L << 20, cancelled, System::nanoTime);

@@ -565,6 +565,150 @@
       "evidence": "Existing canonical oracle, dense primitive-state and prefix verification controls. Formerly exhausted 40M work; retain exact execution exclusions without preempting the original search, and independently verify covered-state closure. Seventeen original/shuffled orders passed. Four-worker 40M/80M control guards against eager global-reachability dispatch preempting a useful retained frontier.",
       "workers": 4,
       "expanded_budget": true
+    },
+    {
+      "name": "mknapcb4_04_bks/price-guided-conflict-core",
+      "source": "cases/graph/19/19406cd58e0668667bcd4248274cfbde0b1b1b3df45c45c4a9c59b5bf99ce321.json",
+      "sha256_lf": "9fdae5e008880e3e329a1f0f81379e25e6381d48018ef41faf21998a242bc9db",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 12000000,
+      "evidence": "Canonical SAT oracle and independently verified primitive CP-SAT witness. Ten fractional coordinates and eight integral changes exceed the small flip neighborhood. The price-guided Boolean core must complete under the unchanged request budget; original plus sixteen shuffled orders and four-worker fixed/expanded controls passed."
+    },
+    {
+      "name": "mknapcb4_04_bks/price-guided-conflict-core/four-workers-fixed",
+      "source": "cases/graph/19/19406cd58e0668667bcd4248274cfbde0b1b1b3df45c45c4a9c59b5bf99ce321.json",
+      "sha256_lf": "9fdae5e008880e3e329a1f0f81379e25e6381d48018ef41faf21998a242bc9db",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 12000000,
+      "evidence": "Canonical SAT oracle and independently verified primitive CP-SAT witness. Ten fractional coordinates and eight integral changes exceed the small flip neighborhood. The price-guided Boolean core must complete under the unchanged request budget; original plus sixteen shuffled orders and four-worker fixed/expanded controls passed.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_04_bks/price-guided-conflict-core/four-workers-expanded",
+      "source": "cases/graph/19/19406cd58e0668667bcd4248274cfbde0b1b1b3df45c45c4a9c59b5bf99ce321.json",
+      "sha256_lf": "9fdae5e008880e3e329a1f0f81379e25e6381d48018ef41faf21998a242bc9db",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 12000000,
+      "evidence": "Canonical SAT oracle and independently verified primitive CP-SAT witness. Ten fractional coordinates and eight integral changes exceed the small flip neighborhood. The price-guided Boolean core must complete under the unchanged request budget; original plus sixteen shuffled orders and four-worker fixed/expanded controls passed.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "mknapcb4_07_bks/price-guided-conflict-core",
+      "source": "cases/graph/33/33c26793c717b107f583614411af18d2d491c6eba87e5a52edf0a1d22a51287f.json",
+      "sha256_lf": "d994c44235e476b13a43385d5911d2321870c841c32920a71a12f761e69d9cb1",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 15000000,
+      "evidence": "Existing canonical SAT oracle, with independently checked primitive prefixes. Recovered from the full corpus after adding retained price-guided cores; the request budget and original input are unchanged. Original plus sixteen shuffled orders and four-worker fixed/expanded controls passed. No native witness is supplied to the solver."
+    },
+    {
+      "name": "mknapcb4_07_bks/price-guided-conflict-core/four-workers-fixed",
+      "source": "cases/graph/33/33c26793c717b107f583614411af18d2d491c6eba87e5a52edf0a1d22a51287f.json",
+      "sha256_lf": "d994c44235e476b13a43385d5911d2321870c841c32920a71a12f761e69d9cb1",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 15000000,
+      "evidence": "Existing canonical SAT oracle, with independently checked primitive prefixes. Recovered from the full corpus after adding retained price-guided cores; the request budget and original input are unchanged. Original plus sixteen shuffled orders and four-worker fixed/expanded controls passed. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_07_bks/price-guided-conflict-core/four-workers-expanded",
+      "source": "cases/graph/33/33c26793c717b107f583614411af18d2d491c6eba87e5a52edf0a1d22a51287f.json",
+      "sha256_lf": "d994c44235e476b13a43385d5911d2321870c841c32920a71a12f761e69d9cb1",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 15000000,
+      "evidence": "Existing canonical SAT oracle, with independently checked primitive prefixes. Recovered from the full corpus after adding retained price-guided cores; the request budget and original input are unchanged. Original plus sixteen shuffled orders and four-worker fixed/expanded controls passed. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "mknapcb4_20_bks/price-guided-conflict-core",
+      "source": "cases/graph/7e/7e5e052a2b780b90c28391edbc82b7846788d61cd763cb8e6cf2b2534669b0bc.json",
+      "sha256_lf": "2d8d8c23787ca6b6c3c767f5ddf1b8776a260e1c1f4bb5af4bf02fd427b00391",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 10000000,
+      "evidence": "Existing canonical SAT oracle, with independently checked primitive prefixes. Recovered from the full corpus after adding retained price-guided cores; the request budget and original input are unchanged. Original plus sixteen shuffled orders and four-worker fixed/expanded controls passed. No native witness is supplied to the solver."
+    },
+    {
+      "name": "mknapcb4_20_bks/price-guided-conflict-core/four-workers-fixed",
+      "source": "cases/graph/7e/7e5e052a2b780b90c28391edbc82b7846788d61cd763cb8e6cf2b2534669b0bc.json",
+      "sha256_lf": "2d8d8c23787ca6b6c3c767f5ddf1b8776a260e1c1f4bb5af4bf02fd427b00391",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 10000000,
+      "evidence": "Existing canonical SAT oracle, with independently checked primitive prefixes. Recovered from the full corpus after adding retained price-guided cores; the request budget and original input are unchanged. Original plus sixteen shuffled orders and four-worker fixed/expanded controls passed. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_20_bks/price-guided-conflict-core/four-workers-expanded",
+      "source": "cases/graph/7e/7e5e052a2b780b90c28391edbc82b7846788d61cd763cb8e6cf2b2534669b0bc.json",
+      "sha256_lf": "2d8d8c23787ca6b6c3c767f5ddf1b8776a260e1c1f4bb5af4bf02fd427b00391",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 10000000,
+      "evidence": "Existing canonical SAT oracle, with independently checked primitive prefixes. Recovered from the full corpus after adding retained price-guided cores; the request budget and original input are unchanged. Original plus sixteen shuffled orders and four-worker fixed/expanded controls passed. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "mknapcb4_06_bks/unproductive-core-cost",
+      "source": "cases/graph/45/453407be184fa6a5fd59436a550329b7a2d5bb22597e35a4b1f2b0e080b3ded2.json",
+      "sha256_lf": "1ff6836b6b0fd8ffb010d14a80a42d94f35cd8ae94669912471a5d50bbd134da",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 30000000,
+      "evidence": "Canonical SAT oracle and independently checked primitive prefixes. The bounded core does not solve this input; the retained LP frontier must still receive its turn. Original-order work increased from 18.37M to 25.94M after admitting the optional core, so this is a cost containment guard, not a claimed speedup. Thirty-three order/worker/budget controls passed."
     }
   ]
 }
