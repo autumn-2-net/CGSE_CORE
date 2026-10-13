@@ -10,6 +10,7 @@ import java.util.function.IntFunction;
 /**
  * Retained, exact box queries over an owned table. Floating correlations choose
  * extra indexing directions only; every exclusion uses exact integer bounds.
+ * Queries retain the first matching source ordinal, even after spatial refinement.
  */
 final class CountRangeIndex implements AutoCloseable {
     private static final int LEAF = 16, MAX_PLANES = 4, MAX_BITS = 1024;
@@ -18,6 +19,7 @@ final class CountRangeIndex implements AutoCloseable {
         final int from, to;
         final BigInteger[] min, max;
         Node left, right;
+        int first = Integer.MAX_VALUE;
 
         Node(int from, int to, int dimensions) {
             this.from = from;
@@ -45,8 +47,8 @@ final class CountRangeIndex implements AutoCloseable {
     private final BigInteger[] low, high;
     private Node leaf;
     private int cursor, match = -1;
-    private boolean queryStarted, queryDone, closed;
-    private long memory;
+    private boolean queryStarted, queryDone, closed, refined;
+    private long memory, queryWork;
 
     static CountRangeIndex create(int size, int dimensions, IntFunction<BigInteger[]> source,
                                   PlanningBudget budget, Runnable charge) {
@@ -165,6 +167,7 @@ final class CountRangeIndex implements AutoCloseable {
         if (building.isEmpty()) return true;
         Node node = building.removeLast();
         if (node.left != null) {
+            node.first = Math.min(node.left.first, node.right.first);
             // Internal boxes must cover every point, including unsampled
             // outliers. Samples below select a split, never a pruning bound.
             for (int d = 0; d < dimensions; d++) {
@@ -174,7 +177,37 @@ final class CountRangeIndex implements AutoCloseable {
             }
             return building.isEmpty();
         }
-        int stride = node.to - node.from <= LEAF ? 1 : Math.max(1, (node.to - node.from) / LEAF);
+        boolean terminal = node.to - node.from <= LEAF;
+        if (terminal || refined) bounds(node, terminal ? 1 : Math.max(1, (node.to - node.from) / LEAF));
+        if (terminal) {
+            if (refined) {
+                for (int i = node.from; i < node.to; i++) {
+                    charge.run();
+                    node.first = Math.min(node.first, order[i]);
+                }
+            } else node.first = node.from;
+            return building.isEmpty();
+        }
+        int middle = (node.from + node.to) >>> 1;
+        // The first tree uses the existing table order: linear construction,
+        // no repartitioning. Only sustained query work pays for spatial splits.
+        if (refined) {
+            int axis = 0;
+            for (int d = 1; d < dimensions; d++) {
+                charge.run();
+                if (node.max[d].subtract(node.min[d]).compareTo(node.max[axis].subtract(node.min[axis])) > 0) axis = d;
+            }
+            partition(node.from, node.to, middle, axis);
+        }
+        node.left = new Node(node.from, middle, dimensions);
+        node.right = new Node(middle, node.to, dimensions);
+        building.addLast(node);
+        building.addLast(node.right);
+        building.addLast(node.left);
+        return false;
+    }
+
+    private void bounds(Node node, int stride) {
         for (int d = 0; d < dimensions; d++) {
             charge.run();
             node.min[d] = node.max[d] = points[order[node.from]][d];
@@ -185,20 +218,6 @@ final class CountRangeIndex implements AutoCloseable {
             node.min[d] = node.min[d].min(value);
             node.max[d] = node.max[d].max(value);
         }
-        if (node.to - node.from <= LEAF) return building.isEmpty();
-        int axis = 0;
-        for (int d = 1; d < dimensions; d++) {
-            charge.run();
-            if (node.max[d].subtract(node.min[d]).compareTo(node.max[axis].subtract(node.min[axis])) > 0) axis = d;
-        }
-        int middle = (node.from + node.to) >>> 1;
-        partition(node.from, node.to, middle, axis);
-        node.left = new Node(node.from, middle, dimensions);
-        node.right = new Node(middle, node.to, dimensions);
-        building.addLast(node);
-        building.addLast(node.right);
-        building.addLast(node.left);
-        return false;
     }
 
     private void partition(int from, int to, int middle, int axis) {
@@ -243,6 +262,13 @@ final class CountRangeIndex implements AutoCloseable {
             low[sourceDimensions + p] = planes[p].value(low);
             high[sourceDimensions + p] = planes[p].value(high);
         }
+        if (!refined && queryWork >= points.length * (4L * dimensions + 16)) {
+            // Reuse the owned coordinates and memory. The complete root box
+            // above still bounds this query; traversal waits for all new boxes.
+            refined = true;
+            root.left = root.right = null;
+            building.add(root);
+        }
         querying.add(root);
     }
 
@@ -250,29 +276,44 @@ final class CountRangeIndex implements AutoCloseable {
         checkOpen();
         if (!queryStarted) throw new IllegalStateException("No box query");
         if (queryDone) return true;
+        if (!building.isEmpty()) { buildStep(); return false; }
         if (leaf != null) {
             int id = order[cursor++];
+            if (match >= 0 && id >= match) {
+                queryCharge();
+                if (cursor == leaf.to) leaf = null;
+                return false;
+            }
             boolean inside = true;
             for (int d = 0; d < sourceDimensions; d++) {
-                charge.run();
+                queryCharge();
                 var value = points[id][d];
                 if (low[d] != null && value.compareTo(low[d]) < 0 ||
                         high[d] != null && value.compareTo(high[d]) > 0) { inside = false; break; }
             }
-            if (inside) { match = id; return queryDone = true; }
+            if (inside) {
+                match = id;
+                if (!refined || id == 0) return queryDone = true;
+            }
             if (cursor == leaf.to) leaf = null;
             return false;
         }
         if (querying.isEmpty()) return queryDone = true;
         Node node = querying.removeLast();
+        if (match >= 0 && node.first >= match) { queryCharge(); return false; }
         for (int d = 0; d < dimensions; d++) {
-            charge.run();
+            queryCharge();
             if (low[d] != null && node.max[d].compareTo(low[d]) < 0 ||
                     high[d] != null && node.min[d].compareTo(high[d]) > 0) return false;
         }
         if (node.left != null) {
-            querying.addLast(node.right);
-            querying.addLast(node.left);
+            if (node.left.first < node.right.first) {
+                querying.addLast(node.right);
+                querying.addLast(node.left);
+            } else {
+                querying.addLast(node.left);
+                querying.addLast(node.right);
+            }
         } else { leaf = node; cursor = node.from; }
         return false;
     }
@@ -281,6 +322,11 @@ final class CountRangeIndex implements AutoCloseable {
         checkOpen();
         if (!queryDone) throw new IllegalStateException("Unfinished query");
         return match;
+    }
+
+    private void queryCharge() {
+        charge.run();
+        if (!refined) queryWork++;
     }
 
     private void checkOpen() {

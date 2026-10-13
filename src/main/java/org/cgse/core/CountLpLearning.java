@@ -12,7 +12,14 @@ import java.util.*;
 /** Exact, globally valid row explanations suggested by a bounded numerical relaxation. */
 final class CountLpLearning {
 
-    record Cut(ExactLinearProgram.Constraint row, Map<Integer, BigInteger> parents, BigInteger divisor) {}
+    record Cut(ExactLinearProgram.Constraint row, Map<Integer, BigInteger> parents, BigInteger divisor) {
+        Cut {
+            // Parent order affects bounded template reconstruction and its
+            // charged intermediate arithmetic. It must not depend on a JVM's
+            // Map.copyOf iteration salt or a caller mutating the proposal.
+            parents = Collections.unmodifiableMap(new TreeMap<>(parents));
+        }
+    }
 
     /** Retain numerical state and original-row structure; cuts still cite original global rows. */
     static final class Session implements AutoCloseable {
@@ -579,7 +586,7 @@ final class CountLpLearning {
         // explicit nonnegative integer and the only division is exact on all
         // coefficients, with the right-hand side rounded down. Current branch
         // bounds affected proposal selection only, never the consequence.
-        return new Cut(consequence, Collections.unmodifiableMap(new TreeMap<>(weights)), divisor);
+        return new Cut(consequence, weights, divisor);
     }
 
     private BigInteger multiply(BigInteger a, BigInteger b) {

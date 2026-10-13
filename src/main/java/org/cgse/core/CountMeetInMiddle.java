@@ -1078,9 +1078,11 @@ final class CountMeetInMiddle implements CountContinuation {
 
     private long rangeIndexCost() {
         // Leave cheap first witnesses on the original path. Pay for an index
-        // only after repeated scans cost as much as a conservative build estimate.
+        // only after repeated scans cover the linear tree and correlation sample.
+        // Spatial refinement has its own admission based on actual query work.
         int dimensions = goalHigh.length;
-        return Math.max(4096L, ranged.length * (8L * dimensions + 32) + 16L * dimensions * dimensions);
+        return Math.max(4096L, ranged.length * (2L * dimensions + 12) +
+                16L * dimensions * dimensions + 64L * dimensions);
     }
 
     private void beginRange() {

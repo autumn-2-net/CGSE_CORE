@@ -11,6 +11,7 @@ import java.util.concurrent.*;
 /** Inventory/demand and supply-boundary changes, with an independent exact derivation replay. */
 public final class CountRowTemplatesTest {
     public static void main(String[] args) throws Exception {
+        permutedParents();
         var recipes = List.of(recipe("a", "ore", 2, "out", 2), recipe("b", "ore", 4, "out", 2));
         var compiler = new GraphCompiler<>(recipes);
         var cache = compiler.rowTemplates;
@@ -127,6 +128,44 @@ public final class CountRowTemplatesTest {
         } finally { Files.delete(archive); }
         check(compiler.cacheMetrics().caches().get("count_row_template").estimatedBytes() > 0, "Template cache residency is invisible");
         System.out.println("Row templates: 120 inventory/demand permutations, changed/missing/new producers, 1502-variable support, 32 concurrent requests, production import and 240 proof replays passed");
+    }
+
+    private static void permutedParents() {
+        var recipes = List.of(recipe("a", "ore", 2, "out", 2), recipe("b", "ore", 4, "out", 2));
+        var compiler = new GraphCompiler<>(recipes);
+        var budget = budget();
+        try (var model = RecipeCountModel.create(compiler, "out", 3, Map.of("ore", 5L), Map.of(), Set.of(), Set.of(), false, budget)) {
+            // (2a + 4b <= 5) + (-2a - 2b <= -3), divided by two, gives b <= 1.
+            // Reordering a derivation must neither duplicate the reusable template
+            // nor change the charged cost of rebuilding the same exact proof.
+            int ore = model.rowKeys.indexOf("ore"), out = model.rowKeys.indexOf("out");
+            int b = -1;
+            for (int i = 0; i < model.recipes.size(); i++) if (model.recipes.get(i).id().equals("b")) b = i;
+            check(ore >= 0 && out >= 0 && b >= 0, "Missing permutation control rows");
+            var consequence = new ExactLinearProgram.Constraint(Map.of(b, BigInteger.ONE), BigInteger.ONE);
+            long expectedWork = -1;
+            for (int variant = 0; variant < 12; variant++) {
+                var parents = new LinkedHashMap<Integer, BigInteger>();
+                parents.put(variant % 2 == 0 ? ore : out, BigInteger.ONE);
+                parents.put(variant % 2 == 0 ? out : ore, BigInteger.ONE);
+                var cut = new CountLpLearning.Cut(consequence, variant % 3 == 0 ? Map.copyOf(parents) : parents, BigInteger.TWO);
+                parents.clear();
+                var cold = new CountRowTemplates();
+                long started = budget.searchWork();
+                cold.remember(model, model.constraints, cut, budget);
+                long work = budget.searchWork() - started;
+                check(cold.cacheMetrics().entries() == 1, "Caller mutation destroyed a captured derivation");
+                if (expectedWork < 0) expectedWork = work;
+                else check(work == expectedWork, "Parent order changed template construction cost");
+                compiler.rowTemplates.remember(model, model.constraints, cut, budget);
+                check(compiler.rowTemplates.cacheMetrics().entries() == 1, "Parent permutation duplicated a template");
+                try { cut.parents().clear(); throw new AssertionError("Mutable proof parents"); }
+                catch (UnsupportedOperationException expected) { /* owned immutable derivation */ }
+            }
+            var replay = compiler.rowTemplates.reuse(model, budget);
+            check(replay.size() == 1 && replay.get(0).row().equals(consequence), "Permuted derivation failed exact replay");
+        }
+        check(budget.reservedBytes() == 0, "Parent-order control leaked workspace");
     }
 
     private static CountLpLearning.Cut divide(RecipeCountModel<String> model, String key, long divisor) {

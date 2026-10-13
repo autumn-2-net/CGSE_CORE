@@ -107,7 +107,7 @@ final class CountIntegerLpLearning implements AutoCloseable {
                             parents.put(rowIds[parent.getKey()], parent.getValue());
                         }
                         cut = new CountLpLearning.Cut(new ExactLinearProgram.Constraint(terms, result.cut.row().upper()),
-                                Map.copyOf(parents), result.cut.divisor());
+                                parents, result.cut.divisor());
                     }
                     var lifted = new CountLpLearning.Result(point, cut, result.numericalInfeasible, result.numericalWork, budget, bytes, integerPoint);
                     bytes = 0;

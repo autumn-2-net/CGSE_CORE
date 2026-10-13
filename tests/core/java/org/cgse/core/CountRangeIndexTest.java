@@ -14,12 +14,16 @@ public final class CountRangeIndexTest {
         boxes();
         correlated();
         matcher();
+        refinementCancellation();
         limits();
-        System.out.println("Range indexes: 3200 exhaustive boxes, wide/negative/unbounded coordinates, outliers, owned inputs, worker handoffs, matcher controls and limits passed");
+        System.out.println("Range indexes: 3200 first-match boxes, wide/negative/unbounded coordinates, outliers, owned inputs, worker handoffs, refinement, matcher controls and limits passed");
     }
 
     private static void boxes() throws Exception {
         var workers = new ExecutorService[]{Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor()};
+        var refined = CountRangeIndex.class.getDeclaredField("refined");
+        refined.setAccessible(true);
+        int refinements = 0;
         try {
             for (int seed = 0; seed < 16; seed++) {
                 var random = new Random(131026L + seed);
@@ -56,7 +60,11 @@ public final class CountRangeIndexTest {
                         if (query == 198) { Arrays.fill(low, BigInteger.ONE.shiftLeft(20000).negate()); Arrays.fill(high, null); }
                         var expectedLow = low.clone();
                         var expectedHigh = high.clone();
-                        boolean possible = Arrays.stream(original).anyMatch(p -> inside(p, expectedLow, expectedHigh));
+                        int expected = -1;
+                        for (int i = 0; i < original.length; i++) if (inside(original[i], expectedLow, expectedHigh)) {
+                            expected = i;
+                            break;
+                        }
                         index.begin(low, high);
                         Arrays.fill(low, BigInteger.ZERO);
                         Arrays.fill(high, BigInteger.ZERO);
@@ -64,12 +72,14 @@ public final class CountRangeIndexTest {
                             while (!workers[visits++ % 2].submit(index::queryStep).get(30, TimeUnit.SECONDS)) {}
                         } else while (!index.queryStep()) {}
                         int id = index.match();
-                        check((id >= 0) == possible, "box oracle mismatch: " + seed + "/" + query);
+                        check(id == expected, "first-match oracle mismatch: " + seed + "/" + query);
                         if (id >= 0) check(inside(original[id], expectedLow, expectedHigh), "out-of-box match");
                     }
+                    if (refined.getBoolean(index)) refinements++;
                 }
                 check(budget.reservedBytes() == 0, "box workspace leaked");
             }
+            check(refinements > 0, "box campaign did not exercise spatial refinement");
         } finally { for (var worker : workers) worker.shutdownNow(); }
     }
 
@@ -129,6 +139,7 @@ public final class CountRangeIndexTest {
             // infeasibility certificate; neither query ordering nor indexing is its oracle.
             var low = new BigInteger[n]; var high = new BigInteger[n];
             Arrays.fill(low, BigInteger.ZERO); Arrays.fill(high, BigInteger.ONE);
+            BigInteger[] first = null;
             for (boolean useIndex : new boolean[]{false, true}) {
                 var budget = budget();
                 try (var search = new CountMeetInMiddle(rows, low, high, budget, 2048).retained()) {
@@ -142,6 +153,8 @@ public final class CountRangeIndexTest {
                     }
                     check(search.infeasible() == !possible && (search.counts() != null) == possible,
                             "matcher disagrees with original-row oracle");
+                    if (!useIndex) first = search.counts();
+                    else check(Arrays.equals(first, search.counts()), "index changed the first count witness");
                     if (possible) for (var row : rows) {
                         var value = BigInteger.ZERO;
                         for (var term : row.terms().entrySet())
@@ -158,6 +171,36 @@ public final class CountRangeIndexTest {
                 "; pauses=" + pauses + "; activated=" + activated);
         check(activated >= 12 && pauses > 100, "campaign did not exercise retained indexes");
         check(indexedWork < scanWork, "indexed matcher lost the scan cost control");
+    }
+
+    private static void refinementCancellation() throws Exception {
+        var source = new BigInteger[512][2];
+        for (int i = 0; i < source.length; i++)
+            source[i] = new BigInteger[]{BigInteger.valueOf(2L * (i % 32)), BigInteger.valueOf(2L * ((i * 13) % 64))};
+        var refined = CountRangeIndex.class.getDeclaredField("refined");
+        refined.setAccessible(true);
+        var cancelled = new AtomicBoolean();
+        var budget = new PlanningBudget(0, 40_000_000, 256L << 20, cancelled::get, System::nanoTime);
+        try (var index = CountRangeIndex.create(source.length, 2, i -> source[i], budget, budget::check)) {
+            check(index != null, "refinement control declined");
+            while (!index.buildStep()) {}
+            boolean rebuilding = false;
+            for (int query = 0; query < 1000; query++) {
+                index.begin(new BigInteger[]{BigInteger.ONE, BigInteger.ONE}, new BigInteger[]{BigInteger.ONE, BigInteger.ONE});
+                if (refined.getBoolean(index)) {
+                    check(!index.queryStep(), "unfinished refinement returned a conclusion");
+                    cancelled.set(true);
+                    try { index.queryStep(); throw new AssertionError("refinement cancellation ignored"); }
+                    catch (CancellationException expected) { /* no witness or proof */ }
+                    rebuilding = true;
+                    break;
+                }
+                while (!index.queryStep()) {}
+                check(index.match() == -1, "odd coordinates matched an even table");
+            }
+            check(rebuilding, "cancellation control did not refine");
+        }
+        check(budget.reservedBytes() == 0, "cancelled refinement workspace leaked");
     }
 
     private static void limits() {
