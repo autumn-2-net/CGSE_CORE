@@ -709,6 +709,186 @@
       "expected": "SAT",
       "maximum_observed_work": 30000000,
       "evidence": "Canonical SAT oracle and independently checked primitive prefixes. The bounded core does not solve this input; the retained LP frontier must still receive its turn. Original-order work increased from 18.37M to 25.94M after admitting the optional core, so this is a cost containment guard, not a claimed speedup. Thirty-three order/worker/budget controls passed."
+    },
+    {
+      "name": "manual_small_n24_c3_d1_a1_s107_wide_weights/retained-grouped-partition",
+      "source": "cases/graph/56/56a69a31732292cde8db23e84df7325f12d59f193b71bac87b8bf3f5da9dae87.json",
+      "sha256_lf": "b1ac87998427380e911bc7e7deb68df5379d0cdf4476d0a85afc3631eee5fa44",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix validation. The bounded original-view partition candidate recovers this case without changing stock, quantities or recipes. Every candidate must still pass original-row and execution checks."
+    },
+    {
+      "name": "manual_small_n40_c3_d1_a1_s313_wide_weights/retained-grouped-partition",
+      "source": "cases/graph/9f/9f1b0fb6e9e1de3b914bd07fbfb3ba80a7bbfeb6b57f1e4f667499136deac03f.json",
+      "sha256_lf": "516805a2057fc13bccef657a495ae5b41f63788ed794a627d74e9dd541a1e5e7",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix validation. The bounded original-view partition candidate recovers this case without changing stock, quantities or recipes. Every candidate must still pass original-row and execution checks."
+    },
+    {
+      "name": "manual_small_n24_c3_d1_a1_s43_wide_weights/retained-grouped-partition",
+      "source": "cases/graph/e8/e8a2033112dcb99c998ec04fd1dfea6e9fdf544f196c3cea455c3153a54ef309.json",
+      "sha256_lf": "32946bc24400b081077f1cc13b3a19e1114d6ce493026a71e6bf9a0375500b7b",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix validation. The bounded original-view partition candidate recovers this case without changing stock, quantities or recipes. Every candidate must still pass original-row and execution checks."
+    },
+    {
+      "name": "manual_small_n40_c3_d1_a1_s43_wide_weights/retained-grouped-partition",
+      "source": "cases/graph/78/78ccc0b45fc6b540fba96c22f3e696323e4ab7ebccbc3bc412f07352e5123eac.json",
+      "sha256_lf": "bb9aa6053d4b6ba06b17aa8f4a9f5221ff91d02e2752c20256ae5a98c68f014c",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix validation. The bounded original-view partition candidate recovers this case without changing stock, quantities or recipes. Every candidate must still pass original-row and execution checks."
+    },
+    {
+      "name": "manual_small_n24_c3_d1_a1_s313_wide_weights/retained-grouped-partition",
+      "source": "cases/graph/80/80188bc1fe8bd334583d51427290cfc7f54c1e03f423373a3dfc56f5f1481f23.json",
+      "sha256_lf": "4af8757cb307725d2080fe7dd17c1439077689d893bf7baf2b4696981af7fbbb",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix validation. The bounded original-view partition candidate recovers this case without changing stock, quantities or recipes. Every candidate must still pass original-row and execution checks."
+    },
+    {
+      "name": "manual_small_n40_c3_d1_a1_s107_wide_weights/retained-grouped-partition",
+      "source": "cases/graph/f0/f03362a6105dd4892e1ac2d05ca2ae53f2877185e08a4d625ba098dcb0bc1dba.json",
+      "sha256_lf": "d4462e9bb91cf79ba8f0a4a807c1caf219571e467f5be8dc9dcce49fcbf37f51",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix validation. The bounded original-view partition candidate recovers this case without changing stock, quantities or recipes. Every candidate must still pass original-row and execution checks."
+    },
+    {
+      "name": "manual_small_n16_c3_d1_a1_s107_wide_weights/bin-order-before-item-order",
+      "source": "cases/graph/7a/7aa24261d2d34c28474d3b7305f409151eb028c99d29fd6559849aee593a6b1a.json",
+      "sha256_lf": "23b38ecb03604c315d18e6c6819ba9e6ecf5a7da66a1473618fc263e93a68428",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 3000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix replay. The first trial of grouped-partition admission regressed this input; this guard preserves the corrected solver outcome and bounded total work. Canonical weights and bin bounds preserve the independently checked allocation across row/column permutations; 33 graph order/worker/budget controls passed below 1.5M work."
+    },
+    {
+      "name": "manual_small_n64_c2_d1_a1_s107_wide_weights/preserve-scalar-partition-path",
+      "source": "cases/graph/d2/d28066be319686074c910af404cff6af7b965e54f60d442d432df79e55a9dd4d.json",
+      "sha256_lf": "f041247c958eb8ad07596d49aa7fa3bf1436c42bfdd1d6e965b1b4d551c1df43",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 2500000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix replay. The first trial of grouped-partition admission regressed this input; this guard preserves the corrected solver outcome and bounded total work."
+    },
+    {
+      "name": "manual_small_n24_c3_d1_a1_s107_wide_weights/retained-grouped-partition/four-workers-fixed",
+      "source": "cases/graph/56/56a69a31732292cde8db23e84df7325f12d59f193b71bac87b8bf3f5da9dae87.json",
+      "sha256_lf": "b1ac87998427380e911bc7e7deb68df5379d0cdf4476d0a85afc3631eee5fa44",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix validation. The bounded original-view partition candidate recovers this case without changing stock, quantities or recipes. Every candidate must still pass original-row and execution checks.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "manual_small_n24_c3_d1_a1_s107_wide_weights/retained-grouped-partition/four-workers-expanded",
+      "source": "cases/graph/56/56a69a31732292cde8db23e84df7325f12d59f193b71bac87b8bf3f5da9dae87.json",
+      "sha256_lf": "b1ac87998427380e911bc7e7deb68df5379d0cdf4476d0a85afc3631eee5fa44",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix validation. The bounded original-view partition candidate recovers this case without changing stock, quantities or recipes. Every candidate must still pass original-row and execution checks.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "manual_small_n16_c3_d1_a1_s107_wide_weights/bin-order-before-item-order/four-workers-fixed",
+      "source": "cases/graph/7a/7aa24261d2d34c28474d3b7305f409151eb028c99d29fd6559849aee593a6b1a.json",
+      "sha256_lf": "23b38ecb03604c315d18e6c6819ba9e6ecf5a7da66a1473618fc263e93a68428",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 3000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix replay. The first trial of grouped-partition admission regressed this input; this guard preserves the corrected solver outcome and bounded total work. Canonical weights and bin bounds preserve the independently checked allocation across row/column permutations; 33 graph order/worker/budget controls passed below 1.5M work.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "manual_small_n16_c3_d1_a1_s107_wide_weights/bin-order-before-item-order/four-workers-expanded",
+      "source": "cases/graph/7a/7aa24261d2d34c28474d3b7305f409151eb028c99d29fd6559849aee593a6b1a.json",
+      "sha256_lf": "23b38ecb03604c315d18e6c6819ba9e6ecf5a7da66a1473618fc263e93a68428",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 3000000,
+      "evidence": "Existing canonical SAT expectation and independent primitive-prefix replay. The first trial of grouped-partition admission regressed this input; this guard preserves the corrected solver outcome and bounded total work. Canonical weights and bin bounds preserve the independently checked allocation across row/column permutations; 33 graph order/worker/budget controls passed below 1.5M work.",
+      "workers": 4,
+      "expanded_budget": true
     }
   ]
 }

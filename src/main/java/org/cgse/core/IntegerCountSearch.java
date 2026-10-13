@@ -300,13 +300,15 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     }
 
     private boolean hasSpecializedWork() {
-        // Structural and weighted-LP frontiers already alternate with owned
-        // generic views. Duplicating generic root workers here can starve those
+        // Structural, weighted-LP and grouped-partition frontiers already own
+        // bounded continuations. Duplicating generic root workers can starve those
         // frontiers under the shared work limit even with spare CPU threads.
         return pending.stream().anyMatch(branch -> branch.structural != null || branch.parkedStructural != null ||
-                branch.lpSearch != null && branch.lpSearch.retained()) ||
+                branch.lpSearch != null && branch.lpSearch.retained() ||
+                branch.viewSearch != null && branch.viewSearch.hasGroupedPartition()) ||
                 deferred.stream().anyMatch(branch -> branch.structural != null || branch.parkedStructural != null ||
-                        branch.lpSearch != null && branch.lpSearch.retained());
+                        branch.lpSearch != null && branch.lpSearch.retained() ||
+                        branch.viewSearch != null && branch.viewSearch.hasGroupedPartition());
     }
 
     /** A short first attempt keeps its full frontier for the normal continuation. */

@@ -26,6 +26,9 @@ final class CountViewSearch implements AutoCloseable {
     private Search candidateSource;
     private boolean strideScoutAttempted;
     private boolean integerLpAttempted;
+    private boolean groupedPartitionAttempted;
+    private final Set<CountModelViews.View> partitionViews = Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<CountModelViews.View> wideAllocationViews = Collections.newSetFromMap(new IdentityHashMap<>());
     private long commonWork, reportedCommonWork, restorationWork;
     private CountPortfolioPolicy.Mode candidateMode;
 
@@ -193,6 +196,7 @@ final class CountViewSearch implements AutoCloseable {
         JUMP,
         SEPARATOR,
         MITM,
+        GROUPED_PARTITION,
         DOMAIN,
         DIAGRAM,
         BOOLEAN,
@@ -227,6 +231,35 @@ final class CountViewSearch implements AutoCloseable {
             }
         }
         addStrideScout();
+        addGroupedPartition();
+    }
+
+    boolean hasGroupedPartition() {
+        return searches.stream().anyMatch(search -> !search.done && search.scheduling.eligible &&
+                search.engine == Engine.GROUPED_PARTITION);
+    }
+
+    private void addGroupedPartition() {
+        if (groupedPartitionAttempted || policy.mode() == CountPortfolioPolicy.Mode.PROOF) return;
+        long before = budget.threadWork();
+        try {
+            for (var view : models.available()) {
+                // Capacity groups are often clearer before substitution. Keep
+                // that original representation eligible before compilation,
+                // while allowing a later new view one admission check too.
+                if (wideAllocationViews.contains(view) || !partitionViews.add(view)) continue;
+                var domains = models.domains(view);
+                var partition = CountGroupedPartition.createMultiway(view.rows(), domains.lower(), domains.upper(), budget,
+                        CountPortfolioPolicy.MIN_QUANTUM);
+                if (partition == null) continue;
+                Search search = new Search(view, policy.add(view.shape().cost(), Engine.GROUPED_PARTITION), Engine.GROUPED_PARTITION);
+                search.specialist = partition;
+                search.scope = domains;
+                searches.add(search);
+                groupedPartitionAttempted = true;
+                return;
+            }
+        } finally { commonWork(budget.threadWork() - before); }
     }
 
     /** Do not displace cheap compilation or existing engines' initial visits with another LCG. */
@@ -407,7 +440,19 @@ final class CountViewSearch implements AutoCloseable {
         if (view.lower().length > 1024 || view.rows().size() > 4096 || view.shape().terms() > 65536) return false;
         for (int i = 0; i < view.lower().length; i++) {
             budget.check();
-            if (view.upper()[i] == null || view.upper()[i].subtract(view.lower()[i]).compareTo(BigInteger.ONE) > 0) return false;
+            var upper = view.upper()[i];
+            if (upper == null) {
+                wideAllocationViews.add(view);
+                return false;
+            }
+            var width = upper.subtract(view.lower()[i]);
+            if (width.compareTo(BigInteger.ONE) > 0) {
+                // Reuse this paid domain observation at candidate admission.
+                // Unsupported wide models need no duplicate inventory scan.
+                if (width.compareTo(BigInteger.valueOf(CountGroupedPartition.MAX_CAPACITY)) > 0)
+                    wideAllocationViews.add(view);
+                return false;
+            }
         }
         return true;
     }
@@ -559,6 +604,16 @@ final class CountViewSearch implements AutoCloseable {
         // turns a witness task into a proof task or disables other engines.
         boolean sampled = searches.stream().noneMatch(search -> !search.done && search.scheduling.eligible &&
                 policy.selections(search.scheduling) == 0);
+        if (sampled) for (Search search : searches) {
+            if (search.done || !search.scheduling.eligible || !(search.specialist instanceof CountGroupedPartition) ||
+                    search.progress == 0) continue;
+            // The existing finite table has already produced reachable sums.
+            // Give it one bounded completion opportunity after mandatory first
+            // visits. Handoffs preserve this ceiling; it is never replenished.
+            if (search.continuationLimit == 0)
+                search.continuationLimit = saturatedAdd(search.work, Math.min(4_194_304, budget.remainingWork() / 8));
+            if (search.work < search.continuationLimit) return search;
+        }
         if (sampled) for (Search search : searches) {
             if (search.done || !search.scheduling.eligible || !(search.specialist instanceof CountDiophantine numeric) ||
                     !numeric.hasCoupledElimination()) continue;
