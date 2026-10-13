@@ -243,6 +243,16 @@ final class CountViewSearch implements AutoCloseable {
         finally { commonWork(budget.threadWork() - packingStarted); }
     }
 
+    /** Observe an already owned, eligible frontier; do not construct a new scout. */
+    long packingContinuationQuantum() {
+        for (Search search : searches) {
+            if (!search.done && search.scheduling.eligible && search.progress > 0 &&
+                    search.specialist instanceof CountPackingCore packing && packing.remainingAllowance() > 0)
+                return policy.quantum(search.scheduling, budget.remainingWork());
+        }
+        return 0;
+    }
+
     boolean hasGroupedPartition() {
         return searches.stream().anyMatch(search -> !search.done && search.scheduling.eligible &&
                 search.engine == Engine.GROUPED_PARTITION);

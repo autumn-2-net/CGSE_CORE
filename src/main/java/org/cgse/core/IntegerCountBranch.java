@@ -438,7 +438,20 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             // Leave the initial sample bounded so cheap candidate strategies
             // can run. Later, productive cuts earn a bounded continuation
             // before branch fan-out disperses the remaining budget.
-            if ((lpResuming || lpScoutsSampled) && lpSearch.continueOnCuts()) return;
+            if ((lpResuming || lpScoutsSampled) && lpSearch.continueOnCuts()) {
+                // Keep the admitted candidate frontier alongside productive
+                // LP learning. Both retain their existing nonrenewable limits;
+                // a new cut alone must not postpone all packing work until
+                // the LP has consumed its entire preferential allowance. Offer
+                // one policy-sized sample, not a second full LP-sized batch.
+                long candidateQuantum = viewSearch == null ? 0 : viewSearch.packingContinuationQuantum();
+                if (candidateQuantum > 0) {
+                    lpActive = false;
+                    viewSearch.resume(candidateQuantum);
+                    viewStage = 9;
+                }
+                return;
+            }
             lpActive = false;
             counts = lpSearch.counts();
             boolean impossible = lpSearch.infeasible();
@@ -2066,6 +2079,9 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         else if (continuation == 5) beginCompiledPortfolio();
         else if (continuation == 7) groups = new CountGroups(reduction.rows(), reduction.lower(), reduction.upper(), budget);
         else if (continuation == 8) beginBoolean();
+        // A rejected packing candidate also returns to the same LP batch.
+        // Its prior resume has already charged/granted the next local slice.
+        else if (continuation == 9) lpActive = true;
         // Stage 1 resumes compilation, preserving the untouched original model.
     }
 

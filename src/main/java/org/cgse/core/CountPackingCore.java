@@ -21,11 +21,11 @@ final class CountPackingCore implements CountContinuation {
     private final long target;
     private final Relaxation lp;
     private long memory, work, until, nodes, relaxationSteps;
-    private long[][] coefficients, minimum;
-    private long[] residual;
-    private int[] ranked, free, choices, allowed;
-    private boolean[] seed, values;
-    private int depth, coreSize;
+    private int[] ranked, free;
+    private boolean[] seed;
+    private int coreSize;
+    private CountPackingSearch search;
+    private long forcedValues;
     private boolean complete, paused;
     private BigInteger[] counts;
     private CountLpLearning.Cut explanation;
@@ -84,62 +84,31 @@ final class CountPackingCore implements CountContinuation {
                 return false;
             }
             if (ranked == null && !prepare()) return finish("point_declined");
-            if (coefficients == null) beginCore();
-            // One retained DFS node; every row is exact and no subset failure is exported.
+            if (search == null) beginCore();
+            // Whole-core propagation and the DFS stack survive each handoff.
+            // Closing this core never exports its outside fixings as facts.
             nodes++;
-            if (depth < 0) {
-                if (coreSize >= Math.min(64, columns.length)) return finish("cores_closed");
-                coreSize = Math.min(Math.min(64, columns.length), coreSize + 8);
-                beginCore(); return false;
+            if (!search.step()) return false;
+            if (search.feasible()) {
+                long assignment = search.assignment();
+                var candidate = lower.clone();
+                for (int i = 0; i < columns.length; i++) candidate[columns[i]] = seed[i] ? BigInteger.ONE : BigInteger.ZERO;
+                for (int i = 0; i < free.length; i++)
+                    candidate[columns[free[i]]] = (assignment & (1L << i)) != 0 ? BigInteger.ONE : BigInteger.ZERO;
+                if (valid(candidate)) { counts = candidate; return finish("verified_candidate"); }
+                return finish("candidate_rejected");
             }
-            if (choices[depth] == 0) {
-                // Reuse each row's activity scan to exclude the next Boolean
-                // value before updating every residual and then undoing it.
-                // These deductions include this core's fixed coordinates and
-                // preceding choices; they stay on this retained DFS stack.
-                int valuesAllowed = 3;
-                for (int r = 0; r < residual.length; r++) {
-                    budget.operation(PlanningBudget.Operation.INTEGER, 64);
-                    long slack = residual[r] - minimum[r][depth];
-                    if (slack < 0) { backtrack(); return false; }
-                    if (depth < free.length) {
-                        budget.operation(PlanningBudget.Operation.SCAN, 0);
-                        long a = coefficients[r][depth];
-                        if (a > slack) valuesAllowed &= 1;
-                        else if (-a > slack) valuesAllowed &= 2;
-                        if (valuesAllowed == 0) { backtrack(); return false; }
-                    }
-                }
-                allowed[depth] = valuesAllowed;
-                if (depth == free.length) {
-                    var candidate = lower.clone();
-                    for (int i = 0; i < columns.length; i++) candidate[columns[i]] = values[i] ? BigInteger.ONE : BigInteger.ZERO;
-                    if (valid(candidate)) { counts = candidate; return finish("verified_candidate"); }
-                    return finish("candidate_rejected");
-                }
-            }
-            int id = free[depth];
-            boolean value = false;
-            while (choices[depth] < 2) {
-                value = choices[depth] == 0 ? seed[id] : !seed[id];
-                if ((allowed[depth] & (value ? 2 : 1)) != 0) break;
-                choices[depth]++;
-            }
-            if (choices[depth] >= 2) { choices[depth] = 0; backtrack(); return false; }
-            choices[depth]++;
-            values[id] = value;
-            for (int r = 0; r < residual.length; r++) {
-                budget.operation(PlanningBudget.Operation.INTEGER, 64);
-                if (value) residual[r] -= coefficients[r][depth];
-            }
-            choices[++depth] = 0;
+            if (coreSize >= Math.min(64, columns.length)) return finish("cores_closed");
+            forcedValues += search.forcedValues();
+            coreSize = Math.min(Math.min(64, columns.length), coreSize + 8);
+            beginCore();
             return false;
         } finally { work += budget.threadWork() - before; }
     }
 
     private boolean prepare() {
         int n = columns.length;
-        seed = new boolean[n]; values = new boolean[n];
+        seed = new boolean[n];
         var ordering = new ArrayList<Integer>(); int fractional = 0;
         for (int i = 0; i < n; i++) {
             budget.check(); double x = lp.point[i];
@@ -191,26 +160,22 @@ final class CountPackingCore implements CountContinuation {
         var demand = new long[n]; for (int i = 0; i < n; i++) demand[i] = -profit[i];
         full.add(demand); bounds.add(-target);
         if (aggregate != null) { full.add(aggregate); bounds.add(aggregateBound); }
-        coefficients = new long[full.size()][coreSize]; minimum = new long[full.size()][coreSize + 1];
-        residual = new long[full.size()]; choices = new int[coreSize + 1]; allowed = new int[coreSize + 1];
+        var coefficients = new long[full.size()][coreSize];
+        var residual = new long[full.size()];
         boolean[] released = new boolean[n]; for (int id : free) released[id] = true;
-        values = seed.clone(); depth = 0;
+        long preferred = 0;
+        for (int d = 0; d < coreSize; d++) if (seed[free[d]]) preferred |= 1L << d;
         for (int r = 0; r < full.size(); r++) {
             residual[r] = bounds.get(r); long[] a = full.get(r);
             for (int i = 0; i < n; i++) { budget.check(); if (!released[i] && seed[i]) residual[r] -= a[i]; }
             for (int d = coreSize - 1; d >= 0; d--) {
                 budget.check(); coefficients[r][d] = a[free[d]];
-                minimum[r][d] = minimum[r][d + 1] + Math.min(0, coefficients[r][d]);
             }
         }
+        // Upfront reservation covers the bounded 34-by-64 coefficients,
+        // threshold masks and retained activity stack together.
+        search = new CountPackingSearch(coefficients, residual, preferred, budget);
         budget.note("count_packing_core", "begin; variables=" + n + "; capacities=" + m + "; free=" + coreSize + "; work=" + work);
-    }
-
-    private void backtrack() {
-        if (--depth < 0) return;
-        if (values[free[depth]]) for (int r = 0; r < residual.length; r++) {
-            budget.operation(PlanningBudget.Operation.INTEGER, 64); residual[r] += coefficients[r][depth];
-        }
     }
 
     private boolean valid(BigInteger[] candidate) {
@@ -226,7 +191,8 @@ final class CountPackingCore implements CountContinuation {
 
     private boolean finish(String reason) {
         complete = true; paused = false;
-        budget.note("count_packing_core", reason + "; free=" + coreSize + "; lp_steps=" + relaxationSteps + "; nodes=" + nodes + "; work=" + work);
+        budget.note("count_packing_core", reason + "; free=" + coreSize + "; lp_steps=" + relaxationSteps + "; nodes=" + nodes +
+                "; forced=" + (forcedValues + (search == null ? 0 : search.forcedValues())) + "; work=" + work);
         return true;
     }
     @Override public boolean paused() { return paused; }
@@ -242,6 +208,7 @@ final class CountPackingCore implements CountContinuation {
         return rows.equals(other) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
     }
     @Override public void close() {
+        search = null;
         budget.release(memory); memory = 0;
         if (ownsStructure) structure.close();
     }

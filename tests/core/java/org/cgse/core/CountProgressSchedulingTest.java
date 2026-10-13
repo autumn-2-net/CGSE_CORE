@@ -15,6 +15,7 @@ public final class CountProgressSchedulingTest {
         lpContinuation();
         largeCeilings();
         numericSelection();
+        packingSampling();
         System.out.println("Progress scheduling: exact/redundant/fixed/trial elimination, LP continuation/plateau, " +
                 "mandatory visits, work ceilings, proof eligibility, cancellation and cleanup passed");
     }
@@ -199,6 +200,56 @@ public final class CountProgressSchedulingTest {
                 }
             }
             check(budget.reservedBytes() == 0, "Large-cap LP leaked");
+        }
+    }
+
+    private static void packingSampling() {
+        for (long cap : new long[] {40_000_000, Integer.MAX_VALUE, Long.MAX_VALUE}) {
+            var budget = budget(cap);
+            int n = 100;
+            var random = new Random(4917);
+            var rows = new ArrayList<ExactLinearProgram.Constraint>();
+            for (int r = 0; r < 11; r++) {
+                var terms = new TreeMap<Integer, BigInteger>();
+                long bound = 0;
+                for (int i = 0; i < n; i++) {
+                    int a = 1 + random.nextInt(100);
+                    if (r == 10) a = -a;
+                    terms.put(i, BigInteger.valueOf(a));
+                    if (i % 2 == 0) bound += a;
+                }
+                rows.add(new ExactLinearProgram.Constraint(terms, BigInteger.valueOf(bound)));
+            }
+            try (var models = CountModelViews.create(rows, filled(n, 0), filled(n, 1), budget);
+                 var search = new CountViewSearch(models, budget)) {
+                check(search.packingContinuationQuantum() == 0, "An observation created a packing scout");
+                models.compileLight();
+                long quantum = 0;
+                for (int turns = 0; turns < 128 && quantum == 0; turns++) {
+                    search.resume(4096);
+                    while (!search.step()) {}
+                    check(search.counts() == null && !search.infeasible(), "Fixture closed before the retained observation");
+                    quantum = search.packingContinuationQuantum();
+                }
+                check(quantum > 0 && quantum <= CountPortfolioPolicy.MAX_QUANTUM,
+                        "Packing handoff bypassed the policy sample size");
+                long bytes = budget.reservedBytes(), work = budget.threadWork();
+                check(search.packingContinuationQuantum() == quantum && budget.reservedBytes() == bytes &&
+                        budget.threadWork() == work, "Repeated observation recreated a candidate frontier");
+                search.mode(CountPortfolioPolicy.Mode.PROOF);
+                check(search.packingContinuationQuantum() == 0, "Candidate-only work entered a proof task");
+                search.mode(CountPortfolioPolicy.Mode.FIRST_WITNESS);
+                check(search.packingContinuationQuantum() > 0, "Goal change discarded retained packing work");
+                // The budget deliberately rejects a single tick conversion
+                // larger than long. Exercise a real tail on representable
+                // charges; the Long.MAX_VALUE configuration still checks the
+                // policy's small, positive grant above.
+                if (cap <= Integer.MAX_VALUE) {
+                    budget.charge(budget.remainingWork() - 7);
+                    check(search.packingContinuationQuantum() <= 7, "Shared-budget tail was replenished");
+                }
+            }
+            check(budget.reservedBytes() == 0, "Packing continuation ownership leaked");
         }
     }
 
