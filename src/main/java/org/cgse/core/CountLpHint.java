@@ -142,7 +142,7 @@ final class CountLpHint {
     private static Result solve(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower, BigInteger[] upper,
                                 PlanningBudget budget, long maximumWork, Attempt attempt, Session session) {
         if (attempt != null) attempt.outcome = Outcome.UNSUPPORTED;
-        if (lower.length < 2 || lower.length > 256 || upper.length != lower.length || rows.size() > 1024) return null;
+        if (lower.length < 2 || lower.length > 512 || upper.length != lower.length || rows.size() > 1024) return null;
         if (maximumWork < 1024) {
             if (attempt != null) attempt.outcome = Outcome.WORK_LIMIT;
             return null;

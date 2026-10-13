@@ -1142,6 +1142,292 @@
       "expected": "SAT",
       "maximum_observed_work": 5000000,
       "evidence": "Existing canonical SAT expectation with exact primitive-prefix verification. New compressed programs and stocked-phase entry trials must leave the established ordering and free/priced recovery witnesses first. Work bound is a performance guard, never a logical oracle."
+    },
+    {
+      "name": "manual_large_n24_c3_d1_a1_s43_wide_weights/grouped-repair",
+      "source": "cases/graph/0e/0ec51298313d87650234a58441d1773795092a576a7361ad6827fb052f008c6a.json",
+      "sha256_lf": "3e9368161b5aac2814edd8fa36e4af53ddd031133b749f99936c963b3058476d",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n24_c3_d1_a1_s107_wide_weights/grouped-repair",
+      "source": "cases/graph/60/60f579791e43f439d6b0d7e3967dd01a03c900f8ee0d57f92a142b2525cfad8e.json",
+      "sha256_lf": "acc6736d6be6b14958477be1e7d5189a36f8e9d23f2ebc0f4ac443210c810156",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n64_c2_d3_a1_s313_shuffle/grouped-repair",
+      "source": "cases/graph/eb/eb0aa112ee35411dadc5eb015476a3e837d803d5babad2818f5a1aec116682b8.json",
+      "sha256_lf": "d2daf3d2ba198ad61a46ac6c1f39bd0f4d9568f290f7fd3223ee362feb6caed6",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n64_c3_d3_a1_s313_shuffle/grouped-repair",
+      "source": "cases/graph/a2/a226ba62bfb7caf9789e49bac73b8baa2251bad6c6563a71d508e882a060134b.json",
+      "sha256_lf": "1a7d9f0d8b45624741040caeedf19cdd6b2026ea1d8342dd0cd1f76806e14b5f",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n64_c3_d3_a1_s107_shuffle/grouped-repair",
+      "source": "cases/graph/d9/d9bbbfcc287400149a48c37019785b92662176d271ef0a140dbb5e5897136ad3.json",
+      "sha256_lf": "e06b4af8c91fdfb0d278d01d653eed9b66af610d13e9779130fee4c119b611a3",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n64_c3_d3_a1_s43_shuffle/grouped-repair",
+      "source": "cases/graph/fc/fcb54fecf3110b54af36e4a71930b09c56db84c5fc1ee5f9a696560c99fb8be5.json",
+      "sha256_lf": "e2eb0d37c7a26d4ed9bdeed588193fef9852bfb0dfdd3d07b9f09a0cc79d4e6e",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n40_c3_d1_a1_s313_wide_weights/grouped-repair",
+      "source": "cases/graph/fd/fd02169d36a309262cd8832cf4267f50fbcd64e089b70ae8876b0ecfa8d1bf31.json",
+      "sha256_lf": "8218890578c46bece39f68e04e1a4c80895df5178783be2ecaab8d795a8c340f",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n40_c3_d1_a1_s107_wide_weights/grouped-repair",
+      "source": "cases/graph/35/35a25ba3eb5e00b7604119e34227ee85a93dedd903ac2d701e394b2caa7ffd15.json",
+      "sha256_lf": "d863eb5dd35079afb57ab1d893108bf2c8d6540bf85ed6a139451bd2148492ca",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n64_c3_d1_a1_s313_wide_weights/grouped-repair",
+      "source": "cases/graph/28/28bd274e844641dde0d38e6bc60b259bdd0f4f9b8c9b8f844973e6ed2df5f2e8.json",
+      "sha256_lf": "4b591fccb7aa34a39fb88c2a6fab2cb2d1c4aa29c791436a4543ead7a81456e5",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n24_c3_d1_a1_s313_wide_weights/grouped-repair",
+      "source": "cases/graph/2a/2ad3649abd7a8f06ea3d15346509766e394bd6ca8da47c88181beb6a5f290a54.json",
+      "sha256_lf": "ce9803dbbf69f40d681c9962b8f0518ee8ef93eb2dbd27cf44f4d6aa83e49415",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n64_c2_d3_a1_s107_shuffle/grouped-repair",
+      "source": "cases/graph/3c/3c2ceca7aeda689908612388ec523855a70a999af58899bd144f5d8cf4673d86.json",
+      "sha256_lf": "522c6aeea7198c35f7fd9f39f6dc0a7b2e370a16d43efe4d6ad545b549f45322",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n64_c3_d1_a1_s43_wide_weights/grouped-repair",
+      "source": "cases/graph/47/47508ddf5e79c8c939eeff8228ff4c56ed9d0b1e76e9c1ba74acf2ae17f038dc.json",
+      "sha256_lf": "90f68553ab4440bf443a44148b9f9867dd44ec4f370ec53c47ac9a322e51a99b",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n64_c3_d1_a1_s107_wide_weights/grouped-repair",
+      "source": "cases/graph/4f/4fd24047c3ccfa324b6547b63ae4bf7b8e9a72aaa33a00b67071146747404dfc.json",
+      "sha256_lf": "ed1ba1410bd10f3e5c74081341b369fbf5f159c2fcf45c1a4429981f1829d059",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n96_c2_d3_a1_s719_shuffle/grouped-repair",
+      "source": "cases/graph/59/590ef0abbbac07b8a055a5dd19cfc21547fcc0b11dc10ca2a446b8878b4aed65.json",
+      "sha256_lf": "3147e60556794486ecaa9615b2b43bdc3879b60f4ba56578f4d0132415f2a03c",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n24_c3_d3_a1_s107_shuffle/grouped-repair",
+      "source": "cases/graph/84/842301f54f9de095f7340f24c1edb86a0516d050b085a38703e7eb3d96939254.json",
+      "sha256_lf": "712fd793464e04fa2210f29bf82957e522ba89e26e8602279e22f8d48d1dc897",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n40_c3_d1_a1_s43_wide_weights/grouped-repair",
+      "source": "cases/graph/96/963db253a842f29708334931c92db4d86d0c9ece0533a0ec265be799f9c0a74b.json",
+      "sha256_lf": "7a5b31873549b4c9ef1d26f3b2c48bfa0296d89febf1e95093fd8bc1a79732ed",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n128_c2_d3_a1_s719_shuffle/grouped-repair",
+      "source": "cases/graph/91/91514a3549134b96002826dc8361b3b126e90d0227d9ea95072eefb542c3bca2.json",
+      "sha256_lf": "0fbe1f1ca52279b86da4c9886b7c447b16ef0e3dfdf9ac4f4f1f89a11378bc2f",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_small_n64_c3_d1_a1_s313_wide_weights/grouped-repair",
+      "source": "cases/graph/7d/7d3a0421c0a36ad875f76a2805a905b67d1473d72e1186252bf9f75ef834a3ac.json",
+      "sha256_lf": "42a3af7b2f0ba05fdd4cc04d70f84d98680fd3b619fd5c2d5138c6ccdeb66955",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_small_n64_c3_d1_a1_s107_wide_weights/grouped-repair",
+      "source": "cases/graph/dc/dc628751db553cfc48f9ecf62101ec6111f281b5991136cc26ca122154dd4621.json",
+      "sha256_lf": "4f812e78b0be3c1da01d85d802c88ec54b5156b448c6d34cadf1ba583ae8b458",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_small_n64_c3_d1_a1_s43_wide_weights/grouped-repair",
+      "source": "cases/graph/fc/fc29ef961dfd8e89c0fbb30985341d1ad1bf6099c0d834c71f3c16127a2f6989.json",
+      "sha256_lf": "1a640861e7c19b436301efce693f1a4441407ec7768873f8ce80e7e7f3685094",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n64_c2_d3_a1_s43_shuffle/grouped-repair",
+      "source": "cases/graph/e6/e659d2c5499b4a3c11d3af08c12cd726aa9f9d859a827269661bededb691a6eb.json",
+      "sha256_lf": "7112021f6c7938557d9c499b3d2eb8f058df24a043d6df56e04ce76d0d84a9d0",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Grouping/relaxation failures are never infeasibility oracles."
+    },
+    {
+      "name": "manual_large_n128_c2_d9_a1_s719_shuffle/grouped-repair",
+      "source": "cases/graph/b0/b01061a7f52385ab996fe1cbaffe2cd5de5a4d304b34050a3f7799512b6a217e.json",
+      "sha256_lf": "b690af4aad98256129df8feeeba6c81e675165f8a92e571c457fb3396f0ecc26",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Bounded LP proposal followed by exact retained repair; restricted failures never prove infeasibility."
     }
   ]
 }

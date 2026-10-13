@@ -27,6 +27,7 @@ final class CountViewSearch implements AutoCloseable {
     private boolean strideScoutAttempted;
     private boolean integerLpAttempted;
     private boolean groupedPartitionAttempted;
+    private boolean relaxationNeighborhoodAttempted;
     private final Set<CountModelViews.View> partitionViews = Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<CountModelViews.View> wideAllocationViews = Collections.newSetFromMap(new IdentityHashMap<>());
     private long commonWork, reportedCommonWork, restorationWork;
@@ -197,6 +198,7 @@ final class CountViewSearch implements AutoCloseable {
         SEPARATOR,
         MITM,
         GROUPED_PARTITION,
+        RELAXATION_NEIGHBORHOOD,
         DOMAIN,
         DIAGRAM,
         BOOLEAN,
@@ -247,10 +249,11 @@ final class CountViewSearch implements AutoCloseable {
                 // Capacity groups are often clearer before substitution. Keep
                 // that original representation eligible before compilation,
                 // while allowing a later new view one admission check too.
-                if (wideAllocationViews.contains(view) || !partitionViews.add(view)) continue;
+                if (!partitionViews.add(view)) continue;
                 var domains = models.domains(view);
-                var partition = CountGroupedPartition.createMultiway(view.rows(), domains.lower(), domains.upper(), budget,
-                        CountPortfolioPolicy.MIN_QUANTUM);
+                var partition = wideAllocationViews.contains(view) ?
+                        CountGroupedPartition.createWide(view.rows(), domains.lower(), domains.upper(), budget, CountPortfolioPolicy.MIN_QUANTUM) :
+                        CountGroupedPartition.createMultiway(view.rows(), domains.lower(), domains.upper(), budget, CountPortfolioPolicy.MIN_QUANTUM);
                 if (partition == null) continue;
                 Search search = new Search(view, policy.add(view.shape().cost(), Engine.GROUPED_PARTITION), Engine.GROUPED_PARTITION);
                 search.specialist = partition;
@@ -539,7 +542,7 @@ final class CountViewSearch implements AutoCloseable {
             if ((stalled || sampled) && counts == null && !infeasible) {
                 long scoutStarted = budget.threadWork();
                 boolean added;
-                try { added = addIntegerLp(); }
+                try { added = addIntegerLp(); if (!added) added = addRelaxationNeighborhood(); }
                 finally {
                     integerScoutWork = budget.threadWork() - scoutStarted;
                     commonWork(integerScoutWork);
@@ -577,6 +580,23 @@ final class CountViewSearch implements AutoCloseable {
         }
     }
 
+    private boolean addRelaxationNeighborhood() {
+        if (relaxationNeighborhoodAttempted || !models.compiledAlternatives() ||
+                policy.mode() == CountPortfolioPolicy.Mode.PROOF) return false;
+        relaxationNeighborhoodAttempted = true;
+        var views = new ArrayList<>(models.available());
+        views.sort(Comparator.comparingLong(view -> view.shape().cost()));
+        for (var view : views) {
+            var domains = models.domains(view);
+            var repair = CountRelaxationNeighborhood.create(view, domains, budget, CountPortfolioPolicy.MIN_QUANTUM);
+            if (repair == null) continue;
+            Search search = new Search(view, policy.add(view.shape().cost(), Engine.RELAXATION_NEIGHBORHOOD), Engine.RELAXATION_NEIGHBORHOOD);
+            search.scope = domains; search.specialist = repair; searches.add(search);
+            return true;
+        }
+        return false;
+    }
+
     private boolean addIntegerJump() {
         if (policy.mode() == CountPortfolioPolicy.Mode.PROOF) return false;
         // Give general integer local search one bounded initial opportunity
@@ -605,11 +625,12 @@ final class CountViewSearch implements AutoCloseable {
         boolean sampled = searches.stream().noneMatch(search -> !search.done && search.scheduling.eligible &&
                 policy.selections(search.scheduling) == 0);
         if (sampled) for (Search search : searches) {
-            if (search.done || !search.scheduling.eligible || !(search.specialist instanceof CountGroupedPartition) ||
+            if (search.done || !search.scheduling.eligible ||
+                    !(search.specialist instanceof CountGroupedPartition || search.specialist instanceof CountRelaxationNeighborhood) ||
                     search.progress == 0) continue;
-            // The existing finite table has already produced reachable sums.
-            // Give it one bounded completion opportunity after mandatory first
-            // visits. Handoffs preserve this ceiling; it is never replenished.
+            // Reachable sums or a usable LP point leave an owned candidate
+            // frontier. Give it one bounded completion opportunity after all
+            // mandatory first visits. Handoffs never replenish this ceiling.
             if (search.continuationLimit == 0)
                 search.continuationLimit = saturatedAdd(search.work, Math.min(4_194_304, budget.remainingWork() / 8));
             if (search.work < search.continuationLimit) return search;
