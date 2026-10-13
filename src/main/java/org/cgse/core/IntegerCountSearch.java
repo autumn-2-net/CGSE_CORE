@@ -56,6 +56,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private CountReachability<K> reachability;
     private IntegerCountBranch<K> reachabilityProbe;
     private long reachabilityWork, reachabilityAllowance, reachabilityMaximum;
+    private boolean reachabilityProofGranted;
     private long work, improvementUntil = Long.MAX_VALUE, firstWitnessWork = -1, firstWitnessNanos;
     private long frontierWork, continuationWork;
     private int branches, rounds, suspensions, boundPrunes, choicePrunes, peakWidth;
@@ -690,6 +691,16 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         }
         boolean found = reachabilityProbe != null && reachabilityProbe.state == IntegerCountBranch.State.FOUND;
         if (found) retain(reachabilityProbe);
+        if (reachabilityProbe == null && reachability.paused() && !reachabilityProofGranted &&
+                reachabilityWork >= reachabilityMaximum && reachability.proofCompletionWork() > 0) {
+            // A completed original-state frontier is stronger progress than
+            // another unexecutable count vector. Finish its independent check
+            // once, within the shared cap; no extra state search is admitted.
+            reachabilityProofGranted = true;
+            long extra = Math.min(reachability.proofCompletionWork(), Math.min(2_097_152, budget.remainingWork() / 16));
+            reachabilityMaximum += Math.min(extra, Long.MAX_VALUE - reachabilityMaximum);
+            budget.note("count_reachability_proof", "completed_frontier; additional_work=" + extra);
+        }
         if (reachabilityProbe == null && reachability.paused() && reachabilityWork < reachabilityMaximum) {
             // Keep both the original-state frontier and independent checker.
             // More work buys new transitions/checks, not another cold traversal.

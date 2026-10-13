@@ -340,6 +340,15 @@ final class ForwardCoverability<K> implements AutoCloseable {
 
     boolean paused() { return paused && !closed; }
 
+    /** Only the independently checked, already finite boundary can earn a final grant. */
+    long proofCompletionWork() {
+        if (closed || checking == null || !stack.isEmpty()) return 0;
+        // Conservative checker cost, bounded by the search's admitted dimensions
+        // and state cap. This is a scheduling estimate, never proof evidence.
+        return 16L + (2L + 2L * recipes.size()) * keys.size() +
+                (long) visited.size() * (3L * keys.size() + 8L + recipes.size() * (3L * keys.size() + 5L));
+    }
+
     void resume(long additionalWork) {
         if (!paused() || additionalWork <= 0) throw new IllegalStateException("No retained forward frontier");
         long extra = Math.min(additionalWork, budget.remainingWork());

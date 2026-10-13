@@ -110,6 +110,8 @@ final class CountReachability<K> implements AutoCloseable {
 
     boolean paused() { return complete && search.paused(); }
 
+    long proofCompletionWork() { return search.proofCompletionWork(); }
+
     void resume(long additionalWork) {
         search.resume(additionalWork);
         complete = false;

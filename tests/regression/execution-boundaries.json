@@ -889,6 +889,178 @@
       "evidence": "Existing canonical SAT expectation and independent primitive-prefix replay. The first trial of grouped-partition admission regressed this input; this guard preserves the corrected solver outcome and bounded total work. Canonical weights and bin bounds preserve the independently checked allocation across row/column permutations; 33 graph order/worker/budget controls passed below 1.5M work.",
       "workers": 4,
       "expanded_budget": true
+    },
+    {
+      "name": "pebble_00560/execution-closure/single",
+      "source": "cases/graph/a6/a6e631ff101406f75bf0638dc70fce0fb0c30a75f49d3b3418110d6b472c1e1a.json",
+      "sha256_lf": "65ccbc67905b99c8033bc2c545356a9c1d07cb754998ae7b1d43d7d587ca96f0",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "maximum_observed_work": 2000000,
+      "evidence": "Existing canonical UNSAT expectation, independently enumerated finite pebbling states, complete original-recipe closure certificate and serialized replay."
+    },
+    {
+      "name": "pebble_00560/execution-closure/four-workers-fixed",
+      "source": "cases/graph/a6/a6e631ff101406f75bf0638dc70fce0fb0c30a75f49d3b3418110d6b472c1e1a.json",
+      "sha256_lf": "65ccbc67905b99c8033bc2c545356a9c1d07cb754998ae7b1d43d7d587ca96f0",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "maximum_observed_work": 2000000,
+      "evidence": "Existing canonical UNSAT expectation, independently enumerated finite pebbling states, complete original-recipe closure certificate and serialized replay.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "pebble_00560/execution-closure/four-workers-expanded",
+      "source": "cases/graph/a6/a6e631ff101406f75bf0638dc70fce0fb0c30a75f49d3b3418110d6b472c1e1a.json",
+      "sha256_lf": "65ccbc67905b99c8033bc2c545356a9c1d07cb754998ae7b1d43d7d587ca96f0",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "maximum_observed_work": 2000000,
+      "evidence": "Existing canonical UNSAT expectation, independently enumerated finite pebbling states, complete original-recipe closure certificate and serialized replay.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "forkjoin_00642/execution-closure/single",
+      "source": "cases/graph/9e/9e0b13026a610b3b0886f95a835efb7effae37f4dc7bf29a1e26187c180d71c5.json",
+      "sha256_lf": "9cf98209e2b1d6f853a1a8826fdb2a31f639eabe8e820803761946113dc3eb31",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 25000000,
+      "evidence": "Existing canonical SAT expectation, SCIP temporal witness independently replayed on original inputs, CGSE primitive-prefix validation. Conserved resource separation blocks collectively unfunded return paths without removing any feasible plan."
+    },
+    {
+      "name": "forkjoin_00642/execution-closure/four-workers-fixed",
+      "source": "cases/graph/9e/9e0b13026a610b3b0886f95a835efb7effae37f4dc7bf29a1e26187c180d71c5.json",
+      "sha256_lf": "9cf98209e2b1d6f853a1a8826fdb2a31f639eabe8e820803761946113dc3eb31",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 25000000,
+      "evidence": "Existing canonical SAT expectation, SCIP temporal witness independently replayed on original inputs, CGSE primitive-prefix validation. Conserved resource separation blocks collectively unfunded return paths without removing any feasible plan.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "forkjoin_00642/execution-closure/four-workers-expanded",
+      "source": "cases/graph/9e/9e0b13026a610b3b0886f95a835efb7effae37f4dc7bf29a1e26187c180d71c5.json",
+      "sha256_lf": "9cf98209e2b1d6f853a1a8826fdb2a31f639eabe8e820803761946113dc3eb31",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 25000000,
+      "evidence": "Existing canonical SAT expectation, SCIP temporal witness independently replayed on original inputs, CGSE primitive-prefix validation. Conserved resource separation blocks collectively unfunded return paths without removing any feasible plan.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "pebble_01673/execution-closure/preserve-existing-cost",
+      "source": "cases/graph/2a/2a0faf3d6113895b19a2305dcdfb18aa6b8cc476e0caed59825491993326c2f3.json",
+      "sha256_lf": "6b86d628cebf62095feae8e2085f8e75b18161cea10302cde2ee37700118d35c",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical expectation and independent original execution validation. Added after a full-corpus cost audit: failed pool separation and proof-checker slice changes must not displace the established search. Budget remains 40M; this bound checks observed total work, not a logical oracle."
+    },
+    {
+      "name": "hard_random_0201/execution-closure/preserve-existing-cost",
+      "source": "cases/graph/3b/3b3f4e40f4498f11b8435cb95913895100e4371b31bfe70e11717b47f53e6b29.json",
+      "sha256_lf": "370ed2f7476a034aa326b471262a166365b8af7e37f8e6903613183d7a9413de",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 33000000,
+      "evidence": "Existing canonical expectation and independent original execution validation. Added after a full-corpus cost audit: failed pool separation and proof-checker slice changes must not displace the established search. Budget remains 40M; this bound checks observed total work, not a logical oracle."
+    },
+    {
+      "name": "rendezvous_00356/execution-closure/preserve-existing-cost",
+      "source": "cases/graph/55/5569eff075d36055fc34b776d9fb3aadfbdaee58d0596e9f2dd790efb0a85247.json",
+      "sha256_lf": "7bdc590e87db83b7a75d862eff328d1089ca49521a92f3fc19bf490291c16813",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "UNSAT",
+      "maximum_observed_work": 6500000,
+      "evidence": "Existing canonical expectation and independent original execution validation. Added after a full-corpus cost audit: failed pool separation and proof-checker slice changes must not displace the established search. Budget remains 40M; this bound checks observed total work, not a logical oracle."
+    },
+    {
+      "name": "pebble_01739/execution-closure/preserve-existing-cost",
+      "source": "cases/graph/61/6179591b1c60546ec76a79d5b9af9427ccca7b019fc85356985c1b1c0b9d8cd7.json",
+      "sha256_lf": "15bdb60dae984747c3966be7006e4f75e54cd484e6ed20f0e4fe626fa0dc5bb3",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 11000000,
+      "evidence": "Existing canonical expectation and independent original execution validation. Added after a full-corpus cost audit: failed pool separation and proof-checker slice changes must not displace the established search. Budget remains 40M; this bound checks observed total work, not a logical oracle."
     }
   ]
 }
