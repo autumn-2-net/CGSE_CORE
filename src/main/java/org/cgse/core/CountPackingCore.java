@@ -30,6 +30,12 @@ final class CountPackingCore implements CountContinuation {
     private long[][] coreCoefficients;
     private long[] coreBounds;
     private long corePreferred;
+    private boolean scouting;
+    private long scoutLimit, scoutAt;
+    private boolean scoutAttempted;
+    private Frontier scoutBase;
+    private record Frontier(CountPackingNeighborhood search, int[] free, int size, int compiledSize,
+                            long[][] coefficients, long[] bounds, long preferred) {}
     private CountPackingNeighborhood search;
     private long forcedValues;
     private boolean complete, paused;
@@ -89,6 +95,7 @@ final class CountPackingCore implements CountContinuation {
         if (work >= until) { paused = true; return true; }
         long before = budget.threadWork();
         try {
+            if (scouting && (work >= scoutLimit || work >= normalWork)) endScout();
             if (phase == Phase.ENUMERATION && work >= normalWork) {
                 if (ranked == null || search == null) return finish("local_limit");
                 phase = Phase.CONFLICT_REPAIR;
@@ -104,6 +111,9 @@ final class CountPackingCore implements CountContinuation {
             }
             if (ranked == null && !prepare()) return finish("point_declined");
             if (search == null) beginCore();
+            if (!scoutAttempted && phase == Phase.ENUMERATION && work >= scoutAt && normalWork - work >= 262144)
+                beginScout();
+
             // Whole-core propagation and the DFS stack survive each handoff.
             // Closing this core never exports its outside fixings as facts.
             nodes++;
@@ -117,6 +127,7 @@ final class CountPackingCore implements CountContinuation {
                 if (valid(candidate)) { counts = candidate; return finish("verified_candidate"); }
                 return finish("candidate_rejected");
             }
+            if (scouting) { endScout(); return false; }
             if (coreSize >= Math.min(64, columns.length)) return finish("cores_closed");
             coreSize = Math.min(Math.min(64, columns.length), coreSize + 8);
             beginCore();
@@ -164,7 +175,32 @@ final class CountPackingCore implements CountContinuation {
             aggregate = Arrays.stream(vector).mapToLong(BigInteger::longValueExact).toArray();
             aggregateBound = bound.longValueExact();
         }
+        // Preserve a first sample of the original exact frontier. Easy cores
+        // can finish without constructing any optional exchange table.
+        scoutAt = work + Math.min(262144, normalWork / 16);
         return coreSize <= 64;
+    }
+
+    private void beginScout() {
+        scoutAttempted = scouting = true;
+        scoutBase = new Frontier(search, free, coreSize, compiledSize, coreCoefficients, coreBounds, corePreferred);
+        search = null;
+        coreSize = Math.min(columns.length, Math.max(40, coreSize));
+        compiledSize = 0;
+        // This scout consumes the existing normal allowance. Neither a worker
+        // handoff nor restoring the saved frontier renews any phase ceiling.
+        scoutLimit = Math.min(normalWork, work + Math.min(1_048_576, maximumWork / 16));
+        beginCore();
+    }
+
+    private void endScout() {
+        if (search != null) search.close();
+        scouting = false;
+        search = scoutBase.search(); free = scoutBase.free();
+        coreSize = scoutBase.size(); compiledSize = scoutBase.compiledSize();
+        coreCoefficients = scoutBase.coefficients(); coreBounds = scoutBase.bounds();
+        corePreferred = scoutBase.preferred(); scoutBase = null;
+        budget.note("count_packing_core", "resume_original; free=" + coreSize + "; work=" + work);
     }
 
     private void beginCore() {
@@ -187,9 +223,10 @@ final class CountPackingCore implements CountContinuation {
         // The parent reserves the bounded 35-by-64 coefficients, threshold
         // masks, suffix maxima and retained activity stack together. PB owns
         // its separate, optional reconstruction and conflict-learning storage.
-        search = new CountPackingNeighborhood(coefficients, residual, corePreferred, budget, phase == Phase.CONFLICT_REPAIR);
+        search = new CountPackingNeighborhood(coefficients, residual, corePreferred, budget, scouting ? CountPackingNeighborhood.Mode.EXCHANGE : phase == Phase.CONFLICT_REPAIR ?
+                CountPackingNeighborhood.Mode.LEARNING : CountPackingNeighborhood.Mode.PROPAGATION);
         budget.note("count_packing_core", "begin; variables=" + columns.length + "; capacities=" + matrix.length +
-                "; fractional=" + fractional + "; free=" + coreSize + "; phase=" + phase + "; work=" + work);
+                "; fractional=" + fractional + "; free=" + coreSize + "; phase=" + phase + "; scout=" + scouting + "; work=" + work);
     }
 
     /** Reuse this projection across repair tools; only a different free set
@@ -235,7 +272,7 @@ final class CountPackingCore implements CountContinuation {
     private boolean finish(String reason) {
         complete = true; paused = false;
         budget.note("count_packing_core", reason + "; free=" + coreSize + "; lp_steps=" + relaxationSteps + "; nodes=" + nodes +
-                "; forced=" + (forcedValues + (search == null ? 0 : search.forcedValues())) + "; phase=" + phase + "; work=" + work);
+                "; forced=" + (forcedValues + (search == null ? 0 : search.forcedValues())) + "; phase=" + phase + "; scout=" + scouting + "; work=" + work);
         return true;
     }
     @Override public boolean paused() { return paused; }
@@ -253,6 +290,8 @@ final class CountPackingCore implements CountContinuation {
     }
     @Override public void close() {
         if (search != null) search.close();
+        if (scoutBase != null) scoutBase.search().close();
+        scoutBase = null;
         search = null;
         coreCoefficients = null; coreBounds = null;
         budget.release(memory); memory = 0;

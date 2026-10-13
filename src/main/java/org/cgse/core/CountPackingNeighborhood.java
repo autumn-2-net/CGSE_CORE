@@ -9,16 +9,26 @@ import java.util.*;
 /** Search in one proposed Boolean face. Neither its fixed exterior nor its
  * distance row is an original-model fact; local failures and clauses stay here. */
 final class CountPackingNeighborhood implements AutoCloseable {
+    enum Mode { PROPAGATION, LEARNING, EXCHANGE }
+
     private final PlanningBudget budget;
     private CountPackingSearch propagation;
+    private CountPackingExchange exchange;
     private CountCdcl learning;
     private long memory, assignment;
     private boolean complete, feasible;
 
     CountPackingNeighborhood(long[][] coefficients, long[] bounds, long seed,
                              PlanningBudget budget, boolean learned) {
+        this(coefficients, bounds, seed, budget, learned ? Mode.LEARNING : Mode.PROPAGATION);
+    }
+    CountPackingNeighborhood(long[][] coefficients, long[] bounds, long seed, PlanningBudget budget, Mode mode) {
         this.budget = budget;
-        if (!learned) {
+        if (mode == Mode.EXCHANGE) {
+            exchange = new CountPackingExchange(coefficients, bounds, seed, budget);
+            return;
+        }
+        if (mode == Mode.PROPAGATION) {
             propagation = new CountPackingSearch(coefficients, bounds, seed, budget);
             return;
         }
@@ -55,6 +65,7 @@ final class CountPackingNeighborhood implements AutoCloseable {
     boolean step() {
         if (complete) return true;
         if (propagation != null) return propagation.step();
+        if (exchange != null) return exchange.step();
         if (!learning.step()) return false;
         if (learning.paused()) {
             learning.resume(262144);
@@ -70,15 +81,17 @@ final class CountPackingNeighborhood implements AutoCloseable {
         return true;
     }
 
-    boolean feasible() { return propagation != null ? propagation.feasible() : feasible; }
+    boolean feasible() { return exchange != null ? exchange.feasible() : propagation != null ? propagation.feasible() : feasible; }
     long assignment() {
         if (!feasible()) throw new IllegalStateException("No neighborhood witness");
-        return propagation != null ? propagation.assignment() : assignment;
+        return exchange != null ? exchange.assignment() : propagation != null ? propagation.assignment() : assignment;
     }
     long forcedValues() { return propagation == null ? 0 : propagation.forcedValues(); }
 
     @Override public void close() {
         propagation = null;
+        if (exchange != null) exchange.close();
+        exchange = null;
         if (learning != null) learning.close();
         learning = null;
         budget.release(memory); memory = 0;

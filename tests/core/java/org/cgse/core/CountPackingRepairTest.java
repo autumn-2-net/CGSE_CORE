@@ -88,6 +88,14 @@ public final class CountPackingRepairTest {
         var view = view(); var budget = budget(40_000_000, 64L << 20, () -> false);
         try (var core = CountPackingCore.create(view, new CountModelViews.Domains(view.lower(), view.upper(), 0), budget, Long.MAX_VALUE)) {
             while (get(core, "search") == null) check(!core.step(), "Fixture ended before its frontier");
+            Object originalSearch = get(core, "search");
+            int originalSize = (int) get(core, "coreSize");
+            set(core, "work", get(core, "scoutAt")); core.resume(Long.MAX_VALUE); core.step();
+            check((boolean) get(core, "scouting"), "Missing bounded exchange scout");
+            var endScout = CountPackingCore.class.getDeclaredMethod("endScout");
+            endScout.setAccessible(true); endScout.invoke(core);
+            check(!(boolean) get(core, "scouting") && (int) get(core, "coreSize") == originalSize &&
+                    get(core, "search") == originalSearch, "Scout discarded the original retained frontier");
             long ceiling = (long) get(core, "maximumWork");
             Object projection = get(core, "coreCoefficients");
             // Advance only the observed owned-work clock to exercise both

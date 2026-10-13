@@ -1780,7 +1780,7 @@
       ],
       "work": 40000000,
       "expected": "SAT",
-      "evidence": "Canonical multidimensional packing SAT oracle. Signed threshold propagation keeps its deductions inside the proposed core; a closed core is not a global negative proof. Retained packing and productive LP learning receive bounded samples; every returned plan is independently checked on primitive recipe execution."
+      "evidence": "Canonical multidimensional packing SAT oracle. Signed threshold propagation keeps its deductions inside the proposed core; a closed core is not a global negative proof. Retained packing and productive LP learning receive bounded samples; every returned plan is independently checked on primitive recipe execution. Eager sparse-exchange scouting also lost this case; the original exact frontier must receive a first sample and survive the bounded scout."
     },
     {
       "name": "mknapcb2_11_bks/whole-core-propagation",
@@ -1944,6 +1944,61 @@
       "work": 40000000,
       "expected": "SAT",
       "evidence": "Existing independent canonical feasibility oracle; main planner only and every primitive execution prefix replayed. Local fixings and distance constraints are candidate hints only."
+    },
+    {
+      "name": "mknapcb5_22_bks/retained-packing-exchanges",
+      "source": "cases/graph/ac/ac98c994ecac500d2cdcf8538976d311e9fd9947d236dfde9482679c347130f1.json",
+      "sha256_lf": "e9c3ded4f0d6407637ffe271ae26ae2bbdba207ff3f7810b988026932ba30fe9",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; original main planner and independent primitive execution replay. Restricted sparse-exchange matches never imply a global negative proof. The original exact frontier must survive the bounded scout; eager replacement lost mknapcb4_22_bks."
+    },
+    {
+      "name": "mknapcb2_28_bks/retained-packing-exchanges",
+      "source": "cases/graph/82/82dee9f2af62a51b6d21c528f9b165c6312175b0070c4c315fc219b8396dd305.json",
+      "sha256_lf": "70e963a647816b2a91ddfbedf09b0e07ebaff2ad842c1f442974d3d4e0a1612d",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; original main planner and independent primitive execution replay. Restricted sparse-exchange matches never imply a global negative proof. The original exact frontier must survive the bounded scout; eager replacement lost mknapcb4_22_bks."
+    },
+    {
+      "name": "mknapcb8_02_bks/retained-packing-exchanges",
+      "source": "cases/graph/34/347750381c82c6e1e57211e0dad3fed018d8ddcf7eb133cbbac8401840d2696f.json",
+      "sha256_lf": "745356906f68160dfb4226ff0c1d8a69cfed7ae12e2716b44d80ad0a2f176d67",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; original main planner and independent primitive execution replay. Restricted sparse-exchange matches never imply a global negative proof. The original exact frontier must survive the bounded scout; eager replacement lost mknapcb4_22_bks."
+    },
+    {
+      "name": "mknapcb7_00_bks/retained-packing-exchanges",
+      "source": "cases/graph/65/6581713ace428709ac5d2f2fa7f20ef8dea7f1aede6ed14bbb3970d1c8a3ed74.json",
+      "sha256_lf": "97cad3bf79fa3e8014435ed6fce5f3edd59164f83cdd1a05f368ae041b4e6450",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; original main planner and independent primitive execution replay. Restricted sparse-exchange matches never imply a global negative proof. The original exact frontier must survive the bounded scout; eager replacement lost mknapcb4_22_bks."
+    },
+    {
+      "name": "mknapcb4_11_bks/retained-packing-exchanges",
+      "source": "cases/graph/e9/e9c8f6acd2e414d8351a3941af77844854ddc8cc817524a30b0b0e02b01e3e06.json",
+      "sha256_lf": "06b3a16648bceae8f1c962821b4fa843c5d210c406140d8d95a38a5688b6315b",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle; original main planner and independent primitive execution replay. Restricted sparse-exchange matches never imply a global negative proof. The original exact frontier must survive the bounded scout; eager replacement lost mknapcb4_22_bks."
     }
   ]
 }
