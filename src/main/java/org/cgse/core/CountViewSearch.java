@@ -140,8 +140,8 @@ final class CountViewSearch implements AutoCloseable {
             var learned = solver != null ? solver.learnedConflicts() : cdcl != null ? cdcl.learnedConflicts() : List.<CountConflict>of();
             models.publishConflicts(view, scope, learned, publishedConflicts, this);
             publishedConflicts = learned.size();
-            if (solver != null) {
-                var cuts = solver.sharedRows();
+            if (solver != null || specialist instanceof CountPackingCore) {
+                var cuts = solver != null ? solver.sharedRows() : ((CountPackingCore) specialist).sharedRows();
                 models.publishCuts(view, cuts, publishedCuts, this);
                 publishedCuts = cuts.size();
             }

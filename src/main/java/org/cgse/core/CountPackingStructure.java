@@ -6,12 +6,14 @@ package org.cgse.core;
 import java.math.BigInteger;
 import java.util.*;
 
-/** Immutable analysis of one declared compiler view. No bound or negative proof is exported.
+/** Immutable analysis of one declared compiler view. Prices only propose exact row combinations.
  * Fixed coordinates are substituted exactly; every omitted row is implied by that same box. */
 final class CountPackingStructure implements AutoCloseable {
     final List<ExactLinearProgram.Constraint> rows;
     final BigInteger[] lower, upper;
     final int[] columns, ranks;
+    final int[] capacityRows;
+    final int demandRow;
     final long[][] matrix;
     final long[] rhs, profit;
     final long target;
@@ -38,8 +40,10 @@ final class CountPackingStructure implements AutoCloseable {
             int[] map = new int[n]; Arrays.fill(map, -1);
             for (int i = 0; i < ids.size(); i++) map[ids.get(i)] = i;
             var packed = new ArrayList<long[]>(); var bounds = new ArrayList<Long>();
+            var sources = new ArrayList<Integer>(); int demandRow = -1;
             long[] profit = null; long target = 0;
-            for (var row : view.rows()) {
+            for (int rowId = 0; rowId < view.rows().size(); rowId++) {
+                var row = view.rows().get(rowId);
                 var bound = row.upper(); var min = BigInteger.ZERO; var max = BigInteger.ZERO;
                 var vector = new long[ids.size()]; boolean positive = false, negative = false;
                 for (var term : row.terms().entrySet()) {
@@ -59,15 +63,18 @@ final class CountPackingStructure implements AutoCloseable {
                     // must not allocate a rows-by-variables matrix unchecked.
                     if (packed.size() == 32) return null;
                     packed.add(vector); bounds.add(bound.longValueExact());
+                    sources.add(rowId);
                 } else if (negative && !positive && bound.signum() < 0 && profit == null) {
                     profit = vector; for (int i = 0; i < profit.length; i++) profit[i] = -profit[i];
                     target = bound.negate().longValueExact();
+                    demandRow = rowId;
                 } else return null;
             }
             if (profit == null || packed.isEmpty() || packed.size() > 32) return null;
             var result = new CountPackingStructure(view.rows(), low, high,
                     ids.stream().mapToInt(Integer::intValue).toArray(), packed.toArray(long[][]::new),
-                    bounds.stream().mapToLong(Long::longValue).toArray(), profit, target, budget, bytes);
+                    bounds.stream().mapToLong(Long::longValue).toArray(), profit, target,
+                    sources.stream().mapToInt(Integer::intValue).toArray(), demandRow, budget, bytes);
             bytes = 0;
             return result;
         } finally { budget.release(bytes); }
@@ -75,11 +82,45 @@ final class CountPackingStructure implements AutoCloseable {
 
     private CountPackingStructure(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower, BigInteger[] upper,
                                   int[] columns, long[][] matrix, long[] rhs, long[] profit, long target,
+                                  int[] capacityRows, int demandRow,
                                   PlanningBudget budget, long bytes) {
         this.rows = List.copyOf(rows); this.lower = lower.clone(); this.upper = upper.clone();
         this.columns = columns; this.matrix = matrix; this.rhs = rhs; this.profit = profit; this.target = target;
+        this.capacityRows = capacityRows; this.demandRow = demandRow;
         this.budget = budget; memory = bytes;
         ranks = rankColumns();
+    }
+
+    /** Prices choose nonnegative integer multipliers, never the validity of the
+     * result. Reconstruct from unshifted original rows so fixed coordinates and
+     * declared domains cannot become hidden premises of a shared explanation. */
+    CountLpLearning.Cut explain(double[] prices) {
+        if (prices.length != capacityRows.length) throw new IllegalArgumentException("Capacity price count");
+        var parents = new TreeMap<Integer, BigInteger>();
+        parents.put(demandRow, BigInteger.valueOf(65536));
+        for (int r = 0; r < prices.length; r++) {
+            double price = prices[r];
+            if (!(price > 0) || !Double.isFinite(price) || price * 65536 > 1e12) continue;
+            long weight = Math.round(price * 65536);
+            if (weight != 0) parents.put(capacityRows[r], BigInteger.valueOf(weight));
+        }
+        var terms = new TreeMap<Integer, BigInteger>(); var bound = BigInteger.ZERO;
+        for (var parent : parents.entrySet()) {
+            var row = rows.get(parent.getKey()); var weight = parent.getValue();
+            budget.check(); bound = bound.add(row.upper().multiply(weight));
+            for (var term : row.terms().entrySet()) {
+                budget.operation(PlanningBudget.Operation.INTEGER, Math.max(term.getValue().bitLength(), weight.bitLength()));
+                terms.merge(term.getKey(), term.getValue().multiply(weight), BigInteger::add);
+            }
+        }
+        terms.values().removeIf(value -> value.signum() == 0);
+        var gcd = BigInteger.ZERO;
+        for (var a : terms.values()) { budget.check(); gcd = gcd.gcd(a); }
+        var divisor = gcd.signum() == 0 ? BigInteger.ONE : gcd;
+        terms.replaceAll((id, a) -> { budget.check(); return a.divide(divisor); });
+        var qr = bound.divideAndRemainder(divisor);
+        var upper = qr[1].signum() < 0 ? qr[0].subtract(BigInteger.ONE) : qr[0];
+        return new CountLpLearning.Cut(new ExactLinearProgram.Constraint(terms, upper), parents, divisor);
     }
 
     private int[] rankColumns() {

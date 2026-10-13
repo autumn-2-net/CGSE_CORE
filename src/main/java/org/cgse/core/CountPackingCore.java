@@ -23,11 +23,14 @@ final class CountPackingCore implements CountContinuation {
     private long memory, work, until, nodes, relaxationSteps;
     private long[][] coefficients, minimum;
     private long[] residual;
-    private int[] ranked, free, choices;
+    private int[] ranked, free, choices, allowed;
     private boolean[] seed, values;
     private int depth, coreSize;
     private boolean complete, paused;
     private BigInteger[] counts;
+    private CountLpLearning.Cut explanation;
+    private long[] aggregate;
+    private long aggregateBound;
 
     static CountPackingCore create(CountModelViews.View view, CountModelViews.Domains domains,
                                    PlanningBudget budget, long quantum) {
@@ -90,10 +93,24 @@ final class CountPackingCore implements CountContinuation {
                 beginCore(); return false;
             }
             if (choices[depth] == 0) {
+                // Reuse each row's activity scan to exclude the next Boolean
+                // value before updating every residual and then undoing it.
+                // These deductions include this core's fixed coordinates and
+                // preceding choices; they stay on this retained DFS stack.
+                int valuesAllowed = 3;
                 for (int r = 0; r < residual.length; r++) {
                     budget.operation(PlanningBudget.Operation.INTEGER, 64);
-                    if (residual[r] < minimum[r][depth]) { backtrack(); return false; }
+                    long slack = residual[r] - minimum[r][depth];
+                    if (slack < 0) { backtrack(); return false; }
+                    if (depth < free.length) {
+                        budget.operation(PlanningBudget.Operation.SCAN, 0);
+                        long a = coefficients[r][depth];
+                        if (a > slack) valuesAllowed &= 1;
+                        else if (-a > slack) valuesAllowed &= 2;
+                        if (valuesAllowed == 0) { backtrack(); return false; }
+                    }
                 }
+                allowed[depth] = valuesAllowed;
                 if (depth == free.length) {
                     var candidate = lower.clone();
                     for (int i = 0; i < columns.length; i++) candidate[columns[i]] = values[i] ? BigInteger.ONE : BigInteger.ZERO;
@@ -101,8 +118,15 @@ final class CountPackingCore implements CountContinuation {
                     return finish("candidate_rejected");
                 }
             }
+            int id = free[depth];
+            boolean value = false;
+            while (choices[depth] < 2) {
+                value = choices[depth] == 0 ? seed[id] : !seed[id];
+                if ((allowed[depth] & (value ? 2 : 1)) != 0) break;
+                choices[depth]++;
+            }
             if (choices[depth] >= 2) { choices[depth] = 0; backtrack(); return false; }
-            int id = free[depth]; boolean value = choices[depth]++ == 0 ? seed[id] : !seed[id];
+            choices[depth]++;
             values[id] = value;
             for (int r = 0; r < residual.length; r++) {
                 budget.operation(PlanningBudget.Operation.INTEGER, 64);
@@ -135,6 +159,24 @@ final class CountPackingCore implements CountContinuation {
         });
         ranked = ordering.stream().mapToInt(Integer::intValue).toArray();
         coreSize = Math.min(n, Math.max(16, fractional + 8));
+        double[] prices = new double[matrix.length];
+        for (int r = 0; r < prices.length; r++) prices[r] = lp.price(r);
+        explanation = structure.explain(prices);
+        // Shift the certified row into this compact view once. Its full-row
+        // certificate remains available to other engines in the same model.
+        var bound = explanation.row().upper(); var vector = new BigInteger[n];
+        for (var term : explanation.row().terms().entrySet()) {
+            budget.check(); bound = bound.subtract(term.getValue().multiply(lower[term.getKey()]));
+        }
+        var magnitude = bound.abs();
+        for (int i = 0; i < n; i++) {
+            budget.check(); vector[i] = explanation.row().terms().getOrDefault(columns[i], BigInteger.ZERO);
+            magnitude = magnitude.add(vector[i].abs());
+        }
+        if (magnitude.bitLength() < 60) {
+            aggregate = Arrays.stream(vector).mapToLong(BigInteger::longValueExact).toArray();
+            aggregateBound = bound.longValueExact();
+        }
         return coreSize <= 64;
     }
 
@@ -148,25 +190,9 @@ final class CountPackingCore implements CountContinuation {
         for (int r = 0; r < m; r++) { full.add(matrix[r]); bounds.add(rhs[r]); }
         var demand = new long[n]; for (int i = 0; i < n; i++) demand[i] = -profit[i];
         full.add(demand); bounds.add(-target);
-        // Rebuild an integer nonnegative combination of the original capacity
-        // and demand rows. Floating prices only suggest the multipliers.
-        BigInteger q = BigInteger.valueOf(65536);
-        var aggregate = new BigInteger[n]; Arrays.fill(aggregate, BigInteger.ZERO);
-        var bound = q.multiply(BigInteger.valueOf(-target));
-        for (int i = 0; i < n; i++) aggregate[i] = q.multiply(BigInteger.valueOf(-profit[i]));
-        for (int r = 0; r < m; r++) {
-            double price = Math.max(0, lp.price(r));
-            if (!Double.isFinite(price) || price * 65536 > 1e12) continue;
-            var weight = BigInteger.valueOf(Math.round(price * 65536));
-            bound = bound.add(weight.multiply(BigInteger.valueOf(rhs[r])));
-            for (int i = 0; i < n; i++) { budget.check(); aggregate[i] = aggregate[i].add(weight.multiply(BigInteger.valueOf(matrix[r][i]))); }
-        }
-        var magnitude = bound.abs(); for (var a : aggregate) magnitude = magnitude.add(a.abs());
-        if (magnitude.bitLength() < 60) {
-            full.add(Arrays.stream(aggregate).mapToLong(BigInteger::longValueExact).toArray()); bounds.add(bound.longValueExact());
-        }
+        if (aggregate != null) { full.add(aggregate); bounds.add(aggregateBound); }
         coefficients = new long[full.size()][coreSize]; minimum = new long[full.size()][coreSize + 1];
-        residual = new long[full.size()]; choices = new int[coreSize + 1];
+        residual = new long[full.size()]; choices = new int[coreSize + 1]; allowed = new int[coreSize + 1];
         boolean[] released = new boolean[n]; for (int id : free) released[id] = true;
         values = seed.clone(); depth = 0;
         for (int r = 0; r < full.size(); r++) {
@@ -206,6 +232,7 @@ final class CountPackingCore implements CountContinuation {
     @Override public boolean paused() { return paused; }
     @Override public void resume(long quantum) { until = CountContinuation.deadline(work, quantum, budget); paused = false; }
     @Override public BigInteger[] counts() { return counts; }
+    List<CountLpLearning.Cut> sharedRows() { return explanation == null ? List.of() : List.of(explanation); }
     @Override public long work() { return work; }
     long remainingAllowance() { return Math.max(0, maximumWork - work); }
     // Completed numerical pivots/bound flips are retained progress too. Waiting

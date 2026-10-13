@@ -1727,6 +1727,45 @@
       "work": 40000000,
       "expected": "SAT",
       "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb2_04_bks/packing-propagation",
+      "source": "cases/graph/40/403e22835f883a22b7b4dde2e4d900a5fb93e18bc5c583fc2e5177296d47fd5c.json",
+      "sha256_lf": "e6b3cc1b3a3d3c31d554fbed0a60e2a2f3d9db70521ee84723229d4f3b12f9fc",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; exact row activity excludes a next choice within its retained core only. Every returned plan is independently checked on primitive recipe execution; no bounded core failure is a global negative proof."
+    },
+    {
+      "name": "mknapcb2_20_bks/packing-propagation",
+      "source": "cases/graph/62/62e04d8418320c9144fef3a8f4df7ec8c960bdec4884e772a1a7d667b2492b5b.json",
+      "sha256_lf": "96151650eff053dc579a4da2eb2ebee235e427746b329d27ad9aa711fe9a8517",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; exact row activity excludes a next choice within its retained core only. Every returned plan is independently checked on primitive recipe execution; no bounded core failure is a global negative proof."
+    },
+    {
+      "name": "mknapcb5_05_bks/packing-propagation",
+      "source": "cases/graph/e8/e87c4099ffa463f85820b7d8987e8bcef8fd443b375b3518d6107f12b02615b0.json",
+      "sha256_lf": "455c83d4a62d1d2e3462546be3d1e7d53e18bdeeb2879f5d8621902fd4b4f2dd",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; exact row activity excludes a next choice within its retained core only. Every returned plan is independently checked on primitive recipe execution; no bounded core failure is a global negative proof."
     }
   ]
 }

@@ -1696,8 +1696,10 @@ final class CountLcg implements AutoCloseable {
 
     /** Only the owner's certified, unconditional original-model consequences may enter here. */
     boolean learn(ExactLinearProgram.Constraint row) {
-        if (complete && !paused || importedRows.size() >= 64 || row.terms().size() > 64 ||
+        if (complete && !paused || importedRows.size() >= 64 || row.terms().size() > 512 ||
                 row.upper().bitLength() > 2048 || importedRows.contains(row) || rows.contains(row))
+            return false;
+        if (row.terms().size() > 64 && importedRows.stream().filter(value -> value.terms().size() > 64).count() >= 4)
             return false;
         if (learnedRelaxation && rows.size() >= rowActivity.length) return false;
         CountConflict explanation = null;
