@@ -79,6 +79,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     private long quickSearchStarted, quickSearchAllowance;
     private long pausedSearchWork;
     private long previewStarted, previewAllowance;
+    private boolean previewCompleting;
     private int quantityResumePhase = -1;
     private Boolean quantityBlocked;
     private Boolean stockBlocked;
@@ -634,13 +635,25 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     if (frontierWork() - previewStarted < previewAllowance) {
                         if (!allocating.step()) return false;
                         preview = allocating.result();
+                    } else if (!previewCompleting && allocating.completePreview()) {
+                        // Detailed raw expansion is optional. Keep its actual
+                        // prefix and bound the construction/verification of an
+                        // explicit intermediate refill instead of discarding it.
+                        previewCompleting = true;
+                        previewStarted = frontierWork();
+                        previewAllowance = Math.min(262_144, budget.remainingWork() / 8);
+                        return false;
                     } else {
                         budget.note("missing_preview", "local_limit; infeasibility_proof_retained");
                         allocating.discard();
                     }
+                    boolean conservativePreview = allocating.usedPreviewCompletion();
                     allocating = null;
                     if (preview != null && !preview.missing().isEmpty()) best = preview;
-                    else if (candidate != null && !candidate.missing().isEmpty()) best = candidate;
+                    if (candidate != null && !candidate.missing().isEmpty() &&
+                            (preview == null || preview.missing().isEmpty() ||
+                                    conservativePreview && candidate.missing().size() < preview.missing().size()))
+                        best = candidate;
                     if (best != null && !best.missing().isEmpty()) verifyMissing();
                     else result = withoutMissingPreview("no funded witness constructed");
                 }
@@ -898,6 +911,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         if (allocating != null) allocating.discard();
         previewStarted = frontierWork();
         previewAllowance = Math.min(262_144, budget.remainingWork() / 8);
+        previewCompleting = false;
         allocating = newAllocation(true);
         budget.note("missing_preview", "order_proven_infeasible; allowance=" + previewAllowance);
         phase = 13;

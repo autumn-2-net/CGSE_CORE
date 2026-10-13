@@ -52,6 +52,7 @@ final class AllocationSearch<K> {
     private LinearMacroCompilation<K> macros;
     private GraphPlan<K> result;
     private final boolean preview;
+    private boolean completingPreview;
     private final List<GraphCompiler.QuantityCertificate<K>> certificates;
     private long allocationStarted;
     private long work, stepStarted;
@@ -113,6 +114,19 @@ final class AllocationSearch<K> {
     /** Work performed by this retained frontier, excluding other strategies' turns. */
     long searchWork() { return searchWork; }
 
+    /** Retain the demand prefix while finishing a conservative, verifiable refill. */
+    boolean completePreview() {
+        if (!preview || phase == 3 || phase == 2 && checking == null) return false;
+        if (!completingPreview) {
+            completingPreview = true;
+            if (expansion != null) expansion.completePreview(target);
+            budget.note("missing_preview", "complete_retained_prefix; intermediate_refills_allowed");
+        }
+        return true;
+    }
+
+    boolean usedPreviewCompletion() { return completingPreview; }
+
     private long usedWork() {
         return work + budget.threadWork() - stepStarted;
     }
@@ -169,6 +183,7 @@ final class AllocationSearch<K> {
                 required.put(target, targetGoal);
                 requiredSeeds.forEach((key, count) -> required.merge(key, BigInteger.valueOf(count), BigInteger::max));
                 expansion = new DemandExpansion<>(relevant, held, required, budget, preview);
+                if (completingPreview) expansion.completePreview(target);
                 phase = 4;
             }
             return false;
@@ -186,6 +201,10 @@ final class AllocationSearch<K> {
             if (!expansion.step()) return false;
             if (expansion.result() != null) checking = candidate(expansion.result());
             else {
+                if (preview && !completingPreview) {
+                    completePreview();
+                    return false;
+                }
                 expansion.close();
                 expansion = null;
             }
