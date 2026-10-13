@@ -8,7 +8,7 @@ import java.util.Arrays;
 /** Exact Boolean search inside one proposed packing core. The owner reserves
  * its bounded workspace; a closed core says nothing about the outside fixings. */
 final class CountPackingSearch {
-    private final long[][] coefficients, thresholds, thresholdMasks, slacks;
+    private final long[][] coefficients, thresholds, thresholdMasks, slacks, suffixMaximum;
     private final long[] undecided, selected, positive, negative;
     private final int[] choices;
     private final boolean[] prepared;
@@ -21,7 +21,7 @@ final class CountPackingSearch {
 
     /** Takes ownership of coefficients. All row activities must fit below 2^60. */
     CountPackingSearch(long[][] coefficients, long[] bounds, long seed, PlanningBudget budget) {
-        if (coefficients.length == 0 || coefficients.length > 34 || coefficients.length != bounds.length)
+        if (coefficients.length == 0 || coefficients.length > 35 || coefficients.length != bounds.length)
             throw new IllegalArgumentException("Packing row count");
         size = coefficients[0].length;
         if (size < 1 || size > 64) throw new IllegalArgumentException("Packing core width");
@@ -29,6 +29,7 @@ final class CountPackingSearch {
         this.seed = seed;
         this.budget = budget;
         slacks = new long[size + 1][bounds.length];
+        suffixMaximum = new long[bounds.length][size + 1];
         undecided = new long[size + 1];
         selected = new long[size + 1];
         choices = new int[size + 1];
@@ -54,6 +55,11 @@ final class CountPackingSearch {
                 slacks[0][r] -= Math.min(0, a);
                 sorted[i] = i;
             }
+            // Decisions consume a prefix of the core's compiled order. Forced
+            // holes only make this maximum conservative, never too small.
+            budget.operations(PlanningBudget.Operation.INTEGER, 64, size);
+            for (int i = size - 1; i >= 0; i--)
+                suffixMaximum[r][i] = Math.max(suffixMaximum[r][i + 1], Math.abs(coefficients[r][i]));
             final int row = r;
             Arrays.sort(sorted, (a, b) -> {
                 budget.check();
@@ -88,8 +94,8 @@ final class CountPackingSearch {
         long bit = 1L << variable;
         boolean value = choices[depth]++ == 0 ? (seed & bit) != 0 : (seed & bit) == 0;
         pendingRows = 0;
+        budget.operations(PlanningBudget.Operation.INTEGER, 64, positive.length);
         for (int r = 0; r < positive.length; r++) {
-            budget.operation(PlanningBudget.Operation.INTEGER, 64);
             long a = coefficients[r][variable];
             long loss = value ? Math.max(0, a) : Math.max(0, -a);
             slacks[depth + 1][r] = slacks[depth][r] - loss;
@@ -112,14 +118,15 @@ final class CountPackingSearch {
                 budget.operation(PlanningBudget.Operation.SCAN, 0);
                 long slack = slacks[depth][r];
                 if (slack < 0) return false;
-                if (slack >= thresholds[r][size - 1]) continue;
-                int low = 0, high = size;
+                if (slack >= suffixMaximum[r][Math.min(size, Long.numberOfTrailingZeros(undecided[depth]))]) continue;
+                int low = 0, high = size, scans = 0;
                 while (low < high) {
-                    budget.operation(PlanningBudget.Operation.SCAN, 0);
+                    scans++;
                     int mid = (low + high) >>> 1;
                     if (thresholds[r][mid] <= slack) low = mid + 1;
                     else high = mid;
                 }
+                budget.operations(PlanningBudget.Operation.SCAN, 0, scans);
                 // All coefficients strictly larger than this row's slack
                 // force their favorable value. Already assigned bits are gone.
                 long forced = thresholdMasks[r][low] & undecided[depth];
@@ -130,12 +137,12 @@ final class CountPackingSearch {
             long forced = forceZero | forceOne;
             if (forced == 0) return true;
             forcedValues += Long.bitCount(forced);
+            budget.operations(PlanningBudget.Operation.SCAN, 0, positive.length);
             for (int r = 0; r < positive.length; r++) {
-                budget.operation(PlanningBudget.Operation.SCAN, 0);
                 long adverse = (forceOne & positive[r]) | (forceZero & negative[r]);
                 if (adverse != 0) pendingRows |= 1L << r;
+                if (adverse != 0) budget.operations(PlanningBudget.Operation.INTEGER, 64, Long.bitCount(adverse));
                 while (adverse != 0) {
-                    budget.operation(PlanningBudget.Operation.INTEGER, 64);
                     int variable = Long.numberOfTrailingZeros(adverse);
                     adverse &= adverse - 1;
                     slacks[depth][r] -= Math.abs(coefficients[r][variable]);

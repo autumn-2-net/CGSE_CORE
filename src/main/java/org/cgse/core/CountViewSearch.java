@@ -75,6 +75,7 @@ final class CountViewSearch implements AutoCloseable {
         PlanningBudget proposalBudget;
         long proposalBytes;
         long sliceWork, progress, work, candidates, verified, dead, unknown, downstreamWork;
+        int repairCompletionObserved;
         long continuationLimit, continuationProgress, continuationCheckpoint;
         long publishedRoots;
         long importedBounds;
@@ -672,6 +673,14 @@ final class CountViewSearch implements AutoCloseable {
             // Reachable sums or a usable LP point leave an owned candidate
             // frontier. Give it one bounded completion opportunity after all
             // mandatory first visits. Handoffs never replenish this ceiling.
+            // A newly compiled repair is distinct from another slice of the
+            // same search. Observe it once, inside the tool's fixed total cap;
+            // its local assumptions are never evidence for switching to PROOF.
+            if (search.specialist instanceof CountPackingCore packing && packing.phase().ordinal() > search.repairCompletionObserved) {
+                search.repairCompletionObserved = packing.phase().ordinal();
+                search.continuationLimit = Math.max(search.continuationLimit, saturatedAdd(search.work,
+                        Math.min(packing.remainingAllowance(), budget.remainingWork() / 3)));
+            }
             if (search.continuationLimit == 0) {
                 long opportunity = search.specialist instanceof CountPackingCore packing ?
                         Math.min(packing.remainingAllowance(), budget.remainingWork() / 3) :

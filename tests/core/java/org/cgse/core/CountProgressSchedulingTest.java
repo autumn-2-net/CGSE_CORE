@@ -203,7 +203,7 @@ public final class CountProgressSchedulingTest {
         }
     }
 
-    private static void packingSampling() {
+    private static void packingSampling() throws Exception {
         for (long cap : new long[] {40_000_000, Integer.MAX_VALUE, Long.MAX_VALUE}) {
             var budget = budget(cap);
             int n = 100;
@@ -236,6 +236,7 @@ public final class CountProgressSchedulingTest {
                 long bytes = budget.reservedBytes(), work = budget.threadWork();
                 check(search.packingContinuationQuantum() == quantum && budget.reservedBytes() == bytes &&
                         budget.threadWork() == work, "Repeated observation recreated a candidate frontier");
+                packingPhases(search, budget);
                 search.mode(CountPortfolioPolicy.Mode.PROOF);
                 check(search.packingContinuationQuantum() == 0, "Candidate-only work entered a proof task");
                 search.mode(CountPortfolioPolicy.Mode.FIRST_WITNESS);
@@ -251,6 +252,43 @@ public final class CountProgressSchedulingTest {
             }
             check(budget.reservedBytes() == 0, "Packing continuation ownership leaked");
         }
+    }
+
+    private static void packingPhases(CountViewSearch search, PlanningBudget budget) throws Exception {
+        var arms = (List<?>) get(search, "searches");
+        var packing = arms.stream().filter(a -> uncheckedGet(a, "specialist") instanceof CountPackingCore).findFirst().orElseThrow();
+        var core = (CountPackingCore) get(packing, "specialist");
+        var policy = (CountPortfolioPolicy) get(search, "policy");
+        long fixed = number(core, "maximumWork"), originalWork = number(packing, "work");
+        // Scheduler observations only: the mathematical rows, domains and
+        // retained engines are not advanced or given manufactured proofs.
+        set(core, "phase", CountPackingCore.Phase.CONFLICT_REPAIR);
+        var mandatory = arms.stream().filter(a -> a != packing).findFirst().orElseThrow();
+        var mandatoryState = (CountPortfolioPolicy.Arm) get(mandatory, "scheduling");
+        // Existing first-visit coverage is checked by numericSelection; here
+        // finish sampling before examining the bounded repair preference.
+        for (Object arm : arms) {
+            var state = (CountPortfolioPolicy.Arm) get(arm, "scheduling");
+            if (state.eligible && policy.selections(state) == 0) policy.selected(state);
+        }
+        for (var phase : List.of(CountPackingCore.Phase.CONFLICT_REPAIR, CountPackingCore.Phase.DISTANCE_REPAIR)) {
+            set(core, "phase", phase);
+            set(packing, "continuationLimit", number(packing, "work"));
+            check(select(search) == packing, "A new retained repair phase received no continuation");
+            long ceiling = number(packing, "continuationLimit");
+            check(ceiling > number(packing, "work") && ceiling - number(packing, "work") <= core.remainingAllowance(),
+                    "Repair observation bypassed the owned cap");
+            set(packing, "work", ceiling);
+            mandatoryState.waiting = Integer.MAX_VALUE;
+            select(search); select(search);
+            check(number(packing, "continuationLimit") == ceiling, "Repeated phase observation renewed the grant");
+            check(number(core, "maximumWork") == fixed, "Scheduler enlarged the fixed repair cap");
+        }
+        set(packing, "work", originalWork);
+        set(core, "phase", CountPackingCore.Phase.ENUMERATION);
+        long charged = budget.threadWork(), bytes = budget.reservedBytes();
+        search.packingContinuationQuantum(); search.packingContinuationQuantum();
+        check(charged == budget.threadWork() && bytes == budget.reservedBytes(), "Phase observation rebuilt an analyzer");
     }
 
     private static List<ExactLinearProgram.Constraint> weighted() {

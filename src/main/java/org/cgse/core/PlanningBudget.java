@@ -221,6 +221,16 @@ public final class PlanningBudget {
         return ticks;
     }
 
+    /** Same exact ticks as individual operations, for a bounded primitive loop.
+     * Call before mutating its state; callers keep cancellation boundaries small. */
+    long operations(Operation operation, int bits, int count) {
+        if (count < 0) throw new IllegalArgumentException("Negative operation count");
+        int words = (int) Math.max(1, Math.min(32, (Math.max(0, bits) + 63L) / 64));
+        long ticks = (long) count * operation.ticks * (operation == Operation.SCAN ? 1 : words);
+        chargeTicks(ticks);
+        return ticks;
+    }
+
     private void chargeTicks(long ticks) {
         chargeTicks(ticks, false);
     }

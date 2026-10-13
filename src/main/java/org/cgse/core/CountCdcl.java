@@ -191,6 +191,14 @@ final class CountCdcl implements AutoCloseable {
         return this;
     }
 
+    /** Preferred Boolean endpoints only; never fix a domain or attach a clause. */
+    void preferPhases(long mask) {
+        if (phase.length > 64 || work != 0 || cursor != 0)
+            throw new IllegalStateException("Phase hints require an unstarted small Boolean search");
+        budget.operations(PlanningBudget.Operation.SCAN, 0, phase.length);
+        for (int i = 0; i < phase.length; i++) phase[i] = (mask & (1L << i)) != 0 ? 1 : 0;
+    }
+
     boolean paused() {
         return paused;
     }

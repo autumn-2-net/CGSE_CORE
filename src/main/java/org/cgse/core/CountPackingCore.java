@@ -9,12 +9,15 @@ import java.util.*;
 /** Bounded-variable LP prices followed by retained, exact Boolean core enumeration.
  * Fixings outside each core are proposals only. Closing a core proves nothing globally. */
 final class CountPackingCore implements CountContinuation {
+    enum Phase { ENUMERATION, CONFLICT_REPAIR, DISTANCE_REPAIR }
     private final List<ExactLinearProgram.Constraint> rows;
     private final BigInteger[] lower, upper;
     private final PlanningBudget budget;
     private final CountPackingStructure structure;
     private final boolean ownsStructure;
-    private final long maximumWork;
+    private final long maximumWork, normalWork;
+    private Phase phase = Phase.ENUMERATION;
+    private final long learningLimit;
     private final int[] columns;
     private final long[][] matrix;
     private final long[] rhs, profit;
@@ -23,8 +26,11 @@ final class CountPackingCore implements CountContinuation {
     private long memory, work, until, nodes, relaxationSteps;
     private int[] ranked, free;
     private boolean[] seed;
-    private int coreSize;
-    private CountPackingSearch search;
+    private int coreSize, fractional, compiledSize;
+    private long[][] coreCoefficients;
+    private long[] coreBounds;
+    private long corePreferred;
+    private CountPackingNeighborhood search;
     private long forcedValues;
     private boolean complete, paused;
     private BigInteger[] counts;
@@ -67,7 +73,11 @@ final class CountPackingCore implements CountContinuation {
         columns = structure.columns; matrix = structure.matrix; rhs = structure.rhs;
         profit = structure.profit; target = structure.target;
         this.budget = budget; this.memory = memory;
-        maximumWork = Math.min(12_582_912, budget.remainingWork() / 3);
+        // Capture every ceiling once. Phase changes and worker handoffs consume
+        // the same request budget and cannot replenish these local allowances.
+        normalWork = Math.min(12_582_912, budget.remainingWork() / 3);
+        learningLimit = normalWork + Math.min(2_097_152, budget.remainingWork() / 16);
+        maximumWork = normalWork + Math.min(8_388_608, budget.remainingWork() / 4);
         until = quantum;
         lp = new Relaxation(matrix, rhs, profit, budget);
     }
@@ -79,6 +89,15 @@ final class CountPackingCore implements CountContinuation {
         if (work >= until) { paused = true; return true; }
         long before = budget.threadWork();
         try {
+            if (phase == Phase.ENUMERATION && work >= normalWork) {
+                if (ranked == null || search == null) return finish("local_limit");
+                phase = Phase.CONFLICT_REPAIR;
+                beginCore();
+            }
+            if (phase == Phase.CONFLICT_REPAIR && work >= learningLimit) {
+                phase = Phase.DISTANCE_REPAIR;
+                beginCore();
+            }
             if (!lp.done) {
                 if (++relaxationSteps > 8192 || !lp.step()) return finish("numeric_declined");
                 return false;
@@ -99,7 +118,6 @@ final class CountPackingCore implements CountContinuation {
                 return finish("candidate_rejected");
             }
             if (coreSize >= Math.min(64, columns.length)) return finish("cores_closed");
-            forcedValues += search.forcedValues();
             coreSize = Math.min(Math.min(64, columns.length), coreSize + 8);
             beginCore();
             return false;
@@ -109,7 +127,7 @@ final class CountPackingCore implements CountContinuation {
     private boolean prepare() {
         int n = columns.length;
         seed = new boolean[n];
-        var ordering = new ArrayList<Integer>(); int fractional = 0;
+        var ordering = new ArrayList<Integer>();
         for (int i = 0; i < n; i++) {
             budget.check(); double x = lp.point[i];
             if (!Double.isFinite(x) || x < -1e-6 || x > 1 + 1e-6) return false;
@@ -150,6 +168,33 @@ final class CountPackingCore implements CountContinuation {
     }
 
     private void beginCore() {
+        if (search != null) { forcedValues += search.forcedValues(); search.close(); search = null; }
+        if (compiledSize != coreSize) compileCore();
+        var coefficients = coreCoefficients;
+        var residual = coreBounds;
+        if (phase == Phase.DISTANCE_REPAIR) {
+            // A search hint, not a valid cut: sum |x - seed| <= radius.
+            // The original face and the certified aggregate remain unchanged.
+            coefficients = Arrays.copyOf(coefficients, coefficients.length + 1);
+            residual = Arrays.copyOf(residual, residual.length + 1);
+            var distance = new long[coreSize];
+            for (int d = 0; d < coreSize; d++) {
+                budget.check(); distance[d] = (corePreferred & (1L << d)) != 0 ? -1 : 1;
+            }
+            coefficients[coefficients.length - 1] = distance;
+            residual[residual.length - 1] = 6 - Long.bitCount(corePreferred);
+        }
+        // The parent reserves the bounded 35-by-64 coefficients, threshold
+        // masks, suffix maxima and retained activity stack together. PB owns
+        // its separate, optional reconstruction and conflict-learning storage.
+        search = new CountPackingNeighborhood(coefficients, residual, corePreferred, budget, phase == Phase.CONFLICT_REPAIR);
+        budget.note("count_packing_core", "begin; variables=" + columns.length + "; capacities=" + matrix.length +
+                "; fractional=" + fractional + "; free=" + coreSize + "; phase=" + phase + "; work=" + work);
+    }
+
+    /** Reuse this projection across repair tools; only a different free set
+     * needs another substitution of the proposed exterior. */
+    private void compileCore() {
         int n = columns.length, m = matrix.length;
         free = Arrays.copyOf(ranked, coreSize);
         // Branch on expensive deviations first; the preferred LP rounding is
@@ -172,10 +217,8 @@ final class CountPackingCore implements CountContinuation {
                 budget.check(); coefficients[r][d] = a[free[d]];
             }
         }
-        // Upfront reservation covers the bounded 34-by-64 coefficients,
-        // threshold masks and retained activity stack together.
-        search = new CountPackingSearch(coefficients, residual, preferred, budget);
-        budget.note("count_packing_core", "begin; variables=" + n + "; capacities=" + m + "; free=" + coreSize + "; work=" + work);
+        coreCoefficients = coefficients; coreBounds = residual;
+        corePreferred = preferred; compiledSize = coreSize;
     }
 
     private boolean valid(BigInteger[] candidate) {
@@ -192,7 +235,7 @@ final class CountPackingCore implements CountContinuation {
     private boolean finish(String reason) {
         complete = true; paused = false;
         budget.note("count_packing_core", reason + "; free=" + coreSize + "; lp_steps=" + relaxationSteps + "; nodes=" + nodes +
-                "; forced=" + (forcedValues + (search == null ? 0 : search.forcedValues())) + "; work=" + work);
+                "; forced=" + (forcedValues + (search == null ? 0 : search.forcedValues())) + "; phase=" + phase + "; work=" + work);
         return true;
     }
     @Override public boolean paused() { return paused; }
@@ -200,6 +243,7 @@ final class CountPackingCore implements CountContinuation {
     @Override public BigInteger[] counts() { return counts; }
     List<CountLpLearning.Cut> sharedRows() { return explanation == null ? List.of() : List.of(explanation); }
     @Override public long work() { return work; }
+    Phase phase() { return phase; }
     long remainingAllowance() { return Math.max(0, maximumWork - work); }
     // Completed numerical pivots/bound flips are retained progress too. Waiting
     // for the final LP point hid this frontier from the bounded completion grant.
@@ -208,7 +252,9 @@ final class CountPackingCore implements CountContinuation {
         return rows.equals(other) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
     }
     @Override public void close() {
+        if (search != null) search.close();
         search = null;
+        coreCoefficients = null; coreBounds = null;
         budget.release(memory); memory = 0;
         if (ownsStructure) structure.close();
     }

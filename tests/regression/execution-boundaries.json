@@ -1900,6 +1900,50 @@
       "work": 40000000,
       "expected": "SAT",
       "evidence": "Canonical multidimensional packing SAT oracle; equal LP-sized interleaving lost the original passing case. Policy-sized retained samples preserve it. Every plan is independently checked on primitive recipe execution."
+    },
+    {
+      "name": "mknapcb2_03_bks/scoped-packing-repair",
+      "source": "cases/graph/c4/c47387d8a14d6a9a010c5a9bbe09fe16f0b1ccbb5e1c2bf08e4643fe4c05cde9.json",
+      "sha256_lf": "02cdd4bd7fedbade15df09da4556f7d7b6148cff8394dd2da3817de5e11489b9",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing independent canonical feasibility oracle; main planner only and every primitive execution prefix replayed. Local fixings and distance constraints are candidate hints only."
+    },
+    {
+      "name": "mknapcb3_24_bks/scoped-packing-repair",
+      "source": "cases/graph/a4/a4a0b61066c0a765dd86237d1686d4b75ce0df330a2ef568deed18bbb6fcb01a.json",
+      "sha256_lf": "dc9bf6ee40d65664d9f9e0c3e69c9db24bfc9db5860a332cbd499b40c6771d66",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing independent canonical feasibility oracle; main planner only and every primitive execution prefix replayed. Local fixings and distance constraints are candidate hints only."
+    },
+    {
+      "name": "mknapcb6_26_bks/scoped-packing-repair",
+      "source": "cases/graph/4c/4c97ac02f35060b6cd5d3d5d760072a54e746bf8b54476cb4d846d4155c70397.json",
+      "sha256_lf": "d753eacc2c98b25c03a444378559e5e13c01477adcd7ebe7ce4330cf3b074e26",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing independent canonical feasibility oracle; main planner only and every primitive execution prefix replayed. Local fixings and distance constraints are candidate hints only."
+    },
+    {
+      "name": "mknapcb8_05_bks/scoped-packing-repair",
+      "source": "cases/graph/b2/b261582c24531eedb830fb6aae367dc8cebf1f4ebf60529783605dc672df9ce1.json",
+      "sha256_lf": "7abc97322a75a4e28943b76a32f394a48e0fc0eeb82980c956bfa4e5aa4a6b89",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing independent canonical feasibility oracle; main planner only and every primitive execution prefix replayed. Local fixings and distance constraints are candidate hints only."
     }
   ]
 }
