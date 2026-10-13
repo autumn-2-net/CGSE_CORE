@@ -1061,6 +1061,87 @@
       "expected": "SAT",
       "maximum_observed_work": 11000000,
       "evidence": "Existing canonical expectation and independent original execution validation. Added after a full-corpus cost audit: failed pool separation and proof-checker slice changes must not displace the established search. Budget remains 40M; this bound checks observed total work, not a logical oracle."
+    },
+    {
+      "name": "compound_recovery_s23/joint-accounts-and-stocked-phases",
+      "source": "cases/graph/62/62bbdc60b3ef1ee9b1d5263142eed15d4dde7a7ef5e0d78ee31432d4fe7a3154.json",
+      "sha256_lf": "250bc0ec9fd3076524a0b24e1269e2fcb8122b443d7288cd15e1d8c28442870e",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation plus independently checked 23-block primitive execution witness. Root search must construct its own candidate and verify every original primitive prefix; no native count hints."
+    },
+    {
+      "name": "compound_recovery_s79/stocked-phase-recovery",
+      "source": "cases/graph/c8/c8a99c44a9ca79c1a163412d75bdeb85a987ead0a06aa5cd7c5c198a3fff90e3.json",
+      "sha256_lf": "266c1d883cd9056ed0f8b527906847f2adada2ef12507aa82c2d26699a7e55da",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 16000000,
+      "evidence": "Existing canonical SAT expectation, now verified by original primitive-prefix replay. Entry suffixes must use current inventory; failure of a restricted macro view is never a global infeasibility proof."
+    },
+    {
+      "name": "compound_recovery_s5/stocked-phase-recovery",
+      "source": "cases/graph/eb/eb19ef2411e0c332f8faf6d8479ac0e8f3a9abe0045b1c9a077a552d78a668e0.json",
+      "sha256_lf": "0193fdb9721be519d90a1e443e269b06e99925eae68fd334d5b164e8162ef0f4",
+      "orders": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 24000000,
+      "evidence": "Existing canonical SAT expectation, now verified by original primitive-prefix replay. Entry suffixes must use current inventory; failure of a restricted macro view is never a global infeasibility proof."
+    },
+    {
+      "name": "compound_recovery_s45/preserve-original-witness-order",
+      "source": "cases/graph/4c/4cf5afa88ba05693c551bb7dea420fd412d30bed5d76ada969daf5d38bf08f0b.json",
+      "sha256_lf": "06fcdbc8e74c92035bffbcd6ae2be8b637a1319651fb0759c615287043f31bb1",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 18000000,
+      "evidence": "Existing canonical SAT expectation with exact primitive-prefix verification. New compressed programs and stocked-phase entry trials must leave the established ordering and free/priced recovery witnesses first. Work bound is a performance guard, never a logical oracle."
+    },
+    {
+      "name": "compound_recovery_s33/preserve-original-witness-order",
+      "source": "cases/graph/04/04acc32d530a5e8a1873e4aa1691ea2fe319003a3ddfee35f9655fa349b6d004.json",
+      "sha256_lf": "25c6aea2c2e31e1ddef2c5782f74e35dee01942b81714e11e72dd1add9bdbec1",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 7500000,
+      "evidence": "Existing canonical SAT expectation with exact primitive-prefix verification. New compressed programs and stocked-phase entry trials must leave the established ordering and free/priced recovery witnesses first. Work bound is a performance guard, never a logical oracle."
+    },
+    {
+      "name": "choice_n18_c2_cap1_s211_ratio_alias/preserve-original-witness-order",
+      "source": "cases/graph/b1/b18125414e6c45c6566778d38ae1f5e0b8c7a19f8a35c78932b4ad02433ab235.json",
+      "sha256_lf": "f3f52c157eef979f1c4d4142f9f9b3f391080553b2eaf3a78dae766e8b850d2e",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "maximum_observed_work": 5000000,
+      "evidence": "Existing canonical SAT expectation with exact primitive-prefix verification. New compressed programs and stocked-phase entry trials must leave the established ordering and free/priced recovery witnesses first. Work bound is a performance guard, never a logical oracle."
     }
   ]
 }

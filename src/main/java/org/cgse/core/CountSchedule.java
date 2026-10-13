@@ -40,6 +40,8 @@ final class CountSchedule<K> implements AutoCloseable {
     private Result result;
     private CountRecurrence<K> recurrence;
     private CountBoundedSchedule<K> bounded;
+    private CountChainSchedule<K> chains;
+    private boolean chainsTried;
     private boolean boundedTried;
     private int[] repairOrder;
     private boolean repairTried, repairingOrder;
@@ -55,7 +57,8 @@ final class CountSchedule<K> implements AutoCloseable {
         RECURRENCE,
         GREEDY,
         EXACT,
-        BOUNDED
+        BOUNDED,
+        CHAINS
     }
 
     private WitnessSource witnessSource;
@@ -114,6 +117,13 @@ final class CountSchedule<K> implements AutoCloseable {
     private boolean stepMeasured() {
         budget.check();
         if (result != null) return true;
+        if (chains != null) {
+            if (!chains.step()) return false;
+            witness = chains.witness();
+            if (witness != null) { witnessSource = WitnessSource.CHAINS; return finish(Result.WITNESS); }
+            chains.close();
+            chains = null;
+        }
         if (bounded != null) {
             if (!bounded.step()) return false;
             witness = bounded.witness();
@@ -328,6 +338,13 @@ final class CountSchedule<K> implements AutoCloseable {
         boolean early = ++attempt < 8 * Math.min(4, model.recipes.size());
         if (early && (rejectedWitness || attempt != 2 || !smallMultiset())) {
             reset();
+            return false;
+        }
+        // Preserve established ordering/batching candidates before constructing
+        // another witness that downstream assembly may need to reject.
+        if (!chainsTried && !smallMultiset()) {
+            chainsTried = true;
+            chains = new CountChainSchedule<>(model, original, budget);
             return false;
         }
         // Only exhaustive exploration may turn a scheduling failure into a
@@ -648,6 +665,12 @@ final class CountSchedule<K> implements AutoCloseable {
         budget.note("count_schedule_order", "assembly_rejected; same_counts_alternative_order");
         switch (witnessSource) {
             case RECURRENCE -> reset();
+            case CHAINS -> {
+                chains.close();
+                chains = null;
+                reset();
+                nextAttempt();
+            }
             case GREEDY -> nextAttempt();
             case EXACT -> {
                 // Continue remaining prefixes. Marking/POR deduplication is
@@ -736,6 +759,7 @@ final class CountSchedule<K> implements AutoCloseable {
 
     @Override
     public void close() {
+        if (chains != null) { chains.close(); chains = null; }
         if (guidedOrder != null) {
             guidedOrder.close();
             guidedOrder = null;
