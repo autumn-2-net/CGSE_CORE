@@ -28,6 +28,7 @@ final class CountViewSearch implements AutoCloseable {
     private boolean integerLpAttempted;
     private boolean groupedPartitionAttempted;
     private boolean relaxationNeighborhoodAttempted;
+    private boolean packingCoreAttempted;
     private final Set<CountModelViews.View> partitionViews = Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<CountModelViews.View> wideAllocationViews = Collections.newSetFromMap(new IdentityHashMap<>());
     private long commonWork, reportedCommonWork, restorationWork;
@@ -199,6 +200,7 @@ final class CountViewSearch implements AutoCloseable {
         MITM,
         GROUPED_PARTITION,
         RELAXATION_NEIGHBORHOOD,
+        PACKING_CORE,
         DOMAIN,
         DIAGRAM,
         BOOLEAN,
@@ -234,6 +236,11 @@ final class CountViewSearch implements AutoCloseable {
         }
         addStrideScout();
         addGroupedPartition();
+        // Once the compiler exposes finite original domains, a small packing
+        // core need not wait for every unrelated representation to stall twice.
+        long packingStarted = budget.threadWork();
+        try { addPackingCore(); }
+        finally { commonWork(budget.threadWork() - packingStarted); }
     }
 
     boolean hasGroupedPartition() {
@@ -542,7 +549,11 @@ final class CountViewSearch implements AutoCloseable {
             if ((stalled || sampled) && counts == null && !infeasible) {
                 long scoutStarted = budget.threadWork();
                 boolean added;
-                try { added = addIntegerLp(); if (!added) added = addRelaxationNeighborhood(); }
+                try {
+                    added = addIntegerLp();
+                    if (!added) added = addRelaxationNeighborhood();
+                    if (!added) added = addPackingCore();
+                }
                 finally {
                     integerScoutWork = budget.threadWork() - scoutStarted;
                     commonWork(integerScoutWork);
@@ -597,6 +608,25 @@ final class CountViewSearch implements AutoCloseable {
         return false;
     }
 
+    private boolean addPackingCore() {
+        if (packingCoreAttempted || !models.compiledAlternatives() ||
+                policy.mode() == CountPortfolioPolicy.Mode.PROOF) return false;
+        packingCoreAttempted = true;
+        var views = new ArrayList<>(models.available());
+        views.sort(Comparator.comparingLong(view -> view.shape().cost()));
+        for (var view : views) {
+            var structure = models.packingStructure(view);
+            if (structure == null) continue;
+            var core = CountPackingCore.create(structure, budget, CountPortfolioPolicy.MIN_QUANTUM);
+            if (core == null) continue;
+            Search search = new Search(view, policy.add(view.shape().cost(), Engine.PACKING_CORE), Engine.PACKING_CORE);
+            search.scope = new CountModelViews.Domains(view.lower(), view.upper(), 0);
+            search.specialist = core; searches.add(search);
+            return true;
+        }
+        return false;
+    }
+
     private boolean addIntegerJump() {
         if (policy.mode() == CountPortfolioPolicy.Mode.PROOF) return false;
         // Give general integer local search one bounded initial opportunity
@@ -626,13 +656,18 @@ final class CountViewSearch implements AutoCloseable {
                 policy.selections(search.scheduling) == 0);
         if (sampled) for (Search search : searches) {
             if (search.done || !search.scheduling.eligible ||
-                    !(search.specialist instanceof CountGroupedPartition || search.specialist instanceof CountRelaxationNeighborhood) ||
+                    !(search.specialist instanceof CountGroupedPartition || search.specialist instanceof CountRelaxationNeighborhood ||
+                            search.specialist instanceof CountPackingCore) ||
                     search.progress == 0) continue;
             // Reachable sums or a usable LP point leave an owned candidate
             // frontier. Give it one bounded completion opportunity after all
             // mandatory first visits. Handoffs never replenish this ceiling.
-            if (search.continuationLimit == 0)
-                search.continuationLimit = saturatedAdd(search.work, Math.min(4_194_304, budget.remainingWork() / 8));
+            if (search.continuationLimit == 0) {
+                long opportunity = search.specialist instanceof CountPackingCore packing ?
+                        Math.min(packing.remainingAllowance(), budget.remainingWork() / 3) :
+                        Math.min(4_194_304, budget.remainingWork() / 8);
+                search.continuationLimit = saturatedAdd(search.work, opportunity);
+            }
             if (search.work < search.continuationLimit) return search;
         }
         if (sampled) for (Search search : searches) {

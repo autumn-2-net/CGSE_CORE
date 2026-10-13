@@ -1428,6 +1428,305 @@
       "work": 40000000,
       "expected": "SAT",
       "evidence": "Canonical constructive allocation oracle; returned plans independently replayed on original primitive inputs and outputs. Bounded LP proposal followed by exact retained repair; restricted failures never prove infeasibility."
+    },
+    {
+      "name": "mknapcb7_18_bks/packing-core",
+      "source": "cases/graph/68/68f376df797ace9dc311396bf3f95f9bc19fb7657c5a7e13368f9ad8528ef6c7.json",
+      "sha256_lf": "e6b94f275de5f3722324f880c23450479750f3e3f9fd0883db456b3209c5a9e7",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb3_27_bks/packing-core",
+      "source": "cases/graph/79/79ebefa7f0fb5558c87c88a3dc82ccafa08229f76fb7b393e9eb49ddd0ff70b7.json",
+      "sha256_lf": "b1df368af654eee0b571e5a56e413c61baa0ec24752f17af16e82083266ca355",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb3_14_bks/packing-core",
+      "source": "cases/graph/92/92307376398cfcf36070e715956c9a82b8b11823435087ebe6b09221797a8102.json",
+      "sha256_lf": "65382143c7cd0b479acd85d1ef901cd538407ea020f4b3bbee33decc247c73cc",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb3_20_bks/packing-core",
+      "source": "cases/graph/b4/b4867af23c674ce1fcd5cc4f5db71e82411a372aaafd29066ca791c0d46b6143.json",
+      "sha256_lf": "bef6cb9a60aa4439364873277bcfec6f8e72e8e86414f2ccfc0d162b58383d3e",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb3_26_bks/packing-core",
+      "source": "cases/graph/ce/cea760a909cf689c81d2bbeb8084dcf75ed31a32e733f71aaf685fa8cd14b751.json",
+      "sha256_lf": "ad22bbf59113025e6f6aa46fc7726b0fab9e89b3357e5a30a868c4ced075f8ac",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb7_05_bks/packing-core",
+      "source": "cases/graph/b4/b491b90b87718bbe71a244b87b8c8760b433fcad44c8f34aab515fcce3e8bb3e.json",
+      "sha256_lf": "df07c53600f2e3968a35f7555860a3b5360f67659040c50ece2335189dbbc45e",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb2_09_bks/packing-core",
+      "source": "cases/graph/0a/0a5ef8dc5a352c78a9bfe40ceff3e24cbfd17e70da4606049f3967f8912b8336.json",
+      "sha256_lf": "acb5bd4f75097c7b985da021ad98b53d9ccaad15d2705890d6a1ca71099a3ab3",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb2_25_bks/packing-core",
+      "source": "cases/graph/0c/0ce8f5107db84b138c378f3a747a7c5eb1308fe8bf8bba41395c1d10e2c15740.json",
+      "sha256_lf": "213b53a3c90070610871dc86baaac406d32cc6a0bd45ce16f4009287715c5061",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb4_29_bks/packing-core",
+      "source": "cases/graph/23/23c67e1e4ed85553d973afd6e33e42fec7f212834ad65f6ec2f1afb1d9479d98.json",
+      "sha256_lf": "0a35f3bd524057a3db89b2e23882ca049f83d2b60da2e4944de1a02e3e1dbe79",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb4_27_bks/packing-core",
+      "source": "cases/graph/1e/1eb65bf637e7e6cc75db7687e00096dd69c9685f1355faab250a94af35b549b6.json",
+      "sha256_lf": "cf3da50ce9c73b64aa4c134f61b13fd4ec76b60f9caa98c5b4640bb3454e7e9d",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb2_27_bks/packing-core",
+      "source": "cases/graph/25/2516c823bb941ba0b04f2f03adbbcc5d1571face96b2d77dafef35e3f310f710.json",
+      "sha256_lf": "41a7f196ffb0dc30625a305f9655af1f18d3b645ced5d5c8dfbafdf8b87ce05d",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb5_06_bks/packing-core",
+      "source": "cases/graph/38/384634087b8805dd9b5b7fe0f96bf1e233d25276098f1a08bc63e44c9a80bfbf.json",
+      "sha256_lf": "e11f18fc3482c23602059f8156adfa76ac2005994f1160237e53f00555453e3c",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb4_17_bks/packing-core",
+      "source": "cases/graph/42/42347eb898f49fb42c4f14461985b7ef20a8934b7636c2f8c55225bc7b43e534.json",
+      "sha256_lf": "a54b5eec02490e92a438a1c61ceaf20204bf9fc121e934672a4cd9f198ec237d",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb5_21_bks/packing-core",
+      "source": "cases/graph/4c/4c3e3ee02764b2b9f674408ee2086b4b2d7ed4c4b7cc8ffaa7361e94ba15929d.json",
+      "sha256_lf": "e7fd2b873e091ef69aeb932677a9292532ee228bc03db4f9718c88e2be2f3c98",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb7_19_bks/packing-core",
+      "source": "cases/graph/60/60a39b52f3fc9ae826b82aeb146350c3bb42fa3b82a89fa356fd8d909890c468.json",
+      "sha256_lf": "f79e97de37ab70a7a05d747c71dff48b9594ffa65a5f10a2c1e578cb8481b02e",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb4_15_bks/packing-core",
+      "source": "cases/graph/7b/7b50c7154e78295ecd38f52889825bcc57d3282fd04c48859de51e017bbed3f2.json",
+      "sha256_lf": "e0f4471bdb13d3fe2165b371a447573d99112ccd8602d48cd00ffbd9746c07d4",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb7_26_bks/packing-core",
+      "source": "cases/graph/86/86c6a24cf37bbb54480c754624d1fdf51143f1eddd90bdaabde5256f400928ff.json",
+      "sha256_lf": "8aeb727b9ff6fd9b529f2c9af18b8ce66dc04f731155258562ecb13bf0495919",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb3_29_bks/packing-core",
+      "source": "cases/graph/bf/bf4aeb4b420789b91a78b5b58bce17d1730e7b8b43637fa749c1ac799acb503f.json",
+      "sha256_lf": "a5005d1d44434f0cbcb7c120d4b865f196afeea6ba5c07c6926e1dbe1671d14e",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb7_27_bks/packing-core",
+      "source": "cases/graph/ce/ce0434f1a4f7bc99a1c5912a4a17a6d932699c38999a651220d48d9d03a08669.json",
+      "sha256_lf": "43bf7c8552ea1e01bdd7fb82e9f084662d4d6535ac33b2479b0aae5823b16997",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb2_08_bks/packing-core",
+      "source": "cases/graph/e0/e012c0f9325af6acb1f2a0888a67f2187fc5118de55e56717fcb16b49b3f5eab.json",
+      "sha256_lf": "c78e00f8ce85e0514aab2c6e63239639b97229b71b7dee05f6928ee7bdfeafb8",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb2_19_bks/packing-core",
+      "source": "cases/graph/f8/f85432be8450d4b431caa97a6dac9d167ee3cd3b453ab959d5dccb6bae46d3f6.json",
+      "sha256_lf": "9893af8e2ad4c309ce9f65addc1a895158d4711be474524e8e835897c1023fe9",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb4_18_bks/packing-core",
+      "source": "cases/graph/f0/f08db5051d6801ecb3ac264c3a14986818ad82e416f7bd52035a0caf3353dae3.json",
+      "sha256_lf": "e5ceb177b0c18c67cf77971386b609c6a8b390fa894ae10b9fc484038d6c65d2",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
+    },
+    {
+      "name": "mknapcb2_26_bks/packing-core",
+      "source": "cases/graph/fb/fb734f092eae202d6287d6ab8496211fe378f58158d6d4618cb82c75c2cf1799.json",
+      "sha256_lf": "e33ed7bb9aeb4f2062b4681c2c61695dd97203300f0440935c55d0f4ee253ded",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing oracle; independent primitive replay checks every returned recipe count and execution. Bounded-variable LP and exact restricted cores propose candidates only; core exhaustion is not an infeasibility proof."
     }
   ]
 }

@@ -1,0 +1,293 @@
+// Copyright (c) 2026 autumn
+// SPDX-License-Identifier: MPL-2.0
+
+package org.cgse.core;
+
+import java.math.BigInteger;
+import java.util.*;
+
+/** Bounded-variable LP prices followed by retained, exact Boolean core enumeration.
+ * Fixings outside each core are proposals only. Closing a core proves nothing globally. */
+final class CountPackingCore implements CountContinuation {
+    private final List<ExactLinearProgram.Constraint> rows;
+    private final BigInteger[] lower, upper;
+    private final PlanningBudget budget;
+    private final CountPackingStructure structure;
+    private final boolean ownsStructure;
+    private final long maximumWork;
+    private final int[] columns;
+    private final long[][] matrix;
+    private final long[] rhs, profit;
+    private final long target;
+    private final Relaxation lp;
+    private long memory, work, until, nodes, relaxationSteps;
+    private long[][] coefficients, minimum;
+    private long[] residual;
+    private int[] ranked, free, choices;
+    private boolean[] seed, values;
+    private int depth, coreSize;
+    private boolean complete, paused;
+    private BigInteger[] counts;
+
+    static CountPackingCore create(CountModelViews.View view, CountModelViews.Domains domains,
+                                   PlanningBudget budget, long quantum) {
+        var structure = CountPackingStructure.create(view, domains, budget);
+        if (structure == null) return null;
+        try {
+            var result = create(structure, budget, quantum, true);
+            if (result != null) structure = null;
+            return result;
+        } finally { if (structure != null) structure.close(); }
+    }
+
+    static CountPackingCore create(CountPackingStructure structure, PlanningBudget budget, long quantum) {
+        return create(structure, budget, quantum, false);
+    }
+
+    private static CountPackingCore create(CountPackingStructure structure, PlanningBudget budget, long quantum, boolean ownsStructure) {
+        if (budget.remainingWork() < 524288) return null;
+        int n = structure.columns.length, m = structure.matrix.length;
+        long bytes = 8192L + 128L * structure.lower.length + 64L * (m + 3) * (n + m + 2);
+        if (!budget.tryReserve(bytes)) return null;
+        long started = budget.threadWork();
+        try {
+            var result = new CountPackingCore(structure, budget, quantum, bytes, ownsStructure);
+            result.work = budget.threadWork() - started;
+            bytes = 0;
+            return result;
+        } finally { budget.release(bytes); }
+    }
+
+    private CountPackingCore(CountPackingStructure structure, PlanningBudget budget, long quantum, long memory, boolean ownsStructure) {
+        this.structure = structure; this.ownsStructure = ownsStructure;
+        rows = structure.rows; lower = structure.lower; upper = structure.upper;
+        columns = structure.columns; matrix = structure.matrix; rhs = structure.rhs;
+        profit = structure.profit; target = structure.target;
+        this.budget = budget; this.memory = memory;
+        maximumWork = Math.min(12_582_912, budget.remainingWork() / 3);
+        until = quantum;
+        lp = new Relaxation(matrix, rhs, profit, budget);
+    }
+
+    @Override public boolean step() {
+        if (complete || paused) return true;
+        budget.checkpoint();
+        if (work >= maximumWork) return finish("local_limit");
+        if (work >= until) { paused = true; return true; }
+        long before = budget.threadWork();
+        try {
+            if (!lp.done) {
+                if (++relaxationSteps > 8192 || !lp.step()) return finish("numeric_declined");
+                return false;
+            }
+            if (ranked == null && !prepare()) return finish("point_declined");
+            if (coefficients == null) beginCore();
+            // One retained DFS node; every row is exact and no subset failure is exported.
+            nodes++;
+            if (depth < 0) {
+                if (coreSize >= Math.min(64, columns.length)) return finish("cores_closed");
+                coreSize = Math.min(Math.min(64, columns.length), coreSize + 8);
+                beginCore(); return false;
+            }
+            if (choices[depth] == 0) {
+                for (int r = 0; r < residual.length; r++) {
+                    budget.operation(PlanningBudget.Operation.INTEGER, 64);
+                    if (residual[r] < minimum[r][depth]) { backtrack(); return false; }
+                }
+                if (depth == free.length) {
+                    var candidate = lower.clone();
+                    for (int i = 0; i < columns.length; i++) candidate[columns[i]] = values[i] ? BigInteger.ONE : BigInteger.ZERO;
+                    if (valid(candidate)) { counts = candidate; return finish("verified_candidate"); }
+                    return finish("candidate_rejected");
+                }
+            }
+            if (choices[depth] >= 2) { choices[depth] = 0; backtrack(); return false; }
+            int id = free[depth]; boolean value = choices[depth]++ == 0 ? seed[id] : !seed[id];
+            values[id] = value;
+            for (int r = 0; r < residual.length; r++) {
+                budget.operation(PlanningBudget.Operation.INTEGER, 64);
+                if (value) residual[r] -= coefficients[r][depth];
+            }
+            choices[++depth] = 0;
+            return false;
+        } finally { work += budget.threadWork() - before; }
+    }
+
+    private boolean prepare() {
+        int n = columns.length;
+        seed = new boolean[n]; values = new boolean[n];
+        var ordering = new ArrayList<Integer>(); int fractional = 0;
+        for (int i = 0; i < n; i++) {
+            budget.check(); double x = lp.point[i];
+            if (!Double.isFinite(x) || x < -1e-6 || x > 1 + 1e-6) return false;
+            seed[i] = x >= 0.5;
+            if (x > 1e-6 && x < 1 - 1e-6) fractional++;
+            ordering.add(i);
+        }
+        // Fractional coordinates have zero reduced cost. Remaining coordinates
+        // are released by price, not by their arbitrary original recipe index.
+        ordering.sort((a, b) -> {
+            budget.operation(PlanningBudget.Operation.SCAN, 0);
+            double first = lp.point[a] > 1e-6 && lp.point[a] < 1 - 1e-6 ? -1 : Math.abs(lp.cost[a]);
+            double second = lp.point[b] > 1e-6 && lp.point[b] < 1 - 1e-6 ? -1 : Math.abs(lp.cost[b]);
+            int compared = Double.compare(first, second);
+            return compared != 0 ? compared : Integer.compare(structure.ranks[a], structure.ranks[b]);
+        });
+        ranked = ordering.stream().mapToInt(Integer::intValue).toArray();
+        coreSize = Math.min(n, Math.max(16, fractional + 8));
+        return coreSize <= 64;
+    }
+
+    private void beginCore() {
+        int n = columns.length, m = matrix.length;
+        free = Arrays.copyOf(ranked, coreSize);
+        // Branch on expensive deviations first; the preferred LP rounding is
+        // visited first. Fractional choices remain available in both directions.
+        for (int i = 0; i < free.length / 2; i++) { int x = free[i]; free[i] = free[free.length - 1 - i]; free[free.length - 1 - i] = x; }
+        var full = new ArrayList<long[]>(); var bounds = new ArrayList<Long>();
+        for (int r = 0; r < m; r++) { full.add(matrix[r]); bounds.add(rhs[r]); }
+        var demand = new long[n]; for (int i = 0; i < n; i++) demand[i] = -profit[i];
+        full.add(demand); bounds.add(-target);
+        // Rebuild an integer nonnegative combination of the original capacity
+        // and demand rows. Floating prices only suggest the multipliers.
+        BigInteger q = BigInteger.valueOf(65536);
+        var aggregate = new BigInteger[n]; Arrays.fill(aggregate, BigInteger.ZERO);
+        var bound = q.multiply(BigInteger.valueOf(-target));
+        for (int i = 0; i < n; i++) aggregate[i] = q.multiply(BigInteger.valueOf(-profit[i]));
+        for (int r = 0; r < m; r++) {
+            double price = Math.max(0, lp.price(r));
+            if (!Double.isFinite(price) || price * 65536 > 1e12) continue;
+            var weight = BigInteger.valueOf(Math.round(price * 65536));
+            bound = bound.add(weight.multiply(BigInteger.valueOf(rhs[r])));
+            for (int i = 0; i < n; i++) { budget.check(); aggregate[i] = aggregate[i].add(weight.multiply(BigInteger.valueOf(matrix[r][i]))); }
+        }
+        var magnitude = bound.abs(); for (var a : aggregate) magnitude = magnitude.add(a.abs());
+        if (magnitude.bitLength() < 60) {
+            full.add(Arrays.stream(aggregate).mapToLong(BigInteger::longValueExact).toArray()); bounds.add(bound.longValueExact());
+        }
+        coefficients = new long[full.size()][coreSize]; minimum = new long[full.size()][coreSize + 1];
+        residual = new long[full.size()]; choices = new int[coreSize + 1];
+        boolean[] released = new boolean[n]; for (int id : free) released[id] = true;
+        values = seed.clone(); depth = 0;
+        for (int r = 0; r < full.size(); r++) {
+            residual[r] = bounds.get(r); long[] a = full.get(r);
+            for (int i = 0; i < n; i++) { budget.check(); if (!released[i] && seed[i]) residual[r] -= a[i]; }
+            for (int d = coreSize - 1; d >= 0; d--) {
+                budget.check(); coefficients[r][d] = a[free[d]];
+                minimum[r][d] = minimum[r][d + 1] + Math.min(0, coefficients[r][d]);
+            }
+        }
+        budget.note("count_packing_core", "begin; variables=" + n + "; capacities=" + m + "; free=" + coreSize + "; work=" + work);
+    }
+
+    private void backtrack() {
+        if (--depth < 0) return;
+        if (values[free[depth]]) for (int r = 0; r < residual.length; r++) {
+            budget.operation(PlanningBudget.Operation.INTEGER, 64); residual[r] += coefficients[r][depth];
+        }
+    }
+
+    private boolean valid(BigInteger[] candidate) {
+        for (var row : rows) {
+            var sum = BigInteger.ZERO;
+            for (var term : row.terms().entrySet()) {
+                budget.check(); sum = sum.add(term.getValue().multiply(candidate[term.getKey()]));
+            }
+            if (sum.compareTo(row.upper()) > 0) return false;
+        }
+        return true;
+    }
+
+    private boolean finish(String reason) {
+        complete = true; paused = false;
+        budget.note("count_packing_core", reason + "; free=" + coreSize + "; lp_steps=" + relaxationSteps + "; nodes=" + nodes + "; work=" + work);
+        return true;
+    }
+    @Override public boolean paused() { return paused; }
+    @Override public void resume(long quantum) { until = CountContinuation.deadline(work, quantum, budget); paused = false; }
+    @Override public BigInteger[] counts() { return counts; }
+    @Override public long work() { return work; }
+    long remainingAllowance() { return Math.max(0, maximumWork - work); }
+    // Completed numerical pivots/bound flips are retained progress too. Waiting
+    // for the final LP point hid this frontier from the bounded completion grant.
+    @Override public long progress() { return relaxationSteps + nodes; }
+    @Override public boolean matches(List<ExactLinearProgram.Constraint> other, BigInteger[] low, BigInteger[] high) {
+        return rows.equals(other) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
+    }
+    @Override public void close() {
+        budget.release(memory); memory = 0;
+        if (ownsStructure) structure.close();
+    }
+
+    /** Primal simplex with variable bounds; the tableau has capacity rows only. */
+    private static final class Relaxation {
+        final double[][] tableau;
+        final double[] point, cost;
+        final double[] scales;
+        final double objectiveScale;
+        final int[] basis;
+        final boolean[] basic;
+        final int n, m;
+        final PlanningBudget budget;
+        boolean done;
+        int degeneracies;
+
+        Relaxation(long[][] a, long[] b, long[] c, PlanningBudget budget) {
+            n = c.length; m = b.length; this.budget = budget;
+            tableau = new double[m][n + m]; point = new double[n + m]; cost = new double[n + m];
+            scales = new double[m];
+            basis = new int[m]; basic = new boolean[n + m];
+            objectiveScale = Math.max(1, Arrays.stream(c).max().orElse(1));
+            for (int i = 0; i < n; i++) cost[i] = c[i] / objectiveScale;
+            for (int r = 0; r < m; r++) {
+                scales[r] = Math.max(1, Arrays.stream(a[r]).max().orElse(1));
+                for (int i = 0; i < n; i++) tableau[r][i] = a[r][i] / scales[r];
+                tableau[r][n + r] = 1; point[n + r] = b[r] / scales[r]; basis[r] = n + r; basic[n + r] = true;
+            }
+            budget.charge((long) m * (n + m) / 4 + n + m);
+        }
+
+        double price(int row) { return -cost[n + row] * objectiveScale / scales[row]; }
+
+        boolean step() {
+            int enter = -1; double gain = 1e-7;
+            budget.charge((n + m + 3L) / 4);
+            for (int i = 0; i < n + m; i++) if (!basic[i]) {
+                double improvement = point[i] > 0.5 ? -cost[i] : cost[i];
+                if (improvement > gain) { enter = i; gain = improvement; if (degeneracies > m + n) break; }
+            }
+            if (enter < 0) { done = true; return true; }
+            double direction = point[enter] > 0.5 ? -1 : 1;
+            double delta = enter < n ? 1 : Double.POSITIVE_INFINITY; int leave = -1;
+            budget.charge(m);
+            for (int r = 0; r < m; r++) {
+                double a = tableau[r][enter] * direction, x = point[basis[r]];
+                double step = a > 1e-10 ? x / a : a < -1e-10 && basis[r] < n ? (1 - x) / -a : Double.POSITIVE_INFINITY;
+                if (step < delta - 1e-9 || Math.abs(step - delta) <= 1e-9 && leave >= 0 && basis[r] < basis[leave]) {
+                    delta = Math.max(0, step); leave = r;
+                }
+            }
+            if (!Double.isFinite(delta)) return false;
+            if (delta < 1e-9) degeneracies++; else degeneracies = 0;
+            for (int r = 0; r < m; r++) point[basis[r]] -= tableau[r][enter] * direction * delta;
+            point[enter] += direction * delta;
+            if (leave < 0) return true;
+            int outgoing = basis[leave];
+            point[outgoing] = outgoing < n && point[outgoing] > 0.5 ? 1 : 0;
+            double pivot = tableau[leave][enter];
+            if (!Double.isFinite(pivot) || Math.abs(pivot) < 1e-12) return false;
+            // A complete pivot is the continuation boundary. Charge every row
+            // before mutating it, with cancellation checks between rows.
+            budget.charge((n + m + 3L) / 4);
+            for (int i = 0; i < n + m; i++) tableau[leave][i] /= pivot;
+            for (int r = 0; r < m; r++) if (r != leave) {
+                budget.charge((n + m + 3L) / 4); double a = tableau[r][enter];
+                for (int i = 0; i < n + m; i++) tableau[r][i] -= a * tableau[leave][i];
+            }
+            budget.charge((n + m + 3L) / 4); double a = cost[enter];
+            for (int i = 0; i < n + m; i++) cost[i] -= a * tableau[leave][i];
+            basic[outgoing] = false; basic[enter] = true; basis[leave] = enter;
+            return true;
+        }
+    }
+}

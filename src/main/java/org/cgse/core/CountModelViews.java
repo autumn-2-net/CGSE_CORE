@@ -48,6 +48,7 @@ final class CountModelViews implements AutoCloseable {
     private View reduced;
     private final List<View> views = new ArrayList<>();
     private final List<View> auxiliaryViews = new ArrayList<>();
+    private final Map<View, CountPackingStructure> packingStructures = new IdentityHashMap<>();
     private boolean lightAttempted;
     private long memory;
     private BigInteger[] sharedLower, sharedUpper;
@@ -101,6 +102,19 @@ final class CountModelViews implements AutoCloseable {
     }
 
     boolean compiledAlternatives() { return lightAttempted || reduced != null; }
+
+    /** Demand-driven auxiliary analysis; scoped to the immutable declared view.
+     * Learned bounds need not reshape a candidate neighborhood on every handoff.
+     * A new inventory/request gets a new owner and recomputes its shifted rows. */
+    CountPackingStructure packingStructure(View view) {
+        if (!views.contains(view)) throw new IllegalArgumentException("Foreign packing view");
+        if (packingStructures.containsKey(view)) return packingStructures.get(view);
+        var structure = CountPackingStructure.create(view, new Domains(view.lower, view.upper, 0), budget);
+        packingStructures.put(view, structure);
+        if (structure != null) budget.note("count_packing_analysis", "view=" + view.name + "; variables=" + view.lower.length +
+                "; free=" + structure.columns.length + "; rows=" + view.rows.size() + "->" + structure.matrix.length + "; scope=declared_view");
+        return structure;
+    }
 
     /** Integer-equivalent row simplification without changing variable coordinates. */
     void compileLight() {
@@ -487,6 +501,8 @@ final class CountModelViews implements AutoCloseable {
 
     @Override
     public void close() {
+        for (var structure : packingStructures.values()) if (structure != null) structure.close();
+        packingStructures.clear();
         if (cuts != null) cuts.close();
         cuts = null;
         if (conflicts != null) conflicts.close();
