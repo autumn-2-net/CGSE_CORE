@@ -77,6 +77,10 @@ public final class PlanningBudget {
     // cumulative across every worker, share memory/time/cancellation, and feed
     // the same local work clock so compilation still yields fairly.
     private final AtomicLong compilationNodes = new AtomicLong();
+    // Optional retention has its own small request-wide account. It must never
+    // consume search/compilation slices or abort an order when this cap is full.
+    static final long CACHE_PREPARATION_WORK = 8192;
+    private long cachePreparationTicks;
     // Keep one ThreadLocal key, but never carry a previous order's fractional
     // ticks into this one's slice boundaries. The request owns the worker clocks;
     // the last-clock fast path must not retain a completed request on idle pools.
@@ -191,6 +195,21 @@ public final class PlanningBudget {
         chargeTicks(Operation.SCAN.ticks, true);
         return Operation.SCAN.ticks;
     }
+
+    /** Optional cache preparation only; deduction, restoration and validation still use search work. */
+    boolean tryCacheScan(int count) {
+        if (count < 0) throw new IllegalArgumentException("Negative operation count");
+        checkpoint();
+        long ticks = (long) count * Operation.SCAN.ticks;
+        synchronized (this) {
+            if (ticks > CACHE_PREPARATION_WORK * WORK_SCALE - cachePreparationTicks) return false;
+            cachePreparationTicks += ticks;
+            return true;
+        }
+    }
+
+    /** Independent retention work; excluded from search, compilation and continuation quotas. */
+    public synchronized long cachePreparationWork() { return units(cachePreparationTicks); }
 
     void compilationCharge(long units) {
         if (units < 0) throw new IllegalArgumentException("Negative work");

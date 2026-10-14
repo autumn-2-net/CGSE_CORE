@@ -29,7 +29,8 @@ final class ConservationAnalysis<K> implements AutoCloseable {
     private BigInteger[][] matrix;
     private int phase, index, rank, column, row, free;
     private boolean blocked;
-    private long memory, eliminationWork;
+    private boolean probing;
+    private long memory, eliminationWork, probeMemory;
 
     ConservationAnalysis(GraphCompiler<K> compiler, K target, long amount, Map<K, Long> stock, Set<K> external,
                          Map<K, Long> required, Set<String> excluded, PlanningBudget budget) {
@@ -51,7 +52,9 @@ final class ConservationAnalysis<K> implements AutoCloseable {
 
     boolean step() {
         long before = budget.threadWork();
-        boolean eliminating = phase >= 2 && phase <= 5;
+        // A failed optional donor must leave the original elimination's local
+        // allowance intact. Its actual inference work still charges the order.
+        boolean eliminating = phase >= 2 && phase <= 5 && !probing;
         try {
             if (eliminating && eliminationWork >= allowance) return finish(false);
             return advance();
@@ -113,14 +116,11 @@ final class ConservationAnalysis<K> implements AutoCloseable {
             // Dense exact elimination is only a bounded aid for small coupled
             // regions. A skipped/exhausted aid never proves infeasibility.
             if (keys.size() > 192 || recipes.size() > 192) return finish(false);
-            long workspace = 576L * keys.size() * (recipes.size() + 16L);
-            if (!budget.tryReserve(workspace)) return finish(false);
-            memory += workspace;
-            matrix = new BigInteger[recipes.size()][keys.size()];
-            pivots = new int[Math.min(keys.size(), recipes.size())];
-            index = 0;
-            phase = 2;
-            return false;
+            var kernel = compiler.conservationBasis(target, excluded);
+            if (kernel != null && kernel.sameOrder(keys)) return restore(kernel, false);
+            var donor = compiler.conservationDonor(excluded);
+            if (donor != null && donor.canProbe(ids, budget, allowance)) return restore(donor, true);
+            return beginElimination();
         }
         if (phase == 2) {
             if (index < recipes.size()) {
@@ -199,11 +199,22 @@ final class ConservationAnalysis<K> implements AutoCloseable {
                 basis.add(vector);
                 return false;
             }
+            compiler.rememberConservationBasis(target, excluded, keys, basis, budget);
             phase = 5;
             index = 0;
         }
         if (phase == 5) {
-            if (index == basis.size()) return finish(false);
+            if (index == basis.size()) {
+                if (!probing) return finish(false);
+                // A donor's rays are only a short probe. Failure to find a
+                // deficit cannot replace this target's original basis search.
+                basis.clear();
+                budget.release(probeMemory);
+                memory -= probeMemory;
+                probeMemory = 0;
+                probing = false;
+                return beginElimination();
+            }
             BigInteger[] vector = basis.get(index++).clone();
             if (vector[ids.get(target)].signum() < 0) for (int i = 0; i < vector.length; i++) vector[i] = vector[i].negate();
             // Positive conservation rays can repair negative catalyst weights
@@ -227,6 +238,28 @@ final class ConservationAnalysis<K> implements AutoCloseable {
             return false;
         }
         return true;
+    }
+
+    private boolean beginElimination() {
+        long workspace = 576L * keys.size() * (recipes.size() + 16L);
+        if (!budget.tryReserve(workspace)) return finish(false);
+        memory += workspace;
+        matrix = new BigInteger[recipes.size()][keys.size()];
+        pivots = new int[Math.min(keys.size(), recipes.size())];
+        index = 0;
+        phase = 2;
+        return false;
+    }
+
+    private boolean restore(ConservationKernel<K> kernel, boolean probe) {
+        if (!budget.tryReserve(kernel.bytes)) return probe ? beginElimination() : finish(false);
+        memory += kernel.bytes;
+        probeMemory = probe ? kernel.bytes : 0;
+        kernel.restore(basis, ids, probe, budget);
+        probing = probe;
+        phase = 5;
+        index = 0;
+        return false;
     }
 
     private boolean certificate(BigInteger[] weights) {

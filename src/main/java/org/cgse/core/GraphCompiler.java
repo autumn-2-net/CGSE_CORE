@@ -32,6 +32,8 @@ public final class GraphCompiler<K> {
     private GraphSourceIndex<K> sourceIndex;
     private boolean catalogIndexRequested, catalogIndexReusable;
     private final List<QuantityCertificate<K>> quantityCertificates = new ArrayList<>();
+    private final Map<ConservationKey<K>, ConservationEntry<K>> conservationBases = new LinkedHashMap<>(16, 0.75f, true);
+    private boolean preparingConservation;
     final CountSessions countSessions = new CountSessions();
     final CountRowTemplates rowTemplates = new CountRowTemplates();
     final CountRecoveryTemplates<K> recoveryTemplates = new CountRecoveryTemplates<>();
@@ -109,6 +111,16 @@ public final class GraphCompiler<K> {
         values.put("demand_program", entry("demand_program", demandPrograms.size(), demandWeight, demandBytes));
         long certificateWeight = quantityCertificates.stream().mapToLong(c -> c.weights.size() + c.excluded.size()).sum();
         values.put("quantity_certificate", entry("quantity_certificate", quantityCertificates.size(), certificateWeight, 192L * certificateWeight));
+        long conservationWeight = 0, conservationBytes = 0;
+        for (var item : conservationBases.entrySet()) {
+            var kernel = item.getValue().kernel;
+            conservationWeight += 1L + item.getKey().excluded.size() + (kernel == null ? 0 : kernel.weight);
+            conservationBytes += conservationBytes(item.getKey(), item.getValue());
+        }
+        values.put("conservation_basis", entry("conservation_basis", conservationBases.size(), conservationWeight, conservationBytes));
+        values.put("conservation_overlap", entry("conservation_overlap", 0, 0, 0));
+        values.put("conservation_preparation", entry("conservation_preparation", preparingConservation ? 1 : 0,
+                0, preparingConservation ? ConservationKernel.MAX_BYTES : 0));
         // Catalog recipes and user keys are shared immutable inputs. Count the
         // index containers here, not arbitrary host objects reachable from them.
         long catalogWeight = catalog.size() + producers.size() + producers.values().stream().mapToLong(List::size).sum();
@@ -403,6 +415,70 @@ public final class GraphCompiler<K> {
     }
 
     record QuantityCertificate<K>(Set<String> excluded, Map<K, BigInteger> weights) {}
+
+    private record ConservationKey<K>(K target, Set<String> excluded) {}
+
+    private static final class ConservationEntry<K> {
+        boolean repeated;
+        ConservationKernel<K> kernel;
+    }
+
+    synchronized ConservationKernel<K> conservationBasis(K target, Set<String> excluded) {
+        if (excluded.size() > 192) return null;
+        var key = new ConservationKey<>(target, excluded);
+        var entry = conservationBases.get(key);
+        if (entry == null) {
+            entry = new ConservationEntry<>();
+            conservationBases.put(new ConservationKey<>(target, Set.copyOf(excluded)), entry);
+            trimConservationBases();
+        } else entry.repeated = true;
+        return lookup("conservation_basis", entry.kernel);
+    }
+
+    synchronized ConservationKernel<K> conservationDonor(Set<String> excluded) {
+        ConservationKey<K> donor = null;
+        for (var item : conservationBases.entrySet()) if (item.getKey().excluded.equals(excluded) && item.getValue().kernel != null)
+            donor = item.getKey();
+        return lookup("conservation_overlap", donor == null ? null : conservationBases.get(donor).kernel);
+    }
+
+    void rememberConservationBasis(K target, Set<String> excluded, List<K> keys, List<BigInteger[]> basis, PlanningBudget budget) {
+        var key = new ConservationKey<>(target, excluded);
+        synchronized (this) {
+            var entry = conservationBases.get(key);
+            if (entry == null || !entry.repeated || entry.kernel != null || preparingConservation) return;
+            preparingConservation = true;
+            trimConservationBases();
+        }
+        // One optional preparation per compiler, with memory reserved against
+        // the cache cap. Other orders continue without waiting for a clone.
+        // Cancellation callbacks never run while holding the compiler monitor.
+        ConservationKernel<K> kernel = null;
+        try {
+            kernel = ConservationKernel.capture(keys, basis, budget);
+        } finally {
+            synchronized (this) {
+                preparingConservation = false;
+                var entry = conservationBases.get(key);
+                if (kernel != null && entry != null && entry.kernel == null) entry.kernel = kernel;
+                trimConservationBases();
+            }
+        }
+    }
+
+    private static long conservationBytes(ConservationKey<?> key, ConservationEntry<?> entry) {
+        return 96L + 32L * key.excluded.size() + (entry.kernel == null ? 0 : entry.kernel.bytes);
+    }
+
+    private void trimConservationBases() {
+        long bytes = preparingConservation ? ConservationKernel.MAX_BYTES : 0;
+        for (var entry : conservationBases.entrySet()) bytes += conservationBytes(entry.getKey(), entry.getValue());
+        while (conservationBases.size() > 8 || bytes > (1L << 20)) {
+            var key = conservationBases.keySet().iterator().next();
+            bytes -= conservationBytes(key, conservationBases.remove(key));
+            evicted("conservation_basis");
+        }
+    }
 
     public Compiled<K> compile(K target, Map<K, Integer> choices, Set<String> excluded, PlanningBudget budget) {
         Compiled<K> cached = cached(target, choices, excluded);
