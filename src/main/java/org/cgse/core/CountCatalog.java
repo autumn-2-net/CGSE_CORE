@@ -115,7 +115,7 @@ final class CountCatalog<K> {
                 budget.check();
                 changed.add(key);
                 if (supplied.contains(key) || external.contains(key) || !ids.containsKey(key)) continue;
-                var value = RecipeCountModel.delta(recipe, key).negate();
+                var value = RecipeCountModel.coefficient(recipe, key);
                 if (value.signum() != 0) additions.computeIfAbsent(key, ignored -> new LinkedHashMap<>()).put(column, value);
             }
         }
@@ -128,20 +128,21 @@ final class CountCatalog<K> {
             var original = terms.get(id);
             if (!moved && !changed.contains(key)) shared.put(key, original);
             else {
-                var row = new LinkedHashMap<Integer, BigInteger>();
+                var row = new ExactLinearProgram.RowBuilder();
                 for (var term : original.entrySet()) {
                     // Coordinate lookup/reference copy, not another exact
                     // material-delta calculation. Use the existing scan cost.
                     budget.operation(PlanningBudget.Operation.SCAN, 0);
                     int next = mapped[term.getKey()];
-                    if (next >= 0) row.put(next, term.getValue());
+                    if (next >= 0) row.add(next, term.getValue());
                 }
                 var extra = additions.get(key);
                 if (extra != null) for (var term : extra.entrySet()) {
                     budget.operation(PlanningBudget.Operation.SCAN, 0);
-                    row.put(term.getKey(), term.getValue());
+                    row.add(term.getKey(), term.getValue());
                 }
-                shared.put(key, row.equals(original) ? original : new ExactLinearProgram.Constraint(row, BigInteger.ZERO).terms());
+                var translated = row.build(BigInteger.ZERO).terms();
+                shared.put(key, translated.equals(original) ? original : translated);
             }
         }
         return shared;

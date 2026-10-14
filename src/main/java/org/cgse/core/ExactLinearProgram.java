@@ -70,7 +70,31 @@ final class ExactLinearProgram implements AutoCloseable {
         }
     }
 
-    /** Only Constraint can construct this immutable, ordered coefficient value. */
+    /** A sparse row with a single ownership transfer; ordered rows need no second copy. */
+    static final class RowBuilder {
+        private Map<Integer, BigInteger> terms = new LinkedHashMap<>();
+        private int previous = -1;
+        private boolean ordered = true;
+
+        void add(int column, BigInteger coefficient) {
+            if (terms == null) throw new IllegalStateException("Row already frozen");
+            if (column < 0) throw new IllegalArgumentException("Negative row coordinate");
+            terms.put(column, Objects.requireNonNull(coefficient));
+            ordered &= column > previous;
+            previous = column;
+        }
+
+        Constraint build(BigInteger upper) {
+            if (terms == null) throw new IllegalStateException("Row already frozen");
+            // The map never escapes this builder before freezing. The same
+            // immutable representation supports cached coefficient analysis.
+            var owned = terms;
+            terms = null;
+            return new Constraint(owned.size() < 2 || !ordered ? owned : new Coefficients(owned), upper);
+        }
+    }
+
+    /** Only the enclosing row factories can construct this immutable coefficient value. */
     private static final class Coefficients extends AbstractMap<Integer, BigInteger> {
         private final Map<Integer, BigInteger> values;
         private volatile byte zeros; // 0 unknown, 1 absent, 2 present

@@ -21,6 +21,7 @@ final class AllocationSearch<K> {
     private final Map<K, Long> requiredSeeds;
     private final Set<K> external;
     private final boolean preserve, force;
+    private final BigInteger productionGoal;
     private final PlanningBudget budget;
     private final Set<String> excluded;
     private final Map<K, BigInteger> goals = new LinkedHashMap<>();
@@ -79,6 +80,7 @@ final class AllocationSearch<K> {
         this.external = external;
         this.preserve = preserve;
         this.force = force;
+        productionGoal = force ? BigInteger.valueOf(stock.getOrDefault(target, 0L)).add(BigInteger.valueOf(amount)) : null;
         this.excluded = excluded;
         this.budget = budget;
         this.started = started;
@@ -334,26 +336,46 @@ final class AllocationSearch<K> {
 
     private long maximum(int index) {
         SequenceSummary<K> summary = summaries.get(index);
-        BigInteger bound = BigInteger.valueOf(Long.MAX_VALUE), useful = BigInteger.ZERO;
-        for (K key : summary.keys()) {
+        long bound = Long.MAX_VALUE, useful = 0;
+        boolean changed = false;
+        // These are one-recipe summaries (also for compiled macro recipes).
+        // Their delta map retains every input, including zero net changes, in
+        // the same order as keys(). No per-node union or support cache is needed.
+        for (var term : summary.delta().entrySet()) {
             budget.check();
+            K key = term.getKey();
             BigInteger current = held.getOrDefault(key, BigInteger.ZERO);
-            if (current.compareTo(summary.required(key)) < 0) return 0;
-            BigInteger delta = summary.delta(key);
-            if (delta.signum() < 0) bound = bound.min(current.subtract(summary.required(key)).divide(delta.negate()).add(BigInteger.ONE));
+            BigInteger required = summary.required(key);
+            if (current.compareTo(required) < 0) return 0;
+            BigInteger delta = term.getValue();
+            changed |= delta.signum() != 0;
+            if (delta.signum() < 0) {
+                if (current.bitLength() <= 63 && required.bitLength() <= 63 && delta.bitLength() <= 63 &&
+                        delta.longValue() != Long.MIN_VALUE) {
+                    long subsequent = (current.longValue() - required.longValue()) / -delta.longValue();
+                    // Compare before adding: MAX subsequent runs already reach
+                    // the long batch cap and MAX + 1 would overflow.
+                    if (subsequent < bound) bound = Math.min(bound, subsequent + 1);
+                } else bound = Math.min(bound, ExactAmounts.capped(current.subtract(required).divide(delta.negate()).add(BigInteger.ONE)));
+            }
             else if (delta.signum() > 0) {
                 BigInteger goal = goals.getOrDefault(key, BigInteger.ZERO);
-                if (force && key.equals(target)) goal = goal.max(BigInteger.valueOf(stock.getOrDefault(target, 0L)).add(BigInteger.valueOf(amount)));
-                useful = useful.max(CheckedAmounts.ceilDiv(goal.subtract(current), delta));
+                if (force && key.equals(target)) goal = goal.max(productionGoal);
+                if (goal.compareTo(current) > 0) {
+                    long needed = goal.bitLength() <= 63 && current.bitLength() <= 63 && delta.bitLength() <= 63 ?
+                            CheckedAmounts.ceilDiv(goal.longValue() - current.longValue(), delta.longValue()) :
+                            ExactAmounts.capped(CheckedAmounts.ceilDiv(goal.subtract(current), delta));
+                    useful = Math.max(useful, needed);
+                }
             }
         }
         // A transformation with an identically zero vector cannot help a material
         // objective. A catalyst-returning productive recipe has nonzero other keys.
-        if (summary.delta().values().stream().allMatch(value -> value.signum() == 0)) return 0;
-        bound = bound.min(useful.max(BigInteger.ONE));
+        if (!changed) return 0;
+        bound = Math.min(bound, Math.max(useful, 1));
         if (proofs != null && proofs.hasPrefixConflicts())
-            bound = proofs.maximumAdditional(cumulativeCounts(), actionCounts.get(recipes.get(index).id()), bound);
-        return ExactAmounts.capped(bound);
+            return ExactAmounts.capped(proofs.maximumAdditional(cumulativeCounts(), actionCounts.get(recipes.get(index).id()), BigInteger.valueOf(bound)));
+        return bound;
     }
 
     private void set(K key, BigInteger value, boolean record) {

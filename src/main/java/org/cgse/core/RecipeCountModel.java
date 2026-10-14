@@ -245,7 +245,7 @@ final class RecipeCountModel<K> implements AutoCloseable {
                         terms = new LinkedHashMap<>();
                         for (int i = 0; i < recipes.size(); i++) {
                             budget.check();
-                            BigInteger value = delta(recipes.get(i), key).negate();
+                            BigInteger value = coefficient(recipes.get(i), key);
                             if (value.signum() != 0) terms.put(i, value);
                         }
                     }
@@ -256,8 +256,8 @@ final class RecipeCountModel<K> implements AutoCloseable {
                 return;
             }
         }
-        Map<K, Map<Integer, BigInteger>> rows = new LinkedHashMap<>();
-        for (K key : keys) if (!external.contains(key)) rows.put(key, new LinkedHashMap<>());
+        Map<K, ExactLinearProgram.RowBuilder> rows = new LinkedHashMap<>();
+        for (K key : keys) if (!external.contains(key)) rows.put(key, new ExactLinearProgram.RowBuilder());
         // Cold construction and unshared regions keep the original sparse
         // incidence pass. A completed request may lend its immutable row terms
         // to the catalog cache; no second matrix is constructed for that cache.
@@ -268,7 +268,7 @@ final class RecipeCountModel<K> implements AutoCloseable {
                 for (int p = 0; p < ports.changed().length; p++) {
                     budget.check();
                     var terms = rows.get(index.resource(ports.changed()[p]));
-                    if (terms != null) terms.put(i, ports.changes()[p].negate());
+                    if (terms != null) terms.add(i, ports.changes()[p].negate());
                 }
                 continue;
             }
@@ -276,16 +276,15 @@ final class RecipeCountModel<K> implements AutoCloseable {
             used.addAll(recipe.outputs().keySet());
             for (K key : used) {
                 budget.check();
-                Map<Integer, BigInteger> terms = rows.get(key);
+                var terms = rows.get(key);
                 if (terms == null) continue;
-                BigInteger value = delta(recipe, key).negate();
-                if (value.signum() != 0) terms.put(i, value);
+                BigInteger value = coefficient(recipe, key);
+                if (value.signum() != 0) terms.add(i, value);
             }
         }
         for (var row : rows.entrySet()) {
             K key = row.getKey();
-            constraints.add(new ExactLinearProgram.Constraint(row.getValue(),
-                    BigInteger.valueOf(stock.getOrDefault(key, 0L)).subtract(goal(key))));
+            constraints.add(row.getValue().build(BigInteger.valueOf(stock.getOrDefault(key, 0L)).subtract(goal(key))));
             rowKeys.add(key);
         }
     }
@@ -309,10 +308,22 @@ final class RecipeCountModel<K> implements AutoCloseable {
     }
 
     static <K> BigInteger delta(GraphRecipe<K> recipe, K key) {
+        return BigInteger.valueOf(change(recipe, key));
+    }
+
+    static <K> BigInteger coefficient(GraphRecipe<K> recipe, K key) {
+        return BigInteger.valueOf(-change(recipe, key));
+    }
+
+    private static <K> long change(GraphRecipe<K> recipe, K key) {
         // Configurations are charged per real push, so omitting their consumption
         // is a safe relaxation for impossibility proofs. Witnesses retain them.
-        return BigInteger.valueOf(recipe.outputs().getOrDefault(key, 0L)).subtract(BigInteger.valueOf(
-                recipe.inputs().getOrDefault(key, 0L) - recipe.configurationInputs().getOrDefault(key, 0L) + recipe.reusableInputs().getOrDefault(key, 0L)));
+        // GraphRecipe validates 0 <= reusable <= configuration <= input <= MAX.
+        // Thus consumed and output are nonnegative longs; their difference and
+        // its negation fit a long even when either side equals Long.MAX_VALUE.
+        long consumed = recipe.inputs().getOrDefault(key, 0L) - recipe.configurationInputs().getOrDefault(key, 0L) +
+                recipe.reusableInputs().getOrDefault(key, 0L);
+        return recipe.outputs().getOrDefault(key, 0L) - consumed;
     }
 
     BigInteger goal(K key) {
