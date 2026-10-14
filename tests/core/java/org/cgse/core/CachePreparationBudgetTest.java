@@ -14,10 +14,36 @@ public final class CachePreparationBudgetTest {
 
     public static void main(String[] args) throws Exception {
         accounts();
+        arithmetic();
         capture();
         concurrent();
         preparationLifetime();
         System.out.println("Cache preparation: independent work/memory, fractional solver clocks, shared cap, cancellation/timeout and concurrent admission passed");
+    }
+
+    private static void arithmetic() {
+        for (var operation : PlanningBudget.Operation.values()) for (int bits : new int[]{-1, 0, 64, 65, 1024, Integer.MAX_VALUE}) {
+            var expected = budget(); var actual = budget();
+            expected.operations(operation, bits, 3);
+            check(actual.tryCacheOperations(operation, bits, 3), "Bounded arithmetic refused");
+            check(actual.cachePreparationWork() == expected.searchWork() && actual.searchWork() == 0,
+                    "Cache arithmetic uses different units or borrows solver work");
+            check(!actual.tryCacheOperations(operation, bits, Integer.MAX_VALUE), "Large batch overflowed optional account");
+            check(!actual.tryCacheCharge(Long.MAX_VALUE), "Large checker charge overflowed optional account");
+            check(actual.cachePreparationWork() == expected.searchWork(), "Refused arithmetic changed the account");
+        }
+        var b = budget();
+        check(b.tryCacheScan(1) && b.tryCacheCharge(PlanningBudget.CACHE_PREPARATION_WORK - 1), "Fractional checker admission failed");
+        check(!b.tryCacheCharge(1) && b.tryCacheScan(3) && !b.tryCacheOperations(PlanningBudget.Operation.INTEGER, 0, 1),
+                "Mixed scan/checker accounting reopened the cap");
+        check(b.cachePreparationWork() == PlanningBudget.CACHE_PREPARATION_WORK && b.nodes() == 0, "Mixed cache account is incorrect");
+        try { b.tryCacheCharge(-1); throw new AssertionError("Negative checker cost accepted"); }
+        catch (IllegalArgumentException expected) {}
+        try { b.tryCacheOperations(PlanningBudget.Operation.INTEGER, 0, -1); throw new AssertionError("Negative batch accepted"); }
+        catch (IllegalArgumentException expected) {}
+        var cancelled = new PlanningBudget(0, 1, 1, () -> true, System::nanoTime);
+        try { cancelled.tryCacheCharge(Long.MAX_VALUE); throw new AssertionError("Oversized charge ignored cancellation"); }
+        catch (CancellationException expected) {}
     }
 
     private static void accounts() {

@@ -198,9 +198,24 @@ public final class PlanningBudget {
 
     /** Optional cache preparation only; deduction, restoration and validation still use search work. */
     boolean tryCacheScan(int count) {
+        return tryCacheOperations(Operation.SCAN, 0, count);
+    }
+
+    boolean tryCacheOperations(Operation operation, int bits, int count) {
         if (count < 0) throw new IllegalArgumentException("Negative operation count");
+        int words = (int) Math.max(1, Math.min(32, (Math.max(0, bits) + 63L) / 64));
+        long ticks = (long) count * operation.ticks * (operation == Operation.SCAN ? 1 : words);
+        return tryCacheTicks(ticks);
+    }
+
+    /** Checking a saved copy for future use is retention, not a current-order deduction. */
+    boolean tryCacheCharge(long units) {
+        if (units < 0) throw new IllegalArgumentException("Negative work");
+        return tryCacheTicks(units > CACHE_PREPARATION_WORK ? CACHE_PREPARATION_WORK * WORK_SCALE + 1 : units * WORK_SCALE);
+    }
+
+    private boolean tryCacheTicks(long ticks) {
         checkpoint();
-        long ticks = (long) count * Operation.SCAN.ticks;
         synchronized (this) {
             if (ticks > CACHE_PREPARATION_WORK * WORK_SCALE - cachePreparationTicks) return false;
             cachePreparationTicks += ticks;

@@ -11,13 +11,16 @@ final class CountRowTemplates {
 
     private static final int MAX_PARENTS = 16, MAX_TERMS = 128, MAX_BITS = 1024;
     private static final long SNAPSHOT_BYTES = 1024;
+    // Catalog-owned retention never borrows the current request's memory. All
+    // concurrent preparers and their evictable snapshots share this separate cap.
+    private static final long RESIDENT_BYTES = 2L << 20, PREPARATION_BYTES = 3L << 20;
     private record Parent(Object key, Map<String, BigInteger> supply, BigInteger divisor, BigInteger weight) {}
     private record Template(List<Parent> parents, BigInteger divisor, long bytes) {}
     private record Snapshot(List<Template> templates, long bytes, long revision) {}
     private record Binding(int row, BigInteger divisor, BigInteger weight) {}
     record Consequence(ExactLinearProgram.Constraint row) {}
     private final Deque<Template> templates = new ArrayDeque<>();
-    private long hits, misses, evictions, memory, revision;
+    private long hits, misses, evictions, memory, revision, preparationMemory;
 
     private static final class Stop extends RuntimeException {
         Stop() { super(null, null, false, false); }
@@ -26,26 +29,43 @@ final class CountRowTemplates {
     private static final class Work {
         final PlanningBudget budget;
         final long started, allowance;
-        Work(PlanningBudget budget) {
+        final boolean retaining;
+        Work(PlanningBudget budget, boolean retaining) {
             this.budget = budget;
-            started = budget.threadWork();
-            allowance = Math.min(65536, budget.remainingWork() / 32);
+            this.retaining = retaining;
+            started = retaining ? 0 : budget.threadWork();
+            allowance = retaining ? PlanningBudget.CACHE_PREPARATION_WORK : Math.min(65536, budget.remainingWork() / 32);
         }
-        long remaining() { return Math.max(0, allowance - (budget.threadWork() - started)); }
+        long remaining() {
+            return Math.max(0, allowance - (retaining ? budget.cachePreparationWork() : budget.threadWork() - started));
+        }
         void check() {
-            if (remaining() == 0) throw new Stop();
-            budget.check();
+            if (retaining) charge(1);
+            else {
+                if (remaining() == 0) throw new Stop();
+                budget.check();
+            }
+        }
+        void charge(long units) {
+            if (retaining) {
+                if (!budget.tryCacheCharge(units)) throw new Stop();
+            } else budget.charge(units);
+        }
+        void operation(PlanningBudget.Operation operation, int bits) {
+            if (retaining) {
+                if (!budget.tryCacheOperations(operation, bits, 1)) throw new Stop();
+            } else budget.operation(operation, bits);
         }
         BigInteger product(BigInteger a, BigInteger b) {
             check();
             if (a.bitLength() + b.bitLength() > 2 * MAX_BITS) throw new Stop();
-            budget.operation(PlanningBudget.Operation.INTEGER, Math.max(a.bitLength(), b.bitLength()));
+            operation(PlanningBudget.Operation.INTEGER, Math.max(a.bitLength(), b.bitLength()));
             return a.multiply(b);
         }
     }
 
     synchronized GraphCompiler.CacheEntry cacheMetrics() {
-        return new GraphCompiler.CacheEntry(templates.size(), memory / 256, memory, hits, misses, evictions);
+        return new GraphCompiler.CacheEntry(templates.size(), memory / 256, memory + preparationMemory, hits, misses, evictions);
     }
 
     /** Every premise must independently match a complete material row or its exact integer division. */
@@ -53,14 +73,13 @@ final class CountRowTemplates {
                   CountLpLearning.Cut cut, PlanningBudget budget) {
         if (cut.parents().isEmpty() || cut.parents().size() > MAX_PARENTS || cut.divisor().signum() <= 0 ||
                 cut.divisor().bitLength() > MAX_BITS || cut.row().terms().size() > MAX_TERMS) return;
-        var work = new Work(budget);
-        if (work.allowance < 1024) return;
+        var work = new Work(budget, true);
         long scratch = 262144 + SNAPSHOT_BYTES;
         for (int id : cut.parents().keySet()) {
             if (id < 0 || id >= source.size() || source.get(id).terms().size() > MAX_TERMS) return;
             scratch += 1024L * source.get(id).terms().size();
         }
-        if (scratch > budget.availableBytes() / 8 || !budget.tryReserve(scratch)) return;
+        if (!reservePreparation(scratch)) return;
         try {
             List<Parent> parents = new ArrayList<>();
             List<Binding> bindings = new ArrayList<>();
@@ -75,9 +94,13 @@ final class CountRowTemplates {
                 parents.add(new Parent(model.rowKeys.get(binding.row), supply, binding.divisor, binding.weight));
                 bindings.add(binding);
             }
+            var immutable = List.copyOf(parents);
+            // These are full current material signatures, not stale RHS values.
+            // An identical, already verified derivation needs no second saved
+            // copy. Actual reuse below still reconstructs and checks current RHS.
+            if (retained(immutable, cut.divisor(), work)) return;
             var reconstructed = rebuild(model, bindings, cut.divisor(), work, false);
             if (reconstructed == null || !reconstructed.row().equals(cut.row())) return;
-            var immutable = List.copyOf(parents);
             long bytes = 512L + 256L * parents.size();
             for (var parent : parents) for (var term : parent.supply.entrySet())
                 bytes += 256L + 2L * term.getKey().length() + (term.getValue().bitLength() + 7L) / 8;
@@ -87,18 +110,43 @@ final class CountRowTemplates {
             budget.note("count_row_template", "retained; parents=" + parents.size() + "; material_derivation_steps=" + steps);
         } catch (Stop ignored) {
             // Template admission is optional, independently bounded, and never a search conclusion.
-        } finally { budget.release(scratch); }
+        } finally { releasePreparation(scratch); }
     }
+
+    private synchronized boolean reservePreparation(long bytes) {
+        if (bytes > PREPARATION_BYTES - preparationMemory) return false;
+        preparationMemory += bytes;
+        return true;
+    }
+
+    private synchronized void releasePreparation(long bytes) { preparationMemory -= bytes; }
 
     private synchronized Snapshot snapshot() {
         return new Snapshot(List.copyOf(templates), memory, revision);
     }
 
+    private synchronized Snapshot retentionSnapshot() {
+        if (!reservePreparation(memory)) return null;
+        return snapshot();
+    }
+
+    private boolean retained(List<Parent> parents, BigInteger divisor, Work work) {
+        var snapshot = retentionSnapshot();
+        if (snapshot == null) throw new Stop();
+        try {
+            for (var old : snapshot.templates) {
+                work.check();
+                if (old.parents.equals(parents) && old.divisor.equals(divisor)) return true;
+            }
+            return false;
+        } finally { releasePreparation(snapshot.bytes); }
+    }
+
     /** Signature comparisons and budget callbacks are outside the catalog monitor too. */
     private boolean publish(Template candidate, Work work) {
         for (int attempt = 0; attempt < 3; attempt++) {
-            var snapshot = snapshot();
-            if (snapshot.bytes > work.budget.availableBytes() / 8 || !work.budget.tryReserve(snapshot.bytes)) return false;
+            var snapshot = retentionSnapshot();
+            if (snapshot == null) return false;
             try {
                 for (var old : snapshot.templates) {
                     work.check();
@@ -106,7 +154,7 @@ final class CountRowTemplates {
                 }
                 synchronized (this) {
                     if (revision != snapshot.revision) continue;
-                    while (!templates.isEmpty() && (templates.size() >= 32 || memory + candidate.bytes > (2L << 20))) {
+                    while (!templates.isEmpty() && (templates.size() >= 32 || memory + candidate.bytes > RESIDENT_BYTES)) {
                         memory -= templates.removeLast().bytes;
                         evictions++;
                     }
@@ -115,14 +163,14 @@ final class CountRowTemplates {
                     revision++;
                     return true;
                 }
-            } finally { work.budget.release(snapshot.bytes); }
+            } finally { releasePreparation(snapshot.bytes); }
         }
         // Admission is optional: catalog churn cannot create an unbounded retry.
         return false;
     }
 
     List<Consequence> reuse(RecipeCountModel<?> model, PlanningBudget budget) {
-        var work = new Work(budget);
+        var work = new Work(budget, false);
         if (work.allowance < 1024) return List.of();
         if (!budget.tryReserve(SNAPSHOT_BYTES)) return List.of();
         long scratch = SNAPSHOT_BYTES, localHits = 0, localMisses = 0;
@@ -205,7 +253,7 @@ final class CountRowTemplates {
                 if (value == null || value.bitLength() > MAX_BITS || term.getValue().signum() == 0 ||
                         term.getValue().bitLength() > MAX_BITS) { matched = false; break; }
                 if (divisor == null) {
-                    work.budget.operation(PlanningBudget.Operation.INTEGER, Math.max(value.bitLength(), term.getValue().bitLength()));
+                    work.operation(PlanningBudget.Operation.INTEGER, Math.max(value.bitLength(), term.getValue().bitLength()));
                     var qr = value.divideAndRemainder(term.getValue());
                     if (qr[1].signum() != 0 || qr[0].signum() <= 0) { matched = false; break; }
                     divisor = qr[0];
@@ -263,7 +311,7 @@ final class CountRowTemplates {
         if (row == null) return null;
         steps.add(new CountProof.Combination(localParents, divisor, CountProof.row(row)));
         var proof = new CountProof.Derivation("current_inventory_template", model.recipes.size(), axioms, steps);
-        if (CountProof.verify(proof, work.remaining(), work.budget::charge) != CountProof.Verdict.VERIFIED) return null;
+        if (CountProof.verify(proof, work.remaining(), work::charge) != CountProof.Verdict.VERIFIED) return null;
         if (journal && work.budget.proofJournal() != null) work.budget.proofJournal().add(proof);
         return new Consequence(row);
     }
@@ -273,7 +321,7 @@ final class CountRowTemplates {
         Map<Integer, BigInteger> divided = new TreeMap<>();
         for (var term : terms.entrySet()) {
             work.check();
-            work.budget.operation(PlanningBudget.Operation.INTEGER, Math.max(term.getValue().bitLength(), divisor.bitLength()));
+            work.operation(PlanningBudget.Operation.INTEGER, Math.max(term.getValue().bitLength(), divisor.bitLength()));
             var qr = term.getValue().divideAndRemainder(divisor);
             if (qr[1].signum() != 0) return null;
             divided.put(term.getKey(), qr[0]);
@@ -283,7 +331,7 @@ final class CountRowTemplates {
 
     private static BigInteger floor(BigInteger upper, BigInteger divisor, Work work) {
         work.check();
-        work.budget.operation(PlanningBudget.Operation.INTEGER, Math.max(upper.bitLength(), divisor.bitLength()));
+        work.operation(PlanningBudget.Operation.INTEGER, Math.max(upper.bitLength(), divisor.bitLength()));
         var qr = upper.divideAndRemainder(divisor);
         return qr[1].signum() < 0 ? qr[0].subtract(BigInteger.ONE) : qr[0];
     }
