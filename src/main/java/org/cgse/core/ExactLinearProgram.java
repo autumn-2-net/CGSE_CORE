@@ -51,14 +51,50 @@ final class ExactLinearProgram implements AutoCloseable {
                 terms = new Coefficients(ordered);
             }
         }
+
+        boolean hasZeroCoefficient() {
+            return terms instanceof Coefficients values ? values.hasZero() : terms.containsValue(BigInteger.ZERO);
+        }
+
+        BigInteger coefficientGcd() {
+            return terms instanceof Coefficients values ? values.gcd() : gcd(terms);
+        }
+
+        private static BigInteger gcd(Map<Integer, BigInteger> terms) {
+            var result = BigInteger.ZERO;
+            for (var value : terms.values()) {
+                result = result.gcd(value);
+                if (result.equals(BigInteger.ONE)) break;
+            }
+            return result;
+        }
     }
 
     /** Only Constraint can construct this immutable, ordered coefficient value. */
     private static final class Coefficients extends AbstractMap<Integer, BigInteger> {
         private final Map<Integer, BigInteger> values;
+        private volatile byte zeros; // 0 unknown, 1 absent, 2 present
+        private volatile BigInteger gcd;
+        private int hash;
+        private volatile boolean hashed;
 
         Coefficients(Map<Integer, BigInteger> owned) {
             values = Collections.unmodifiableMap(owned);
+        }
+
+        // Compiler-owned rows and request RHS overlays share this immutable
+        // analysis. It contains no stock, domains, learned bounds or row proofs.
+        // Concurrent first readers may calculate twice, then publish the same value.
+        BigInteger gcd() {
+            var result = gcd;
+            if (result == null) gcd = result = Constraint.gcd(values);
+            return result;
+        }
+
+        boolean hasZero() {
+            byte result = zeros;
+            if (result == 0) zeros = result = (byte) (values.containsValue(BigInteger.ZERO) ? 2 : 1);
+            return result == 2;
         }
 
         @Override public Set<Entry<Integer, BigInteger>> entrySet() { return values.entrySet(); }
@@ -68,7 +104,10 @@ final class ExactLinearProgram implements AutoCloseable {
         @Override public BigInteger get(Object key) { return values.get(key); }
         @Override public boolean containsKey(Object key) { return values.containsKey(key); }
         @Override public int size() { return values.size(); }
-        @Override public int hashCode() { return values.hashCode(); }
+        @Override public int hashCode() {
+            if (!hashed) { hash = values.hashCode(); hashed = true; }
+            return hash;
+        }
     }
 
     private final List<Constraint> constraints;

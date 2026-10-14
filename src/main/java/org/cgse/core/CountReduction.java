@@ -633,13 +633,12 @@ final class CountReduction implements AutoCloseable {
     }
 
     static ExactLinearProgram.Constraint normalize(ExactLinearProgram.Constraint row) {
-        if (row.terms().values().stream().anyMatch(value -> value.signum() == 0)) {
+        if (row.hasZeroCoefficient()) {
             Map<Integer, BigInteger> sparse = new LinkedHashMap<>(row.terms());
             sparse.values().removeIf(value -> value.signum() == 0);
             row = new ExactLinearProgram.Constraint(sparse, row.upper());
         }
-        BigInteger gcd = BigInteger.ZERO;
-        for (BigInteger value : row.terms().values()) gcd = gcd.gcd(value);
+        BigInteger gcd = row.coefficientGcd();
         if (gcd.compareTo(BigInteger.ONE) <= 0) return row;
         Map<Integer, BigInteger> terms = new LinkedHashMap<>();
         BigInteger divisor = gcd;
