@@ -2010,6 +2010,193 @@
       "work": 40000000,
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle and independently replayed primitive execution. The unchanged 40M complete planner exhausted its budget before a retained candidate could finish. Completed LP effort must earn bounded candidate service without renewing any local cap or delaying mandatory first visits."
+    },
+    {
+      "source": "cases/graph/06/0677aa99e6ac3c89468493553f1c4b4c3a2edb72f9c3f810ee115d67ea6a2a3e.json",
+      "sha256_lf": "4af84f7b45c057aa08a3bc8cb0c882dcb3bfff08ef2bf3496186a1c6e2657d43",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb5_16_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/10/1055ad9c7a1b8ab102e6675ec3a160021b5e37ea8fa3f66093bf84d8a44b3bee.json",
+      "sha256_lf": "2048a6b99943b8cdda5fcb5099fb64ccafa6ad5203935bcf10c3f8bb1299fdd5",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb2_23_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/11/117792a679b3e3a12a9fc684e63c8dd55fd607d343e7b27f1011461d21cd9959.json",
+      "sha256_lf": "6bb6a5c2164380a27b211a560f1658e4b033f2be8d7930c5736c5128d118c130",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb3_18_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/49/498a9fd26ed03386c3351eb1299cc3cb82587619c957b4081cf74ec90ae6aca6.json",
+      "sha256_lf": "19f47ef5f083902fff76c37d28eacda1a688fcb8b7506dc0856a25af15ca0e9d",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb4_03_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/53/539ab1392dd3b416e49b9041b0bc912d77007f6456e829b695428fb4466d8f5b.json",
+      "sha256_lf": "13fef0928b4ef4c155768dbcab5f1591969f251ac83c91ae11b7cea32948058c",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb3_22_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/76/762aa4564bc8bc0533e3bb36f4365a2f62bed0768de78530d1bca0ef89850b3c.json",
+      "sha256_lf": "1b34fb747f3b71081e6fc359484063375c2788f6c8f9278c149ce1cd9dd1ec91",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb2_05_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/83/83d999d955eccdfd988ea17e22452b2a04fc32ce85884c4037016d982b6e78cf.json",
+      "sha256_lf": "12b41f08c752f9b1037e3ff44f4598b58204a3c9770c78b6d483d8c1db1ac5ee",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb3_17_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/8d/8d5580f1e7ccc02af834017d1031dda431ccc006ba05472c36e623f2c3c715dd.json",
+      "sha256_lf": "d37331d2be74593b2566318c2f1e18a0499fc96406c7a68f9cd0dc7aa98e60b6",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb6_10_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/95/955492c8e7474c81d955b632f27cdf52403659a2ad9984ac24ea65fdc46dab6e.json",
+      "sha256_lf": "b119e4786ec5d54c8f9e3b824e72eb295c53580290b7e7940fdaec9d68dcca2d",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb2_00_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/96/96b54569247229f1b18ab97e573f7a9ffb4d2373d0f4f1048cd57cdcf6ad0181.json",
+      "sha256_lf": "5925735b3925b238bfee57d96b1cbe1cf53d202161b9ee6c74dd5629a4812699",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb2_02_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/c5/c5a0b71347c4faf8309fd2857c45af4cfd48a00347257fc5f32bbbd1859ee16b.json",
+      "sha256_lf": "83d8a9c17b76ab5fad8a830cf2deaf15a4c5b585ab2a40876185629d52f9c245",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb2_17_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/c9/c9591d52104c1f7c03f089662624118bb8c3ad514103341ce54f603756ec8849.json",
+      "sha256_lf": "2c8585ee8c44ce5c580d6c40ff2d2d8871745d0251e7cb0592857a3667f48833",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb2_22_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/cb/cbd29058b1548a7e56feffcf61c74ba6ceb4e9fb8712abc141e684d1007aba99.json",
+      "sha256_lf": "0d2348327d2556e4e14039a1df57603e37bab4e47012795cba644c361c7da588",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb2_21_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/fc/fc9d29b9c0909c1201fd66346f7a291271b388f6841f3c2ea81a6103ca54c108.json",
+      "sha256_lf": "be3d9d8682a7ce43408f35ebe119abf330901332dc963f6d677de3253840499d",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb8_20_bks-retained-tail",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known witness target; complete primitive-prefix and material validation at the unchanged 40M budget. Retained exact suffix index closes repeated Boolean-core queries."
+    },
+    {
+      "source": "cases/graph/62/62252dbf45ad8f2a8acb1a9f46fb506b7aaaa6d2d538dcca6131298e81f07150.json",
+      "sha256_lf": "f1d06360dc615f9030971416f05f871ad6bae0abab1ef182c77a96f58c582a66",
+      "orders": [
+        0
+      ],
+      "work": 20000000,
+      "name": "mknapcb4_09_bks-packing-tail-cost-guard",
+      "expected": "SAT",
+      "evidence": "Original canonical input and unchanged budget passed before suffix tables. Early table admission lost this witness; measured warmup must preserve it. Independent primitive-prefix validation."
+    },
+    {
+      "source": "cases/graph/86/86f7b51f995525613f20fd7b4ece8216708fb7e69e4aa1023a6e6526b2cf98e1.json",
+      "sha256_lf": "fc1150b2d2979d7a5e0ab31b0da3a831bf6c868ea91355403a33331db8cb5270",
+      "orders": [
+        0
+      ],
+      "work": 2000000,
+      "name": "mknapcb1_08_bks-packing-tail-cost-guard",
+      "expected": "SAT",
+      "evidence": "Original canonical input and unchanged budget passed before suffix tables. Early table admission lost this witness; measured warmup must preserve it. Independent primitive-prefix validation."
+    },
+    {
+      "source": "cases/graph/ce/ce0434f1a4f7bc99a1c5912a4a17a6d932699c38999a651220d48d9d03a08669.json",
+      "sha256_lf": "43bf7c8552ea1e01bdd7fb82e9f084662d4d6535ac33b2479b0aae5823b16997",
+      "orders": [
+        0
+      ],
+      "work": 8000000,
+      "name": "mknapcb7_27_bks-packing-tail-cost-guard",
+      "expected": "SAT",
+      "evidence": "Original canonical input and unchanged budget passed before suffix tables. Early table admission lost this witness; measured warmup must preserve it. Independent primitive-prefix validation."
     }
   ]
 }

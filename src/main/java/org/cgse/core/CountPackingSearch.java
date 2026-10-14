@@ -7,7 +7,8 @@ import java.util.Arrays;
 
 /** Exact Boolean search inside one proposed packing core. The owner reserves
  * its bounded workspace; a closed core says nothing about the outside fixings. */
-final class CountPackingSearch {
+final class CountPackingSearch implements AutoCloseable {
+    private static final int TAIL_BITS = 12;
     private final long[][] coefficients, thresholds, thresholdMasks, slacks, suffixMaximum;
     private final long[] undecided, selected, positive, negative;
     private final int[] choices;
@@ -18,6 +19,9 @@ final class CountPackingSearch {
     private long pendingRows, forcedValues;
     private int depth;
     private boolean complete, feasible;
+    private CountPackingTail tail;
+    private long tailWork;
+    private boolean tailAttempted, tailActive, tailQuery;
 
     /** Takes ownership of coefficients. All row activities must fit below 2^60. */
     CountPackingSearch(long[][] coefficients, long[] bounds, long seed, PlanningBudget budget) {
@@ -80,13 +84,51 @@ final class CountPackingSearch {
     boolean step() {
         if (complete) return true;
         budget.checkpoint();
+        boolean suffix = tail == null && !tailAttempted && depth >= 0 && size >= 2 * TAIL_BITS &&
+                Long.numberOfTrailingZeros(undecided[depth]) >= size - TAIL_BITS;
+        long before = suffix ? budget.threadWork() : 0;
+        try { return advance(); }
+        finally { if (tail == null && suffix) tailWork += budget.threadWork() - before; }
+    }
+
+    private boolean advance() {
         if (depth < 0) { complete = true; return true; }
+        if (tailActive) {
+            if (!tail.prepare()) return false;
+            if (!tailQuery) {
+                tail.begin(undecided[depth], selected[depth], slacks[depth]);
+                tailQuery = true;
+            }
+            if (!tail.step()) return false;
+            tailActive = tailQuery = false;
+            if (tail.feasible()) {
+                long prefix = (1L << (size - TAIL_BITS)) - 1;
+                selected[depth] = (selected[depth] & prefix) | tail.assignment();
+                feasible = complete = true;
+                return true;
+            }
+            depth--;
+            return false;
+        }
         if (!prepared[depth]) {
             if (!propagate()) { depth--; return false; }
             prepared[depth] = true;
             if (undecided[depth] == 0) {
                 feasible = complete = true;
                 return true;
+            }
+            // Amortize a finite exact tail only after this same search has
+            // already spent a measured warmup repeating suffix propagation.
+            // Include the table depth in that estimate: admitting after just a
+            // few repeats costs easy cores their low-budget witness. This is
+            // a scheduling estimate; construction/query work is charged in full.
+            if (size >= 2 * TAIL_BITS && Long.numberOfTrailingZeros(undecided[depth]) >= size - TAIL_BITS) {
+                long warmup = (1L << TAIL_BITS) * positive.length * (TAIL_BITS + 1) * 2;
+                if (!tailAttempted && tailWork >= warmup && budget.remainingWork() >= warmup) {
+                    tailAttempted = true;
+                    tail = CountPackingTail.create(coefficients, size - TAIL_BITS, budget);
+                }
+                if (tail != null) { tailActive = true; return false; }
             }
         }
         if (choices[depth] == 2) { depth--; return false; }
@@ -159,4 +201,8 @@ final class CountPackingSearch {
         return selected[depth];
     }
     long forcedValues() { return forcedValues; }
+    @Override public void close() {
+        if (tail != null) tail.close();
+        tail = null;
+    }
 }

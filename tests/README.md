@@ -724,3 +724,17 @@ request parameters must match before either operation. Its 36 positive/negative
 permutation controls replay primitive firings independently; further controls
 cover changed inventory, goals, seeds, providers, slots, exclusions, new supply,
 memory refusal, cancellation and cleanup after exclusive ownership transfer.
+
+`CountPackingTailTest` checks 3,072 exact suffix queries against independent
+primitive sums. Signed/scaled rows, forced holes, changed prefixes, bit 64 and
+worker handoffs reuse one retained table without carrying query assumptions to
+the next prefix. A parity oracle exercises lazy table admission and the ordinary
+search under memory refusal; cancelled builds/queries release their storage.
+Fourteen original multi-dimensional knapsack cases now have strict execution
+boundaries at the existing 40M budget. The suffix index is private to its Boolean
+face; it cannot export a restricted failure as an original-model proof.
+Three existing witnesses also retain their 2M, 8M and 20M cost guards: speculative
+table construction must not consume the original search's low-budget solution.
+Index partition samples affect ordering only. Exact leaf bounds are joined after
+both children finish; 156 uniquely determined full-box assignments guard against
+using sampled extrema for pruning. Storage follows the actual eight-point leaves.

@@ -89,6 +89,7 @@ final class CountPackingNeighborhood implements AutoCloseable {
     long forcedValues() { return propagation == null ? 0 : propagation.forcedValues(); }
 
     @Override public void close() {
+        if (propagation != null) propagation.close();
         propagation = null;
         if (exchange != null) exchange.close();
         exchange = null;
