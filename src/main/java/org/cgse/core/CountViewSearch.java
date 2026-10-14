@@ -246,10 +246,23 @@ final class CountViewSearch implements AutoCloseable {
 
     /** Observe an already owned, eligible frontier; do not construct a new scout. */
     long packingContinuationQuantum() {
+        return packingContinuationQuantum(0);
+    }
+
+    long packingContinuationQuantum(long completedCompetingWork) {
+        if (completedCompetingWork < 0) throw new IllegalArgumentException("Negative completed effort");
         for (Search search : searches) {
             if (!search.done && search.scheduling.eligible && search.progress > 0 &&
-                    search.specialist instanceof CountPackingCore packing && packing.remainingAllowance() > 0)
-                return policy.quantum(search.scheduling, budget.remainingWork());
+                    search.specialist instanceof CountPackingCore packing && packing.remainingAllowance() > 0) {
+                // A productive LP can spend a much larger batch outside this
+                // portfolio. One repeatedly tiny candidate sample need not be
+                // fair service, even when both frontiers retain their state.
+                // Compensate for measured competing work, capped at one normal
+                // portfolio batch and the candidate's original local ceiling.
+                long quantum = Math.max(policy.quantum(search.scheduling, budget.remainingWork()),
+                        Math.min(CountPortfolioPolicy.MAX_QUANTUM, completedCompetingWork));
+                return Math.min(quantum, Math.min(packing.remainingAllowance(), budget.remainingWork()));
+            }
         }
         return 0;
     }

@@ -707,3 +707,11 @@ expensive strategies.
 `CountStrategyTraceTest` checks that real LP/LCG and neighborhood visits appear
 under their actual strategy names, with identical results and work when metrics
 are enabled or disabled; a retained LP is not reported as model compilation.
+
+`CountProgressSchedulingTest` also checks measured LP-to-candidate handoffs:
+completed LP work excludes unrelated frontiers and resets on resume; waiting
+compensation is bounded by one policy batch, the original candidate cap and
+the shared remaining budget. Observation cannot construct scouts or bypass
+proof-mode eligibility, including long-limit and seven-unit tail controls.
+The `mknapcb4_16_bks` execution boundary retains its canonical order, original
+SAT oracle and 40M budget, with independent primitive-prefix validation.

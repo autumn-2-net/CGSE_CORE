@@ -95,14 +95,22 @@ public final class CountProgressSchedulingTest {
                 long ceiling = number(search, "progressLimit");
                 while (!search.step()) {}
                 check(search.retained(), "Fixture needs an undecided retained LP");
+                check(search.sliceWork() == number(search, "work") && search.sliceWork() > 0,
+                        "Initial LP sample did not report its actual owned effort");
+                long completed = search.sliceWork();
+                budget.charge(12345);
+                check(search.sliceWork() == completed, "Unrelated work changed the LP sample cost");
                 var lcg = (CountLcg) get(search, "search");
                 check(lcg.cutProgress() > 0, "Fixture did not produce certified cuts");
                 check(search.continueOnCuts(), "Certified cuts lost their continuation");
+                check(search.sliceWork() == 0, "Resumed LP sample included a previous batch");
                 long before = budget.nodes(), ownedBefore = number(search, "work"), chargedBefore = budget.threadWork();
                 while (!search.step()) {}
                 check(budget.nodes() > before, "LP continuation did no charged work");
                 check(number(search, "work") - ownedBefore == budget.threadWork() - chargedBefore,
                         "Separating local allowances changed global work ownership");
+                check(search.sliceWork() == budget.threadWork() - chargedBefore,
+                        "LP handoff did not report the completed batch including step overshoot");
                 if (search.counts() != null) check(valid(rows, low, high, search.counts()), "Invalid LP witness");
                 check(search.retained(), "Fixture completed before plateau test");
 
@@ -223,6 +231,8 @@ public final class CountProgressSchedulingTest {
             try (var models = CountModelViews.create(rows, filled(n, 0), filled(n, 1), budget);
                  var search = new CountViewSearch(models, budget)) {
                 check(search.packingContinuationQuantum() == 0, "An observation created a packing scout");
+                check(search.packingContinuationQuantum(Long.MAX_VALUE) == 0,
+                        "Waiting compensation constructed a fresh candidate scout");
                 models.compileLight();
                 long quantum = 0;
                 for (int turns = 0; turns < 128 && quantum == 0; turns++) {
@@ -236,9 +246,25 @@ public final class CountProgressSchedulingTest {
                 long bytes = budget.reservedBytes(), work = budget.threadWork();
                 check(search.packingContinuationQuantum() == quantum && budget.reservedBytes() == bytes &&
                         budget.threadWork() == work, "Repeated observation recreated a candidate frontier");
+                check(search.packingContinuationQuantum(1) == quantum, "Tiny competing turn bypassed normal policy");
+                check(search.packingContinuationQuantum(262144) == CountPortfolioPolicy.MAX_QUANTUM &&
+                        search.packingContinuationQuantum(Long.MAX_VALUE) == CountPortfolioPolicy.MAX_QUANTUM,
+                        "Long competing turns received too little service or exceeded one bounded policy batch");
+                check(budget.reservedBytes() == bytes && budget.threadWork() == work,
+                        "Measuring waiting work rebuilt a candidate frontier");
+                var arms = (List<?>) get(search, "searches");
+                var packing = arms.stream().map(a -> uncheckedGet(a, "specialist"))
+                        .filter(a -> a instanceof CountPackingCore).map(a -> (CountPackingCore) a).findFirst().orElseThrow();
+                long spent = number(packing, "work"), ceiling = number(packing, "maximumWork");
+                set(packing, "work", ceiling - 7);
+                check(search.packingContinuationQuantum(Long.MAX_VALUE) <= 7, "Handoff replenished the core's local cap");
+                set(packing, "work", ceiling);
+                check(search.packingContinuationQuantum(Long.MAX_VALUE) == 0, "Exhausted core received a new handoff");
+                set(packing, "work", spent);
                 packingPhases(search, budget);
                 search.mode(CountPortfolioPolicy.Mode.PROOF);
                 check(search.packingContinuationQuantum() == 0, "Candidate-only work entered a proof task");
+                check(search.packingContinuationQuantum(Long.MAX_VALUE) == 0, "Waiting bypassed proof-mode eligibility");
                 search.mode(CountPortfolioPolicy.Mode.FIRST_WITNESS);
                 check(search.packingContinuationQuantum() > 0, "Goal change discarded retained packing work");
                 // The budget deliberately rejects a single tick conversion
@@ -248,6 +274,7 @@ public final class CountProgressSchedulingTest {
                 if (cap <= Integer.MAX_VALUE) {
                     budget.charge(budget.remainingWork() - 7);
                     check(search.packingContinuationQuantum() <= 7, "Shared-budget tail was replenished");
+                    check(search.packingContinuationQuantum(Long.MAX_VALUE) <= 7, "Waiting replenished the shared tail");
                 }
             }
             check(budget.reservedBytes() == 0, "Packing continuation ownership leaked");

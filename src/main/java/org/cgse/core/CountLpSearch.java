@@ -14,7 +14,7 @@ final class CountLpSearch implements AutoCloseable {
     private final CountLcg search;
     private final CountReduction.Coordinates coordinates;
     private final int[] representatives;
-    private long memory, work, until;
+    private long memory, work, until, sliceStarted;
     private boolean complete;
     private final long progressLimit;
     private long lastCuts;
@@ -236,7 +236,13 @@ final class CountLpSearch implements AutoCloseable {
 
     void resume(long allowance) {
         if (!retained() || allowance <= 0) throw new IllegalStateException("No retained LP search");
+        sliceStarted = work;
         until = work + Math.min(allowance, budget.remainingWork());
+    }
+
+    /** Owned effort since the last handoff, excluding work in other frontiers. */
+    long sliceWork() {
+        return work - sliceStarted;
     }
 
     boolean infeasible() {

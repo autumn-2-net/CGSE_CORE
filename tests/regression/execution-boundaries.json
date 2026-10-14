@@ -1999,6 +1999,17 @@
       "work": 40000000,
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle; original main planner and independent primitive execution replay. Restricted sparse-exchange matches never imply a global negative proof. The original exact frontier must survive the bounded scout; eager replacement lost mknapcb4_22_bks."
+    },
+    {
+      "name": "mknapcb4_16_bks/measured-lp-handoff",
+      "source": "cases/graph/2c/2ccdf6b732976398745405a611166e91790d02a79de9333f7e6630f4c7745acd.json",
+      "sha256_lf": "69153ba14e990cf84b476a3dba5225c6f2343235488261ae02029609318e2004",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle and independently replayed primitive execution. The unchanged 40M complete planner exhausted its budget before a retained candidate could finish. Completed LP effort must earn bounded candidate service without renewing any local cap or delaying mandatory first visits."
     }
   ]
 }

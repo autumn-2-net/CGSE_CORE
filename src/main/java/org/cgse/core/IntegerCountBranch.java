@@ -434,6 +434,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         }
         if (lpActive) {
             if (!lpSearch.step()) return;
+            long completedLpWork = lpSearch.sliceWork();
             lpSearch.publishCuts(modelViews, reduction);
             // Leave the initial sample bounded so cheap candidate strategies
             // can run. Later, productive cuts earn a bounded continuation
@@ -443,8 +444,9 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 // LP learning. Both retain their existing nonrenewable limits;
                 // a new cut alone must not postpone all packing work until
                 // the LP has consumed its entire preferential allowance. Offer
-                // one policy-sized sample, not a second full LP-sized batch.
-                long candidateQuantum = viewSearch == null ? 0 : viewSearch.packingContinuationQuantum();
+                // one bounded policy batch, accounting for the LP work just
+                // completed. Read it before continueOnCuts() resumes the LP.
+                long candidateQuantum = viewSearch == null ? 0 : viewSearch.packingContinuationQuantum(completedLpWork);
                 if (candidateQuantum > 0) {
                     lpActive = false;
                     viewSearch.resume(candidateQuantum);
