@@ -770,7 +770,8 @@ final class CountNumericRelaxation {
     }
 
     private void pivot(int row, int column) {
-        double pivot = finite(tableau[row][column]);
+        double[] pivotRow = tableau[row];
+        double pivot = finite(pivotRow[column]);
         if (Math.abs(pivot) < 1e-15) throw new Stop();
         pivots++;
         int columns = 0;
@@ -778,27 +779,46 @@ final class CountNumericRelaxation {
         // scan merely to rediscover the same zero columns in every row.
         for (int target = 0; target < variables + 2; target++) {
             operation();
-            if (target != column && tableau[row][target] != 0) pivotColumns[columns++] = target;
+            if (target != column && pivotRow[target] != 0) pivotColumns[columns++] = target;
         }
         for (int other = 0; other < rowCount + 2; other++) {
             operation();
-            if (other == row || tableau[other][column] == 0) continue;
-            double factor = finite(tableau[other][column] / pivot);
-            for (int index = 0; index < columns; index++) {
-                operation();
-                int target = pivotColumns[index];
-                tableau[other][target] = finite(tableau[other][target] - tableau[row][target] * factor);
+            double[] values = tableau[other];
+            if (other == row || values[column] == 0) continue;
+            double factor = finite(values[column] / pivot);
+            for (int index = 0; index < columns;) {
+                // Keep the original check BEFORE each 256th scalar operation.
+                // Between those boundaries, count locally so the hot cell loop
+                // need not update the solver object or call operation each time.
+                int end = index + Math.min(columns - index, 255 - (int) (operations & 255));
+                int visited = 0;
+                try {
+                    while (index < end) {
+                        int target = pivotColumns[index++];
+                        visited++;
+                        values[target] = finite(values[target] - pivotRow[target] * factor);
+                    }
+                } finally {
+                    // A non-finite cell still consumes its scalar operation,
+                    // exactly as the original operation(); finite(...) order.
+                    operations += visited;
+                }
+                if (index < columns) {
+                    operation();
+                    int target = pivotColumns[index++];
+                    values[target] = finite(values[target] - pivotRow[target] * factor);
+                }
             }
         }
         for (int target = 0; target < variables + 2; target++) if (target != column) {
             operation();
-            tableau[row][target] = finite(tableau[row][target] / pivot);
+            pivotRow[target] = finite(pivotRow[target] / pivot);
         }
         for (int other = 0; other < rowCount + 2; other++) if (other != row) {
             operation();
             tableau[other][column] = finite(tableau[other][column] / -pivot);
         }
-        tableau[row][column] = 1 / pivot;
+        pivotRow[column] = 1 / pivot;
         int previous = basic[row];
         basic[row] = nonbasic[column];
         nonbasic[column] = previous;

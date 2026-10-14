@@ -144,9 +144,11 @@ final class ConservationAnalysis<K> implements AutoCloseable {
                     budget.check();
                     values[j] = values[j].multiply(divisor).subtract(pivot[j].multiply(factor));
                     if (values[j].bitLength() > 4096) return finish(false);
-                    gcd = gcd.gcd(values[j]);
+                    // Once coprime, later coefficients cannot change the GCD.
+                    if (!gcd.equals(BigInteger.ONE)) gcd = gcd.gcd(values[j]);
                 }
-                if (gcd.signum() > 0) for (int j = column; j < keys.size(); j++) values[j] = values[j].divide(gcd);
+                if (gcd.compareTo(BigInteger.ONE) > 0)
+                    for (int j = column; j < keys.size(); j++) values[j] = values[j].divide(gcd);
                 return false;
             }
             if (row >= 0) {
@@ -183,12 +185,16 @@ final class ConservationAnalysis<K> implements AutoCloseable {
                         budget.check();
                         sum = sum.add(matrix[i][j].multiply(vector[j]));
                     }
-                    BigInteger scale = matrix[i][pivot].abs().divide(matrix[i][pivot].gcd(sum));
+                    BigInteger common = matrix[i][pivot].gcd(sum);
+                    BigInteger scale = matrix[i][pivot].abs().divide(common);
                     for (int j = 0; j < vector.length; j++) {
-                        vector[j] = vector[j].multiply(scale);
+                        if (!scale.equals(BigInteger.ONE)) vector[j] = vector[j].multiply(scale);
                         if (vector[j].bitLength() > 4096) return finish(false);
                     }
-                    vector[pivot] = sum.multiply(scale).negate().divide(matrix[i][pivot]);
+                    // common divides sum exactly, and scale = abs(pivot)/common.
+                    // Cancel before forming the otherwise redundant large product.
+                    vector[pivot] = common.equals(BigInteger.ONE) ? sum : sum.divide(common);
+                    if (matrix[i][pivot].signum() > 0) vector[pivot] = vector[pivot].negate();
                 }
                 basis.add(vector);
                 return false;
