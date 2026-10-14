@@ -886,8 +886,10 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         if (allocating != null) allocating.proofs(proofs);
         budget.note("integer_counts", "start");
         try (var costs = budget.trace(nesting == 0 ? PlanningCostTrace.Origin.INTEGER_COUNTS : null, PlanningCostTrace.Stage.PREPARE)) {
-            countSearch = new IntegerCountSearch<>(compiler, target, amount, stock, requiredSeeds, external,
-                    excluded, preserve, forceCraft, budget, started, proofs);
+            countSearch = stockView == null ? null : stockView.takeFullSearch(compiler, target, amount, stock, requiredSeeds,
+                    external, excluded, preserve, forceCraft, budget, started, proofs);
+            if (countSearch == null) countSearch = new IntegerCountSearch<>(compiler, target, amount, stock, requiredSeeds,
+                    external, excluded, preserve, forceCraft, budget, started, proofs);
         }
         phase = 14;
     }

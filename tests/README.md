@@ -715,3 +715,12 @@ the shared remaining budget. Observation cannot construct scouts or bypass
 proof-mode eligibility, including long-limit and seven-unit tail controls.
 The `mknapcb4_16_bks` execution boundary retains its canonical order, original
 SAT oracle and 40M budget, with independent primitive-prefix validation.
+
+`CountSearchOwnershipTest` covers complete-scope stock/count handoffs. Identical
+recipe and resource order can transfer live branches without refunding their
+work; different orders retain separate searches and exchange only certified
+order clauses. The full backward closure, original recipe objects and immutable
+request parameters must match before either operation. Its 36 positive/negative
+permutation controls replay primitive firings independently; further controls
+cover changed inventory, goals, seeds, providers, slots, exclusions, new supply,
+memory refusal, cancellation and cleanup after exclusive ownership transfer.

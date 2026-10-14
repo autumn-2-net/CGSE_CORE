@@ -16,7 +16,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private static final long CACHE_ENTRY_BYTES = 96;
 
     private final RecipeCountModel<K> model;
-    private final GraphCompiler<K> compiler;
+    private GraphCompiler<K> compiler;
     private final CountExecution<K> execution;
     private final K target;
     private final long amount, started, preprocessingAllowance;
@@ -33,7 +33,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private final CountCutPool materialConflicts;
     private final Set<CountGuard> supportConflicts = new LinkedHashSet<>();
     private final CountConflictPool choiceConflicts;
-    private final OrderProofs<K> proofs;
+    private OrderProofs<K> proofs;
     private CountBranchHistory branchHistory;
     private CountScheduleContinuations<K> scheduleContinuations;
     private long compilationWork;
@@ -133,6 +133,62 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     }
 
     boolean admitted() { return model != null; }
+
+    enum Handoff { DECLINED, SHARED, TRANSFERRED }
+
+    /** Join an idle scout to its own order; preserve differently ordered searches. */
+    Handoff joinFullSearch(GraphCompiler<K> destination, K target, long amount, Map<K, Long> stock,
+                    Map<K, Long> seeds, Set<K> external, Set<String> excluded, boolean preserve, boolean force,
+                    PlanningBudget budget, long started, OrderProofs<K> proofs) {
+        if (model == null || complete || stopped.get() || running != null || !dispatched.isEmpty() ||
+                this.proofs != null || proofs == null || !compileRecovery || this.budget != budget || this.started != started ||
+                !this.target.equals(target) || this.amount != amount || this.preserve != preserve || this.force != force ||
+                !this.stock.equals(stock) || !this.seeds.equals(seeds) || !this.external.equals(external)) return Handoff.DECLINED;
+        // Equal dimensions or matching ids do not establish complete supply.
+        // Check the destination's whole backward closure, including seed goals
+        // and exclusions. Object identity also covers bindings and slot semantics.
+        long workspace = (512L << 10) + 64L * model.recipes.size();
+        if (!budget.tryReserve(workspace)) return Handoff.DECLINED;
+        boolean sameOrder;
+        try {
+            var closure = destination.countClosure(target, seeds.keySet(), excluded, 8192, 8192, budget);
+            if (closure == null || closure.recipes().size() != model.recipes.size()) return Handoff.DECLINED;
+            Set<GraphRecipe<K>> available = Collections.newSetFromMap(new IdentityHashMap<>());
+            for (var recipe : model.recipes) {
+                budget.compilationCheck();
+                available.add(recipe);
+            }
+            for (var recipe : closure.recipes()) {
+                budget.compilationCheck();
+                if (!available.contains(recipe)) return Handoff.DECLINED;
+            }
+            sameOrder = closure.recipes().equals(model.recipes) && closure.keys().equals(model.keys);
+        } finally {
+            budget.release(workspace);
+        }
+        // Keep this model's columns, branches, cuts and execution continuations
+        // together. No live state is remapped into a different recipe order.
+        this.compiler = destination;
+        this.proofs = proofs;
+        proofs.adopt(model);
+        proofs.publish(model, choiceConflicts.snapshot());
+        choiceConflicts.add(destination.countSessions.reuse(model, budget));
+        for (var cut : destination.rowTemplates.reuse(model, budget)) materialConflicts.offer(cut.row());
+        model.recoveryTemplates = destination.recoveryTemplates;
+        model.rowTemplates = destination.rowTemplates;
+        if (!sameOrder) {
+            // Recipe order diversifies actual branching and candidate search.
+            // A complete supply match permits clauses, not removal of that arm.
+            choiceConflicts.add(proofs.forModel(model));
+            budget.note("integer_counts_share", "complete_scope; distinct_order; recipes=" + model.recipes.size());
+            return Handoff.SHARED;
+        }
+        paused = true;
+        resume();
+        budget.note("integer_counts_transfer", "complete_scope; recipes=" + model.recipes.size() +
+                "; retained_work=" + work + "; branches=" + branches);
+        return Handoff.TRANSFERRED;
+    }
 
     /** Pull original order clauses into an optional program view. No reverse inference is made. */
     void importProgramConflicts(RecipeCountModel<K> original, Map<String, PlanStep> programs, List<CountConflict> conflicts) {
