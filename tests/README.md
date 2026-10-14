@@ -62,6 +62,15 @@ assertions remain enforced. UNKNOWN and exhausted budgets are still unresolved;
 historical failing labels are not rewritten into passing expectations. Local
 player captures and recovered incident inputs remain in the local case registry.
 
+`CountSessionBudgetTest` keeps persistent conflict-proof retention on the separate
+cache preparation account, including full request accounts, partial cache grants,
+cancellation, shared concurrent grants and readers paused during publication.
+`CountSessionReuseTest` independently checks bounded proof-support reduction,
+recipe-coordinate changes, subset/superset catalogs, changed goals and inventory,
+new producers, external supplies, transitive premises, eviction and serialized
+proof replay. Current-request matching and revalidation remain charged search work;
+only complete material rows can justify an imported conflict.
+
 Audit archived programs separately from their input coverage:
 
 ```text

@@ -38,6 +38,8 @@ public final class GraphCompiler<K> {
     final CountRowTemplates rowTemplates = new CountRowTemplates();
     final CountRecoveryTemplates<K> recoveryTemplates = new CountRecoveryTemplates<>();
     private final List<DemandEntry<K>> demandPrograms = new ArrayList<>();
+    private static final long DEMAND_CACHE_BYTES = 8L << 20;
+    private boolean preparingDemand;
     private final Map<String, long[]> cacheCounters = new LinkedHashMap<>();
     private long activeSearches;
 
@@ -105,10 +107,12 @@ public final class GraphCompiler<K> {
                 catalogIndex == null ? 0 : catalogIndex.resourceCount(), packedBytes));
         long demandWeight = 0, demandBytes = 0;
         for (var demand : demandPrograms) {
-            demandWeight += demand.graph.recipes().size() + (demand.program == null ? 0 : demand.program.weight);
-            demandBytes += demand.graph.estimatedBytes() + (demand.program == null ? 0 : 64L * demand.program.weight);
+            demandWeight += demand.recipes + (demand.program == null ? 0 : demand.program.weight);
+            demandBytes += demand.bytes();
         }
         values.put("demand_program", entry("demand_program", demandPrograms.size(), demandWeight, demandBytes));
+        values.put("demand_preparation", entry("demand_preparation", preparingDemand ? 1 : 0,
+                0, preparingDemand ? GraphDemandProgram.MAX_BYTES : 0));
         long certificateWeight = quantityCertificates.stream().mapToLong(c -> c.weights.size() + c.excluded.size()).sum();
         values.put("quantity_certificate", entry("quantity_certificate", quantityCertificates.size(), certificateWeight, 192L * certificateWeight));
         long conservationWeight = 0, conservationBytes = 0;
@@ -145,49 +149,69 @@ public final class GraphCompiler<K> {
             aggregate.merge("count_row_template", compiler.rowTemplates.cacheMetrics(), CacheEntry::plus);
             var recovery = compiler.recoveryTemplates.cacheMetrics();
             aggregate.merge("recovery_template", recovery.entry(), CacheEntry::plus);
+            aggregate.merge("recovery_preparation", recovery.preparation(), CacheEntry::plus);
             pending.addAll(recovery.compilers());
         }
         return new CacheMetrics(seen.size(), active, aggregate);
     }
 
-    private record DemandEntry<K>(Compiled<K> graph, GraphDemandProgram<K> program) {}
+    // Retain the immutable partition, not a request's selected-source map. The
+    // same port program can serve all compiled views with this exact partition.
+    private record DemandEntry<K>(List<Region<K>> regions, int recipes, GraphDemandProgram<K> program) {
+        long bytes() { return 256L + 72L * recipes + 64L * regions.size() + (program == null ? 0 : program.bytes); }
+    }
 
     /** Compile only an observed repeated graph; failed optional preparation is never cached as final. */
     GraphDemandProgram<K> demandProgram(Compiled<K> graph, PlanningBudget budget) {
+        if (graph.regions().isEmpty() || graph.regions().size() > 8192 ||
+                256L + 72L * graph.recipes().size() + 64L * graph.regions().size() > DEMAND_CACHE_BYTES) return null;
         synchronized (this) {
             int found = -1;
-            for (int i = 0; i < demandPrograms.size(); i++) if (demandPrograms.get(i).graph.regions() == graph.regions()) {
+            for (int i = 0; i < demandPrograms.size(); i++) if (demandPrograms.get(i).regions == graph.regions()) {
                 found = i;
                 break;
             }
             if (found < 0) {
                 lookup("demand_program", null);
-                demandPrograms.add(0, new DemandEntry<>(graph, null));
+                demandPrograms.add(0, new DemandEntry<>(graph.regions(), graph.recipes().size(), null));
                 trimDemandPrograms();
                 return null;
             }
             var entry = demandPrograms.remove(found);
             demandPrograms.add(0, entry);
-            if (lookup("demand_program", entry.program) != null) return entry.program.forGraph(graph);
+            if (lookup("demand_program", entry.program) != null) return entry.program;
+            if (preparingDemand) return null;
+            preparingDemand = true;
         }
-        var program = GraphDemandProgram.create(graph, budget);
+        GraphDemandProgram<K> program = null;
+        try {
+            program = GraphDemandProgram.create(graph, budget);
+        } finally {
+            synchronized (this) {
+                preparingDemand = false;
+                if (program != null) {
+                    demandPrograms.removeIf(entry -> entry.regions == graph.regions());
+                    demandPrograms.add(0, new DemandEntry<>(graph.regions(), graph.recipes().size(), program));
+                    trimDemandPrograms();
+                }
+            }
+        }
         if (program == null) return null;
-        synchronized (this) {
-            demandPrograms.removeIf(entry -> entry.graph.regions() == graph.regions());
-            demandPrograms.add(0, new DemandEntry<>(graph, program));
-            trimDemandPrograms();
-        }
         budget.note("demand_program", "compiled; regions=" + graph.regions().size() + "; weight=" + program.weight);
         return program;
     }
 
     private void trimDemandPrograms() {
-        long weight = 0;
-        for (var entry : demandPrograms) weight += entry.graph.recipes().size() + (entry.program == null ? 0 : entry.program.weight);
-        while (demandPrograms.size() > 1 && (demandPrograms.size() > 8 || weight > 65536)) {
+        long weight = 0, bytes = 0;
+        for (var entry : demandPrograms) {
+            weight += entry.recipes + (entry.program == null ? 0 : entry.program.weight);
+            bytes += entry.bytes();
+        }
+        while (!demandPrograms.isEmpty() && (demandPrograms.size() > 8 || weight > 65536 || bytes > DEMAND_CACHE_BYTES)) {
             var removed = demandPrograms.remove(demandPrograms.size() - 1);
             evicted("demand_program");
-            weight -= removed.graph.recipes().size() + (removed.program == null ? 0 : removed.program.weight);
+            weight -= removed.recipes + (removed.program == null ? 0 : removed.program.weight);
+            bytes -= removed.bytes();
         }
     }
 
