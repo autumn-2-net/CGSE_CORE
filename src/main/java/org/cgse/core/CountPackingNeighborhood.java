@@ -9,7 +9,7 @@ import java.util.*;
 /** Search in one proposed Boolean face. Neither its fixed exterior nor its
  * distance row is an original-model fact; local failures and clauses stay here. */
 final class CountPackingNeighborhood implements AutoCloseable {
-    enum Mode { PROPAGATION, LEARNING, EXCHANGE }
+    enum Mode { PROPAGATION, LEARNING, EXCHANGE, EXCHANGE_FOUR }
 
     private final PlanningBudget budget;
     private CountPackingSearch propagation;
@@ -24,8 +24,8 @@ final class CountPackingNeighborhood implements AutoCloseable {
     }
     CountPackingNeighborhood(long[][] coefficients, long[] bounds, long seed, PlanningBudget budget, Mode mode) {
         this.budget = budget;
-        if (mode == Mode.EXCHANGE) {
-            exchange = new CountPackingExchange(coefficients, bounds, seed, budget);
+        if (mode == Mode.EXCHANGE || mode == Mode.EXCHANGE_FOUR) {
+            exchange = new CountPackingExchange(coefficients, bounds, seed, budget, mode == Mode.EXCHANGE_FOUR ? 4 : 3);
             return;
         }
         if (mode == Mode.PROPAGATION) {

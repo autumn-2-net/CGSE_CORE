@@ -2197,6 +2197,72 @@
       "name": "mknapcb7_27_bks-packing-tail-cost-guard",
       "expected": "SAT",
       "evidence": "Original canonical input and unchanged budget passed before suffix tables. Early table admission lost this witness; measured warmup must preserve it. Independent primitive-prefix validation."
+    },
+    {
+      "source": "cases/graph/4c/4c97ac02f35060b6cd5d3d5d760072a54e746bf8b54476cb4d846d4155c70397.json",
+      "sha256_lf": "d753eacc2c98b25c03a444378559e5e13c01477adcd7ebe7ce4330cf3b074e26",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb6_26_bks-exchange-repair-cost-guard",
+      "expected": "SAT",
+      "evidence": "A late wide exchange initially displaced this previously verified witness. Keep the original 40M allowance and independently replay every primitive execution."
+    },
+    {
+      "source": "cases/graph/68/68c7ea75aa7f6fc03ad17bd1a0bd9c0fb246f51768d757c9b390e0cef75a9dbb.json",
+      "sha256_lf": "6e2a1eb6cb93e2a2a46032c4dc0c508fd971dc0656f387535f751f5e999dd9cf",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb5_07_bks-wide-lp-exchange",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known target; an eight-coordinate LP exchange yields a complete primitive execution witness at the original 40M allowance. The restricted neighborhood cannot certify infeasibility."
+    },
+    {
+      "source": "cases/graph/ab/ab8e13aca87373f3c333f7c0f76ef89a11ee808522ed0a4da589a232e99dc5b4.json",
+      "sha256_lf": "e3de3cab2d6a24df863a39880b41d296c98e32f1161af2f5a27b06f570a08421",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb3_15_bks-wide-lp-exchange",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known target; an eight-coordinate LP exchange yields a complete primitive execution witness at the original 40M allowance. The restricted neighborhood cannot certify infeasibility."
+    },
+    {
+      "source": "cases/graph/ed/ed618f7227c971f46840962fde838814c5c56a228cb0b31e2018802a6a1ed1ad.json",
+      "sha256_lf": "a7da9f022dce0d6464664dd0d5ae592e8f13c9479cc0d1f64920b208396df1ef",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb9_26_bks-wide-lp-exchange",
+      "expected": "SAT",
+      "evidence": "Original canonical best-known target; an eight-coordinate LP exchange yields a complete primitive execution witness at the original 40M allowance. The restricted neighborhood cannot certify infeasibility."
+    },
+    {
+      "source": "cases/graph/c4/c47387d8a14d6a9a010c5a9bbe09fe16f0b1ccbb5e1c2bf08e4643fe4c05cde9.json",
+      "sha256_lf": "02cdd4bd7fedbade15df09da4556f7d7b6148cff8394dd2da3817de5e11489b9",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb2_03_bks-restored-pb-cost-guard",
+      "expected": "SAT",
+      "evidence": "Original 40M witness needs the saved PB frontier after an optional exchange. Scout work cannot expire the PB window, and restoration must notify portfolio scheduling. Independent primitive replay."
+    },
+    {
+      "source": "cases/graph/0f/0f8d42b95c6cd50f0dc9f6b644095f3b20b73a7c1dcd7fd298a6cdc85a830000.json",
+      "sha256_lf": "e461d6a337d3318ee733138be62125b42c26a8af1c69ea98db5eec8a516b796d",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "name": "mknapcb9_17_bks-wide-lp-exchange",
+      "expected": "SAT",
+      "evidence": "Original canonical target independently verified through primitive execution at the unchanged 40M work cap. Retained wide LP exchange and restoration-aware portfolio scheduling."
     }
   ]
 }

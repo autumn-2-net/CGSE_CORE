@@ -298,8 +298,12 @@ public final class CountProgressSchedulingTest {
             var state = (CountPortfolioPolicy.Arm) get(arm, "scheduling");
             if (state.eligible && policy.selections(state) == 0) policy.selected(state);
         }
-        for (var phase : List.of(CountPackingCore.Phase.CONFLICT_REPAIR, CountPackingCore.Phase.DISTANCE_REPAIR)) {
+        for (int event = 0; event < 3; event++) {
+            var phase = event < 2 ? CountPackingCore.Phase.CONFLICT_REPAIR : CountPackingCore.Phase.DISTANCE_REPAIR;
             set(core, "phase", phase);
+            // The middle event restores an existing PB frontier. It must be
+            // visible once even though its mathematical phase did not change.
+            if (event == 1) set(core, "wideScoutWork", 262144L);
             set(packing, "continuationLimit", number(packing, "work"));
             check(select(search) == packing, "A new retained repair phase received no continuation");
             long ceiling = number(packing, "continuationLimit");
@@ -313,6 +317,7 @@ public final class CountProgressSchedulingTest {
         }
         set(packing, "work", originalWork);
         set(core, "phase", CountPackingCore.Phase.ENUMERATION);
+        set(core, "wideScoutWork", 0L);
         long charged = budget.threadWork(), bytes = budget.reservedBytes();
         search.packingContinuationQuantum(); search.packingContinuationQuantum();
         check(charged == budget.threadWork() && bytes == budget.reservedBytes(), "Phase observation rebuilt an analyzer");

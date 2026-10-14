@@ -4,13 +4,13 @@
 package org.cgse.core;
 
 /** Retained sparse-exchange matching inside a proposed Boolean face.
- * Each half may change at most three seed coordinates. Exhausting that
+ * Each half may change a bounded number of seed coordinates (three by default). Exhausting that
  * restricted neighborhood is never a proof about the original count model.
  * A retained left table is queried by exact integer boxes, without allocating
  * a vector or traversing every left entry for each right-hand combination. */
 final class CountPackingExchange implements AutoCloseable {
     private final PlanningBudget budget;
-    private final long[] slack, seedChange, query;
+    private final long[] slack, seedChange, query, prefix;
     private final long seed;
     private final int size, dimensions, split, points;
     private final long[] vectors, masks, minimum, maximum, spread;
@@ -20,6 +20,10 @@ final class CountPackingExchange implements AutoCloseable {
     private long memory, assignment, rightMask;
     private boolean complete, feasible;
     CountPackingExchange(long[][] a, long[] b, long seed, PlanningBudget budget) {
+        this(a, b, seed, budget, 3);
+    }
+    CountPackingExchange(long[][] a, long[] b, long seed, PlanningBudget budget, int radius) {
+        if (radius < 1 || radius > 4) throw new IllegalArgumentException("Exchange radius");
         if (a.length == 0) throw new IllegalArgumentException("Empty exchange face");
         size = a[0].length;
         dimensions = b.length;
@@ -27,13 +31,19 @@ final class CountPackingExchange implements AutoCloseable {
         if (size < 2 || size > 64 || dimensions < 1 || dimensions > 35 || a.length != dimensions)             throw new IllegalArgumentException("Exchange shape");
         this.budget = budget;
         this.seed = seed;
-        points = 1 + split + split * (split - 1)/ 2 + split * (split - 1) * (split - 2)/ 6;
+        int combinations = 1, chosen = 1;
+        for (int k = 1; k <= Math.min(radius, split); k++) { chosen = chosen * (split - k + 1) / k; combinations += chosen; }
+        points = combinations;
         // Retain only lower node bounds for one-sided queries. Upper activities
         // are build scratch; root spreads guide partitioning without tree storage.
-        long bytes = 8192L + points * (128L + 24L * dimensions) + 32L * size * dimensions;
+        // Median splits need a power-of-two leaf bound, including partial leaves.
+        int leaves = 1;
+        while (leaves * 8 < points) leaves <<= 1;
+        int capacity = 2 * leaves;
+        long bytes = 8192L + points * (12L + 8L * dimensions) + capacity * (16L + 8L * dimensions) + 32L * size * dimensions;
         if (!budget.tryReserve(bytes)) {
             complete = true;
-            slack = seedChange = query = vectors = masks = minimum = maximum = spread = null;
+            slack = seedChange = query = prefix = vectors = masks = minimum = maximum = spread = null;
             order = from = to = left = right = building = querying = null;
             subsets = null;
             return;
@@ -43,6 +53,7 @@ final class CountPackingExchange implements AutoCloseable {
         try {
             slack = b.clone();
             query = new long[dimensions];
+            prefix = new long[(radius + 1) * dimensions];
             seedChange = new long[dimensions * size];
             for (int r = 0; r < dimensions; r++) {
                 long magnitude = Math.abs(b[r]);
@@ -62,16 +73,16 @@ final class CountPackingExchange implements AutoCloseable {
             vectors = new long[points * dimensions];
             masks = new long[points];
             order = new int[points];
-            minimum = new long[2 * points * dimensions];
+            minimum = new long[capacity * dimensions];
             maximum = new long[dimensions];
             spread = new long[dimensions];
-            from = new int[2 * points];
-            to = new int[2 * points];
-            left = new int[2 * points];
-            right = new int[2 * points];
+            from = new int[capacity];
+            to = new int[capacity];
+            left = new int[capacity];
+            right = new int[capacity];
             building = new int[64];
             querying = new int[64];
-            subsets = new Subsets(0, split);
+            subsets = new Subsets(0, split, radius);
         }
  catch (RuntimeException failure) {
             close();
@@ -94,17 +105,9 @@ final class CountPackingExchange implements AutoCloseable {
 
             masks[cursor] = mask;
             order[cursor] = cursor;
-            for (int r = 0; r < dimensions; r++) {
-                long value = 0, bits = mask;
-                budget.operations(PlanningBudget.Operation.INTEGER, 64, Long.bitCount(mask) + 1);
-                while (bits != 0) {
-                    int i = Long.numberOfTrailingZeros(bits);
-                    bits &= bits - 1;
-                    value += seedChange[r * size + i];
-                }
-
-                vectors[cursor * dimensions + r] = value;
-            }
+            updatePrefix();
+            budget.operations(PlanningBudget.Operation.SCAN, 0, dimensions);
+            System.arraycopy(prefix, subsets.count * dimensions, vectors, cursor * dimensions, dimensions);
 
             cursor++;
             return false;
@@ -117,7 +120,10 @@ final class CountPackingExchange implements AutoCloseable {
                 return false;
             }
 
-            build(building[--builds]);
+            int node = building[--builds];
+            // Queries start only after every exact child bound has been joined.
+            if (node >= 0) build(node);
+            else join(~node);
             return false;
         }
 
@@ -128,17 +134,9 @@ final class CountPackingExchange implements AutoCloseable {
                 return true;
             }
 
-            for (int r = 0; r < dimensions; r++) {
-                long value = slack[r], bits = rightMask;
-                budget.operations(PlanningBudget.Operation.INTEGER, 64, Long.bitCount(bits) + 1);
-                while (bits != 0) {
-                    int i = Long.numberOfTrailingZeros(bits);
-                    bits &= bits - 1;
-                    value -= seedChange[r * size + i];
-                }
-
-                query[r] = value;
-            }
+            updatePrefix();
+            budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
+            for (int r = 0; r < dimensions; r++) query[r] = slack[r] - prefix[subsets.count * dimensions + r];
 
             querying[queries++] = 0;
         }
@@ -177,52 +175,75 @@ final class CountPackingExchange implements AutoCloseable {
         return false;
     }
 
+    /** Adjacent lexicographic combinations retain every unchanged prefix sum. */
+    private void updatePrefix() {
+        for (int d = subsets.changed; d < subsets.count; d++) {
+            budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
+            int id = subsets.chosen[d];
+            for (int r = 0; r < dimensions; r++)
+                prefix[(d + 1) * dimensions + r] = prefix[d * dimensions + r] + seedChange[r * size + id];
+        }
+    }
+
     private void build(int node) {
-        int begin = from[node], end = to[node];
-        int offset = node * dimensions, first = order[begin] * dimensions;
-        budget.operations(PlanningBudget.Operation.SCAN, 0, 2 * dimensions);
-        System.arraycopy(vectors, first, minimum, offset, dimensions);
-        System.arraycopy(vectors, first, maximum, 0, dimensions);
-        // Every stored point contributes to the box; no sampled bound can prune.
+        int begin = from[node], end = to[node], first = order[begin] * dimensions;
+        if (node == 0) {
+            budget.operations(PlanningBudget.Operation.SCAN, 0, 2 * dimensions);
+            System.arraycopy(vectors, first, query, 0, dimensions);
+            System.arraycopy(vectors, first, maximum, 0, dimensions);
+            for (int p = begin + 1; p < end; p++) {
+                budget.operations(PlanningBudget.Operation.INTEGER, 64, 2 * dimensions);
+                int id = order[p] * dimensions;
+                for (int r = 0; r < dimensions; r++) {
+                    query[r] = Math.min(query[r], vectors[id + r]);
+                    maximum[r] = Math.max(maximum[r], vectors[id + r]);
+                }
+            }
+            budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
+            for (int r = 0; r < dimensions; r++) spread[r] = maximum[r] - query[r];
+        }
+        if (end - begin > 8) {
+            // Samples choose a partition axis only; they never become query bounds.
+            if (node != 0) {
+                budget.operations(PlanningBudget.Operation.SCAN, 0, 2 * dimensions);
+                System.arraycopy(vectors, first, query, 0, dimensions);
+                System.arraycopy(vectors, first, maximum, 0, dimensions);
+                for (int sample = 1; sample < 8; sample++) {
+                    int id = order[begin + sample * (end - begin - 1) / 7] * dimensions;
+                    budget.operations(PlanningBudget.Operation.INTEGER, 64, 2 * dimensions);
+                    for (int r = 0; r < dimensions; r++) {
+                        query[r] = Math.min(query[r], vectors[id + r]);
+                        maximum[r] = Math.max(maximum[r], vectors[id + r]);
+                    }
+                }
+            }
+            int axis = 0; double widest = -1;
+            for (int r = 0; r < dimensions; r++) {
+                budget.operation(PlanningBudget.Operation.SCAN, 0);
+                double relative = (double) (maximum[r] - query[r]) / Math.max(1, spread[r]);
+                if (relative > widest) { widest = relative; axis = r; }
+            }
+            int middle = (begin + end) >>> 1;
+            partition(begin, end, middle, axis);
+            int a = nodes++, b = nodes++;
+            left[node] = a; right[node] = b;
+            from[a] = begin; to[a] = middle; from[b] = middle; to[b] = end;
+            building[builds++] = ~node; building[builds++] = b; building[builds++] = a;
+            return;
+        }
+        budget.operations(PlanningBudget.Operation.SCAN, 0, dimensions);
+        System.arraycopy(vectors, first, minimum, node * dimensions, dimensions);
         for (int p = begin + 1; p < end; p++) {
             int id = order[p] * dimensions;
-            budget.operations(PlanningBudget.Operation.INTEGER, 64, 2 * dimensions);
-            for (int r = 0; r < dimensions; r++) {
-                long v = vectors[id + r];
-                minimum[offset + r] = Math.min(minimum[offset + r], v);
-                maximum[r] = Math.max(maximum[r], v);
-            }
-        }
-
-        if (node == 0) {
             budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
-            for (int r = 0; r < dimensions; r++) spread[r] = maximum[r] - minimum[r];
+            for (int r = 0; r < dimensions; r++) minimum[node * dimensions + r] = Math.min(minimum[node * dimensions + r], vectors[id + r]);
         }
-        if (end - begin <= 8) return;
-        // Relative spread chooses a partition only. Exclusions above compare
-        // exact long activities whose complete range was checked on admission.
-        int axis = 0;
-        double widest = -1;
-        for (int r = 0; r < dimensions; r++) {
-            budget.operation(PlanningBudget.Operation.SCAN, 0);
-            double relative = (double) (maximum[r] - minimum[offset + r]) / Math.max(1, spread[r]);
-            if (relative > widest) {
-                widest = relative;
-                axis = r;
-            }
-        }
+    }
 
-        int middle = (begin + end) >>> 1;
-        partition(begin, end, middle, axis);
-        int a = nodes++, b = nodes++;
-        left[node] = a;
-        right[node] = b;
-        from[a] = begin;
-        to[a] = middle;
-        from[b] = middle;
-        to[b] = end;
-        building[builds++] = b;
-        building[builds++] = a;
+    private void join(int node) {
+        budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
+        for (int r = 0; r < dimensions; r++)
+            minimum[node * dimensions + r] = Math.min(minimum[left[node] * dimensions + r], minimum[right[node] * dimensions + r]);
     }
 
     private void partition(int begin, int end, int middle, int axis) {
@@ -267,10 +288,11 @@ final class CountPackingExchange implements AutoCloseable {
     }
 
     private static final class Subsets {
-        int start, end, count;
-        int[] chosen = new int[3];
+        int start, end, count, changed;
+        final int[] chosen;
         boolean first = true, done;
-        Subsets(int start, int end) {
+        Subsets(int start, int end, int radius) {
+            chosen = new int[radius];
             reset(start, end);
         }
 
@@ -278,6 +300,7 @@ final class CountPackingExchange implements AutoCloseable {
             this.start = start;
             this.end = end;
             count = 0;
+            changed = 0;
             first = true;
             done = false;
         }
@@ -292,13 +315,15 @@ final class CountPackingExchange implements AutoCloseable {
             int i = count - 1;
             while (i >= 0 && chosen[i] == end - count + i) i--;
             if (i < 0) {
-                if (++count > Math.min(3, end - start)) {
+                if (++count > Math.min(chosen.length, end - start)) {
                     done = true;
                     return -1L;
                 }
 
+                changed = 0;
                 for (i = 0; i < count; i++) chosen[i] = start + i;
             } else {
+                changed = i;
                 chosen[i]++;
                 for (int j = i + 1; j < count; j++) chosen[j] = chosen[j - 1] + 1;
             }

@@ -738,3 +738,16 @@ table construction must not consume the original search's low-budget solution.
 Index partition samples affect ordering only. Exact leaf bounds are joined after
 both children finish; 156 uniquely determined full-box assignments guard against
 using sampled extrema for pruning. Storage follows the actual eight-point leaves.
+
+`CountPackingIndexTest` checks 144 unique signed/scaled assignments and 256
+exhaustive radius oracles, including 64 variables, incomplete tree leaves,
+worker handoffs, compact-memory admission and cancellation during tree joins.
+Sampled partition axes never replace exact subtree activity bounds. Retained
+combination prefixes must survive the switch between both exchange halves.
+
+`CountPackingScoutTest` distinguishes six- from eight-coordinate neighborhoods,
+checks the saved learned frontier and compiled projection, and exercises phase
+limits, handoffs and cancellation. The original 40M execution boundaries retain
+newly verified wide-exchange witnesses and both old witnesses displaced
+by premature phase expiry or a missing restoration notification. Numerical LP fixings and exchange radii remain local hints;
+all accepted counts still pass original-row and primitive-execution validation.
