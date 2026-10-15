@@ -69,6 +69,7 @@ public final class CountPackingTailTest {
             }
         } finally { worker.shutdownNow(); }
         lifecycle();
+        restorationLimit();
         exactJoin();
         retainedIntegration();
         System.out.println(checked + " exhaustive signed/scaled suffix queries, bit 64, forced holes, changed prefixes, handoffs and cleanup passed");
@@ -89,9 +90,18 @@ public final class CountPackingTailTest {
                 while (!tail.prepare()) {}
                 for (long value : new long[] {0, 1, 7, 8, 63, 64, 511, 512, 1023, 1024, 1387, 2048, 4095}) {
                     long wanted = value & mask;
-                    tail.begin(mask << offset, 0, new long[] {wanted, mask - wanted});
-                    while (!tail.step()) {}
-                    check(tail.feasible() && tail.assignment() == wanted << offset, "Sample pruned an exact suffix value");
+                    for (long fixed : new long[] {0, mask, 0x555 & mask, 0xaaa & mask}) {
+                        long selected = (wanted & fixed) << offset, undecided = (mask ^ fixed) << offset;
+                        var slacks = new long[] {wanted, -wanted};
+                        for (int r = 0; r < rows.length; r++) for (int i = offset; i < 64; i++) {
+                            if ((selected & 1L << i) != 0) slacks[r] -= rows[r][i];
+                            else if ((undecided & 1L << i) != 0) slacks[r] -= Math.min(0, rows[r][i]);
+                        }
+                        tail.begin(undecided, selected, slacks);
+                        while (!tail.step()) {}
+                        check(tail.feasible() && tail.assignment() == wanted << offset,
+                                "Fixed endpoint correction pruned an exact suffix value");
+                    }
                 }
             }
             check(budget.reservedBytes() == 0, "Joined index leaked");
@@ -149,6 +159,29 @@ public final class CountPackingTailTest {
             if (sum.compareTo(BigInteger.valueOf(b[r])) > 0) return false;
         }
         return true;
+    }
+
+    private static void restorationLimit() {
+        var rows = new long[35][4];
+        for (int r = 0; r < rows.length; r++) for (int i = 0; i < 4; i++)
+            rows[r][i] = (i % 2 == 0 ? 1 : -1) * (r + 1L);
+        for (long undecided : new long[] {15, 0}) {
+            var budget = budget(64L << 20, () -> false);
+            try (var tail = CountPackingTail.create(rows, 0, budget)) {
+                while (!tail.prepare()) {}
+                budget.charge(budget.remainingWork() - 1);
+                for (int attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        tail.begin(undecided, 5 & ~undecided, new long[35]);
+                        throw new AssertionError("Restoration returned after budget exhaustion");
+                    } catch (PlanningBudget.Exhausted expected) {
+                        check(expected.limit() == PlanningBudget.Limit.SEARCH_LIMIT, "Wrong restoration limit");
+                    }
+                }
+                check(budget.cachePreparationWork() == 0, "Restoration used the retention allowance");
+            }
+            check(budget.reservedBytes() == 0, "Exhausted restoration leaked the suffix table");
+        }
     }
     private static PlanningBudget budget(long bytes, java.util.function.BooleanSupplier stopped) {
         return new PlanningBudget(0, 40_000_000, bytes, stopped, System::nanoTime);

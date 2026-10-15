@@ -12,6 +12,7 @@ final class CountPackingTail implements AutoCloseable {
     private final long[][] coefficients;
     private final CountPackingValues vectors;
     private final long[] minimum, maximum, spread, common, possible, query, stricter;
+    private final long[] suffixMinimum, positive, negative;
     private final int[] order, from, to, left, right, stack;
     private long memory, fixed, selected, assignment;
     private int cursor, phase, nodes = 1, pending;
@@ -23,7 +24,7 @@ final class CountPackingTail implements AutoCloseable {
         if (offset < 0 || size < 1 || size > 12) throw new IllegalArgumentException("Packing tail width");
         int points = 1 << size, nodes = 2 * ((points + 7) / 8);
         boolean compact = CountPackingValues.canPack(coefficients, offset, coefficients[0].length, budget);
-        long bytes = 8192L + points * (8L + (compact ? 4L : 8L) * coefficients.length) + nodes * (44L + 8L * coefficients.length);
+        long bytes = 8192L + 24L * coefficients.length + points * (8L + (compact ? 4L : 8L) * coefficients.length) + nodes * (44L + 8L * coefficients.length);
         if (!budget.tryReserve(bytes)) return null;
         try { return new CountPackingTail(coefficients, offset, budget, bytes, compact); }
         catch (RuntimeException failure) { budget.release(bytes); throw failure; }
@@ -35,6 +36,7 @@ final class CountPackingTail implements AutoCloseable {
         int capacity = 2 * ((points + 7) / 8);
         vectors = new CountPackingValues(points * dimensions, compact); minimum = new long[capacity * dimensions];
         maximum = new long[dimensions]; spread = new long[dimensions]; query = new long[dimensions];
+        suffixMinimum = new long[dimensions]; positive = new long[dimensions]; negative = new long[dimensions];
         common = new long[capacity]; possible = new long[capacity];
         stricter = new long[capacity]; stricter[0] = (1L << dimensions) - 1;
         order = new int[points]; from = new int[capacity]; to = new int[capacity];
@@ -44,8 +46,14 @@ final class CountPackingTail implements AutoCloseable {
         // This complete Boolean box has an exact row spread without enumerating
         // its points. Relative spreads guide partitioning, never exclusions.
         for (int r = 0; r < dimensions; r++) {
-            budget.operations(PlanningBudget.Operation.INTEGER, 64, size);
-            for (int i = offset; i < offset + size; i++) spread[r] += Math.abs(coefficients[r][i]);
+            budget.operations(PlanningBudget.Operation.INTEGER, 64, 3 * size);
+            for (int i = offset; i < offset + size; i++) {
+                long value = coefficients[r][i], bit = 1L << (i - offset);
+                spread[r] += Math.abs(value);
+                suffixMinimum[r] += Math.min(0, value);
+                if (value > 0) positive[r] |= bit;
+                else if (value < 0) negative[r] |= bit;
+            }
         }
     }
 
@@ -80,14 +88,24 @@ final class CountPackingTail implements AutoCloseable {
         this.selected = (selected >>> offset) & fixed;
         // slacks = b - fixed activity - minimum remaining activity. Restore
         // the full suffix RHS, including forced coordinates checked by masks.
+        // Construction is complete, so its temporary maxima can hold this
+        // query's correction masks. Batch the bounded accounting instead of
+        // updating the shared work counter once or twice for every row.
+        budget.operations(PlanningBudget.Operation.INTEGER, 64, 3 * dimensions);
+        int correctionCount = 0;
         for (int r = 0; r < dimensions; r++) {
-            long bound = slacks[r];
-            budget.operations(PlanningBudget.Operation.INTEGER, 64, size);
-            for (int i = 0; i < size; i++) {
-                long a = coefficients[r][offset + i], bit = 1L << i;
-                if ((fixed & bit) == 0) bound += Math.min(0, a);
-                else if ((this.selected & bit) != 0) bound += a;
-            }
+            maximum[r] = (this.selected & positive[r]) | (fixed & ~this.selected & negative[r]);
+            correctionCount += Long.bitCount(maximum[r]);
+        }
+        if (correctionCount != 0)
+            budget.operations(PlanningBudget.Operation.INTEGER, 64, 2 * correctionCount);
+        for (int r = 0; r < dimensions; r++) {
+            long bound = slacks[r] + suffixMinimum[r];
+            // The full free suffix minimum is immutable. A fixed coordinate
+            // needs a correction only when it takes its adverse endpoint:
+            // positive coefficient at one, or negative coefficient at zero.
+            for (long bits = maximum[r]; bits != 0; bits &= bits - 1)
+                bound += Math.abs(coefficients[r][offset + Long.numberOfTrailingZeros(bits)]);
             query[r] = bound;
         }
         pending = 1; stack[0] = 0; complete = feasible = false;

@@ -819,3 +819,15 @@ both representations. `mknapcb2_19_bks` additionally guards first-plan cost belo
 6M reported work within the unchanged 40M request allowance.
 A separate 8M request guards observed cost below 5M; this cost bound does not
 imply a 5M request budget is sufficient.
+
+The retained suffix table also reuses each row's exact minimum over its complete
+Boolean domain. Query restoration visits only fixed variables at the adverse
+endpoint: a positive coefficient fixed to one or a negative coefficient fixed
+to zero. Both endpoints of mixed fixed/free domains, including bit 64, are
+checked against independently formed slacks in `CountPackingTailTest`.
+These summaries depend only on the table's coefficients; changed query bounds
+and fixings are always reapplied. Construction and query work remain charged to
+search, while the three row arrays belong to the table's reserved workspace.
+Restoration charges one bounded batch for row setup and at most one for the
+actual fixed-endpoint corrections, reusing construction scratch space. This
+avoids per-row shared-counter updates without discounting performed work.
