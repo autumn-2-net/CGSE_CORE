@@ -1,0 +1,104 @@
+Stateful inputs and physical returns
+===================================
+
+StateFamily<K> describes captured algebra for a tool, charge container or other
+consumable state. Attach it to CapturedRecipe.Candidate.family and retain the
+CapturedCatalog when using RequestPlanningWork.capturedCatalog(...). Supplying
+only the legacy concrete prefix cannot recover the omitted states.
+
+Capture and identity
+--------------------
+StateFamily implementations must be immutable and safe to call on a planning
+worker. They must not read a live world, inventory or mutable host object, or
+invoke live recipe callbacks. An immutable key codec may reconstruct captured
+identities through frozen registries. Keys need stable equality and hash codes.
+
+id() identifies the complete rule, including per-use cost and invariant state
+semantics. Equal IDs must mean interchangeable algebra; different costs or
+incompatible rules need different IDs. accepts(key) must check the invariant
+data, not just the item's basic type. capacity(key) is a nonnegative guaranteed
+number of complete uses from ONE physical entity, not expected random lifetime.
+nominalAfterOne(key) supplies one legal exact return, or null for consumption.
+Its successor must preserve the remaining guarantee. Unchanged states and
+saturated Long.MAX_VALUE lower bounds are supported; neither implies expansion
+of the whole possible lifetime.
+
+StateReturn<K> separately describes the complete finite outcomes of one exact
+input state. exact/consumed describe deterministic returns; alternatives carries
+explicit possible outcomes and a completeness flag. An empty outcome means no
+remainder. A sampled callback or expected-value approximation is not a complete
+contract. requireExact() rejects incomplete or stochastic contracts; hosts must
+explicitly supply the runtime outcome protocol for uncertain returns.
+
+Capacity proposals and exact restoration
+----------------------------------------
+CapturedStatePlanning is an internal positive-only auxiliary view. Activation
+spends a physical entity and supplies family-use capacity. Different worn tools
+retain their own capacities; an entity cannot be activated twice. Ordinary
+producer recipes can manufacture further tools. Capacity keys exist only in the
+auxiliary coordinates, never in host inventory or a submitted physical plan.
+
+The restorer allocates actual entities to every slot before releasing that
+operation's returns. It generates only selected exact states and restores real
+GraphRecipe/PlanStep values, then checks funding, execution and the request.
+Aggregate capacity alone cannot prove that enough separate tools exist for a
+multi-tool operation or that fragments can be combined. Dispatch still needs
+the physical inputs: use capacity does not permit concurrent reuse of one tool.
+Restoration consumes work and memory budget and has cancellation checkpoints;
+very large requested executions may still exhaust that budget.
+
+A failed auxiliary solve or failed restoration is not a global negative proof.
+Family domains remain incomplete; a verified witness is
+FEASIBLE_NOT_PROVEN_OPTIMAL, while restricted failure cannot become INFEASIBLE.
+Other captured paths may continue. The existing finite-domain CapturedProof
+export rejects family catalogs because it cannot serialize this algebra.
+General custom dynamic outputs, arbitrary world-dependent transitions and
+unbounded stochastic outcome protocols are not supported by this interface.
+
+Runtime return ownership
+------------------------
+GraphJobRuntime.Adapter.returnChoices supplies OutputObligations.ReturnChoice
+for guaranteed finite alternatives: input slot, predicted output key, allowed
+keys and the physical quantity owed by that dispatch. Every key represents the
+same owed quantity; alternatives are not additional inventory. The predicted
+quantity must already exist in the recipe's execution outputs. Exact returns
+continue to use ordinary output obligations.
+
+Disjoint domains and equivalent contracts (same predicted key and allowed set)
+can run concurrently. Equivalent owners share FIFO receipts, including partial
+receipts across saved flights. Non-equivalent overlapping domains wait for older
+owners to settle; incompatible overlaps within one batch are rejected before
+push. Fixed outputs or external supply cannot overlap an active choice domain.
+Aggregate return headroom is reserved before inputs leave the runtime.
+
+A nullable nominal return is not a mandatory ReturnChoice. If the sound nominal
+plan consumes the tool and the complete outcome contract also permits survival,
+the host may route that unpromised bonus to ordinary storage. It must not promise
+a surviving tool or leave a mandatory wait for the empty outcome. Generic
+optional/multi-output contracts cannot be passed as single-key choices.
+
+An actual alternative retires the predicted obligation and credits only the
+received key. A changed state freezes the old suffix. beginReplan and inventory
+forecasting wait for all variable-return owners to settle; stateReplanReady then
+permits a checkpoint and a validated replacement suffix. Persistence must retain
+remaining choices and needsStateReplan. A save during provider handoff preserves
+ambiguous ownership and cannot authorize automatic redispatch or input refund.
+Cancellation refunds only held inventory; late machine returns go to the host's
+ordinary storage. Host adapters must publish and clear all alternative-key
+subscriptions, including synchronous returns and rejected dispatches.
+
+Regression entry points
+------------------------
+The public tests are under tests/core/java/org/cgse/core:
+  StateTransitionTest: exact/unknown contracts and finite closure boundaries.
+  CapturedStateTest: large state spaces, separate worn entities, new tools,
+    configuration inputs, unchanged/saturated capacity and proof/budget limits.
+  CapturedReachableTest: sparse candidate recovery and exact execution checks.
+  RequestCoverageTest: request-level coverage and restricted-result boundaries.
+  StateReturnRuntimeTest: alternatives, equivalent parallel owners, persistence,
+    rejection, cancellation and checkpoint/replacement behavior.
+  StateReturnConcurrencyTest: aggregate headroom and transient subscriptions.
+  StateReturnPlaceholderTest: completion markers cannot discard pending returns.
+
+These are core regressions. A host must additionally test actual provider
+capture, dispatch, inventory routing and persistence in its own environment.
