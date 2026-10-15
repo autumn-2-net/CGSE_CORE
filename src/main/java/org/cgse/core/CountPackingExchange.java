@@ -151,13 +151,8 @@ final class CountPackingExchange implements AutoCloseable {
         // Recheck the last separating row against this query. The remembered
         // coordinate is an ordering hint, never a cached failure or bound.
         int first = rejected[node] == 0 ? dimensions - 1 : rejected[node] - 1;
-        budget.operation(PlanningBudget.Operation.SCAN, 0);
-        if (minimum[node * dimensions + first] > query[first]) return false;
-        for (int r = dimensions - 1; r >= 0; r--) {
-            if (r == first) continue;
-            budget.operation(PlanningBudget.Operation.SCAN, 0);
-            if (minimum[node * dimensions + r] > query[r]) { rejected[node] = r + 1; return false; }
-        }
+        int rejection = CountPackingQuery.reject(minimum, node * dimensions, query, first, budget);
+        if (rejection >= 0) { rejected[node] = rejection + 1; return false; }
 
         if (left[node] != 0) {
             querying[queries++] = right[node];
@@ -168,14 +163,9 @@ final class CountPackingExchange implements AutoCloseable {
         for (int p = from[node]; p < to[node]; p++) {
             int id = order[p];
             int pointFirst = rejectedPoint[id] == 0 ? dimensions - 1 : rejectedPoint[id] - 1;
-            budget.operation(PlanningBudget.Operation.SCAN, 0);
-            boolean valid = vectors.get(id * dimensions + pointFirst) <= query[pointFirst];
-            if (valid) for (int r = dimensions - 1; r >= 0; r--) {
-                if (r == pointFirst) continue;
-                budget.operation(PlanningBudget.Operation.SCAN, 0);
-                if (vectors.get(id * dimensions + r) > query[r]) { rejectedPoint[id] = r + 1; valid = false; break; }
-            }
-            if (valid) {
+            int pointRejection = CountPackingQuery.reject(vectors, id * dimensions, query, pointFirst, budget);
+            if (pointRejection >= 0) rejectedPoint[id] = pointRejection + 1;
+            else {
                 assignment = seed ^ masks[id] ^ rightMask;
                 feasible = complete = true;
                 return true;

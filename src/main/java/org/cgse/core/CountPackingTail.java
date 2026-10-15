@@ -18,6 +18,7 @@ final class CountPackingTail implements AutoCloseable {
     private boolean ready, complete, feasible;
 
     static CountPackingTail create(long[][] coefficients, int offset, PlanningBudget budget) {
+        if (coefficients.length < 1 || coefficients.length > 35) throw new IllegalArgumentException("Packing row count");
         int size = coefficients[0].length - offset;
         if (offset < 0 || size < 1 || size > 12) throw new IllegalArgumentException("Packing tail width");
         int points = 1 << size, nodes = 2 * ((points + 7) / 8);
@@ -102,13 +103,8 @@ final class CountPackingTail implements AutoCloseable {
         // Recheck the last separating row against this query. The remembered
         // coordinate is an ordering hint, never a cached failure or bound.
         int first = rejected[node] == 0 ? dimensions - 1 : rejected[node] - 1;
-        budget.operation(PlanningBudget.Operation.SCAN, 0);
-        if (minimum[node * dimensions + first] > query[first]) return false;
-        for (int r = dimensions - 1; r >= 0; r--) {
-            if (r == first) continue;
-            budget.operation(PlanningBudget.Operation.SCAN, 0);
-            if (minimum[node * dimensions + r] > query[r]) { rejected[node] = r + 1; return false; }
-        }
+        int rejection = CountPackingQuery.reject(minimum, node * dimensions, query, first, budget);
+        if (rejection >= 0) { rejected[node] = rejection + 1; return false; }
         if (left[node] != 0) {
             stack[pending++] = right[node]; stack[pending++] = left[node];
             return false;
@@ -118,14 +114,9 @@ final class CountPackingTail implements AutoCloseable {
             budget.operation(PlanningBudget.Operation.SCAN, 0);
             if ((((long) id ^ selected) & fixed) != 0) continue;
             int pointFirst = rejectedPoint[id] == 0 ? dimensions - 1 : rejectedPoint[id] - 1;
-            budget.operation(PlanningBudget.Operation.SCAN, 0);
-            boolean valid = vectors.get(id * dimensions + pointFirst) <= query[pointFirst];
-            if (valid) for (int r = dimensions - 1; r >= 0; r--) {
-                if (r == pointFirst) continue;
-                budget.operation(PlanningBudget.Operation.SCAN, 0);
-                if (vectors.get(id * dimensions + r) > query[r]) { rejectedPoint[id] = r + 1; valid = false; break; }
-            }
-            if (valid) { assignment = (long) id << offset; feasible = complete = true; return true; }
+            int pointRejection = CountPackingQuery.reject(vectors, id * dimensions, query, pointFirst, budget);
+            if (pointRejection >= 0) rejectedPoint[id] = pointRejection + 1;
+            else { assignment = (long) id << offset; feasible = complete = true; return true; }
         }
         return false;
     }

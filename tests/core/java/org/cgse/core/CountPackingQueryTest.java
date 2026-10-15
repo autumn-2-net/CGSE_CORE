@@ -51,7 +51,86 @@ public final class CountPackingQueryTest {
         } finally { worker.shutdownNow(); }
         check(budget.reservedBytes() == 0, "Query index ownership leaked");
         compactBoundary();
-        System.out.println("Repeated exact queries, changed RHS, bit 64, fixed domains, worker moves and bounded storage passed");
+        accounting();
+        sharedAccounting();
+        System.out.println("Exact queries, changed RHS, bit 64, fixed domains, worker moves, bounded storage and shared scan accounting passed");
+    }
+
+    /** Comparison values deliberately cross floating-point and signed bounds.
+     * Batching must neither skip charged work nor publish a result on exhaustion. */
+    private static void accounting() {
+        var actual = new PlanningBudget(0, 1_000_000, 1L << 20, () -> false, System::nanoTime);
+        var reference = new PlanningBudget(0, 1_000_000, 1L << 20, () -> false, System::nanoTime);
+        for (int rows : new int[] {0, 36}) {
+            try {
+                CountPackingTail.create(new long[rows][12], 0, actual);
+                throw new AssertionError("Unbounded packing query admitted");
+            } catch (IllegalArgumentException expected) {}
+        }
+        check(actual.nodes() == 0 && actual.reservedBytes() == 0, "Rejected shape consumed a budget");
+        actual.threadWork(); reference.threadWork();
+        for (boolean compact : new boolean[] {true, false}) {
+            for (int size : new int[] {1, 2, 7, 32, 35}) {
+                var query = new long[size];
+                var values = new long[size + 11];
+                var points = new CountPackingValues(values.length, compact);
+                for (int r = 0; r < size; r++) query[r] = compact ? Integer.MIN_VALUE + r : Long.MIN_VALUE + r;
+                for (int separator = -1; separator < size; separator++) {
+                    for (int r = 0; r < size; r++) {
+                        values[r + 7] = separator == r ? (compact ? Integer.MAX_VALUE : Long.MAX_VALUE) : query[r];
+                        points.set(r + 7, values[r + 7]);
+                    }
+                    for (int first = 0; first < size; first++) {
+                        // All rows except the designated separator satisfy equality.
+                        int visits = separator < 0 ? size : separator == first ? 1 :
+                                1 + size - separator - (first > separator ? 1 : 0);
+                        for (int i = 0; i < 2 * visits; i++) reference.operation(PlanningBudget.Operation.SCAN, 0);
+                        check(CountPackingQuery.reject(values, 7, query, first, actual) == separator, "Wrong box separator");
+                        check(CountPackingQuery.reject(points, 7, query, first, actual) == separator, "Wrong point separator");
+                        check(actual.nodes() == reference.nodes() && actual.threadWork() == reference.threadWork() &&
+                                actual.threadSearchWork() == reference.threadSearchWork(), "Lost exact or fractional scan work");
+                        check(actual.cachePreparationWork() == 0, "Query work charged to retention");
+                    }
+                }
+            }
+        }
+        var query = new long[35];
+        var values = new CountPackingValues(35, true);
+        for (boolean point : new boolean[] {false, true}) {
+            var limited = new PlanningBudget(0, 1, 1L << 20, () -> false, System::nanoTime);
+            for (int attempt = 0; attempt < 2; attempt++) {
+                try {
+                    if (point) CountPackingQuery.reject(values, 0, query, 0, limited);
+                    else CountPackingQuery.reject(query, 0, query, 0, limited);
+                    throw new AssertionError("Published a result after budget exhaustion");
+                } catch (PlanningBudget.Exhausted expected) {
+                    check(expected.limit() == PlanningBudget.Limit.SEARCH_LIMIT, "Wrong exhaustion reason");
+                }
+            }
+            var cancelled = new PlanningBudget(0, 1_000_000, 1L << 20, () -> true, System::nanoTime);
+            try {
+                if (point) CountPackingQuery.reject(values, 0, query, 0, cancelled);
+                else CountPackingQuery.reject(query, 0, query, 0, cancelled);
+                throw new AssertionError("Published a result after cancellation");
+            } catch (CancellationException expected) {}
+        }
+    }
+
+    private static void sharedAccounting() throws Exception {
+        var budget = new PlanningBudget(0, 1_000_000, 1L << 20, () -> false, System::nanoTime);
+        var workers = Executors.newFixedThreadPool(4);
+        var tasks = new java.util.ArrayList<Future<Long>>();
+        try {
+            for (int i = 0; i < 4; i++) tasks.add(workers.submit(() -> {
+                var query = new long[35];
+                long before = budget.threadSearchWork();
+                for (int n = 0; n < 1000; n++) check(CountPackingQuery.reject(query, 0, query, n % 35, budget) == -1,
+                        "Shared budget changed query result");
+                return budget.threadSearchWork() - before;
+            }));
+            for (var task : tasks) check(task.get() == 8750, "Another worker charged this continuation");
+            check(budget.nodes() == 35000, "Shared query accounting lost work");
+        } finally { workers.shutdownNow(); }
     }
 
     private static void compactBoundary() {
