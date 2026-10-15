@@ -50,6 +50,11 @@ carry into the complementary attempt. Deferral saves the remaining
 complementary allowance once; its eventual deadline is capped by that allowance
 and the original normal phase. Neither resuming nor inspecting it renews work.
 Continuation retains subset cursors, prefix activities and the exact query index.
+The complementary index chooses leaf width from its row count (the next power of
+two, with the original minimum of eight). Wider boxes use coarser leaves to avoid
+paying for many intermediate row bounds; each visited point is still checked by
+exact integer comparisons. Tree allocation uses the same leaf width, including
+partially filled leaves. The original sparse exchange layout remains unchanged.
 Only the original exchange receives the early companion service alongside the
 ordinary packing search. A pending or running complementary rounding domain stays
 eligible through the retained portfolio and LP handoffs, without extending that
@@ -68,7 +73,8 @@ CountPackingFlexibleTest checks independent exhaustive neighborhoods, scaled
 integer rows, twelve-change witnesses excluded by ordinary sparse exchange,
 word/row boundaries, retained worker handoffs, fixed attempt ceilings, memory
 refusal, cancellation and empty restricted faces. Existing packing, proof and
-execution regressions remain enabled.
+execution regressions remain enabled. Its 512 generated cases retain the original
+256 controls and add 256 covering up to 35 rows.
 CountPackingScheduleTest checks distinct coupled/independent decisions at equal
 fractionality, exact coverage counts, row/column permutations, changed inventory,
 and a deferred attempt surviving worker handoff without increasing its allowance.

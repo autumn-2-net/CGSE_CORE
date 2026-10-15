@@ -16,7 +16,7 @@ final class CountPackingExchange implements AutoCloseable {
     private final int[] rejected, rejectedPoint;
     private final long[] slack, seedChange, query, prefix, leftLimit;
     private final long seed;
-    private final int size, dimensions, split, points;
+    private final int size, dimensions, split, points, leafSize;
     private final CountPackingValues vectors;
     private final long[] masks, minimum, maximum, spread;
     private final int[] order, from, to, left, right, building, querying;
@@ -35,6 +35,10 @@ final class CountPackingExchange implements AutoCloseable {
         if (a.length == 0) throw new IllegalArgumentException("Empty exchange face");
         size = a[0].length;
         dimensions = b.length;
+        // More rows make an internal box expensive relative to an exact
+        // short-circuit point check. Coarsen only the complementary domain;
+        // the original sparse trial keeps its existing query order.
+        leafSize = flexible == 0 ? 8 : Math.max(8, Integer.highestOneBit(Math.max(1, dimensions - 1)) << 1);
         split = size / 2;
         if (size < 2 || size > 64 || dimensions < 1 || dimensions > 35 || a.length != dimensions)             throw new IllegalArgumentException("Exchange shape");
         if (size < 64 && (flexible >>> size) != 0) throw new IllegalArgumentException("Flexible coordinates outside face");
@@ -57,7 +61,7 @@ final class CountPackingExchange implements AutoCloseable {
         // are build scratch; root spreads guide partitioning without tree storage.
         // Median splits need a power-of-two leaf bound, including partial leaves.
         int leaves = 1;
-        while (leaves * 8 < points) leaves <<= 1;
+        while (leaves * leafSize < points) leaves <<= 1;
         int capacity = 2 * leaves;
         boolean compact = CountPackingValues.canPack(a, 0, split, budget);
         long bytes = 8192L + points * (16L + (compact ? 4L : 8L) * dimensions) + capacity * (20L + 8L * dimensions) + 32L * size * dimensions;
@@ -245,7 +249,7 @@ final class CountPackingExchange implements AutoCloseable {
             budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
             for (int r = 0; r < dimensions; r++) spread[r] = maximum[r] - query[r];
         }
-        if (end - begin > 8) {
+        if (end - begin > leafSize) {
             // Samples choose a partition axis only; they never become query bounds.
             if (node != 0) {
                 budget.operations(PlanningBudget.Operation.SCAN, 0, 2 * dimensions);

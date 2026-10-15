@@ -13,9 +13,11 @@ public final class CountPackingFlexibleTest {
     public static void main(String[] args) throws Exception {
         var worker = Executors.newSingleThreadExecutor();
         try {
-            for (int trial = 0; trial < 256; trial++) {
+            for (int trial = 0; trial < 512; trial++) {
                 var random = new Random(151051L + trial);
-                int n = 2 + trial % 13, m = 1 + trial % 8, radius = 1 + trial % 4;
+                // Keep the original 256 cases byte-for-byte, then exercise
+                // wider exact boxes and partially filled coarser leaves.
+                int n = 2 + trial % 13, m = trial < 256 ? 1 + trial % 8 : 1 + (trial - 256) % 35, radius = 1 + trial % 4;
                 long seed = random.nextInt(1 << n), flexible = random.nextInt(1 << n);
                 if (flexible == 0) flexible = 1;
                 long[][] a = new long[m][n]; long[] b = new long[m];
@@ -49,7 +51,7 @@ public final class CountPackingFlexibleTest {
         } finally { worker.shutdownNow(); }
         boundaries();
         lifecycle();
-        System.out.println("256 exhaustive flexible-neighborhood controls, 12-change witnesses, large exact rows, word boundary, handoff, cancellation and cleanup passed");
+        System.out.println("512 exhaustive flexible-neighborhood controls, 12-change witnesses, large exact rows, word boundary, handoff, cancellation and cleanup passed");
     }
 
     private static void widerRounding(ExecutorService worker) throws Exception {
