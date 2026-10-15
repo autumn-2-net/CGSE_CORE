@@ -16,13 +16,13 @@ import appeng.api.stacks.KeyCounter;
 
 import java.util.*;
 
-/** Differential oracle retains the pre-split Cartesian/zero-branch DFS algorithm. */
+/** Legacy fast-window oracle plus independent complete captured-domain dependencies. */
 final class CapturedPatternExpansionTest {
 
     static void run() throws Exception {
         int cases = 0;
         for (boolean external : new boolean[] { false, true }) {
-            for (int candidates : new int[] { 1, 2, 3, 4, 8, 16, 255, 256 }) {
+            for (int candidates : new int[] { 1, 2, 3, 4, 8, 16, 255, 256, 257, 300 }) {
                 for (int copies : new int[] { 1, 2, 3, 9, 10 }) {
                     compare(List.of(input(0, candidates, copies)), external);
                     compare(List.of(input(0, 2, 3), input(1, candidates, copies), input(2, 3, 2)), external);
@@ -40,8 +40,11 @@ final class CapturedPatternExpansionTest {
         }
         compare(List.of(), false);
         compare(List.of(input(0, 2, 3), input(1, 0, 1)), false);
+        var shared = input(0, 3, 2);
+        compare(List.of(shared, shared), false);
+        compare(List.of(input(0, 0, 1), input(1, 300, 1)), true);
         captureCallbacks();
-        System.out.println("Detached combinations: " + (cases + 2) + " legacy differential fixtures passed (ordered variants/dependencies, remainders, long counts, caps)");
+        System.out.println("Detached combinations: " + (cases + 4) + " differential fixtures passed (legacy ordered variants/window dependencies, complete candidate dependencies, remainders, long counts, caps)");
     }
 
     private static void captureCallbacks() throws Exception {
@@ -149,10 +152,21 @@ final class CapturedPatternExpansionTest {
         while (expansion.hasNext()) actual.add(expansion.next());
         if (!actual.equals(reference.recipes()) || captured.bounded() != reference.bounded() || captured.size() != actual.size())
             throw new AssertionError("Detached Cartesian expansion differs from old matcher: inputs=" + inputs.size() + " external=" + external);
-        Set<AEKey> expectedKeys = new LinkedHashSet<>(), capturedKeys = new LinkedHashSet<>();
-        for (var recipe : reference.recipes()) for (var slot : recipe.slots()) expectedKeys.add(slot.key());
-        captured.dependencies().forEachRemaining(capturedKeys::add);
-        if (!new ArrayList<>(expectedKeys).equals(new ArrayList<>(capturedKeys))) throw new AssertionError("Discovery order or truncated alternatives changed");
+        Set<AEKey> expectedWindowKeys = new LinkedHashSet<>(), actualWindowKeys = new LinkedHashSet<>();
+        for (var recipe : reference.recipes()) for (var slot : recipe.slots()) expectedWindowKeys.add(slot.key());
+        captured.core().dependencies().forEachRemaining(actualWindowKeys::add);
+        if (!new ArrayList<>(expectedWindowKeys).equals(new ArrayList<>(actualWindowKeys)))
+            throw new AssertionError("Legacy fast-window dependency order or coverage changed");
+
+        // Discovery must retain every captured alternative, including alternatives
+        // beyond the first 256 concrete variants and slots of a currently empty
+        // Cartesian product. Derive this oracle from the input contract, not from
+        // either expansion implementation. Discovery alone does not create stock.
+        List<AEKey> expectedCandidateKeys = new ArrayList<>(), actualCandidateKeys = new ArrayList<>();
+        for (var input : inputs) for (var candidate : input.candidates()) expectedCandidateKeys.add(candidate.stack().what());
+        captured.dependencies().forEachRemaining(actualCandidateKeys::add);
+        if (!expectedCandidateKeys.equals(actualCandidateKeys))
+            throw new AssertionError("Complete captured-domain dependency order or coverage changed");
     }
 
     private record Picked(CapturedPattern.Candidate candidate, long copies) {}

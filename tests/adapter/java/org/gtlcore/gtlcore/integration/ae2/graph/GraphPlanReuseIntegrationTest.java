@@ -38,8 +38,8 @@ final class GraphPlanReuseIntegrationTest {
         var priorConfig = ConfigHolder.INSTANCE;
         try {
             ConfigHolder.INSTANCE = new ConfigHolder();
-            ConfigHolder.INSTANCE.ae2GraphDiagnosticLogging = false;
-            ConfigHolder.INSTANCE.ae2GraphFallback = false;
+            ConfigHolder.INSTANCE.diagnostics.ae2GraphDiagnosticLogging = false;
+            ConfigHolder.INSTANCE.performance.ae2GraphFallback = false;
             var firstBinding = pattern(input, output);
             var currentBinding = pattern(input, output);
             check(firstBinding != currentBinding && PatternFingerprint.of(firstBinding).equals(PatternFingerprint.of(currentBinding)),
@@ -86,7 +86,7 @@ final class GraphPlanReuseIntegrationTest {
         var catalog = new CapturedPatternCatalog(List.of(), 1);
         var prepared = CapturedPatternCatalog.class.getDeclaredField("prepared");
         prepared.setAccessible(true);
-        prepared.set(catalog, new CapturedPatternCatalog.Prepared(compiler, Map.of(id, binding)));
+        prepared.set(catalog, new CapturedPatternCatalog.Prepared(compiler, Map.of(id, binding), null));
         var structure = new GtlPatternCatalog.Structure(catalog, Set.of(input, output), Set.of(), Set.of(), false, Map.of(), 0);
         var snapshot = new GtlPatternCatalog.Snapshot(structure, Map.of(input, stock), external, 0, false);
         var constructor = requestType.getDeclaredConstructors()[0];
