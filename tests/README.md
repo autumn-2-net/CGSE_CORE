@@ -52,6 +52,10 @@ assembler execution require the explicit local live-adapter checks.
 `StateReturnConcurrencyTest` guards aggregate return capacity and temporary
 subscriptions; `StateReturnPlaceholderTest` prevents placeholder completion from
 discarding unresolved physical state returns.
+`DagReturnWakeupTest` requires actual returns to wake the next operation in
+128/1000-state chains within two dispatch checks, including a saved prefix.
+It also preserves normal/retry service under repeated wakeups and rejects
+duplicate dispatches after synchronous full or partial acceptance.
 
 The `Historical*Test` programs provide 31 maintained regressions. The migration
 index maps 44 archived sources, including two reference helpers and aliases
