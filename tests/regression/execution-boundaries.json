@@ -2463,6 +2463,30 @@
       "expanded_budget": true,
       "expected": "SAT",
       "evidence": "Paired before/after four-worker original-input replay. Independent primitive validation; fixed or expanded request ceiling; no state reset or fallback."
+    },
+    {
+      "source": "cases/graph/f8/f85432be8450d4b431caa97a6dac9d167ee3cd3b453ab959d5dccb6bae46d3f6.json",
+      "sha256_lf": "9893af8e2ad4c309ce9f65addc1a895158d4711be474524e8e835897c1023fe9",
+      "name": "mknapcb2_19_bks/exact-query-reuse-cost",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Original corpus SAT oracle plus independent primitive replay. Remembered query rows remain rechecked under each RHS; this is an observed-cost guard within the unchanged 40M request budget.",
+      "maximum_observed_work": 6000000
+    },
+    {
+      "source": "cases/graph/f8/f85432be8450d4b431caa97a6dac9d167ee3cd3b453ab959d5dccb6bae46d3f6.json",
+      "sha256_lf": "9893af8e2ad4c309ce9f65addc1a895158d4711be474524e8e835897c1023fe9",
+      "name": "mknapcb2_19_bks/exact-query-eight-million",
+      "orders": [
+        0
+      ],
+      "work": 8000000,
+      "expected": "SAT",
+      "evidence": "Paired main-planner replay under an actual 8M request allowance; original rows and stock. Independent primitive replay establishes feasibility; the observed-cost limit is distinct from the request budget.",
+      "maximum_observed_work": 5000000
     }
   ]
 }

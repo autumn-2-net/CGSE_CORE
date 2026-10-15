@@ -7,9 +7,11 @@ package org.cgse.core;
  * are retained; forced suffix values are query premises, never global facts. */
 final class CountPackingTail implements AutoCloseable {
     private final PlanningBudget budget;
+    private final int[] rejected, rejectedPoint;
     private final int offset, size, dimensions, points;
     private final long[][] coefficients;
-    private final long[] vectors, minimum, maximum, spread, common, possible, query;
+    private final CountPackingValues vectors;
+    private final long[] minimum, maximum, spread, common, possible, query;
     private final int[] order, from, to, left, right, stack;
     private long memory, fixed, selected, assignment;
     private int cursor, phase, nodes = 1, pending;
@@ -19,20 +21,23 @@ final class CountPackingTail implements AutoCloseable {
         int size = coefficients[0].length - offset;
         if (offset < 0 || size < 1 || size > 12) throw new IllegalArgumentException("Packing tail width");
         int points = 1 << size, nodes = 2 * ((points + 7) / 8);
-        long bytes = 8192L + points * (4L + 8L * coefficients.length) + nodes * (32L + 8L * coefficients.length);
+        boolean compact = CountPackingValues.canPack(coefficients, offset, coefficients[0].length, budget);
+        long bytes = 8192L + points * (8L + (compact ? 4L : 8L) * coefficients.length) + nodes * (36L + 8L * coefficients.length);
         if (!budget.tryReserve(bytes)) return null;
-        try { return new CountPackingTail(coefficients, offset, budget, bytes); }
+        try { return new CountPackingTail(coefficients, offset, budget, bytes, compact); }
         catch (RuntimeException failure) { budget.release(bytes); throw failure; }
     }
 
-    private CountPackingTail(long[][] coefficients, int offset, PlanningBudget budget, long memory) {
+    private CountPackingTail(long[][] coefficients, int offset, PlanningBudget budget, long memory, boolean compact) {
         this.coefficients = coefficients; this.offset = offset; this.budget = budget; this.memory = memory;
         size = coefficients[0].length - offset; dimensions = coefficients.length; points = 1 << size;
         int capacity = 2 * ((points + 7) / 8);
-        vectors = new long[points * dimensions]; minimum = new long[capacity * dimensions];
+        vectors = new CountPackingValues(points * dimensions, compact); minimum = new long[capacity * dimensions];
         maximum = new long[dimensions]; spread = new long[dimensions]; query = new long[dimensions];
         common = new long[capacity]; possible = new long[capacity];
         order = new int[points]; from = new int[capacity]; to = new int[capacity];
+        rejectedPoint = new int[points];
+        rejected = new int[capacity];
         left = new int[capacity]; right = new int[capacity]; stack = new int[64];
         // This complete Boolean box has an exact row spread without enumerating
         // its points. Relative spreads guide partitioning, never exclusions.
@@ -54,8 +59,8 @@ final class CountPackingTail implements AutoCloseable {
             int previous = cursor & (cursor - 1), variable = Integer.numberOfTrailingZeros(cursor);
             budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
             for (int r = 0; r < dimensions; r++)
-                vectors[cursor * dimensions + r] = cursor == 0 ? 0 :
-                        vectors[previous * dimensions + r] + coefficients[r][offset + variable];
+                vectors.set(cursor * dimensions + r, cursor == 0 ? 0 :
+                        vectors.get(previous * dimensions + r) + coefficients[r][offset + variable]);
             order[cursor] = cursor; cursor++;
             return false;
         }
@@ -94,21 +99,31 @@ final class CountPackingTail implements AutoCloseable {
         int node = stack[--pending];
         budget.operation(PlanningBudget.Operation.SCAN, 0);
         if ((common[node] & fixed & ~selected) != 0 || (selected & ~possible[node]) != 0) return false;
+        // Recheck the last separating row against this query. The remembered
+        // coordinate is an ordering hint, never a cached failure or bound.
+        int first = rejected[node] == 0 ? dimensions - 1 : rejected[node] - 1;
+        budget.operation(PlanningBudget.Operation.SCAN, 0);
+        if (minimum[node * dimensions + first] > query[first]) return false;
         for (int r = dimensions - 1; r >= 0; r--) {
+            if (r == first) continue;
             budget.operation(PlanningBudget.Operation.SCAN, 0);
-            if (minimum[node * dimensions + r] > query[r]) return false;
+            if (minimum[node * dimensions + r] > query[r]) { rejected[node] = r + 1; return false; }
         }
         if (left[node] != 0) {
             stack[pending++] = right[node]; stack[pending++] = left[node];
             return false;
         }
         for (int p = from[node]; p < to[node]; p++) {
-            int id = order[p]; boolean valid = true;
+            int id = order[p];
             budget.operation(PlanningBudget.Operation.SCAN, 0);
             if ((((long) id ^ selected) & fixed) != 0) continue;
-            for (int r = dimensions - 1; r >= 0; r--) {
+            int pointFirst = rejectedPoint[id] == 0 ? dimensions - 1 : rejectedPoint[id] - 1;
+            budget.operation(PlanningBudget.Operation.SCAN, 0);
+            boolean valid = vectors.get(id * dimensions + pointFirst) <= query[pointFirst];
+            if (valid) for (int r = dimensions - 1; r >= 0; r--) {
+                if (r == pointFirst) continue;
                 budget.operation(PlanningBudget.Operation.SCAN, 0);
-                if (vectors[id * dimensions + r] > query[r]) { valid = false; break; }
+                if (vectors.get(id * dimensions + r) > query[r]) { rejectedPoint[id] = r + 1; valid = false; break; }
             }
             if (valid) { assignment = (long) id << offset; feasible = complete = true; return true; }
         }
@@ -123,13 +138,13 @@ final class CountPackingTail implements AutoCloseable {
             // children complete. Repeated full scans at every tree level would
             // cost the same suffix work this index is intended to avoid.
             budget.operations(PlanningBudget.Operation.SCAN, 0, 2 * dimensions);
-            System.arraycopy(vectors, start * dimensions, query, 0, dimensions);
-            System.arraycopy(vectors, start * dimensions, maximum, 0, dimensions);
+            vectors.copy(start * dimensions, query, 0, dimensions);
+            vectors.copy(start * dimensions, maximum, 0, dimensions);
             for (int sample = 1; sample < 8; sample++) {
                 int id = order[begin + sample * (end - begin - 1) / 7];
                 budget.operations(PlanningBudget.Operation.INTEGER, 64, 2 * dimensions);
                 for (int r = 0; r < dimensions; r++) {
-                    long value = vectors[id * dimensions + r];
+                    long value = vectors.get(id * dimensions + r);
                     query[r] = Math.min(query[r], value); maximum[r] = Math.max(maximum[r], value);
                 }
             }
@@ -148,13 +163,13 @@ final class CountPackingTail implements AutoCloseable {
             return;
         }
         budget.operations(PlanningBudget.Operation.SCAN, 0, 2 * dimensions);
-        System.arraycopy(vectors, start * dimensions, minimum, node * dimensions, dimensions);
+        vectors.copy(start * dimensions, minimum, node * dimensions, dimensions);
         long all = start, any = start;
         for (int p = begin + 1; p < end; p++) {
             int id = order[p]; all &= id; any |= id;
             budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions + 2);
             for (int r = 0; r < dimensions; r++) {
-                long value = vectors[id * dimensions + r];
+                long value = vectors.get(id * dimensions + r);
                 minimum[node * dimensions + r] = Math.min(minimum[node * dimensions + r], value);
             }
         }
@@ -186,7 +201,7 @@ final class CountPackingTail implements AutoCloseable {
     }
     private int compare(int first, int second, int axis) {
         budget.operation(PlanningBudget.Operation.SCAN, 0);
-        int result = Long.compare(vectors[first * dimensions + axis], vectors[second * dimensions + axis]);
+        int result = Long.compare(vectors.get(first * dimensions + axis), vectors.get(second * dimensions + axis));
         return result == 0 ? Integer.compare(first, second) : result;
     }
     boolean feasible() { return feasible; }

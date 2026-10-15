@@ -10,10 +10,12 @@ package org.cgse.core;
  * a vector or traversing every left entry for each right-hand combination. */
 final class CountPackingExchange implements AutoCloseable {
     private final PlanningBudget budget;
+    private final int[] rejected, rejectedPoint;
     private final long[] slack, seedChange, query, prefix;
     private final long seed;
     private final int size, dimensions, split, points;
-    private final long[] vectors, masks, minimum, maximum, spread;
+    private final CountPackingValues vectors;
+    private final long[] masks, minimum, maximum, spread;
     private final int[] order, from, to, left, right, building, querying;
     private final Subsets subsets;
     private int cursor, phase, nodes = 1, builds, queries;
@@ -40,11 +42,13 @@ final class CountPackingExchange implements AutoCloseable {
         int leaves = 1;
         while (leaves * 8 < points) leaves <<= 1;
         int capacity = 2 * leaves;
-        long bytes = 8192L + points * (12L + 8L * dimensions) + capacity * (16L + 8L * dimensions) + 32L * size * dimensions;
+        boolean compact = CountPackingValues.canPack(a, 0, split, budget);
+        long bytes = 8192L + points * (16L + (compact ? 4L : 8L) * dimensions) + capacity * (20L + 8L * dimensions) + 32L * size * dimensions;
         if (!budget.tryReserve(bytes)) {
             complete = true;
-            slack = seedChange = query = prefix = vectors = masks = minimum = maximum = spread = null;
-            order = from = to = left = right = building = querying = null;
+            vectors = null;
+            slack = seedChange = query = prefix = masks = minimum = maximum = spread = null;
+            order = from = to = left = right = building = querying = rejected = rejectedPoint = null;
             subsets = null;
             return;
         }
@@ -70,7 +74,7 @@ final class CountPackingExchange implements AutoCloseable {
 
             }
 
-            vectors = new long[points * dimensions];
+            vectors = new CountPackingValues(points * dimensions, compact);
             masks = new long[points];
             order = new int[points];
             minimum = new long[capacity * dimensions];
@@ -80,6 +84,8 @@ final class CountPackingExchange implements AutoCloseable {
             to = new int[capacity];
             left = new int[capacity];
             right = new int[capacity];
+            rejectedPoint = new int[points];
+            rejected = new int[capacity];
             building = new int[64];
             querying = new int[64];
             subsets = new Subsets(0, split, radius);
@@ -107,7 +113,7 @@ final class CountPackingExchange implements AutoCloseable {
             order[cursor] = cursor;
             updatePrefix();
             budget.operations(PlanningBudget.Operation.SCAN, 0, dimensions);
-            System.arraycopy(prefix, subsets.count * dimensions, vectors, cursor * dimensions, dimensions);
+            vectors.put(prefix, subsets.count * dimensions, cursor * dimensions, dimensions);
 
             cursor++;
             return false;
@@ -142,9 +148,15 @@ final class CountPackingExchange implements AutoCloseable {
         }
 
         int node = querying[--queries];
+        // Recheck the last separating row against this query. The remembered
+        // coordinate is an ordering hint, never a cached failure or bound.
+        int first = rejected[node] == 0 ? dimensions - 1 : rejected[node] - 1;
+        budget.operation(PlanningBudget.Operation.SCAN, 0);
+        if (minimum[node * dimensions + first] > query[first]) return false;
         for (int r = dimensions - 1; r >= 0; r--) {
+            if (r == first) continue;
             budget.operation(PlanningBudget.Operation.SCAN, 0);
-            if (minimum[node * dimensions + r] > query[r]) return false;
+            if (minimum[node * dimensions + r] > query[r]) { rejected[node] = r + 1; return false; }
         }
 
         if (left[node] != 0) {
@@ -155,16 +167,14 @@ final class CountPackingExchange implements AutoCloseable {
 
         for (int p = from[node]; p < to[node]; p++) {
             int id = order[p];
-            boolean valid = true;
-            for (int r = dimensions - 1; r >= 0; r--) {
+            int pointFirst = rejectedPoint[id] == 0 ? dimensions - 1 : rejectedPoint[id] - 1;
+            budget.operation(PlanningBudget.Operation.SCAN, 0);
+            boolean valid = vectors.get(id * dimensions + pointFirst) <= query[pointFirst];
+            if (valid) for (int r = dimensions - 1; r >= 0; r--) {
+                if (r == pointFirst) continue;
                 budget.operation(PlanningBudget.Operation.SCAN, 0);
-                if (vectors[id * dimensions + r] > query[r]) {
-                    valid = false;
-                    break;
-                }
-
+                if (vectors.get(id * dimensions + r) > query[r]) { rejectedPoint[id] = r + 1; valid = false; break; }
             }
-
             if (valid) {
                 assignment = seed ^ masks[id] ^ rightMask;
                 feasible = complete = true;
@@ -189,14 +199,14 @@ final class CountPackingExchange implements AutoCloseable {
         int begin = from[node], end = to[node], first = order[begin] * dimensions;
         if (node == 0) {
             budget.operations(PlanningBudget.Operation.SCAN, 0, 2 * dimensions);
-            System.arraycopy(vectors, first, query, 0, dimensions);
-            System.arraycopy(vectors, first, maximum, 0, dimensions);
+            vectors.copy(first, query, 0, dimensions);
+            vectors.copy(first, maximum, 0, dimensions);
             for (int p = begin + 1; p < end; p++) {
                 budget.operations(PlanningBudget.Operation.INTEGER, 64, 2 * dimensions);
                 int id = order[p] * dimensions;
                 for (int r = 0; r < dimensions; r++) {
-                    query[r] = Math.min(query[r], vectors[id + r]);
-                    maximum[r] = Math.max(maximum[r], vectors[id + r]);
+                    query[r] = Math.min(query[r], vectors.get(id + r));
+                    maximum[r] = Math.max(maximum[r], vectors.get(id + r));
                 }
             }
             budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
@@ -206,14 +216,14 @@ final class CountPackingExchange implements AutoCloseable {
             // Samples choose a partition axis only; they never become query bounds.
             if (node != 0) {
                 budget.operations(PlanningBudget.Operation.SCAN, 0, 2 * dimensions);
-                System.arraycopy(vectors, first, query, 0, dimensions);
-                System.arraycopy(vectors, first, maximum, 0, dimensions);
+                vectors.copy(first, query, 0, dimensions);
+                vectors.copy(first, maximum, 0, dimensions);
                 for (int sample = 1; sample < 8; sample++) {
                     int id = order[begin + sample * (end - begin - 1) / 7] * dimensions;
                     budget.operations(PlanningBudget.Operation.INTEGER, 64, 2 * dimensions);
                     for (int r = 0; r < dimensions; r++) {
-                        query[r] = Math.min(query[r], vectors[id + r]);
-                        maximum[r] = Math.max(maximum[r], vectors[id + r]);
+                        query[r] = Math.min(query[r], vectors.get(id + r));
+                        maximum[r] = Math.max(maximum[r], vectors.get(id + r));
                     }
                 }
             }
@@ -232,11 +242,11 @@ final class CountPackingExchange implements AutoCloseable {
             return;
         }
         budget.operations(PlanningBudget.Operation.SCAN, 0, dimensions);
-        System.arraycopy(vectors, first, minimum, node * dimensions, dimensions);
+        vectors.copy(first, minimum, node * dimensions, dimensions);
         for (int p = begin + 1; p < end; p++) {
             int id = order[p] * dimensions;
             budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
-            for (int r = 0; r < dimensions; r++) minimum[node * dimensions + r] = Math.min(minimum[node * dimensions + r], vectors[id + r]);
+            for (int r = 0; r < dimensions; r++) minimum[node * dimensions + r] = Math.min(minimum[node * dimensions + r], vectors.get(id + r));
         }
     }
 
@@ -269,7 +279,7 @@ final class CountPackingExchange implements AutoCloseable {
     }
     private int compare(int a, int b, int axis) {
         budget.operation(PlanningBudget.Operation.SCAN, 0);
-        int c = Long.compare(vectors[a * dimensions + axis], vectors[b * dimensions + axis]);
+        int c = Long.compare(vectors.get(a * dimensions + axis), vectors.get(b * dimensions + axis));
         return c != 0 ? c : Integer.compare(a, b);
     }
 
