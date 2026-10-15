@@ -63,6 +63,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
     boolean structureScouted, structureEarly, structureResuming, preferStructureResume;
     CountCongruence congruence;
     CountPacking packing;
+    private long packingViewWork, packingServiceCredit;
     CountJump jumping;
     CountProbing probing;
     boolean probed, jumpCandidate, jumpLate;
@@ -446,7 +447,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
                 // the LP has consumed its entire preferential allowance. Offer
                 // one bounded policy batch, accounting for the LP work just
                 // completed. Read it before continueOnCuts() resumes the LP.
-                long candidateQuantum = viewSearch == null ? 0 : viewSearch.packingContinuationQuantum(completedLpWork);
+                long candidateQuantum = packingQuantum(completedLpWork);
                 if (candidateQuantum > 0) {
                     lpActive = false;
                     viewSearch.resume(candidateQuantum);
@@ -477,7 +478,11 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             return;
         }
         if (viewStage != 0) {
-            if (!viewSearch.step()) return;
+            long before = viewSearch.work();
+            boolean done;
+            try { done = viewSearch.step(); }
+            finally { if (viewStage == 10) packingServiceCredit += viewSearch.work() - before; }
+            if (!done) return;
             int continuation = viewStage;
             viewStage = 0;
             counts = viewSearch.counts();
@@ -570,7 +575,25 @@ final class IntegerCountBranch<K> implements AutoCloseable {
             return;
         }
         if (packing != null) {
-            if (!packing.step()) return;
+            long before = packing.work();
+            boolean done;
+            try { done = packing.step(); }
+            finally { packingViewWork += packing.work() - before; }
+            if (!done) {
+                // Service an already admitted initial frontier alongside the
+                // ordinary packing search. Credit only this tool's measured
+                // work; neither the portfolio nor either local cap is reset.
+                if (packingViewWork >= CountPortfolioPolicy.MAX_QUANTUM) {
+                    long quantumForViews = viewSearch == null ? 0 : viewSearch.packingScoutQuantum(packingViewWork);
+                    packingViewWork = 0;
+                    if (quantumForViews > 0) {
+                        viewSearch.resume(quantumForViews);
+                        viewStage = 10;
+                    }
+                }
+                return;
+            }
+            packingViewWork = 0;
             counts = reduction.expand(packing.counts());
             packing.close();
             packing = null;
@@ -2074,6 +2097,15 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         children.add(List.copyOf(next));
     }
 
+    /** Early service advances an existing companion's opportunity. Offset its
+     * later LP service once; never subtract from actual/global work counters. */
+    private long packingQuantum(long completedLpWork) {
+        long quantum = viewSearch == null ? 0 : viewSearch.packingContinuationQuantum(completedLpWork);
+        long credited = Math.min(quantum, packingServiceCredit);
+        packingServiceCredit -= credited;
+        return quantum - credited;
+    }
+
     private void afterViewSearch(int continuation) {
         if (continuation == 2) congruence = new CountCongruence(reduction.rows(), reduction.variables(), budget);
         else if (continuation == 3) diagram = new CountDecisionDiagram(reduction.rows(), reduction.lower(), reduction.upper(), budget, 65536).retained();
@@ -2084,6 +2116,8 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         // A rejected packing candidate also returns to the same LP batch.
         // Its prior resume has already charged/granted the next local slice.
         else if (continuation == 9) lpActive = true;
+        // Completion or rejection returns to the same ordinary packing stack.
+        else if (continuation == 10) return;
         // Stage 1 resumes compilation, preserving the untouched original model.
     }
 
@@ -2094,6 +2128,7 @@ final class IntegerCountBranch<K> implements AutoCloseable {
         viewSearch = null;
         modelViews = null;
         viewStage = viewCandidateStage = 0;
+        packingServiceCredit = 0;
     }
 
     private static ExactLinearProgram.Constraint bound(int variable, BigInteger value, boolean lower) {

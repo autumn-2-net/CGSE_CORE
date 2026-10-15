@@ -250,10 +250,21 @@ final class CountViewSearch implements AutoCloseable {
     }
 
     long packingContinuationQuantum(long completedCompetingWork) {
+        return packingContinuationQuantum(completedCompetingWork, false);
+    }
+
+    /** Complement an ordinary packing search until the first trial closes.
+     * Later repairs retain their normal portfolio and LP continuation routes. */
+    long packingScoutQuantum(long completedCompetingWork) {
+        return packingContinuationQuantum(completedCompetingWork, true);
+    }
+
+    private long packingContinuationQuantum(long completedCompetingWork, boolean initialOnly) {
         if (completedCompetingWork < 0) throw new IllegalArgumentException("Negative completed effort");
         for (Search search : searches) {
             if (!search.done && search.scheduling.eligible && search.progress > 0 &&
-                    search.specialist instanceof CountPackingCore packing && packing.remainingAllowance() > 0) {
+                    search.specialist instanceof CountPackingCore packing && packing.remainingAllowance() > 0 &&
+                    (!initialOnly || packing.initialOpportunity())) {
                 // A productive LP can spend a much larger batch outside this
                 // portfolio. One repeatedly tiny candidate sample need not be
                 // fair service, even when both frontiers retain their state.
@@ -729,6 +740,9 @@ final class CountViewSearch implements AutoCloseable {
         var chosen = policy.select();
         return searches.stream().filter(search -> search.scheduling == chosen).findFirst().orElse(null);
     }
+
+    /** Charged work in completed or retained portfolio steps. */
+    long work() { return work; }
 
     BigInteger[] counts() {
         return counts == null ? null : counts.clone();

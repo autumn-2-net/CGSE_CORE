@@ -182,9 +182,11 @@ final class CountPackingCore implements CountContinuation {
             aggregate = Arrays.stream(vector).mapToLong(BigInteger::longValueExact).toArray();
             aggregateBound = bound.longValueExact();
         }
-        // Preserve a first sample of the original exact frontier. Easy cores
-        // can finish without constructing any optional exchange table.
-        scoutAt = work + Math.min(262144, normalWork / 16);
+        // Preserve the same bounded first sample at smaller request budgets.
+        // Dividing this sample by the total allowance interrupted easy cores
+        // earlier precisely when less work was available to recover them.
+        // The normal phase ceiling still ends the sample if it is smaller.
+        scoutAt = work + Math.min(262144, normalWork);
         return coreSize <= 64;
     }
 
@@ -196,7 +198,9 @@ final class CountPackingCore implements CountContinuation {
         compiledSize = 0;
         // This scout consumes the existing normal allowance. Neither a worker
         // handoff nor restoring the saved frontier renews any phase ceiling.
-        scoutLimit = Math.min(normalWork, work + Math.min(1_048_576, maximumWork / 16));
+        // Admission already requires this minimum normal-phase remainder.
+        // Leave room to query the exchange index after paying to build it.
+        scoutLimit = Math.min(normalWork, work + Math.min(1_048_576, Math.max(262144, maximumWork / 16)));
         beginCore();
     }
 
@@ -305,6 +309,9 @@ final class CountPackingCore implements CountContinuation {
     List<CountLpLearning.Cut> sharedRows() { return explanation == null ? List.of() : List.of(explanation); }
     @Override public long work() { return work; }
     Phase phase() { return phase; }
+    /** Initial enumeration and its first exchange only. A closed restricted
+     * scout ends this opportunity, without proving anything about other faces. */
+    boolean initialOpportunity() { return phase == Phase.ENUMERATION && (!scoutAttempted || scouting); }
     // One completed, owned scout; neither resuming nor observing adds work.
     long restoredScoutWork() { return wideScoutWork; }
     int completionEpoch() { return phase.ordinal() + (wideScoutWork > 0 ? 1 : 0); }

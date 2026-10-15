@@ -765,3 +765,22 @@ Three canonical packing inputs also guard first-plan cost below 2M reported
 work under the unchanged 40M scheduling envelope. A smaller request budget
 changes strategy allocation and is tested separately; it is not equivalent to
 this observed-cost bound.
+
+`CountPackingServiceTest` uses a planted, independently funded 100-recipe
+fixture to exercise complementary packing service on a second worker. Both
+frontiers retain their stacks and fixed ceilings; charged work cannot be
+refunded on handoff. Completion of the initial restricted exchange ends this
+extra service while preserving ordinary LP/portfolio continuation. Cancellation
+releases both owners. The existing exhaustive packing checks still validate the
+underlying searches and their proof boundaries.
+Three canonical witnesses now have actual 2M request-budget guards, and another
+has a 4M guard plus a 3M observed-cost guard under the normal 40M budget. A smaller
+budget must leave a bounded initial sample and useful exchange queries after
+index preparation. No restricted failure is promoted to an original-model
+proof. Internal scout allocation changes within the unchanged request, total
+search and normal-phase ceilings; handoffs cannot renew those ceilings.
+The same four inputs also run through four-worker execution boundaries with
+fixed and expanded budgets; independent primitive replay remains mandatory.
+Measured early service offsets later discretionary LP companion visits once;
+the service-ledger check forbids refunding charged work or granting the same
+opportunity twice. Existing 12M cost guards remain unchanged.

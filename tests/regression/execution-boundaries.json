@@ -2299,6 +2299,170 @@
       "name": "mknapcb1_26_bks-threshold-index-cost-guard",
       "expected": "SAT",
       "evidence": "Original canonical recipe order and 40M search budget. Exact threshold indexing gives a primitive-validated witness below 2M total reported work; keep the original scheduling envelope when checking this cost bound."
+    },
+    {
+      "source": "cases/graph/11/1101c8158719daddb55218dbf219c0b0ddfba737d2da2787e269aaaaa0175685.json",
+      "sha256_lf": "05ec442c11051c5bb4da336854e079497e5291b96a007d3cae2ae11869957e42",
+      "orders": [
+        0
+      ],
+      "work": 2000000,
+      "maximum_observed_work": 1800000,
+      "name": "mknapcb4_22_bks/stable-initial-budget",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle. Main-planner witness independently replays all original primitive recipes. Guards actual request-budget service, with no fallback or changed input."
+    },
+    {
+      "source": "cases/graph/1e/1eb65bf637e7e6cc75db7687e00096dd69c9685f1355faab250a94af35b549b6.json",
+      "sha256_lf": "cf3da50ce9c73b64aa4c134f61b13fd4ec76b60f9caa98c5b4640bb3454e7e9d",
+      "orders": [
+        0
+      ],
+      "work": 2000000,
+      "maximum_observed_work": 1800000,
+      "name": "mknapcb4_27_bks/stable-initial-budget",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle. Main-planner witness independently replays all original primitive recipes. Guards actual request-budget service, with no fallback or changed input."
+    },
+    {
+      "source": "cases/graph/46/46925cba4f4060e438efb8ca29b1cfa3993e9172b355933e382ff696628f42bb.json",
+      "sha256_lf": "035a07d8f7e9218a4c23c91d1e605507b90c199fc75672a83b0c0b21ffc5b9e5",
+      "orders": [
+        0
+      ],
+      "work": 2000000,
+      "maximum_observed_work": 1800000,
+      "name": "mknapcb1_26_bks/stable-initial-budget",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle. Main-planner witness independently replays all original primitive recipes. Guards actual request-budget service, with no fallback or changed input."
+    },
+    {
+      "source": "cases/graph/2c/2ccdf6b732976398745405a611166e91790d02a79de9333f7e6630f4c7745acd.json",
+      "sha256_lf": "69153ba14e990cf84b476a3dba5225c6f2343235488261ae02029609318e2004",
+      "orders": [
+        0
+      ],
+      "work": 4000000,
+      "maximum_observed_work": 3000000,
+      "name": "mknapcb4_16_bks/retained-service-budget",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle. Main-planner witness independently replays all original primitive recipes. Guards actual request-budget service, with no fallback or changed input."
+    },
+    {
+      "source": "cases/graph/2c/2ccdf6b732976398745405a611166e91790d02a79de9333f7e6630f4c7745acd.json",
+      "sha256_lf": "69153ba14e990cf84b476a3dba5225c6f2343235488261ae02029609318e2004",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 3000000,
+      "name": "mknapcb4_16_bks/retained-service-cost",
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle. Main-planner witness independently replays all original primitive recipes. Guards actual request-budget service, with no fallback or changed input."
+    },
+    {
+      "source": "cases/graph/11/1101c8158719daddb55218dbf219c0b0ddfba737d2da2787e269aaaaa0175685.json",
+      "sha256_lf": "05ec442c11051c5bb4da336854e079497e5291b96a007d3cae2ae11869957e42",
+      "name": "mknapcb4_22_bks/packing-service/four-workers-fixed",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "workers": 4,
+      "expanded_budget": false,
+      "expected": "SAT",
+      "evidence": "Paired before/after four-worker original-input replay. Independent primitive validation; fixed or expanded request ceiling; no state reset or fallback."
+    },
+    {
+      "source": "cases/graph/11/1101c8158719daddb55218dbf219c0b0ddfba737d2da2787e269aaaaa0175685.json",
+      "sha256_lf": "05ec442c11051c5bb4da336854e079497e5291b96a007d3cae2ae11869957e42",
+      "name": "mknapcb4_22_bks/packing-service/four-workers-expanded",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "workers": 4,
+      "expanded_budget": true,
+      "expected": "SAT",
+      "evidence": "Paired before/after four-worker original-input replay. Independent primitive validation; fixed or expanded request ceiling; no state reset or fallback."
+    },
+    {
+      "source": "cases/graph/1e/1eb65bf637e7e6cc75db7687e00096dd69c9685f1355faab250a94af35b549b6.json",
+      "sha256_lf": "cf3da50ce9c73b64aa4c134f61b13fd4ec76b60f9caa98c5b4640bb3454e7e9d",
+      "name": "mknapcb4_27_bks/packing-service/four-workers-fixed",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "workers": 4,
+      "expanded_budget": false,
+      "expected": "SAT",
+      "evidence": "Paired before/after four-worker original-input replay. Independent primitive validation; fixed or expanded request ceiling; no state reset or fallback."
+    },
+    {
+      "source": "cases/graph/1e/1eb65bf637e7e6cc75db7687e00096dd69c9685f1355faab250a94af35b549b6.json",
+      "sha256_lf": "cf3da50ce9c73b64aa4c134f61b13fd4ec76b60f9caa98c5b4640bb3454e7e9d",
+      "name": "mknapcb4_27_bks/packing-service/four-workers-expanded",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "workers": 4,
+      "expanded_budget": true,
+      "expected": "SAT",
+      "evidence": "Paired before/after four-worker original-input replay. Independent primitive validation; fixed or expanded request ceiling; no state reset or fallback."
+    },
+    {
+      "source": "cases/graph/46/46925cba4f4060e438efb8ca29b1cfa3993e9172b355933e382ff696628f42bb.json",
+      "sha256_lf": "035a07d8f7e9218a4c23c91d1e605507b90c199fc75672a83b0c0b21ffc5b9e5",
+      "name": "mknapcb1_26_bks/packing-service/four-workers-fixed",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "workers": 4,
+      "expanded_budget": false,
+      "expected": "SAT",
+      "evidence": "Paired before/after four-worker original-input replay. Independent primitive validation; fixed or expanded request ceiling; no state reset or fallback."
+    },
+    {
+      "source": "cases/graph/46/46925cba4f4060e438efb8ca29b1cfa3993e9172b355933e382ff696628f42bb.json",
+      "sha256_lf": "035a07d8f7e9218a4c23c91d1e605507b90c199fc75672a83b0c0b21ffc5b9e5",
+      "name": "mknapcb1_26_bks/packing-service/four-workers-expanded",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "workers": 4,
+      "expanded_budget": true,
+      "expected": "SAT",
+      "evidence": "Paired before/after four-worker original-input replay. Independent primitive validation; fixed or expanded request ceiling; no state reset or fallback."
+    },
+    {
+      "source": "cases/graph/2c/2ccdf6b732976398745405a611166e91790d02a79de9333f7e6630f4c7745acd.json",
+      "sha256_lf": "69153ba14e990cf84b476a3dba5225c6f2343235488261ae02029609318e2004",
+      "name": "mknapcb4_16_bks/packing-service/four-workers-fixed",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "workers": 4,
+      "expanded_budget": false,
+      "expected": "SAT",
+      "evidence": "Paired before/after four-worker original-input replay. Independent primitive validation; fixed or expanded request ceiling; no state reset or fallback."
+    },
+    {
+      "source": "cases/graph/2c/2ccdf6b732976398745405a611166e91790d02a79de9333f7e6630f4c7745acd.json",
+      "sha256_lf": "69153ba14e990cf84b476a3dba5225c6f2343235488261ae02029609318e2004",
+      "name": "mknapcb4_16_bks/packing-service/four-workers-expanded",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "workers": 4,
+      "expanded_budget": true,
+      "expected": "SAT",
+      "evidence": "Paired before/after four-worker original-input replay. Independent primitive validation; fixed or expanded request ceiling; no state reset or fallback."
     }
   ]
 }
