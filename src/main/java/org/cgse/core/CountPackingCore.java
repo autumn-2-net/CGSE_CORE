@@ -99,8 +99,17 @@ final class CountPackingCore implements CountContinuation {
         stepStart = before;
         try {
             if (scouting && work >= scoutLimit) endScout();
-            if (phase == Phase.ENUMERATION && work >= normalWork) {
+            // Other retained arms spend the same request account. Once this
+            // enumeration has had half its fixed opportunity, do not wait for
+            // its entire local ceiling if that would leave less than the
+            // originally sized repair opportunity in the request. This moves
+            // a phase boundary only; no local or global allowance is renewed.
+            if (phase == Phase.ENUMERATION && (work >= normalWork ||
+                    work >= normalWork / 2 && budget.remainingWork() <= maximumWork - normalWork)) {
                 flexiblePending = false;
+                // The request can shrink while an optional scout is live.
+                // Restore the original face before constructing its PB repair.
+                if (scouting) endScout();
                 if (ranked == null || search == null) return finish("local_limit");
                 phase = Phase.CONFLICT_REPAIR;
                 beginCore();

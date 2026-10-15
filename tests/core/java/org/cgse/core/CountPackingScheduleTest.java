@@ -52,7 +52,66 @@ public final class CountPackingScheduleTest {
             throw new AssertionError("Cancelled structural analysis ran");
         } catch (CancellationException expected) {}
         deferredHandoff();
-        System.out.println("Coverage, capacity coupling, inventory scope, permutations, deferred handoff and fixed ceilings passed");
+        competingWork(false);
+        competingWork(true);
+        System.out.println("Coverage, capacity coupling, inventory scope, permutations, competing work, deferred handoff and fixed ceilings passed");
+    }
+
+    /** Controlled completed-work observations, charged to the real account;
+     * only the phase handoff is under test, not a fabricated SAT/UNSAT oracle. */
+    private static void competingWork(boolean liveScout) throws Exception {
+        int n = 64;
+        var lo = new BigInteger[n]; var hi = new BigInteger[n];
+        Arrays.fill(lo, BigInteger.ZERO); Arrays.fill(hi, BigInteger.ONE);
+        var random = new Random(161017); var rows = new ArrayList<ExactLinearProgram.Constraint>();
+        var demand = new TreeMap<Integer, BigInteger>(); var target = BigInteger.ZERO;
+        for (int r = 0; r < 5; r++) {
+            var terms = new TreeMap<Integer, BigInteger>(); var capacity = BigInteger.ZERO;
+            for (int i = 0; i < n; i++) {
+                var a = BigInteger.valueOf(1 + random.nextInt(100)); terms.put(i, a);
+                demand.merge(i, a.negate(), BigInteger::add);
+                if (i % 2 == 0) capacity = capacity.add(a);
+            }
+            rows.add(new ExactLinearProgram.Constraint(terms, capacity)); target = target.add(capacity);
+        }
+        rows.add(new ExactLinearProgram.Constraint(demand, target.negate()));
+        var view = new CountModelViews.View("competing-work", rows, lo, hi,
+                new CountModelViews.Shape(n, 6L * n, 64, n), null, CountModelViews.Semantics.EQUIVALENT, null);
+        var budget = budget(); var worker = Executors.newSingleThreadExecutor();
+        try (var core = CountPackingCore.create(view, new CountModelViews.Domains(lo, hi, 0), budget, Long.MAX_VALUE)) {
+            while (field(core, "search") == null) check(!core.step(), "Fixture closed before LP preparation");
+            long normal = (long) field(core, "normalWork"), maximum = (long) field(core, "maximumWork");
+            long learning = (long) field(core, "learningLimit"), allowance = maximum - normal;
+            invoke(core, "beginScout"); invoke(core, "endScout");
+            long beforeMinimum = normal / 2 - 1;
+            budget.charge(beforeMinimum - core.work()); set(core, "work", beforeMinimum);
+            if (!liveScout) {
+                // Other work cannot preempt the initial exploration opportunity.
+                worker.submit(() -> budget.charge(budget.remainingWork() - allowance)).get();
+                check(!core.step() && core.phase() == CountPackingCore.Phase.ENUMERATION,
+                        "Competing work skipped the minimum enumeration opportunity");
+            } else {
+                // With ample total budget, the local ceiling still owns this phase.
+                check(!core.step() && core.phase() == CountPackingCore.Phase.ENUMERATION,
+                        "Enumeration ended while the request still had repair headroom");
+                invoke(core, "beginScout");
+                check((boolean) field(core, "scouting"), "Missing live scout control");
+                worker.submit(() -> budget.charge(budget.remainingWork() - allowance)).get();
+            }
+            check(core.work() >= normal / 2 && core.work() < normal, "Fixture did not cross the observation boundary");
+            core.resume(Long.MAX_VALUE); worker.submit(core::step).get();
+            check(core.phase() == CountPackingCore.Phase.CONFLICT_REPAIR && !(boolean) field(core, "scouting") &&
+                    field(core, "scoutBase") == null && !(boolean) field(core, "flexiblePending"),
+                    "Shared request depletion stranded a scout or postponed the PB repair");
+            Object search = field(core, "search");
+            for (int i = 0; i < 3; i++) { core.resume(1); worker.submit(core::step).get(); }
+            check(field(core, "search") == search && (long) field(core, "normalWork") == normal &&
+                    (long) field(core, "learningLimit") == learning && (long) field(core, "maximumWork") == maximum,
+                    "Repair handoff rebuilt the frontier or replenished fixed ceilings");
+            check(core.counts() == null && budget.cachePreparationWork() == 0,
+                    "Scheduling manufactured a witness or hid competing work in retention");
+        } finally { worker.shutdownNow(); }
+        check(budget.reservedBytes() == 0, "Request-aware repair leaked a saved scout");
     }
 
     private static void deferredHandoff() throws Exception {

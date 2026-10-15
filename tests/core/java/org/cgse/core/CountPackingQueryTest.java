@@ -53,7 +53,78 @@ public final class CountPackingQueryTest {
         compactBoundary();
         accounting();
         sharedAccounting();
-        System.out.println("Exact queries, changed RHS, bit 64, fixed domains, worker moves, bounded storage and shared scan accounting passed");
+        inheritedBounds();
+        inheritedAccounting();
+        System.out.println("Exact queries, inherited bounds, changed RHS, bit 64, fixed domains, worker moves, bounded storage and shared scan accounting passed");
+    }
+
+    /** Every accepted leaf is checked independently against every query row.
+     * Changed bounds restart at the root; a previous parent pass is not reusable. */
+    private static void inheritedBounds() {
+        var random = new java.util.Random(161016);
+        var budget = new PlanningBudget(0, 100_000_000, 1L << 20, () -> false, System::nanoTime);
+        for (int dimensions : new int[] {1, 2, 7, 32, 35}) for (int trial = 0; trial < 64; trial++) {
+            var values = new long[32 * dimensions];
+            var rows = new long[32]; rows[1] = (1L << dimensions) - 1;
+            for (int leaf = 16; leaf < 32; leaf++) for (int r = 0; r < dimensions; r++) {
+                int kind = random.nextInt(16);
+                values[leaf * dimensions + r] = kind == 0 ? Long.MIN_VALUE : kind == 1 ? Long.MAX_VALUE :
+                        kind == 2 ? (1L << 53) + leaf : kind == 3 ? -(1L << 53) - leaf : random.nextInt(9) - 4;
+            }
+            for (int node = 15; node > 0; node--)
+                CountPackingQuery.join(values, rows, dimensions, node, 2 * node, 2 * node + 1, budget);
+            var hints = new int[32]; var query = new long[dimensions]; var stack = new int[32];
+            for (int turn = 0; turn < 32; turn++) {
+                for (int r = 0; r < dimensions; r++) query[r] = turn % 4 == 0 ? Long.MAX_VALUE :
+                        turn % 4 == 1 ? Long.MIN_VALUE : values[(16 + turn % 16) * dimensions + r];
+                int expected = 0;
+                for (int leaf = 16; leaf < 32; leaf++) {
+                    boolean fits = true;
+                    for (int r = 0; r < dimensions; r++) fits &= values[leaf * dimensions + r] <= query[r];
+                    if (fits) expected |= 1 << (leaf - 16);
+                }
+                int found = 0, pending = 1; stack[0] = 1;
+                while (pending > 0) {
+                    int node = stack[--pending];
+                    int rejection = CountPackingQuery.reject(values, node * dimensions, query, hints[node], rows[node], budget);
+                    if (rejection >= 0) { hints[node] = rejection; continue; }
+                    if (node >= 16) found |= 1 << (node - 16);
+                    else { stack[pending++] = 2 * node + 1; stack[pending++] = 2 * node; }
+                }
+                check(found == expected, "Inherited row comparison lost a leaf or accepted an invalid one");
+            }
+        }
+    }
+
+    private static void inheritedAccounting() {
+        var actual = new PlanningBudget(0, 1_000_000, 1L << 20, () -> false, System::nanoTime);
+        var reference = new PlanningBudget(0, 1_000_000, 1L << 20, () -> false, System::nanoTime);
+        actual.threadWork(); reference.threadWork();
+        var query = new long[35]; var values = new long[42];
+        for (long rows : new long[] {0, 1, 1L << 34, 0x555555555L, (1L << 35) - 1})
+            for (int first = 0; first < 35; first++) {
+                reference.operations(PlanningBudget.Operation.SCAN, 0, Long.bitCount(rows));
+                check(CountPackingQuery.reject(values, 7, query, first, rows, actual) == -1, "Equal inherited bounds rejected");
+                check(actual.nodes() == reference.nodes() && actual.threadSearchWork() == reference.threadSearchWork(),
+                        "Inherited comparison charged skipped coordinates or lost fractional work");
+            }
+        check(actual.cachePreparationWork() == 0, "Current-query deductions used the retention account");
+        var limited = new PlanningBudget(0, 1, 1L << 20, () -> false, System::nanoTime);
+        try {
+            CountPackingQuery.reject(values, 7, query, 0, (1L << 35) - 1, limited);
+            throw new AssertionError("Inherited query published after exhaustion");
+        } catch (PlanningBudget.Exhausted expected) {}
+        for (long rows : new long[] {0, (1L << 35) - 1}) {
+            try {
+                CountPackingQuery.reject(values, 7, query, 0, rows, limited);
+                throw new AssertionError("Empty comparison reopened an exhausted account");
+            } catch (PlanningBudget.Exhausted expected) {}
+            var cancelled = new PlanningBudget(0, 1_000_000, 1L << 20, () -> true, System::nanoTime);
+            try {
+                CountPackingQuery.reject(values, 7, query, 0, rows, cancelled);
+                throw new AssertionError("Inherited query ignored cancellation");
+            } catch (CancellationException expected) {}
+        }
     }
 
     /** Comparison values deliberately cross floating-point and signed bounds.

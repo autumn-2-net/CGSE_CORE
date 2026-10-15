@@ -55,6 +55,19 @@ two, with the original minimum of eight). Wider boxes use coarser leaves to avoi
 paying for many intermediate row bounds; each visited point is still checked by
 exact integer comparisons. Tree allocation uses the same leaf width, including
 partially filled leaves. The original sparse exchange layout remains unchanged.
+Both exchange indices and retained suffix tables also record which exact child
+bounds are stricter than their parent. A child is reachable only after that parent
+passed the current query, so unchanged row bounds need no second comparison.
+Every new query checks the root again, and point checks still cover all rows.
+The masks describe immutable index structure; they are not stored failures, cuts
+or inventory-independent conclusions. Tree construction charges their work and
+reserves eight additional bytes per node. Query work includes every comparison
+actually performed; it does not charge skipped comparisons or the separate cache
+retention account. A resumed query retains its pending nodes and current RHS.
+Sparse row masks use descending set-bit traversal; dense masks scan row positions.
+The selection compares three operations per selected bit with two per row as a
+bounded cost estimate. Both loops preserve comparison order, first separator,
+charged work and the first witness; this choice changes CPU overhead only.
 Only the original exchange receives the early companion service alongside the
 ordinary packing search. A pending or running complementary rounding domain stays
 eligible through the retained portfolio and LP handoffs, without extending that
@@ -69,6 +82,15 @@ The original frontier and projection are restored after either scout. Optional
 reservations are released on closure, cancellation and budget exhaustion.
 Estimates describe reserved solver workspace, not JVM process memory.
 
+The enumeration-to-conflict-repair handoff also observes the shared request
+remainder. After at least half of its fixed enumeration opportunity, it can
+advance when the request has no more work left than the repair opportunity sized
+at creation (maximumWork - normalWork). Other arms can otherwise consume this
+remainder while a faster enumerator continues to its unchanged local ceiling.
+The original local ceilings remain fixed, and this is not a hard reservation
+against concurrent work. An active scout is closed and its original face restored
+before PB construction. Restricted search results retain their original scope.
+
 CountPackingFlexibleTest checks independent exhaustive neighborhoods, scaled
 integer rows, twelve-change witnesses excluded by ordinary sparse exchange,
 word/row boundaries, retained worker handoffs, fixed attempt ceilings, memory
@@ -78,3 +100,6 @@ execution regressions remain enabled. Its 512 generated cases retain the origina
 CountPackingScheduleTest checks distinct coupled/independent decisions at equal
 fractionality, exact coverage counts, row/column permutations, changed inventory,
 and a deferred attempt surviving worker handoff without increasing its allowance.
+CountPackingQueryTest additionally compares 10,240 inherited-bound queries with
+independent leaf scans, including signed-long extremes, changed RHS, row 35,
+empty masks, fractional work accounting, cancellation and exhausted accounts.

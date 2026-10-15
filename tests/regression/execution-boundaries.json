@@ -1906,7 +1906,9 @@
       "source": "cases/graph/c4/c47387d8a14d6a9a010c5a9bbe09fe16f0b1ccbb5e1c2bf08e4643fe4c05cde9.json",
       "sha256_lf": "02cdd4bd7fedbade15df09da4556f7d7b6148cff8394dd2da3817de5e11489b9",
       "orders": [
-        0
+        0,
+        17,
+        1009
       ],
       "work": 40000000,
       "expected": "SAT",
@@ -2591,6 +2593,128 @@
       "name": "fractional-packing-mknapcb5_25_bks",
       "expected": "SAT",
       "evidence": "Existing corpus target; full original integer rows and primitive execution prefixes independently verified. Retained fractional-rounding exchange repairs the original 40M budget failure."
+    },
+    {
+      "name": "mknapcb7_12_bks/inherited-bounds-request-repair/original-and-permuted",
+      "source": "cases/graph/33/33c83a7c65b54d4e482ac6d4f5c1a44743abc4c2ea88c65a30502b56087de0e1.json",
+      "sha256_lf": "8ba6148744e0c1f021edadc9a542c6fbf57834b4a03a4eaf50b82a7f739b5401",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver."
+    },
+    {
+      "name": "mknapcb7_12_bks/inherited-bounds-request-repair/four-workers-fixed",
+      "source": "cases/graph/33/33c83a7c65b54d4e482ac6d4f5c1a44743abc4c2ea88c65a30502b56087de0e1.json",
+      "sha256_lf": "8ba6148744e0c1f021edadc9a542c6fbf57834b4a03a4eaf50b82a7f739b5401",
+      "orders": [
+        0,
+        17
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb7_12_bks/inherited-bounds-request-repair/four-workers-expanded",
+      "source": "cases/graph/33/33c83a7c65b54d4e482ac6d4f5c1a44743abc4c2ea88c65a30502b56087de0e1.json",
+      "sha256_lf": "8ba6148744e0c1f021edadc9a542c6fbf57834b4a03a4eaf50b82a7f739b5401",
+      "orders": [
+        0,
+        17
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "mknapcb5_09_bks/inherited-bounds-request-repair/original-and-permuted",
+      "source": "cases/graph/88/887334aba87cf6084dcf097e349ae76601e12760ffeebb44f230a26688b3ce85.json",
+      "sha256_lf": "d81de7f46ea51e6503023bc7fa0869065705ea7ae5a1c4a834131fd7cc8bd7c5",
+      "orders": [
+        0,
+        17
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver."
+    },
+    {
+      "name": "mknapcb5_09_bks/inherited-bounds-request-repair/four-workers-fixed",
+      "source": "cases/graph/88/887334aba87cf6084dcf097e349ae76601e12760ffeebb44f230a26688b3ce85.json",
+      "sha256_lf": "d81de7f46ea51e6503023bc7fa0869065705ea7ae5a1c4a834131fd7cc8bd7c5",
+      "orders": [
+        0,
+        17
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb5_09_bks/inherited-bounds-request-repair/four-workers-expanded",
+      "source": "cases/graph/88/887334aba87cf6084dcf097e349ae76601e12760ffeebb44f230a26688b3ce85.json",
+      "sha256_lf": "d81de7f46ea51e6503023bc7fa0869065705ea7ae5a1c4a834131fd7cc8bd7c5",
+      "orders": [
+        0,
+        17
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "mknapcb3_23_bks/inherited-bounds-request-repair/original-and-permuted",
+      "source": "cases/graph/d9/d9a6258167433e34740be53dbf86b9448798d90436e9642ec5f16c8e12141b25.json",
+      "sha256_lf": "282974da39f3ec9b91989f9de683b6f6059971d5c73f0b4adc6a6f55303ebdc1",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver."
+    },
+    {
+      "name": "mknapcb3_23_bks/inherited-bounds-request-repair/four-workers-fixed",
+      "source": "cases/graph/d9/d9a6258167433e34740be53dbf86b9448798d90436e9642ec5f16c8e12141b25.json",
+      "sha256_lf": "282974da39f3ec9b91989f9de683b6f6059971d5c73f0b4adc6a6f55303ebdc1",
+      "orders": [
+        0,
+        17
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb3_23_bks/inherited-bounds-request-repair/four-workers-expanded",
+      "source": "cases/graph/d9/d9a6258167433e34740be53dbf86b9448798d90436e9642ec5f16c8e12141b25.json",
+      "sha256_lf": "282974da39f3ec9b91989f9de683b6f6059971d5c73f0b4adc6a6f55303ebdc1",
+      "orders": [
+        0,
+        17
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver.",
+      "workers": 4,
+      "expanded_budget": true
     }
   ]
 }

@@ -18,7 +18,7 @@ final class CountPackingExchange implements AutoCloseable {
     private final long seed;
     private final int size, dimensions, split, points, leafSize;
     private final CountPackingValues vectors;
-    private final long[] masks, minimum, maximum, spread;
+    private final long[] masks, minimum, maximum, spread, stricter;
     private final int[] order, from, to, left, right, building, querying;
     private final Subsets subsets;
     private int cursor, phase, nodes = 1, builds, queries;
@@ -64,11 +64,11 @@ final class CountPackingExchange implements AutoCloseable {
         while (leaves * leafSize < points) leaves <<= 1;
         int capacity = 2 * leaves;
         boolean compact = CountPackingValues.canPack(a, 0, split, budget);
-        long bytes = 8192L + points * (16L + (compact ? 4L : 8L) * dimensions) + capacity * (20L + 8L * dimensions) + 32L * size * dimensions;
+        long bytes = 8192L + points * (16L + (compact ? 4L : 8L) * dimensions) + capacity * (28L + 8L * dimensions) + 32L * size * dimensions;
         if (!budget.tryReserve(bytes)) {
             complete = true;
             vectors = null;
-            slack = seedChange = query = prefix = leftLimit = masks = minimum = maximum = spread = null;
+            slack = seedChange = query = prefix = leftLimit = masks = minimum = maximum = spread = stricter = null;
             order = from = to = left = right = building = querying = rejected = rejectedPoint = null;
             subsets = null;
             return;
@@ -125,6 +125,8 @@ final class CountPackingExchange implements AutoCloseable {
             minimum = new long[capacity * dimensions];
             maximum = new long[dimensions];
             spread = new long[dimensions];
+            stricter = new long[capacity];
+            stricter[0] = (1L << dimensions) - 1;
             from = new int[capacity];
             to = new int[capacity];
             left = new int[capacity];
@@ -198,7 +200,7 @@ final class CountPackingExchange implements AutoCloseable {
         // Recheck the last separating row against this query. The remembered
         // coordinate is an ordering hint, never a cached failure or bound.
         int first = rejected[node] == 0 ? dimensions - 1 : rejected[node] - 1;
-        int rejection = CountPackingQuery.reject(minimum, node * dimensions, query, first, budget);
+        int rejection = CountPackingQuery.reject(minimum, node * dimensions, query, first, stricter[node], budget);
         if (rejection >= 0) { rejected[node] = rejection + 1; return false; }
 
         if (left[node] != 0) {
@@ -288,9 +290,7 @@ final class CountPackingExchange implements AutoCloseable {
     }
 
     private void join(int node) {
-        budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions);
-        for (int r = 0; r < dimensions; r++)
-            minimum[node * dimensions + r] = Math.min(minimum[left[node] * dimensions + r], minimum[right[node] * dimensions + r]);
+        CountPackingQuery.join(minimum, stricter, dimensions, node, left[node], right[node], budget);
     }
 
     private void partition(int begin, int end, int middle, int axis) {

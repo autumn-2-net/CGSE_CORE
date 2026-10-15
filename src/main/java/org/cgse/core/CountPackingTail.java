@@ -11,7 +11,7 @@ final class CountPackingTail implements AutoCloseable {
     private final int offset, size, dimensions, points;
     private final long[][] coefficients;
     private final CountPackingValues vectors;
-    private final long[] minimum, maximum, spread, common, possible, query;
+    private final long[] minimum, maximum, spread, common, possible, query, stricter;
     private final int[] order, from, to, left, right, stack;
     private long memory, fixed, selected, assignment;
     private int cursor, phase, nodes = 1, pending;
@@ -23,7 +23,7 @@ final class CountPackingTail implements AutoCloseable {
         if (offset < 0 || size < 1 || size > 12) throw new IllegalArgumentException("Packing tail width");
         int points = 1 << size, nodes = 2 * ((points + 7) / 8);
         boolean compact = CountPackingValues.canPack(coefficients, offset, coefficients[0].length, budget);
-        long bytes = 8192L + points * (8L + (compact ? 4L : 8L) * coefficients.length) + nodes * (36L + 8L * coefficients.length);
+        long bytes = 8192L + points * (8L + (compact ? 4L : 8L) * coefficients.length) + nodes * (44L + 8L * coefficients.length);
         if (!budget.tryReserve(bytes)) return null;
         try { return new CountPackingTail(coefficients, offset, budget, bytes, compact); }
         catch (RuntimeException failure) { budget.release(bytes); throw failure; }
@@ -36,6 +36,7 @@ final class CountPackingTail implements AutoCloseable {
         vectors = new CountPackingValues(points * dimensions, compact); minimum = new long[capacity * dimensions];
         maximum = new long[dimensions]; spread = new long[dimensions]; query = new long[dimensions];
         common = new long[capacity]; possible = new long[capacity];
+        stricter = new long[capacity]; stricter[0] = (1L << dimensions) - 1;
         order = new int[points]; from = new int[capacity]; to = new int[capacity];
         rejectedPoint = new int[points];
         rejected = new int[capacity];
@@ -103,7 +104,7 @@ final class CountPackingTail implements AutoCloseable {
         // Recheck the last separating row against this query. The remembered
         // coordinate is an ordering hint, never a cached failure or bound.
         int first = rejected[node] == 0 ? dimensions - 1 : rejected[node] - 1;
-        int rejection = CountPackingQuery.reject(minimum, node * dimensions, query, first, budget);
+        int rejection = CountPackingQuery.reject(minimum, node * dimensions, query, first, stricter[node], budget);
         if (rejection >= 0) { rejected[node] = rejection + 1; return false; }
         if (left[node] != 0) {
             stack[pending++] = right[node]; stack[pending++] = left[node];
@@ -169,10 +170,8 @@ final class CountPackingTail implements AutoCloseable {
 
     private void join(int node) {
         int a = left[node], b = right[node];
-        budget.operations(PlanningBudget.Operation.INTEGER, 64, dimensions + 2);
-        for (int r = 0; r < dimensions; r++) {
-            minimum[node * dimensions + r] = Math.min(minimum[a * dimensions + r], minimum[b * dimensions + r]);
-        }
+        CountPackingQuery.join(minimum, stricter, dimensions, node, a, b, budget);
+        budget.operations(PlanningBudget.Operation.INTEGER, 64, 2);
         common[node] = common[a] & common[b]; possible[node] = possible[a] | possible[b];
     }
 
