@@ -169,8 +169,8 @@ public final class ServiceExtractionTest {
             run(bounded);
             throw new AssertionError("bounded alternatives cannot publish an unproven missing preview");
         } catch (java.util.concurrent.ExecutionException expected) {
-            check(expected.getCause() instanceof PlanningBudget.Exhausted exhausted && exhausted.limit() == PlanningBudget.Limit.SEARCH_LIMIT,
-                    "bounded alternatives must signal search limit");
+            check(PlanningFailure.result(expected) == GraphPlan.Result.INCOMPLETE_MODEL,
+                    "bounded alternatives must report incomplete coverage, not exhausted search");
         }
     }
 

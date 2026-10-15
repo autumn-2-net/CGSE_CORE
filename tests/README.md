@@ -36,6 +36,23 @@ resource requirements differ. Use `--case <regex>`, `--shard 0/4`, `--millisecon
 
 ## Maintained historical tests
 
+`RequestCoverageTest` keeps incomplete candidate/state domains distinct from
+complete infeasibility, including retained smaller requests and direct emission.
+`CapturedReachableTest` checks sparse executable witnesses beyond the initial
+concrete window. `CapturedStateTest` checks symbolic tool capacity, separate
+physical ownership, mixed worn tools, replacement-tool production and bounded
+restoration of only the selected uses. Their auxiliary failures are not proofs
+about unexpanded state domains.
+
+`StateTransitionTest` verifies exact and uncertain return contracts and bounded
+state discovery. `StateReturnRuntimeTest` covers actual alternative receipts,
+parallel equivalent/disjoint return domains, partial returns, synchronous handoff,
+rejection, cancellation and persistence. Native AE/GT callbacks and molecular
+assembler execution require the explicit local live-adapter checks.
+`StateReturnConcurrencyTest` guards aggregate return capacity and temporary
+subscriptions; `StateReturnPlaceholderTest` prevents placeholder completion from
+discarding unresolved physical state returns.
+
 The `Historical*Test` programs provide 31 maintained regressions. The migration
 index maps 44 archived sources, including two reference helpers and aliases
 whose distinct generator/branching variants are explicitly retained. They run in `standard` and can also be selected with
@@ -784,3 +801,17 @@ fixed and expanded budgets; independent primitive replay remains mandatory.
 Measured early service offsets later discretionary LP companion visits once;
 the service-ledger check forbids refunding charged work or granting the same
 opportunity twice. Existing 12M cost guards remain unchanged.
+
+
+`CountPackingQueryTest` checks repeated exact index queries after RHS and fixed
+suffix changes, including bit 64 and a worker handoff. The last separating row
+is checked against each new query; it is never a reusable infeasibility verdict.
+A query-cost guard catches repeated scanning of already known harmless rows.
+The table keeps constant storage across queries and releases it with its owner.
+Exact absolute-sum bounds allow narrower point storage. Boundary controls straddle
+the signed 32-bit range and also use 43-bit scales; query arithmetic and node
+bounds remain 64-bit. The existing exhaustive tail and exchange oracles cover
+both representations. `mknapcb2_19_bks` additionally guards first-plan cost below
+6M reported work within the unchanged 40M request allowance.
+A separate 8M request guards observed cost below 5M; this cost bound does not
+imply a 5M request budget is sufficient.

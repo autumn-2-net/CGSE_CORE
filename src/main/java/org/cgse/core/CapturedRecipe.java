@@ -21,10 +21,15 @@ public final class CapturedRecipe<K> {
         }
     }
 
-    public record Candidate<K>(Amount<K> stack, K remaining, boolean configuration, boolean reusable) {
+    public record Candidate<K>(Amount<K> stack, K remaining, boolean configuration, boolean reusable,
+                               StateFamily<K> family) {
+
+        public Candidate(Amount<K> stack, K remaining, boolean configuration, boolean reusable) {
+            this(stack, remaining, configuration, reusable, null);
+        }
 
         public Candidate(Amount<K> stack, K remaining, boolean configuration) {
-            this(stack, remaining, configuration, false);
+            this(stack, remaining, configuration, false, null);
         }
     }
 
@@ -55,6 +60,10 @@ public final class CapturedRecipe<K> {
         this.inputs = List.copyOf(inputs);
         this.outputs = List.copyOf(outputs);
         this.external = external;
+        // A family represents further exact states which the finite candidate
+        // list intentionally does not enumerate. That list cannot prove closure.
+        for (var input : inputs) for (var candidate : input.candidates())
+            bounded |= candidate.family() != null;
         this.captureBounded = bounded;
         choices = new int[inputs.size()];
         int product = 1;
@@ -89,6 +98,12 @@ public final class CapturedRecipe<K> {
 
     public boolean bounded() {
         return bounded;
+    }
+
+    /** Every captured input key, independent of the concrete fast-view window. */
+    public Iterator<K> candidateDependencies() {
+        return inputs.stream().flatMap(input -> input.candidates().stream())
+                .map(candidate -> candidate.stack().what()).iterator();
     }
 
     /** Complete captured domain, with the same first window as expand(). Caller owns its lifetime. */
