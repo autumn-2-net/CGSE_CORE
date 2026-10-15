@@ -2487,6 +2487,110 @@
       "expected": "SAT",
       "evidence": "Paired main-planner replay under an actual 8M request allowance; original rows and stock. Independent primitive replay establishes feasibility; the observed-cost limit is distinct from the request budget.",
       "maximum_observed_work": 5000000
+    },
+    {
+      "source": "cases/graph/04/041215f14abcc9355d84ebedf873e66f633ac6c052159ccfe5f31314c0ebb961.json",
+      "sha256_lf": "7efe610ccc247d30d932e0830414687ee41d8752bfde0559b5b10e948e47b812",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "fractional-packing-mknapcb4_02_bks",
+      "expected": "SAT",
+      "evidence": "Existing corpus target; full original integer rows and primitive execution prefixes independently verified. Retained fractional-rounding exchange repairs the original 40M budget failure."
+    },
+    {
+      "source": "cases/graph/16/165e5b19eee92061412faed02c918dceb95c22c3242f5e747298b2d81923a65c.json",
+      "sha256_lf": "08278db649227dab86fcfd7d08577062427180666fdace42eab743c2d8848098",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "fractional-packing-mknapcb4_21_bks",
+      "expected": "SAT",
+      "evidence": "Existing corpus target; full original integer rows and primitive execution prefixes independently verified. Retained fractional-rounding exchange repairs the original 40M budget failure."
+    },
+    {
+      "source": "cases/graph/38/389e26c90fc889ca5692f3467d200ef1108099ecf7acb405762d5eef6524bc2a.json",
+      "sha256_lf": "65e0f1d2891c2e9082722d48c965de4087ef428351509e3bff05919fb254256a",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "fractional-packing-mknapcb3_04_bks",
+      "expected": "SAT",
+      "evidence": "Existing corpus target; full original integer rows and primitive execution prefixes independently verified. Retained fractional-rounding exchange repairs the original 40M budget failure."
+    },
+    {
+      "source": "cases/graph/55/55d1afa1b87bd6f943bfda84df571a335bcce72b3e8ed3e66556963f2877d866.json",
+      "sha256_lf": "8bc53e0b3265b0e7f89c5523808a86e0d1361167fc7ca89cef10c4ed799a205d",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "fractional-packing-mknapcb4_14_bks",
+      "expected": "SAT",
+      "evidence": "Existing corpus target; full original integer rows and primitive execution prefixes independently verified. Retained fractional-rounding exchange repairs the original 40M budget failure."
+    },
+    {
+      "source": "cases/graph/5f/5f040314f6048be0c076178f6d5eb9cdd342316f825e0614165abf9618816468.json",
+      "sha256_lf": "0c7989397a1bccd0af57a5efff242eb352e1d4b2142cec02cdfde3bfbe8d9a89",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "fractional-packing-mknapcb5_01_bks",
+      "expected": "SAT",
+      "evidence": "Existing corpus target; full original integer rows and primitive execution prefixes independently verified. Retained fractional-rounding exchange repairs the original 40M budget failure."
+    },
+    {
+      "source": "cases/graph/b6/b6a286fd8607c3deb0488e58a40a8841eb0824791d4629a40f71409b88e45fb1.json",
+      "sha256_lf": "37f6010f73c57a0899389040bbb41db73bcc79c5ef1d89f9075582d119847ff3",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "fractional-packing-mknapcb4_26_bks",
+      "expected": "SAT",
+      "evidence": "Existing corpus target; full original integer rows and primitive execution prefixes independently verified. Retained fractional-rounding exchange repairs the original 40M budget failure."
+    },
+    {
+      "source": "cases/graph/c2/c2ca1f1f0cc7f7df8de5eb1793c98e1d52c9bb8713ecbc2cfab683bc6ec181bd.json",
+      "sha256_lf": "145df777253e30f49c05958702f6eb1bcc1b3e023d00e4449640010c7370ccfb",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "fractional-packing-mknapcb5_29_bks",
+      "expected": "SAT",
+      "evidence": "Existing corpus target; full original integer rows and primitive execution prefixes independently verified. Retained fractional-rounding exchange repairs the original 40M budget failure."
+    },
+    {
+      "source": "cases/graph/fd/fd6b628e8baef62afe30cae30628618bcee03f00b7a94fbc2d997110a94e08b7.json",
+      "sha256_lf": "b4475ede81323fb36146432c2f2c48d765e92911b6320c0af4f7e07154f96c61",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "name": "fractional-packing-mknapcb5_25_bks",
+      "expected": "SAT",
+      "evidence": "Existing corpus target; full original integer rows and primitive execution prefixes independently verified. Retained fractional-rounding exchange repairs the original 40M budget failure."
     }
   ]
 }

@@ -1,0 +1,74 @@
+Fractional packing neighborhoods
+================================
+
+CountPackingCore keeps its original exact frontier and first sparse-exchange
+attempt. If that exchange closes without a witness, a complementary attempt can
+enumerate all roundings of a small LP-fractional set, together with a bounded
+number of changes to the remaining Boolean choices. Alternating positions in the
+LP ranking distributes cheap deviations and fractional choices between the halves.
+
+This uses the fractional-neighborhood idea of SCIP's RENS:
+https://www.scipopt.org/scip/doc/html/heur__rens_8c.php
+The implementation is CGSE's retained integer matching index, not a sub-SCIP or a
+copy of SCIP's search. Numerical values select an optional domain only; every
+accepted vector is checked against the original exact count rows and subsequently
+against the executable graph plan.
+
+For a half with h coordinates, f flexible coordinates and ordinary radius r, the
+number of assignments is 2^f * sum(k=0..r, binomial(h-f,k)). The ordinary radius is
+reduced until both halves fit within the existing four-change table bound for
+the larger half. This is at most 41,449 assignments per half at width 64. If even
+the all-roundings domain exceeds that bound, the optional attempt is declined;
+it does not silently omit roundings. This bound is a memory/search admission
+policy, not a completeness claim about the original problem.
+
+Before indexing a left assignment, exact row bounds check whether any right
+assignment could repair it. For each row, the right minimum includes all improving
+flexible flips and at most r improving ordinary flips. Row minima need not have
+a common witness: they are conservative necessary conditions, never a claimed
+feasible combination. The original integer range guards cover these activities.
+An empty filtered table closes only this particular neighborhood.
+
+CountPackingSchedule inspects the first scout's actual coordinates once it closes.
+It counts fractional-only roundings already covered by that sparse domain, sizes
+the proposed flexible tables, and connects fractional choices through capacity
+rows that can constrain their roundings with the integer seed held fixed. Demand
+and aggregate rows still participate in every real search; excluding them from
+this capacity-coupling hint does not remove them from the model.
+
+If at least half of the fractional-only roundings were already covered, the
+retained exact frontier receives a second sample proportional to that coverage,
+capped at 1,048,576 work. Capacity components small enough to fit the original
+per-half radius also receive this bounded original-frontier preference. Otherwise
+the complementary domain runs immediately. Recipe identifiers and case names are
+not inputs to the policy. Inventory-dependent row activity is analyzed afresh in
+the current request; structural hints never become pruning or proof premises.
+
+The initial attempt ceilings are captured at the first scout's creation, inside
+the unchanged normal-phase and request work caps. Unused first-scout work can
+carry into the complementary attempt. Deferral saves the remaining
+complementary allowance once; its eventual deadline is capped by that allowance
+and the original normal phase. Neither resuming nor inspecting it renews work.
+Continuation retains subset cursors, prefix activities and the exact query index.
+Only the original exchange receives the early companion service alongside the
+ordinary packing search. A pending or running complementary rounding domain stays
+eligible through the retained portfolio and LP handoffs, without extending that
+first domain's extra service. Its coverage advantage does not imply greater yield.
+If the complementary attempt closes without a candidate, its measured work cools
+the same amount of future extra LP companion service. The observation is consumed
+once, including a partial final service batch, and additions saturate at long's
+maximum. The original retained portfolio remains eligible; this neither refunds
+global work nor lowers a proof bound. A successful rounding attempt receives no
+such penalty. The feedback uses actual work, not the number of scheduler turns.
+The original frontier and projection are restored after either scout. Optional
+reservations are released on closure, cancellation and budget exhaustion.
+Estimates describe reserved solver workspace, not JVM process memory.
+
+CountPackingFlexibleTest checks independent exhaustive neighborhoods, scaled
+integer rows, twelve-change witnesses excluded by ordinary sparse exchange,
+word/row boundaries, retained worker handoffs, fixed attempt ceilings, memory
+refusal, cancellation and empty restricted faces. Existing packing, proof and
+execution regressions remain enabled.
+CountPackingScheduleTest checks distinct coupled/independent decisions at equal
+fractionality, exact coverage counts, row/column permutations, changed inventory,
+and a deferred attempt surviving worker handoff without increasing its allowance.

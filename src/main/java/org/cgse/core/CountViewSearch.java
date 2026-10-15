@@ -77,6 +77,7 @@ final class CountViewSearch implements AutoCloseable {
         long sliceWork, progress, work, candidates, verified, dead, unknown, downstreamWork;
         int repairCompletionObserved;
         long continuationLimit, continuationProgress, continuationCheckpoint;
+        long observedRoundingWork;
         long publishedRoots;
         long importedBounds;
         int publishedConflicts, importedConflicts;
@@ -276,6 +277,18 @@ final class CountViewSearch implements AutoCloseable {
             }
         }
         return 0;
+    }
+
+    /** Consume each unsuccessful complementary attempt's measured cost once.
+     * This only cools extra companion service; the retained portfolio stays live. */
+    long takePackingCooldown() {
+        long result = 0;
+        for (Search search : searches) if (search.specialist instanceof CountPackingCore packing) {
+            long measured = packing.failedRoundingWork();
+            result = saturatedAdd(result, measured - search.observedRoundingWork);
+            search.observedRoundingWork = measured;
+        }
+        return result;
     }
 
     boolean hasGroupedPartition() {

@@ -91,6 +91,33 @@ public final class CountPackingServiceTest {
                     budget.nodes() == globalWork && budget.reservedBytes() == reserved,
                     "Service credit refunded global work, allocated memory or permanently withheld later visits");
 
+            // A completed restricted miss is a service observation, not a new
+            // row or an infeasibility claim. Consume its cost once, including
+            // a partial final batch, then restore ordinary extra service.
+            long failedCost = 2 * CountPortfolioPolicy.MAX_QUANTUM + 13;
+            set(core, "failedRoundingWork", failedCost);
+            long offered = views.packingContinuationQuantum(CountPortfolioPolicy.MAX_QUANTUM);
+            check(views.packingContinuationQuantum(CountPortfolioPolicy.MAX_QUANTUM) == offered,
+                    "Inspecting an eligible frontier consumed cooldown feedback");
+            long paid = 0;
+            for (int i = 0; i < 3; i++) {
+                long actual = (long) grant.invoke(branch, CountPortfolioPolicy.MAX_QUANTUM);
+                paid += offered - actual;
+                check(views.takePackingCooldown() == 0, "Failed attempt was reported more than once");
+            }
+            check(paid == failedCost && (long) get(branch, "packingServiceCredit") == 0 &&
+                    (long) grant.invoke(branch, CountPortfolioPolicy.MAX_QUANTUM) == offered,
+                    "Measured cooldown was rounded to whole turns or withheld service permanently");
+            check(branch.viewSearch == views && core.remainingAllowance() > 0 &&
+                    budget.nodes() == globalWork && budget.reservedBytes() == reserved,
+                    "Cooldown changed the frontier, actual work, memory or original allowance");
+            set(branch, "packingServiceCredit", Long.MAX_VALUE - 7);
+            set(core, "failedRoundingWork", failedCost + 100);
+            check((long) grant.invoke(branch, CountPortfolioPolicy.MAX_QUANTUM) == 0 &&
+                    (long) get(branch, "packingServiceCredit") == Long.MAX_VALUE - offered,
+                    "Combining service feedback overflowed the long allowance");
+            set(branch, "packingServiceCredit", 0L);
+
             // A completed first exchange ends this extra service, not the
             // retained repair's ordinary LP/portfolio eligibility. Only the
             // scheduling observation changes; rows and search state do not.
