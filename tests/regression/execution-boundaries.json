@@ -2715,6 +2715,76 @@
       "evidence": "Existing canonical feasibility oracle and independently replayed primitive execution. Exact parent-bound reuse and the request-remainder repair handoff retain the original inputs and search allowance. Each listed ordering has a validated witness. Eight recipe orders and four-worker fixed/expanded controls were compared with the previous revision; other examined permutations can remain budget-limited. No native witness is supplied to the solver.",
       "workers": 4,
       "expanded_budget": true
+    },
+    {
+      "name": "mknapcb5_27_bks/pair-projection/serial",
+      "source": "cases/graph/37/3795933b60b23a7492ec9e7501a73390e2fa0bc565830d3fd650fb8fe8e70edc.json",
+      "sha256_lf": "761ccd759df2e5200767d1bd537304d7eb15cc48ca27ce841d98ceff0672aa86",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing feasibility oracle; every returned count/plan is independently replayed against primitive recipes. Demand/resource pair projections reject only the current exact suffix set. Original inputs and budget are retained; no native witness is supplied. Each listed order was verified through this worker/budget mode."
+    },
+    {
+      "name": "mknapcb5_27_bks/pair-projection/four-workers-fixed",
+      "source": "cases/graph/37/3795933b60b23a7492ec9e7501a73390e2fa0bc565830d3fd650fb8fe8e70edc.json",
+      "sha256_lf": "761ccd759df2e5200767d1bd537304d7eb15cc48ca27ce841d98ceff0672aa86",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing feasibility oracle; every returned count/plan is independently replayed against primitive recipes. Demand/resource pair projections reject only the current exact suffix set. Original inputs and budget are retained; no native witness is supplied. Each listed order was verified through this worker/budget mode.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb5_27_bks/pair-projection/four-workers-expanded",
+      "source": "cases/graph/37/3795933b60b23a7492ec9e7501a73390e2fa0bc565830d3fd650fb8fe8e70edc.json",
+      "sha256_lf": "761ccd759df2e5200767d1bd537304d7eb15cc48ca27ce841d98ceff0672aa86",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "Canonical multidimensional packing feasibility oracle; every returned count/plan is independently replayed against primitive recipes. Demand/resource pair projections reject only the current exact suffix set. Original inputs and budget are retained; no native witness is supplied. Each listed order was verified through this worker/budget mode.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "mknapcb2_04_bks/deferred-projection-cost",
+      "source": "cases/graph/40/403e22835f883a22b7b4dde2e4d900a5fb93e18bc5c583fc2e5177296d47fd5c.json",
+      "sha256_lf": "e6b3cc1b3a3d3c31d554fbed0a60e2a2f3d9db70521ee84723229d4f3b12f9fc",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 6000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical feasibility oracle and independent primitive replay. Guard first-plan observed cost under the unchanged 40M request envelope: building an optional projection for a short-lived suffix must not displace the original completion opportunity. This is not a 6M request-budget claim."
     }
   ]
 }

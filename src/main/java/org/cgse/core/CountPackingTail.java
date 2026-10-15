@@ -11,12 +11,17 @@ final class CountPackingTail implements AutoCloseable {
     private final int offset, size, dimensions, points;
     private final long[][] coefficients;
     private final CountPackingValues vectors;
+    private final boolean compact;
     private final long[] minimum, maximum, spread, common, possible, query, stricter;
     private final long[] suffixMinimum, positive, negative;
     private final int[] order, from, to, left, right, stack;
     private long memory, fixed, selected, assignment;
     private int cursor, phase, nodes = 1, pending;
     private boolean ready, complete, feasible;
+    private CountPackingProjection projection;
+    private boolean projectionAttempted, projected;
+    private long queryWork;
+    private int queries;
 
     static CountPackingTail create(long[][] coefficients, int offset, PlanningBudget budget) {
         if (coefficients.length < 1 || coefficients.length > 35) throw new IllegalArgumentException("Packing row count");
@@ -32,6 +37,7 @@ final class CountPackingTail implements AutoCloseable {
 
     private CountPackingTail(long[][] coefficients, int offset, PlanningBudget budget, long memory, boolean compact) {
         this.coefficients = coefficients; this.offset = offset; this.budget = budget; this.memory = memory;
+        this.compact = compact;
         size = coefficients[0].length - offset; dimensions = coefficients.length; points = 1 << size;
         int capacity = 2 * ((points + 7) / 8);
         vectors = new CountPackingValues(points * dimensions, compact); minimum = new long[capacity * dimensions];
@@ -109,12 +115,44 @@ final class CountPackingTail implements AutoCloseable {
             query[r] = bound;
         }
         pending = 1; stack[0] = 0; complete = feasible = false;
+        projected = false;
+        queries++;
+        // Current-query acceleration, not cross-request cache preparation.
+        // Require repeated traversal worth two estimated builds: a short-lived
+        // tail can otherwise finish before its new index repays construction,
+        // and even a small delay can miss the parent's completion opportunity.
+        // Memory refusal preserves the ordinary index.
+        long estimate = (long) points * (dimensions + size);
+        if (!projectionAttempted && queries >= Math.max(32, points / 32) && queryWork >= 2 * estimate &&
+                budget.remainingWork() >= 2 * estimate) {
+            projectionAttempted = true;
+            for (int r = 0; r < dimensions; r++) {
+                budget.operation(PlanningBudget.Operation.SCAN, 0);
+                if (positive[r] == 0 && negative[r] != 0) {
+                    projection = CountPackingProjection.create(vectors, points, dimensions, r, compact, budget);
+                    break;
+                }
+            }
+        }
     }
 
     /** Exact orthant query; a failed query only closes its caller's prefix. */
     boolean step() {
         if (complete) return true;
         budget.checkpoint();
+        if (!projected) {
+            if (projection != null) {
+                if (!projection.prepare()) return false;
+                if (projection.rejects(query)) return complete = true;
+            }
+            projected = true;
+        }
+        long before = budget.threadWork();
+        try { return advance(); }
+        finally { queryWork += budget.threadWork() - before; }
+    }
+
+    private boolean advance() {
         if (pending == 0) return complete = true;
         int node = stack[--pending];
         budget.operation(PlanningBudget.Operation.SCAN, 0);
@@ -217,5 +255,9 @@ final class CountPackingTail implements AutoCloseable {
         if (!feasible) throw new IllegalStateException("No suffix witness");
         return assignment;
     }
-    @Override public void close() { budget.release(memory); memory = 0; }
+    @Override public void close() {
+        if (projection != null) projection.close();
+        projection = null;
+        budget.release(memory); memory = 0;
+    }
 }

@@ -843,3 +843,28 @@ search, while the three row arrays belong to the table's reserved workspace.
 Restoration charges one bounded batch for row setup and at most one for the
 actual fixed-endpoint corrections, reusing construction scratch space. This
 avoids per-row shared-counter updates without discounting performed work.
+
+`CountPackingProjectionTest` checks 4,608 queries against independent point
+enumeration. After repeated paid suffix traversal, an optional index combines
+the demand row with each other row over the same immutable point set. Sorting
+the common axis once allows exact prefix minima to exclude queries that pass
+each row's separate minimum. Passing these pairwise relaxations is not a joint
+witness; the original suffix search still checks all rows and fixed values.
+This follows the per-capacity bound idea used by
+[OR-Tools' knapsack solver](https://github.com/google/or-tools/blob/stable/ortools/algorithms/knapsack_solver.cc),
+with CGSE deriving each bound from its exact finite suffix table.
+
+One summary per eight points reduces projection storage. Incomplete final
+blocks are checked exactly, including tied axis values and non-power-of-two
+point counts. Tests cover signed 43-bit scales, extreme query bounds, changed
+fixed variables at bit 64, worker handoffs, cancellation, memory refusal and
+exhaustion before publishing a result. A parity oracle exercises deferred
+admission through the real suffix search; later relaxed queries must recover
+their independently enumerated witnesses. A 160 KiB guard admits the widest
+compact projection without retaining a dense summary for every point.
+All construction and query work belongs to the current search; it never uses
+the independent cross-request cache-preparation allowance. Restricted misses
+remain local to this suffix and cannot become global infeasibility proofs.
+The `mknapcb2_04_bks` first-plan cost guard keeps optional construction from
+displacing a short original search: observed work must stay below 6M within
+the unchanged 40M scheduling envelope. This is not a 6M request-budget claim.
