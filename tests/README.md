@@ -675,6 +675,18 @@ ordered SCCs. Co-output chains and rings also cover repeated dependency edges,
 bounded memory, cancellation and incomplete-cache cleanup. Twelve additional
 catalogs exercise equal-but-distinct resource keys in hash-collision tree bins.
 
+`GraphTopologyReuseTest` checks physical dependency reuse across alternative
+recipe objects. In 240 seeded catalogs, ordered regions must equal a fresh
+compilation and satisfy an independent recipe-reachability oracle. Dense chains
+and rings check saved compilation work and bounded reservations; changed counts,
+bindings, stock leaves, exclusions, input/output order and real versus virtual
+returns cannot inherit old demand semantics. Equal-but-distinct output keys in
+collision tree bins deliberately miss. Matching is resumable, uses the compilation
+account, and publishes only complete partitions into the existing bounded cache.
+Cancellation, optional memory refusal, independent cache budgets and four-worker
+continuations/publications are covered. This does not reuse execution proofs or
+make a restricted source choice a global infeasibility result.
+
 `StockCountHandoffTest` checks initial and retained complete-model turns during
 stock-view repair, cold/warm work caps, independent finite-state enumeration,
 changed stock, 24 recipe permutations and one/four-worker handoffs. Cancellation
