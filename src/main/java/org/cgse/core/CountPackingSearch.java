@@ -12,6 +12,9 @@ final class CountPackingSearch implements AutoCloseable {
     private final long[][] coefficients, thresholds, thresholdMasks, slacks, suffixMaximum;
     private final long[] undecided, selected, positive, negative;
     private final int[] choices;
+    private int[] shifts;
+    private int[][] buckets;
+    private long indexMemory;
     private final boolean[] prepared;
     private final PlanningBudget budget;
     private final int size;
@@ -77,6 +80,36 @@ final class CountPackingSearch implements AutoCloseable {
                 if (coefficients[r][variable] > 0) positive[r] |= 1L << variable;
                 else if (coefficients[r][variable] < 0) negative[r] |= 1L << variable;
             }
+        }
+        buildIndex();
+    }
+
+    /** Bound the exact threshold search by its integer interval. The optional
+     * table owns its reservation; declining it preserves the original search. */
+    private void buildIndex() {
+        long bytes = 64L + 576L * positive.length;
+        if (!budget.tryReserve(bytes)) return;
+        try {
+            shifts = new int[positive.length];
+            buckets = new int[positive.length][];
+            for (int r = 0; r < positive.length; r++) {
+                int shift = shifts[r] = Math.max(0, 64 - Long.numberOfLeadingZeros(thresholds[r][size - 1]) - 7);
+                int count = (int) (thresholds[r][size - 1] >>> shift) + 1;
+                var starts = buckets[r] = new int[count + 1];
+                int at = 0;
+                // At most 129 interval boundaries and 64 thresholds. Charge
+                // this bounded pass once before filling the retained table.
+                budget.operations(PlanningBudget.Operation.SCAN, 0, count + 1 + size);
+                for (int b = 0; b <= count; b++) {
+                    long limit = (long) b << shift;
+                    while (at < size && thresholds[r][at] < limit) at++;
+                    starts[b] = at;
+                }
+            }
+            indexMemory = bytes;
+        } catch (RuntimeException failure) {
+            budget.release(bytes);
+            throw failure;
         }
     }
 
@@ -162,6 +195,14 @@ final class CountPackingSearch implements AutoCloseable {
                 if (slack < 0) return false;
                 if (slack >= suffixMaximum[r][Math.min(size, Long.numberOfTrailingZeros(undecided[depth]))]) continue;
                 int low = 0, high = size, scans = 0;
+                if (buckets != null) {
+                    int bucket = (int) (slack >>> shifts[r]);
+                    high = buckets[r][bucket + 1];
+                    // Unit-width intervals already identify the exact upper
+                    // bound, including coefficients equal to the current slack.
+                    low = shifts[r] == 0 ? high : buckets[r][bucket];
+                    scans = shifts[r] == 0 ? 1 : 2;
+                }
                 while (low < high) {
                     scans++;
                     int mid = (low + high) >>> 1;
@@ -204,5 +245,7 @@ final class CountPackingSearch implements AutoCloseable {
     @Override public void close() {
         if (tail != null) tail.close();
         tail = null;
+        buckets = null; shifts = null;
+        budget.release(indexMemory); indexMemory = 0;
     }
 }

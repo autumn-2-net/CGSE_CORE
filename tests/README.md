@@ -751,3 +751,17 @@ limits, handoffs and cancellation. The original 40M execution boundaries retain
 newly verified wide-exchange witnesses and both old witnesses displaced
 by premature phase expiry or a missing restoration notification. Numerical LP fixings and exchange radii remain local hints;
 all accepted counts still pass original-row and primitive-execution validation.
+
+`CountPackingThresholdTest` compares 4,096 signed, clustered and scaled models
+with independent exhaustive evaluation, including the first witness in the
+original branch order. Integer intervals narrow the existing threshold lookup;
+large coefficients and exact ties still use their original values. The optional
+index has its own bounded reservation and uses ordinary binary search when that
+reservation is refused. Checks cover worker handoffs, interval boundaries up to
+57-bit coefficients, identical witnesses with and without index memory, and
+400 construction/search work limits with complete cleanup. This changes neither
+the neighborhood nor its proof scope, and adds no persistent cache.
+Three canonical packing inputs also guard first-plan cost below 2M reported
+work under the unchanged 40M scheduling envelope. A smaller request budget
+changes strategy allocation and is tested separately; it is not equivalent to
+this observed-cost bound.

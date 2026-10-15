@@ -93,21 +93,26 @@ public final class CountPackingPropagationTest {
 
     private static void cancellation() {
         var stop = new AtomicBoolean(); var budget = budget(stop::get);
-        var search = new CountPackingSearch(new long[][] {{1, 1}}, new long[] {1}, 3, budget);
-        search.step(); stop.set(true);
-        try { search.step(); throw new AssertionError("Cancelled propagation continued"); }
-        catch (CancellationException expected) {}
+        try (var search = new CountPackingSearch(new long[][] {{1, 1}}, new long[] {1}, 3, budget)) {
+            search.step(); stop.set(true);
+            try { search.step(); throw new AssertionError("Cancelled propagation continued"); }
+            catch (CancellationException expected) {}
+        }
+        check(budget.reservedBytes() == 0, "Cancelled propagation retained its index");
     }
 
     private static Long solve(long[][] a, long[] b, long seed, ExecutorService worker) throws Exception {
         var budget = budget(() -> false);
-        var search = new CountPackingSearch(a, b, seed, budget);
-        for (int turns = 0; ; turns++) {
-            check(turns < 100000, "Propagation did not terminate");
-            if (worker == null ? search.step() : worker.submit(search::step).get()) break;
+        Long result;
+        try (var search = new CountPackingSearch(a, b, seed, budget)) {
+            for (int turns = 0; ; turns++) {
+                check(turns < 100000, "Propagation did not terminate");
+                if (worker == null ? search.step() : worker.submit(search::step).get()) break;
+            }
+            result = search.feasible() ? search.assignment() : null;
         }
-        check(budget.reservedBytes() == 0, "Private kernel unexpectedly owns a reservation");
-        return search.feasible() ? search.assignment() : null;
+        check(budget.reservedBytes() == 0, "Completed propagation retained its index");
+        return result;
     }
 
     private static boolean valid(long[][] rows, long[] bounds, long assignment) {
