@@ -52,6 +52,14 @@ restoration cost attribution. The production-restored plan runs through actual
 return gating and saved runtime state; a compressed count cannot authorize
 concurrent use of a single tool. Periodic changing states retain their exact word.
 
+`StateEntityAllocationTest` compares simultaneous tool allocation with 28,002
+independent small oracle cases, including indivisible backtracking, very large
+entity counts, retained depth and cancellation. `CapturedStateEntityTest` covers
+mixed/indivisible slot competition, repeated wear, manufactured replacements and
+early activation of already owned tools across stock/slot/recipe permutations.
+It replays each exact transition against the original captured source and checks
+runtime return routing through save/load, local work limits and incomplete coverage.
+
 `StateTransitionTest` verifies exact and uncertain return contracts and bounded
 state discovery. `StateReturnRuntimeTest` covers actual alternative receipts,
 parallel equivalent/disjoint return domains, partial returns, synchronous handoff,

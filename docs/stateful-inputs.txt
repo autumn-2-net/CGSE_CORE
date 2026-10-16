@@ -54,6 +54,34 @@ do not acquire unconditional requirements from independent choice marginals.
 The arc is only added for simultaneous demand above one: positive use capacity
 already requires an activation, so ordinary one-tool recipes keep the smaller view.
 
+Simultaneous slots of one family are allocated jointly against the actual owned
+state keys. A retained search assigns indivisible slots to whole same-key groups,
+trying best-fit first and backtracking when that choice blocks another slot.
+Mixed slots then use the remaining entities, preferring longer-lived states.
+No returns become available until every slot of the firing has been allocated.
+The single-tool path does not build this allocator. Allocation failure concerns
+these exact owned entities and slots, not all possible programs or count vectors.
+
+If a failed allocation needs an activation already selected by the proposal,
+restoration may advance that activation only when its physical input is currently
+owned. Ordinary inputs of the current firing are reserved first. A per-binding
+credit skips the corresponding later activation, so an entity is never activated
+twice. This can use a manufactured replacement as soon as it is present; it cannot
+borrow a future manufacturing output or an entity held by another family.
+
+If entities are still insufficient, a local repair can re-propose with each
+activation's capacity capped by the selected number of firings using that family.
+One physical tool can serve at most once per firing. This prevents a long-lived
+tool from substituting for several concurrent short-lived tools in that candidate,
+and can request extra stocked or manufactured replacements. The firing horizon is
+only a proposal restriction, not a bound on every valid execution of the catalog.
+All old restored inventory, activation credits and coordinate-local plans are
+discarded before solving the changed auxiliary model. The allocation DFS retains
+its frontier between steps; a changed capacity model starts a new auxiliary solve.
+Neither path renews the arm's original work allowance or borrows cache-preparation
+budget. General temporal matching, arbitrary cross-family assignment and a complete
+restoration repair procedure are not implied by these bounded positive searches.
+
 Exact transitions are interned within the same auxiliary variant, retaining the
 source binding, family choices, input slots and full outputs. Repeated execution
 words can therefore share recipe IDs. An immutable transition returning the
@@ -75,8 +103,8 @@ Restoration, assembly and verification have separate cost-trace stages. Candidat
 diagnostics include restored firings, unique transitions, program nodes, restore
 calls and work. Internal outcomes distinguish verified candidates, restricted
 declines and local resource limits, including invalid algebra versus insufficient
-entities. General matching/reordering repair after a decline and continuation
-after the arm's fixed allowance are not implemented by these outcomes.
+entities. Diagnostics also count candidate horizon refinements and advanced owned
+activations. The arm cannot continue beyond its original fixed allowance.
 
 A failed auxiliary solve or failed restoration is not a global negative proof.
 Family domains remain incomplete; a verified witness is
@@ -128,6 +156,11 @@ The public tests are under tests/core/java/org/cgse/core:
     state words, entity read arcs, manufactured tools, slot/order alternatives,
     exact seed preservation, per-dispatch inputs, cost attribution and actual
     return gating through save/load of a production-restored plan.
+  StateEntityAllocationTest: 28,002 independent tiny allocation oracle cases,
+    indivisible backtracking, large counts, retained depth and cancellation.
+  CapturedStateEntityTest: changing stock/slot order, mixed and indivisible
+    multi-tool firings, attrition, replacement production and activation ordering,
+    physical source-level replay, saved runtime returns and restricted limits.
   CapturedReachableTest: sparse candidate recovery and exact execution checks.
   RequestCoverageTest: request-level coverage and restricted-result boundaries.
   StateReturnRuntimeTest: alternatives, equivalent parallel owners, persistence,

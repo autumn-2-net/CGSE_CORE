@@ -31,6 +31,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     // The auxiliary variant pins the source binding, candidate choices and
     // family contracts. Equal net columns alone never identify a transition.
     private record Transition<K>(String variant, List<GraphRecipe.Slot<K>> slots, Map<K, Long> outputs) {}
+    private record ToolGroup(String family, List<StateEntityAllocation.Demand> demands) {}
 
     enum Status { RUNNING, VERIFIED, DECLINED, LIMITED }
     enum Reason {
@@ -59,11 +60,16 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private final Map<K, BigInteger> free = new LinkedHashMap<>();
     private final Map<String, GraphRecipe<K>> restored = new LinkedHashMap<>();
     private final Map<Transition<K>, String> transitions = new LinkedHashMap<>();
+    private final Map<String, List<ToolGroup>> toolGroups = new LinkedHashMap<>();
+    private final Map<Integer, List<StateEntityAllocation.Pick<K>>> toolChoices = new LinkedHashMap<>();
+    private final Map<String, Long> capacityCaps = new LinkedHashMap<>();
+    private final Map<String, BigInteger> unclaimed = new LinkedHashMap<>(), advanced = new LinkedHashMap<>();
     private final List<PlanStep> program = new ArrayList<>();
     private List<K> activationStates = List.of();
     private CapturedCatalog<Key<K>>.Work planning;
     private GraphPlan<Key<K>> proposed;
     private PlanCursor cursor;
+    private StateEntityAllocation<K> allocation;
     private AllocationSearch.Candidate<K> assembly;
     private PlanVerification<K> verification;
     private ForceCraftProof<K> production;
@@ -72,6 +78,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private int entry, activation;
     private long memory;
     private long restoreWork, restoreCalls;
+    private long proposalMemory, choiceMemory;
+    private int selectingGroup, refinements, activationAdvances;
     private long programNodes = 1; // Includes the root sequence before optimization.
     private BigInteger restoredFirings = BigInteger.ZERO;
     private Outcome outcome = new Outcome(Status.RUNNING, Reason.NONE);
@@ -131,6 +139,14 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 planning.close(); planning = null;
                 if (!proposed.feasible()) return stop(Reason.AUXILIARY_RESULT);
                 cursor = new PlanCursor(proposed.steps());
+                proposalMemory = memory;
+                for (var value : proposed.patternTimesExact().entrySet()) {
+                    budget.check();
+                    String binding = proposed.recipes().get(value.getKey()).binding();
+                    if (!activations.containsKey(binding)) continue;
+                    if (!unclaimed.containsKey(binding) && !reserve(224)) return true;
+                    unclaimed.merge(binding, value.getValue(), BigInteger::add);
+                }
                 observation = budget.observeCandidate(PlanningBudget.CandidateOrigin.ALLOCATION);
             }
             return done;
@@ -218,6 +234,11 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             }
             return;
         }
+        beginProposal();
+        prepared = true;
+    }
+
+    private void beginProposal() {
         var available = new LinkedHashMap<Key<K>, Long>();
         stock.forEach((key, count) -> available.put(Key.physical(key), count));
         var required = new LinkedHashMap<Key<K>, Long>();
@@ -237,7 +258,6 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         external.forEach(key -> emitted.add(Key.physical(key)));
         planning = new CapturedCatalog<>(auxiliary, false).begin(Key.physical(target), amount, available, emitted,
                 required, preserve, force, budget);
-        prepared = true;
     }
 
     private void restore() {
@@ -258,12 +278,17 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         var activating = activations.get(recipe.binding());
         if (activating != null) {
             BigInteger count = BigInteger.valueOf(batch.runs());
-            if (!spend(activating.state(), count)) { stop(Reason.ACTIVATION_OWNERSHIP); return; }
-            pool(activating.family()).merge(activating.state(), count, BigInteger::add);
+            BigInteger credited = advanced.getOrDefault(recipe.binding(), BigInteger.ZERO).min(count);
+            if (credited.signum() > 0) advanced.compute(recipe.binding(), (key, value) -> value.subtract(credited));
+            count = count.subtract(credited);
+            if (count.signum() > 0) {
+                if (!claim(recipe.binding(), activating, count)) { stop(Reason.ACTIVATION_OWNERSHIP); return; }
+            }
             cursor.dispatched(batch.runs()); return;
         }
         var source = sources.get(recipe.binding());
         if (source == null) { stop(Reason.UNKNOWN_AUXILIARY_BINDING); return; }
+        if (!selectTools(recipe, source)) return;
         boolean stateful = recipe.slots().stream().anyMatch(slot -> slot.key().family() != null);
         long runs = stateful ? 1 : batch.runs();
         var slots = new ArrayList<GraphRecipe.Slot<K>>();
@@ -274,7 +299,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (output.getKey().family() != null) { stop(Reason.UNEXPECTED_CAPACITY_OUTPUT); return; }
             outputs.merge(output.getKey().physical(), output.getValue(), Math::addExact);
         }
+        int ordinal = -1;
         for (var slot : recipe.slots()) {
+            ordinal++;
             budget.check();
             if (slot.key().entity()) continue;
             if (slot.key().family() == null) {
@@ -282,8 +309,11 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             } else {
                 var family = families.get(slot.key().family());
                 var input = source.recipe().inputs().get(slot.inputSlot());
-                if (!takeTools(family, slot, source.recipe().mixed(input), slots, returns)) {
-                    if (!done) stop(Reason.INSUFFICIENT_DISTINCT_ENTITIES);
+                var selected = toolChoices.get(ordinal);
+                boolean taken = selected == null ? takeTools(family, slot, source.recipe().mixed(input), slots, returns) :
+                        takeSelected(family, slot, selected, slots, returns);
+                if (!taken) {
+                    if (!done) allocationFailed(family, null);
                     return;
                 }
             }
@@ -360,6 +390,184 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         long dispatched = Math.multiplyExact(runs, repetitions);
         restoredFirings = restoredFirings.add(BigInteger.valueOf(dispatched));
         cursor.dispatched(dispatched);
+        clearSelection();
+    }
+
+    /** Allocate each family jointly before mutating any owned inventory. */
+    private boolean selectTools(GraphRecipe<Key<K>> recipe, CapturedCatalog.Entry<K> source) {
+        var groups = toolGroups.get(recipe.id());
+        if (groups == null) {
+            var grouped = new LinkedHashMap<String, List<StateEntityAllocation.Demand>>();
+            for (int i = 0; i < recipe.slots().size(); i++) {
+                var slot = recipe.slots().get(i);
+                if (slot.key().family() == null || slot.key().entity()) continue;
+                budget.check();
+                grouped.computeIfAbsent(slot.key().family(), ignored -> new ArrayList<>()).add(
+                        new StateEntityAllocation.Demand(i, slot.amount(), source.recipe().mixed(source.recipe().inputs().get(slot.inputSlot()))));
+            }
+            groups = new ArrayList<>();
+            for (var group : grouped.entrySet()) {
+                var demands = group.getValue();
+                if (demands.size() == 1 && demands.get(0).amount() == 1) continue;
+                if (!reserve(160L + 64L * demands.size())) return false;
+                groups.add(new ToolGroup(group.getKey(), List.copyOf(demands)));
+            }
+            if (!reserve(96)) return false;
+            toolGroups.put(recipe.id(), groups);
+        }
+        if (selectingGroup == groups.size()) return true;
+        var group = groups.get(selectingGroup);
+        var family = families.get(group.family());
+        if (allocation == null) {
+            long transientBytes = 64L + 80L * pool(family).size();
+            if (!budget.tryReserve(transientBytes)) { stop(Reason.WORKSPACE_DECLINED); return false; }
+            try {
+                var supplies = new ArrayList<StateEntityAllocation.Supply<K>>();
+                for (var value : pool(family).entrySet()) {
+                    budget.check();
+                    long capacity = family.capacity(value.getKey());
+                    if (!family.accepts(value.getKey()) || capacity <= 0) { stop(Reason.INVALID_STATE_ALGEBRA); return false; }
+                    supplies.add(new StateEntityAllocation.Supply<>(value.getKey(), value.getValue(), capacity));
+                }
+                allocation = StateEntityAllocation.create(group.demands(), supplies, budget);
+            } finally {
+                budget.release(transientBytes);
+            }
+            if (allocation == null) stop(Reason.WORKSPACE_DECLINED);
+            return false;
+        }
+        if (!allocation.step()) return false;
+        if (!allocation.feasible()) { allocationFailed(family, recipe); return false; }
+        long bytes = 128L + 192L * allocation.result().size();
+        if (!reserve(bytes)) return false;
+        choiceMemory += bytes;
+        for (var pick : allocation.result()) {
+            budget.check();
+            toolChoices.computeIfAbsent(pick.slot(), ignored -> new ArrayList<>()).add(pick);
+        }
+        allocation.close(); allocation = null; selectingGroup++;
+        return false;
+    }
+
+    private boolean takeSelected(StateFamily<K> family, GraphRecipe.Slot<Key<K>> slot,
+                                 List<StateEntityAllocation.Pick<K>> selected, List<GraphRecipe.Slot<K>> slots,
+                                 List<Returned<K>> returns) {
+        var pool = pool(family);
+        long left = slot.amount();
+        for (var pick : selected) {
+            budget.check();
+            K state = pick.state();
+            BigInteger use = BigInteger.valueOf(pick.amount());
+            BigInteger count = pool.getOrDefault(state, BigInteger.ZERO);
+            if (count.compareTo(use) < 0 || pick.amount() > left) return false;
+            long before = family.capacity(state);
+            K after = family.nominalAfterOne(state);
+            long afterCapacity = after != null && family.accepts(after) ? family.capacity(after) : 0;
+            if (afterCapacity < before - 1) { stop(Reason.INVALID_STATE_ALGEBRA); return false; }
+            if (count.equals(use)) pool.remove(state); else pool.put(state, count.subtract(use));
+            slots.add(new GraphRecipe.Slot<>(state, pick.amount(), slot.inputSlot()));
+            returns.add(new Returned<>(state, after, family, pick.amount()));
+            left -= pick.amount();
+        }
+        return left == 0;
+    }
+
+    private void clearSelection() {
+        if (allocation != null) allocation.close(); allocation = null;
+        toolChoices.clear(); selectingGroup = 0;
+        budget.release(choiceMemory); memory -= choiceMemory; choiceMemory = 0;
+    }
+
+    private void allocationFailed(StateFamily<K> family, GraphRecipe<Key<K>> intactRecipe) {
+        clearSelection();
+        if (intactRecipe != null && advanceActivations(family, intactRecipe)) return;
+        if (done) return;
+        if (!refineCapacity(family) && !done) stop(Reason.INSUFFICIENT_DISTINCT_ENTITIES);
+    }
+
+    private boolean claim(String binding, Activation<K> activating, BigInteger count) {
+        BigInteger remaining = unclaimed.getOrDefault(binding, BigInteger.ZERO);
+        if (count.compareTo(remaining) > 0 || !spend(activating.state(), count)) return false;
+        unclaimed.put(binding, remaining.subtract(count));
+        pool(activating.family()).merge(activating.state(), count, BigInteger::add);
+        return true;
+    }
+
+    private boolean advanceActivations(StateFamily<K> family, GraphRecipe<Key<K>> recipe) {
+        boolean changed = false;
+        for (var value : unclaimed.entrySet()) {
+            budget.check();
+            var activating = activations.get(value.getKey());
+            if (value.getValue().signum() <= 0 || !family.id().equals(activating.family().id())) continue;
+            K state = activating.state();
+            BigInteger available = external.contains(state) ? value.getValue() : free.getOrDefault(state, BigInteger.ZERO);
+            for (var slot : recipe.slots()) {
+                budget.check();
+                if (slot.key().family() == null && state.equals(slot.key().physical()))
+                    available = available.subtract(BigInteger.valueOf(slot.amount()));
+            }
+            BigInteger count = available.max(BigInteger.ZERO).min(value.getValue());
+            if (count.signum() == 0) continue;
+            if (!claim(value.getKey(), activating, count)) { stop(Reason.ACTIVATION_OWNERSHIP); return false; }
+            advanced.merge(value.getKey(), count, BigInteger::add); changed = true;
+        }
+        if (changed) {
+            activationAdvances++;
+            budget.note("candidate_state", "advance_owned_activations; family=" + family.id() + "; advances=" + activationAdvances);
+        }
+        return changed;
+    }
+
+    /** Re-propose with a smaller positive-only use allowance per activated
+     * entity. One entity cannot occupy two simultaneous slots in one firing.
+     * The horizon comes from this proposal, not from a global upper bound on
+     * all possible programs; it must never become a canonical theorem. */
+    private boolean refineCapacity(StateFamily<K> family) {
+        BigInteger firings = BigInteger.ZERO;
+        for (var value : proposed.patternTimesExact().entrySet()) {
+            budget.check();
+            var recipe = proposed.recipes().get(value.getKey());
+            for (var slot : recipe.slots()) {
+                budget.check();
+                if (!slot.key().entity() && family.id().equals(slot.key().family())) { firings = firings.add(value.getValue()); break; }
+            }
+        }
+        long horizon = ExactAmounts.capped(firings);
+        if (horizon <= 0 || horizon >= capacityCaps.getOrDefault(family.id(), Long.MAX_VALUE)) return false;
+        boolean stronger = false;
+        for (var value : proposed.patternTimesExact().entrySet()) {
+            budget.check();
+            var activating = activations.get(proposed.recipes().get(value.getKey()).binding());
+            if (activating != null && activating.family().id().equals(family.id()) && family.capacity(activating.state()) > horizon) {
+                stronger = true; break;
+            }
+        }
+        if (!stronger) return false;
+        finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+        budget.note("candidate_state", "refine_entity_horizon; family=" + family.id() + "; horizon=" + horizon +
+                "; restored_firings=" + restoredFirings + "; retry=" + (refinements + 1) + "; negative_proofs=false");
+        // All changed coordinates and the old physical restoration are private
+        // to this arm. No old plan, certificate or partial inventory survives.
+        cursor = null; proposed = null;
+        toolGroups.clear(); pools.clear(); restored.clear(); transitions.clear(); program.clear(); free.clear(); unclaimed.clear(); advanced.clear();
+        budget.release(memory - proposalMemory); memory = proposalMemory;
+        if (!capacityCaps.containsKey(family.id()) && !reserve(128)) return true;
+        capacityCaps.put(family.id(), horizon); refinements++;
+        for (var value : stock.entrySet()) { budget.check(); free.put(value.getKey(), BigInteger.valueOf(value.getValue())); }
+        restoredFirings = BigInteger.ZERO; programNodes = 1;
+        for (int i = 0; i < auxiliary.size(); i++) {
+            budget.compilationCheck();
+            var old = auxiliary.get(i);
+            var activating = activations.get(old.binding());
+            if (activating == null || !activating.family().id().equals(family.id())) continue;
+            var outputs = new ArrayList<CapturedRecipe.Amount<Key<K>>>();
+            for (var output : old.recipe().outputs()) outputs.add(!output.what().entity() && family.id().equals(output.what().family()) ?
+                    new CapturedRecipe.Amount<>(output.what(), Math.min(output.amount(), horizon)) : output);
+            auxiliary.set(i, new CapturedCatalog.Entry<>(old.id(), old.binding(), new CapturedRecipe<>(
+                    old.recipe().inputs(), outputs, old.recipe().external(), old.recipe().captureBounded())));
+        }
+        beginProposal();
+        return true;
     }
 
     private boolean append(String id, long runs, long repetitions) {
@@ -434,7 +642,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         finishObservation(PlanningBudget.CandidateOutcome.ACCEPTED);
         budget.note("candidate_state", "verified_exact_execution; variants=" + restored.size() +
                 "; program_nodes=" + programNodes + "; restored_firings=" + restoredFirings +
-                "; restore_calls=" + restoreCalls + "; restore_work=" + restoreWork + "; work=" + (budget.nodes() - workStarted));
+                "; restore_calls=" + restoreCalls + "; restore_work=" + restoreWork + "; refinements=" + refinements +
+                "; activation_advances=" + activationAdvances + "; work=" + (budget.nodes() - workStarted));
     }
 
     private boolean reserve(long bytes) {
@@ -461,13 +670,14 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
 
     @Override public void close() {
         finishObservation(PlanningBudget.CandidateOutcome.ABANDONED);
+        clearSelection();
         if (planning != null) planning.close(); planning = null;
         if (production != null) production.close(); production = null;
         if (verification != null) verification.close(); verification = null;
         if (assembly != null) assembly.close(); assembly = null;
         cursor = null; proposed = null;
         families.clear(); entityFamilies.clear(); known.clear(); activationStates = List.of(); auxiliary.clear(); sources.clear(); activations.clear(); pools.clear();
-        free.clear(); restored.clear(); transitions.clear(); program.clear();
+        free.clear(); restored.clear(); transitions.clear(); program.clear(); toolGroups.clear(); capacityCaps.clear(); unclaimed.clear(); advanced.clear();
         budget.release(memory); memory = 0; done = true;
     }
 }
