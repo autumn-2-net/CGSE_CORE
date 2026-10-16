@@ -28,8 +28,23 @@ def run(args,java,classes,output,execute,results,save):
     eligible=[p for p in probes if args.compile_only or args.include_historical or p.get('tier')=='standalone']
     if not args.classpath and not args.compile_only and not args.include_historical:
         eligible=[p for p in eligible if not p['external_imports']]
+    if args.suite == 'all':
+        # Maintained replacements do not inherit an archived program's missing
+        # campaign arguments or dependencies. Discover them in the complete run.
+        eligible=[p for p in probes if p in eligible or p['id'] in migrated]
+        eligible_ids={p['id'] for p in eligible}
+        omitted=[p for p in probes if p['id'] not in eligible_ids and p['main']]
+        for i,probe in enumerate(omitted):
+            if i%shards != shard or not re.search(args.case,probe['id']):continue
+            reason=('Requires explicit external test classpath: '+', '.join(probe['external_imports'])
+                    if probe.get('tier')=='standalone' and probe['external_imports'] and not args.classpath
+                    else 'Archived API/campaign-dependent program; requires its original arguments or a maintained migration')
+            results.append({'name':probe['id'],'status':'NOT_RUN','reason':reason,'source':probe['path'],
+                            'related_checks':probe.get('current_entrypoints',[]),
+                            'coverage_note':probe.get('coverage_note'), 'external_imports':probe['external_imports']})
+        save()
     chosen=[p for i,p in enumerate(eligible) if i%shards==shard and re.search(args.case,p['id'])]
-    executed={}
+    executed={r['main_class']:r.copy() for r in results if r.get('main_class')}
     for probe in chosen:
         entry=migrated.get(probe['id'])
         if entry is None:continue

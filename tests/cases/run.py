@@ -80,6 +80,7 @@ def run(args,output,execute):
     spec=importlib.util.spec_from_file_location('fixture_helpers',BASE.parent/'regression/run.py')
     helpers=importlib.util.module_from_spec(spec);spec.loader.exec_module(helpers)
     kinds=['count-model'] if args.suite=='models' else ['graph','count-model']
+    batches=[]
     for kind in kinds:
         selected=[c for c in manifest['cases'] if c['kind']==kind and re.search(args.case,c['id']+' '+ ' '.join(c['names']))]
         selected=[c for i,c in enumerate(selected) if i%shards==shard]
@@ -93,7 +94,13 @@ def run(args,output,execute):
                 write_models(path,cases);entry='CountModelRegression'
             arguments=[path,args.milliseconds,args.work]
             if kind=='count-model':arguments.extend([args.model_engine,str(args.model_trace).lower()])
-            execute(kind+'-'+str(offset),'org.cgse.core.'+entry,arguments)
+            batches.append((kind+'-'+str(offset),'org.cgse.core.'+entry,arguments))
+    if getattr(args,'jobs',1)==1:
+        for batch in batches: execute(*batch)
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=args.jobs) as pool:
+            for _ in pool.map(lambda batch:execute(*batch),batches):pass
 
 
 if __name__=='__main__':

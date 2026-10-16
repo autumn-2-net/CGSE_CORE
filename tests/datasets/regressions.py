@@ -20,12 +20,15 @@ def main():
     parser.add_argument('--timeout', type=int, default=300)
     parser.add_argument('--workers', type=int, default=1)
     parser.add_argument('--expanded-budget', action='store_true')
+    parser.add_argument('--keep-going', action='store_true')
     parser.add_argument('--output', type=Path, default=BASE.parents[1] / 'build/captured-regressions')
     args = parser.parse_args()
     campaigns = json.loads((BASE / 'regressions.json').read_text(encoding='utf-8'))['campaigns']
     campaigns = [case for case in campaigns if re.search(args.case, case['name'])]
     if not campaigns:
         parser.error('No campaigns selected')
+    results = []
+    args.output.mkdir(parents=True, exist_ok=True)
     for case in campaigns:
         if case['expected'] != 'SAT':
             raise ValueError('This runner requires independently validated positive regression expectations')
@@ -40,7 +43,16 @@ def main():
             command += ['--java-home', args.java_home]
         if args.expanded_budget:
             command += ['--expanded-budget']
-        subprocess.run(command, check=True)
+        code = subprocess.run(command).returncode
+        results.append({'name': case['name'], 'exit_code': code, 'command': command,
+                        'status': 'PASS' if code == 0 else 'INCONCLUSIVE' if code == 2 else 'FAIL'})
+        (args.output / 'results.json').write_text(json.dumps({'results': results}, indent=2), encoding='utf-8')
+        if code and not args.keep_going:
+            raise SystemExit(code)
+    if any(r['status'] == 'FAIL' for r in results):
+        raise SystemExit(1)
+    if any(r['status'] != 'PASS' for r in results):
+        raise SystemExit(2)
 
 
 if __name__ == '__main__':

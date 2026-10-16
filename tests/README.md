@@ -31,9 +31,43 @@ budget runs out. An unresolved result is never accepted as UNSAT or reported as 
 | Live adapter | `adapter/live/` | Forge/server probes requiring the actual host installation |
 
 `standard` runs core, view, the stable oracles and the pinned count/graph/execution boundaries. `all` also selects every fixed
-fixture, portable probe and corpus case; it can take substantially longer and includes
-known hard inputs. Benchmark/dataset/AE/live suites are explicit separate entries because their
-resource requirements differ. Use `--case <regex>`, `--shard 0/4`, `--milliseconds`,
+fixture, portable probe, maintained historical migration, corpus case and GraphBenchmark.
+It automatically discovers unittest cases in `test_*.py` below `tests/` and each directory's `suite.json`.
+These registrations include capture integrity, complete AE/JEI catalog replay, every
+named captured regression in serial and four-worker expanded-budget modes, and AEDUMP
+migration checks. A new portable Java main in core/view/regression or a Python test
+needs no central runner edit or Python `__main__` guard; a Python test file with
+zero discovered cases fails. An argument-dependent driver registers beside its data.
+Canonical corpus and historical-probe manifests are checked against the actual
+files too: a new unregistered input or missing source fails discovery rather than
+silently disappearing. Oracle/argument metadata must still be supplied explicitly.
+The full run keeps going after failures and runs driver jobs sequentially.
+`--jobs 4` permits up to four independent corpus JVMs; it does not multiply the
+thread count of other suites or overlap the captured parallel campaigns. The
+corpus default is one JVM. Isolated historical probes retain up to four compiler
+workers and execute their main programs serially. Use the host's CPU-affinity
+controls when a strict total CPU cap is required.
+
+```text
+python tests/run.py --suite all --list-tests --output build/test-inventory
+python tests/run.py --java-home <jdk17> --suite all --milliseconds 0 --model-engine main-counts --output build/all-tests
+```
+
+`inventory.json` records discovered Java/Python tests, registered drivers, every
+canonical corpus input, historical probe and archived scenario descriptor.
+`results.json` records actual commands and outcomes. Host and live tests require
+an explicitly selected compatible GTL installation; the complete run reports
+`NOT_RUN` with prerequisites instead of silently omitting or passing them. Historical
+programs without a maintained migration or required campaign/dependency arguments
+are likewise listed as `NOT_RUN`. Compilation and migration aliases retain their
+explicit modes. Archived scenario files are preserved evidence, not automatically
+executed scripts: their complete original campaigns still use `datasets/scenarios.py`
+or the native drivers with explicit catalog/order semantics. Data integrity does
+not imply their solver requests were executed.
+
+The full run includes known hard inputs. Inconclusive budgets, timeouts or missing
+prerequisites return exit status 2; assertion/setup failures return 1. It can take
+substantially longer than `standard`. Use `--case <regex>`, `--shard 0/4`, `--milliseconds`,
 `--work`, and `--timeout` to control a repeatable selection and its budgets.
 
 ## Maintained historical tests
@@ -65,6 +99,15 @@ runtime return routing through save/load, local work limits and incomplete cover
 `StateEntityMatchingTest` checks 56,798 finite allocation cases against an
 independent enumerator, with different slot eligibility, whole-key branching and
 integral augmenting paths, very large quantities, memory limits and cancellation.
+Failed pure-flow allocations also check their deficient slot set against the
+original eligibility matrix and exact available counts. Whole-key branch failures
+alone cannot export a Hall deficit. `CapturedStateDeficitTest` covers 68 funded
+requests with overlapping tool families: a new A-only tool can free an existing
+A/B tool for B, even when an unrelated C tool makes total entity counts look
+sufficient. Recipe, slot and stock order, mixed/indivisible inputs, simultaneous
+counts, current-stock changes, seeds, low budgets and cancellation are checked
+with primitive physical replay. Union feedback remains a restricted positive
+proposal hint; it cannot prove the original capture infeasible.
 `CapturedStateSharingTest` covers shared tools under different wear rules,
 simultaneous matching after wear, manufactured replacements, disjoint eligibility,
 physical seed requirements and request-level incomplete coverage. It replays the
@@ -178,12 +221,22 @@ source bindings and checks linear notification work for up to 8,192 consumers.
 Its physical runtime cases cover one/four tools, partial dispatch, separate and
 synchronous receipts, older returns during rejection, and saved ownership.
 
-The `Historical*Test` programs provide 31 maintained regressions. The migration
-index maps 44 archived sources, including two reference helpers and aliases
+The `Historical*Test` programs provide 34 maintained regressions. The migration
+index maps 47 archived sources, including two reference helpers and aliases
 whose distinct generator/branching variants are explicitly retained. They run in `standard` and can also be selected with
 `--suite core --case '^Historical'`. `provenance/migrated-probes.json` records each
 original program, its source-artifact hash, the unchanged portable source hash
 (LF-normalized), its replacement and the exact contract changes.
+
+`HistoricalCompilerReuseTest` retains 2,048 cold/warm comparisons, 4,096 changed
+stock/exclusion scopes and 256 recipe mutations using current ownership APIs.
+`HistoricalLossyRefillTest` preserves the original exact conversion counts and
+raw-material shortages across all three catalyst policies and quantities through
+`Long.MAX_VALUE`. `HistoricalSourceBoundaryTest` retains all 23 original cases,
+including 64 funded sources with one missing raw unit and 8,192-deep alternatives.
+These refill checks require the original missing-material oracle and validate the
+completed hypothetical plan; borrowing an arbitrary intermediate is not accepted
+as an equivalent result. Bounded preview completion is not a global refill optimum.
 
 Coverage includes budget overflow and concurrent reservations, 700 reduction,
 1,200 Boolean, 1,000 MITM, 1,000 LCG and 1,500 neighborhood finite-domain oracles,

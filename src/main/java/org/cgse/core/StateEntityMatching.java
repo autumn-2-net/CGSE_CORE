@@ -15,6 +15,8 @@ import java.util.function.ToIntBiFunction;
  * flow. Both the assignments and augmentations survive step boundaries. This
  * is an exact one-firing allocation, not a theorem about future tool choices. */
 final class StateEntityMatching<K> implements AutoCloseable {
+    /** Hall deficit in this one-firing inventory, never a future-supply bound. */
+    record Deficit(List<Integer> slots, BigInteger required, BigInteger available) {}
     private final PlanningBudget budget;
     private final List<StateEntityAllocation.Demand> demands;
     private final List<StateEntityAllocation.Supply<K>> supplies;
@@ -27,7 +29,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
     private final int fixed, width;
     private int depth, unmet, failedSlot;
     private long memory;
-    private boolean done, feasible, flowing;
+    private boolean done, feasible, flowing, totalShortage;
 
     static <K> StateEntityMatching<K> create(List<StateEntityAllocation.Demand> demands,
             List<StateEntityAllocation.Supply<K>> supplies,
@@ -93,7 +95,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
         chosen = new int[fixed]; next = new int[fixed]; Arrays.fill(chosen, -1);
         parentDemand = new int[count]; parentSupply = new int[width]; queue = new int[count];
         failedSlot = count == 0 ? -1 : this.demands.get(0).slot();
-        if (needed.compareTo(available) > 0) done = true;
+        if (needed.compareTo(available) > 0) totalShortage = done = true;
     }
 
     private static boolean whole(StateEntityAllocation.Demand demand) { return !demand.mixed() && demand.amount() > 1; }
@@ -189,6 +191,28 @@ final class StateEntityMatching<K> implements AutoCloseable {
 
     boolean feasible() { return done && feasible; }
     int failedSlot() { return failedSlot; }
+
+    /** The failed residual search exposes a deficient set without another
+     * matching solve. Whole-key branch failures alone are not Hall deficits.
+     * Keep feedback small even when the allocation itself is much larger. */
+    Deficit deficit() {
+        if (!done || feasible || memory == 0 || (!totalShortage && fixed != 0) || demands.size() > 32) return null;
+        var slots = new ArrayList<Integer>();
+        BigInteger required = BigInteger.ZERO, available = BigInteger.ZERO;
+        for (int d = 0; d < demands.size(); d++) {
+            budget.check();
+            if (!totalShortage && parentDemand[d] == -1) continue;
+            slots.add(demands.get(d).slot());
+            required = required.add(BigInteger.valueOf(demands.get(d).amount()));
+        }
+        for (int s = 0; s < width; s++) for (int d = 0; d < demands.size(); d++) {
+            budget.check();
+            if ((totalShortage || parentDemand[d] != -1) && allowed[d * width + s]) {
+                available = available.add(supplies.get(s).count()); break;
+            }
+        }
+        return required.compareTo(available) > 0 ? new Deficit(List.copyOf(slots), required, available) : null;
+    }
     List<StateEntityAllocation.Pick<K>> result() { if (!feasible()) throw new IllegalStateException("No matching witness"); return result; }
 
     @Override public void close() {

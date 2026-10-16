@@ -1,0 +1,7 @@
+{
+  "schema": "cgse-test-suite-v1",
+  "tests": [
+    {"id": "migration", "script": "check_migration.py", "java_home": true,
+     "arguments": ["--output", "{test_output}"]}
+  ]
+}

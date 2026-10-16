@@ -22,10 +22,11 @@ import java.util.concurrent.CompletableFuture;
  */
 final class CapturedStatePlanning<K> implements AutoCloseable {
 
-    private record Key<K>(K physical, String family, boolean entity) {
-        static <K> Key<K> physical(K key) { return new Key<>(key, null, false); }
-        static <K> Key<K> capacity(String family) { return new Key<>(null, family, false); }
-        static <K> Key<K> entities(String family) { return new Key<>(null, family, true); }
+    private record Key<K>(K physical, String family, boolean entity, List<String> group) {
+        static <K> Key<K> physical(K key) { return new Key<>(key, null, false, null); }
+        static <K> Key<K> capacity(String family) { return new Key<>(null, family, false, null); }
+        static <K> Key<K> entities(String family) { return new Key<>(null, family, true, null); }
+        static <K> Key<K> entities(List<String> group) { return new Key<>(null, "", true, group); }
     }
     private record Activation<K>(K state, List<String> families) {}
     private record Returned<K>(K before, K state, StateFamily<K> family, long amount) {}
@@ -65,6 +66,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private final Map<Integer, List<StateEntityAllocation.Pick<K>>> toolChoices = new LinkedHashMap<>();
     private final Map<String, Long> capacityCaps = new LinkedHashMap<>();
     private final Map<String, Long> entityFloors = new LinkedHashMap<>();
+    private final Map<List<String>, Long> entityUnionFloors = new LinkedHashMap<>();
     private final Map<String, BigInteger> unclaimed = new LinkedHashMap<>(), advanced = new LinkedHashMap<>();
     private final List<PlanStep> program = new ArrayList<>();
     private List<K> activationStates = new ArrayList<>();
@@ -358,6 +360,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (!state) required.put(Key.physical(seed.getKey()), seed.getValue());
         }
         entityFloors.forEach((family, count) -> required.put(Key.entities(family), count));
+        entityUnionFloors.forEach((group, count) -> required.put(Key.entities(group), count));
         var emitted = new LinkedHashSet<Key<K>>();
         external.forEach(key -> emitted.add(Key.physical(key)));
         planning = new CapturedCatalog<>(auxiliary, false).begin(Key.physical(target), amount, available, emitted,
@@ -782,12 +785,79 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     }
 
     private void allocationFailed(StateFamily<K> family, GraphRecipe<Key<K>> intactRecipe) {
-        clearSelection();
-        if (intactRecipe != null && advanceActivations(family, intactRecipe)) return;
-        if (done) return;
-        if (repairChoices(family)) return;
-        if (repairOrder(family, intactRecipe == null ? proposed.recipes().get(cursor.current().recipe()) : intactRecipe)) return;
-        refineEntities(family);
+        // Retain the failed residual graph while trying the cheaper repairs.
+        // Its certificate storage remains owned until feedback has been used.
+        var failed = matching; matching = null;
+        try {
+            clearSelection();
+            if (intactRecipe != null && advanceActivations(family, intactRecipe)) return;
+            if (done) return;
+            if (repairChoices(family)) return;
+            if (repairOrder(family, intactRecipe == null ? proposed.recipes().get(cursor.current().recipe()) : intactRecipe)) return;
+            if (failed != null && intactRecipe != null && refineEntityUnion(failed.deficit(), intactRecipe)) return;
+            if (!done) refineEntities(family);
+        } finally { if (failed != null) failed.close(); }
+    }
+
+    /** Request an additional entity eligible for any slot in a deficient set,
+     * rather than arbitrarily replacing the last failed slot's tool. An entity
+     * contributes once to this union even if several rules accept it. These
+     * are restricted proposal hints, not canonical cuts or negative proofs. */
+    private boolean refineEntityUnion(StateEntityMatching.Deficit deficit, GraphRecipe<Key<K>> blocked) {
+        if (deficit == null || !shared() || activations.size() > 128 || proposed.patternTimesExact().size() > 128) return false;
+        var ids = new java.util.TreeSet<String>();
+        for (int slot : deficit.slots()) {
+            budget.check(); ids.add(blocked.slots().get(slot).key().family());
+        }
+        if (ids.size() < 2) return false;
+        var group = List.copyOf(ids);
+        boolean existing = entityUnionFloors.containsKey(group);
+        if (!existing && entityUnionFloors.size() >= 8) return false;
+        boolean partial = false;
+        int producers = 0;
+        for (var activating : activations.values()) {
+            int accepted = 0;
+            for (String id : group) { budget.check(); if (activating.families().contains(id)) accepted++; }
+            if (accepted > 0) { producers++; partial |= accepted < group.size(); }
+        }
+        // Identical eligibility has no new choice to expose. Preserve the
+        // existing combined-wear and horizon refinement for that common case.
+        if (!partial) return false;
+        BigInteger count = BigInteger.ZERO;
+        for (var value : proposed.patternTimesExact().entrySet()) {
+            budget.check();
+            var activating = activations.get(proposed.recipes().get(value.getKey()).binding());
+            if (activating == null) continue;
+            for (String id : group) {
+                budget.check();
+                if (activating.families().contains(id)) { count = count.add(value.getValue()); break; }
+            }
+        }
+        BigInteger needed = count.add(BigInteger.ONE).max(deficit.required());
+        if (needed.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0) return false;
+        long required = needed.longValueExact();
+        if (required <= entityUnionFloors.getOrDefault(group, 0L)) return false;
+        finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+        budget.note("candidate_state", "refine_entity_union; families=" + group + "; required=" + required +
+                "; matching_required=" + deficit.required() + "; matching_available=" + deficit.available() +
+                "; retry=" + (refinements + 1) + "; negative_proofs=false");
+        resetProposal();
+        if (!existing && !reserve(256L + 64L * group.size() + 256L * producers)) return true;
+        entityUnionFloors.put(group, required); refinements++;
+        if (!existing) for (int i = 0; i < auxiliary.size(); i++) {
+            budget.compilationCheck();
+            var old = auxiliary.get(i);
+            var activating = activations.get(old.binding());
+            if (activating == null) continue;
+            boolean relevant = false;
+            for (String id : group) { budget.compilationCheck(); if (activating.families().contains(id)) { relevant = true; break; } }
+            if (!relevant) continue;
+            var outputs = new ArrayList<>(old.recipe().outputs());
+            outputs.add(new CapturedRecipe.Amount<>(Key.<K>entities(group), 1));
+            auxiliary.set(i, new CapturedCatalog.Entry<>(old.id(), old.binding(), new CapturedRecipe<>(
+                    old.recipe().inputs(), outputs, old.recipe().external(), old.recipe().captureBounded())));
+        }
+        beginProposal(); return true;
     }
 
     /** Replaying the same word can choose another already owned entity at an
@@ -1196,7 +1266,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         cursor = null; restorationWord = null; proposed = null;
         captureStock = null; captureExternal = null;
         families.clear(); entityFamilies.clear(); known.clear(); activationStates = List.of(); auxiliary.clear(); sources.clear(); activations.clear(); pools.clear();
-        free.clear(); restored.clear(); transitions.clear(); program.clear(); toolGroups.clear(); capacityCaps.clear(); entityFloors.clear(); unclaimed.clear(); advanced.clear();
+        free.clear(); restored.clear(); transitions.clear(); program.clear(); toolGroups.clear(); capacityCaps.clear(); entityFloors.clear(); entityUnionFloors.clear(); unclaimed.clear(); advanced.clear();
         budget.release(memory); memory = 0; done = true;
     }
 }

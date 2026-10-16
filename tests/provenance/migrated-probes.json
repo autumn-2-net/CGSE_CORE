@@ -396,6 +396,33 @@
       "migration": "Preserve all 20 original quantity/generator pairs and the previously unreachable 128/512/1024 rings; independently verify every known and solver witness. Keep the 100M cap check; duplicate memory-only 1GiB diagnostic and direct reflective AllocationSearch diagnostics remain archival, not asserted main-solver coverage.",
       "source_artifact_sha256": "254f6d3c19c8416a092ecb991616e41ac2c265e6a21dc57ce56cb192a7960df7",
       "original_sha256_lf": "d46523534e94c36f1af27a4a9be79a68792033a579e20380985fd4c2496c7c52"
+    },
+    {
+      "id": "CompilerReuseProbe-50cb9fa99edf",
+      "original_path": "probes/java/support-completion-20261007/CompilerReuseProbe-50cb9fa99edf/CompilerReuseProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalCompilerReuseTest.java",
+      "class": "org.cgse.core.HistoricalCompilerReuseTest",
+      "migration": "Preserve 2048 cold/warm demand comparisons, 4096 stock/exclusion scopes and 256 recipe mutations. Use immutable topology identity and the current GraphSolve.program ownership check instead of the removed graph wrapper API.",
+      "source_artifact_sha256": "50cb9fa99edfdb71bfa4abd1a90419b2ba59be20d837c4a2be94e4c80bf80346",
+      "original_sha256_lf": "bfed43dec088b928e98ad970714ac2ee1c8cd69d9ee68c6bc198fc941c2806fb"
+    },
+    {
+      "id": "LossyConversionRegression-e377c7b2d5ba",
+      "original_path": "probes/java/strategy-scheduling/LossyConversionRegression-e377c7b2d5ba/LossyConversionRegression.java",
+      "replacement": "core/java/org/cgse/core/HistoricalLossyRefillTest.java",
+      "class": "org.cgse.core.HistoricalLossyRefillTest",
+      "migration": "Preserve all original catalyst policies, exact direct conversion counts, wide raw shortages, funded alternatives and the necessary mixed top-up. No weaker intermediate-refill oracle.",
+      "source_artifact_sha256": "e377c7b2d5ba3a1aded2d1a3824ccf170a550373dbd028ba07851c5aa73038ec",
+      "original_sha256_lf": "40efb3ac6b50cdb1b63ff12dd3edc12059f9a008663f101ae9ffd9cca42dd6af"
+    },
+    {
+      "id": "SourceBoundary-9c1c7e18600b",
+      "original_path": "probes/java/dispatch-regression/SourceBoundary-9c1c7e18600b/SourceBoundary.java",
+      "replacement": "core/java/org/cgse/core/HistoricalSourceBoundaryTest.java",
+      "class": "org.cgse.core.HistoricalSourceBoundaryTest",
+      "migration": "Preserve every 4/16/64-source long-sized request, exact one-unit shortage, rescued request, 256/8192-deep alternative and 24/40/60-depth nested case. Inline the same fixture generators and original inventory/recipe validation; add runtime verification.",
+      "source_artifact_sha256": "9c1c7e18600b500cb3b0f80e4a5b423aa7351c41b2bc8de5ea1e83f8cf5a06cf",
+      "original_sha256_lf": "8607a7aec4d3aefd285f44823a5eba72d9dc7c9a210ea1e20e4fbfd8557ee1af"
     }
   ]
 }

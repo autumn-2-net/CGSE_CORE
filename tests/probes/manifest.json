@@ -6669,7 +6669,11 @@
         ".local/cp-sat-recheck-20260926/FinalBoundaryBench.java"
       ],
       "main": true,
-      "external_imports": [],
+      "external_imports": [
+        "com.google.ortools.Loader",
+        "com.google.ortools.sat.*",
+        "com.google.ortools.linearsolver.*"
+      ],
       "uses_arguments": false,
       "campaign": "cp-sat-recheck-20260926",
       "mode": "probe",
@@ -7451,7 +7455,9 @@
         ".local/dispatch-regression/StreamRuntimeRegression.java"
       ],
       "main": true,
-      "external_imports": [],
+      "external_imports": [
+        "com.google.gson.*"
+      ],
       "uses_arguments": false,
       "campaign": "dispatch-regression",
       "mode": "probe",

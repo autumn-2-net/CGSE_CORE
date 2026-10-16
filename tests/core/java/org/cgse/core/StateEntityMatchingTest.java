@@ -57,6 +57,7 @@ public final class StateEntityMatchingTest {
             check(work.feasible() == expected, "Oracle mismatch: stock=" + Arrays.toString(stock) + "; need=" + Arrays.toString(need) +
                     "; mixed=" + mixed + "; edges=" + edges);
             if (expected) {
+                check(work.deficit() == null, "Feasible allocation exported a deficit");
                 long[] spent = new long[stock.length], filled = new long[need.length];
                 int[] key = new int[need.length]; Arrays.fill(key, -1);
                 for (var pick : work.result()) {
@@ -67,7 +68,29 @@ public final class StateEntityMatchingTest {
                 }
                 for (int s = 0; s < stock.length; s++) check(spent[s] <= stock[s], "Shared a physical entity twice");
                 for (int d = 0; d < need.length; d++) check(filled[d] == need[d], "Unfilled slot");
-            } else check(work.failedSlot() >= 0 && work.failedSlot() < need.length, "Lost allocation failure scope");
+            } else {
+                check(work.failedSlot() >= 0 && work.failedSlot() < need.length, "Lost allocation failure scope");
+                var deficit = work.deficit();
+                boolean whole = false;
+                for (int d = 0; d < need.length; d++) whole |= need[d] > 1 && (mixed & (1 << d)) == 0;
+                if (!whole) check(deficit != null, "Failed integral flow lost its Hall deficit");
+                if (deficit != null) {
+                    // Reconstruct the certificate using only original input
+                    // eligibility and quantities, independently of residual flow.
+                    long required = 0, available = 0;
+                    var slots = new java.util.HashSet<>(deficit.slots());
+                    check(!slots.isEmpty() && slots.size() == deficit.slots().size(), "Invalid deficit slots");
+                    for (int d : slots) { check(d >= 0 && d < need.length, "Invented slot"); required += need[d]; }
+                    for (int s = 0; s < stock.length; s++) {
+                        boolean neighbor = false;
+                        for (int d : slots) neighbor |= edge(edges, stock.length, d, s);
+                        if (neighbor) available += stock[s];
+                    }
+                    check(required > available, "Certificate is not a deficient subset");
+                    check(deficit.required().equals(BigInteger.valueOf(required)) && deficit.available().equals(BigInteger.valueOf(available)),
+                            "Certificate changed original counts");
+                }
+            }
         }
         check(budget.reservedBytes() == 0, "Matching workspace leak"); cases++;
     }
@@ -105,6 +128,23 @@ public final class StateEntityMatchingTest {
             check(work.feasible(), "BigInteger supply / long demand overflow");
         }
         check(budget.reservedBytes() == 0, "Wide matching leak");
+        var deficient = List.of(new StateEntityAllocation.Supply<>("a", BigInteger.valueOf(Long.MAX_VALUE).multiply(BigInteger.TWO), 1),
+                new StateEntityAllocation.Supply<>("b", BigInteger.valueOf(Long.MAX_VALUE), 1));
+        try (var work = StateEntityMatching.create(demands, deficient, (d, s) -> s.equals("b"), budget)) {
+            while (!work.step()) {}
+            var deficit = work.deficit();
+            check(deficit != null && deficit.required().compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0,
+                    "Wide deficit overflow");
+            check(deficit.available().equals(BigInteger.valueOf(Long.MAX_VALUE)), "Counted an ineligible large supply");
+        }
+        var indivisible = List.of(new StateEntityAllocation.Demand(0, 2, false));
+        var split = List.of(new StateEntityAllocation.Supply<>("a", BigInteger.ONE, 1),
+                new StateEntityAllocation.Supply<>("b", BigInteger.ONE, 1));
+        try (var work = StateEntityMatching.create(indivisible, split, (d, s) -> true, budget)) {
+            while (!work.step()) {}
+            check(!work.feasible() && work.deficit() == null, "Whole-key failure became a false Hall deficit");
+        }
+        check(budget.reservedBytes() == 0, "Deficit workspace leaked");
         // Uniform count is sufficient, but the subset of eligible keys is not.
         compare(new int[]{2, 3}, new int[]{2, 2}, 3, 5, false);
         // First whole-key choice must be undone to leave the only eligible key

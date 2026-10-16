@@ -1,0 +1,12 @@
+{
+  "schema": "cgse-test-suite-v1",
+  "tests": [
+    {"id": "integrity", "script": "run.py", "arguments": ["--verify-only"], "timeout_multiplier": 4},
+    {"id": "named-serial", "script": "regressions.py", "java_home": true,
+     "arguments": ["--keep-going", "--timeout", "{timeout}", "--output", "{test_output}"], "timeout_multiplier": 64},
+    {"id": "named-parallel", "script": "regressions.py", "java_home": true,
+     "arguments": ["--keep-going", "--workers", "4", "--expanded-budget", "--timeout", "{timeout}", "--output", "{test_output}"], "timeout_multiplier": 64},
+    {"id": "complete-catalog", "script": "run.py", "java_home": true,
+     "arguments": ["--modes", "manual,manual-first,extra-first,random", "--amounts", "1,1000", "--work", "{work}", "--milliseconds", "{milliseconds}", "--timeout", "{timeout}", "--output", "{test_output}"], "timeout_multiplier": 32}
+  ]
+}

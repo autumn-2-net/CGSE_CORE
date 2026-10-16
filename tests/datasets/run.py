@@ -213,6 +213,7 @@ def main():
     print((output / 'replay.log').read_text(encoding='utf-8', errors='replace'), end='')
     print(json.dumps(summary, indent=2), flush=True)
     if result.returncode != 0 or len(rows) != summary['expected_rows']: raise SystemExit(1)
+    if summary['assessments'].get('INCONCLUSIVE', 0): raise SystemExit(2)
 
 
 if __name__ == '__main__':

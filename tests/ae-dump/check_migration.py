@@ -62,6 +62,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--java-home", default=os.environ.get("JAVA_HOME"))
     parser.add_argument("--static-only", action="store_true")
+    parser.add_argument("--output", type=Path, default=ROOT / "build/tests/ae-dump")
     parser.add_argument("--host-classes", help="Optional GTL compile output/classpath; verify actual Router JVM descriptor")
     args = parser.parse_args()
     static_checks()
@@ -79,7 +80,7 @@ def main():
             return path
         parser.error("Cannot find " + name + "; set --java-home or JAVA_HOME to JDK 17")
 
-    output = ROOT / "build/tests/ae-dump"
+    output = args.output.resolve()
     classes = output / "classes"
     classes.mkdir(parents=True, exist_ok=True)
     sources = sorted((ROOT / "src/main/java").rglob("*.java"))
