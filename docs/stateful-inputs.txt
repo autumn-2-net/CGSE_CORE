@@ -144,9 +144,33 @@ may request production of a replacement; actual restoration still cannot use
 that replacement until it has been produced and physically claimed.
 Neither path renews the arm's original work allowance or borrows cache-preparation
 budget. General temporal matching and a complete restoration repair procedure
-are not implied by these bounded positive searches. In particular, arbitrary
-transitions that first become eligible for an unrelated rule are not a complete
-state-domain expansion, and an auxiliary decline is still inconclusive.
+are not implied by these bounded positive searches.
+
+After a capacity proposal fails, CapturedStateExpansion can expose a small
+exact cross-rule boundary to the ordinary graph compiler. It starts from initial,
+declared and ordinary-produced keys, retaining keys eligible for a supported
+state rule. Exact returns are followed only when they gain eligibility for a rule
+that could not use the predecessor. This can recover a tool cycling between
+otherwise disconnected rule domains without unfolding every durability or charge
+value. Changes that only lose eligibility do not launch another finite solve.
+This helper admits at most 128 sources, 32 rules, 128 eligible states and 4096
+input/output/candidate ports, including newly added candidates. Unsupported
+state inputs retain only their original finite captures.
+
+Original input modes, multiplicities, source bindings and physical outputs are
+retained. Derived candidates freeze the immutable rule's exact nominal return;
+their successor must respect its remaining guaranteed capacity. Discovered keys
+never become inventory. A fresh private catalog owns new variant identities and
+incomplete coverage; it imports neither canonical negative facts nor a previous
+finite view's proof scope. Its first short attempt uses existing physically funded
+forward recovery, then the usual graph/count portfolio. All stages share one
+allowance, capped at 262144 work units and one eighth of remaining request work,
+with admission requiring 16384 work. The forward attempt uses at most 8192 units
+and one sixteenth of that allowance. The enclosing arm's lifetime cap also stays
+in force. Exact verification, physical seeds and forced-production checks precede
+acceptance; a private miss, workspace refusal or quota exit resumes the original
+incomplete capture without an infeasibility claim. This is bounded positive
+recovery, not a complete state closure or arbitrary symbolic-state solver.
 
 Exact transitions are interned within the same auxiliary variant, retaining the
 source binding, family choices, input slots and full outputs. Repeated execution
@@ -316,6 +340,12 @@ The public tests are under tests/core/java/org/cgse/core:
   StateChoiceRepairTest: independent literal assignment oracles under arbitrary
     per-key/per-edge preferences, whole-key backtracking and augmenting paths,
     wide counts, cached feedback revisions, work/memory limits and cancellation.
+  CapturedStateExpansionTest: omitted cross-rule state cycles, source/slot/stock
+    permutations, long-sized orders, multiple physical tools, mixed/indivisible
+    slots, manufactured tools, exact seeds and forced/preserved requests. Source
+    replay and delayed returns/save-load validate the resulting physical plans.
+    Unfunded stock, unbounded state domains, same-rule wear/charge, cancellation
+    and tight budgets guard positive-only coverage and bounded workspace.
   StateRestorationCycleTest: 22,000 independent primitive-prefix comparisons,
     serial and nested word composition, exact pool identity/order/counts,
     wide resource arithmetic and budget cleanup.

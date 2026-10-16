@@ -68,6 +68,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private final List<PlanStep> program = new ArrayList<>();
     private List<K> activationStates = List.of();
     private CapturedCatalog<Key<K>>.Work planning;
+    private CapturedStateExpansion<K> expansion;
     private GraphPlan<Key<K>> proposed;
     private PlanCursor cursor;
     private PlanStep restorationWord;
@@ -146,6 +147,14 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             budget.phase(!prepared ? PlanningBudget.Phase.BUILD : assembly == null ? PlanningBudget.Phase.SOLVE : PlanningBudget.Phase.VERIFY);
             if (budget.nodes() - workStarted >= allowance) return stop(Reason.LOCAL_WORK_LIMIT);
             if (!prepared) prepare();
+            else if (expansion != null) {
+                if (expansion.step()) {
+                    result = expansion.result();
+                    expansion.close(); expansion = null;
+                    if (result == null) return stop(Reason.AUXILIARY_RESULT);
+                    done = true; outcome = new Outcome(Status.VERIFIED, Reason.NONE);
+                }
+            }
             else if (searchingOrder) reschedule();
             else if (verification != null) verify();
             else if (assembly != null) {
@@ -160,7 +169,16 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             else if (planning.step()) {
                 proposed = planning.result().plan();
                 planning.close(); planning = null;
-                if (!proposed.feasible()) return stop(Reason.AUXILIARY_RESULT);
+                if (!proposed.feasible()) {
+                    proposed = null;
+                    // Capacity activation cannot express a previously ineligible
+                    // rule becoming available after another rule changes a tool.
+                    // The private exact capture cannot export negative results.
+                    if (families.size() < 2) return stop(Reason.AUXILIARY_RESULT);
+                    expansion = CapturedStateExpansion.create(entries, known, target, amount, stock, external, seeds, preserve, force, budget);
+                    if (expansion == null) return stop(Reason.AUXILIARY_RESULT);
+                    return false;
+                }
                 proposalMemory = memory;
                 startRestoration(proposed.steps());
             }
@@ -1107,7 +1125,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     GraphPlan<K> result() { return result; }
     Outcome outcome() { return outcome; }
 
-    CompletableFuture<?> waitingFor() { return planning == null ? null : planning.waitingFor(); }
+    CompletableFuture<?> waitingFor() { return expansion != null ? expansion.waitingFor() : planning == null ? null : planning.waitingFor(); }
 
     private void finishObservation(PlanningBudget.CandidateOutcome outcome) {
         if (observation != null) observation.finish(outcome);
@@ -1122,6 +1140,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (choiceRepair != null) choiceRepair.close(); choiceRepair = null;
         if (orderRepair != null) orderRepair.close(); orderRepair = null;
         if (planning != null) planning.close(); planning = null;
+        if (expansion != null) expansion.close(); expansion = null;
         if (production != null) production.close(); production = null;
         if (verification != null) verification.close(); verification = null;
         if (assembly != null) assembly.close(); assembly = null;

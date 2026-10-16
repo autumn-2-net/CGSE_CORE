@@ -110,6 +110,19 @@ preferences and low budgets cannot invent tools or export an infeasibility proof
 literal assignments; preference scores must never remove feasible choices. It
 also exercises wide quantities, score-cache revisions and lifetime work limits.
 
+`CapturedStateExpansionTest` covers 44 positive requests with omitted cross-rule
+state candidates. Four- and eight-state cycles, source/slot/stock permutations,
+quantities through `Long.MAX_VALUE`, simultaneous mixed/indivisible tools,
+ordinary tool production, exact seeds and forced/preserved requests must produce
+physically executable plans. It independently checks each source transition and
+small primitive executions, and replays delayed returns through save/load.
+Missing tools/materials, incompatible whole-key groups, impossible exact seeds
+and later stock changes guard against invented inventory or stale conclusions.
+Same-rule wear/charge up to `Long.MAX_VALUE` must not trigger state enumeration
+or an unrelated finite solve; unbounded eligibility chains and oversized output
+sets must stop at the local support limit. Work/memory refusal and cancellation
+cannot renew the allowance, leak workspace or prove the original domain empty.
+
 `PlanCursorLoopTest` checks whole-loop skips against primitive expanded programs,
 including shared and nested occurrences, partial batches, stale boundaries,
 cancellation and saved exact counts above long. `CapturedStateLoopTest` preserves
