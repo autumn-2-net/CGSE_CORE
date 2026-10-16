@@ -975,3 +975,24 @@ remain local to this suffix and cannot become global infeasibility proofs.
 The `mknapcb2_04_bks` first-plan cost guard keeps optional construction from
 displacing a short original search: observed work must stay below 6M within
 the unchanged 40M scheduling envelope. This is not a 6M request-budget claim.
+
+`CapturedIndexReuseTest` checks complete producer-index reuse within one immutable
+capture, with 1,024/16,384 irrelevant sources, reversed source order, changing
+targets and stock, stable state families, worn tools and manufactured replacements.
+Low-budget requests must still produce independently verified physical plans;
+cached producer incidence is compared with a full literal scan of every output
+and return. Return candidates beyond 256, empty domains, virtual configuration
+returns, force/preserve/seeds, replaced catalogs and incomplete captures guard
+scope. Another 120 shuffled catalogs compare source priority and execution words
+against literal GraphCompiler models. Cancellation, independent cache-account
+refusal, an oversized index, a 64 KiB borrower and four concurrent publishers
+exercise ownership and resource limits. A retained cache has its own 8 MiB
+estimated-container cap; request peaks exclude that persistent allocation.
+
+`CapturedStatePreparationTest` independently widens seven discovery dimensions
+to 10,000 elements: stock, external supply, source lists, outputs, slots,
+candidates and family identities. Construction must not scan them eagerly.
+Preparation yields between elements and stops at its original local allowance;
+memory refusal, mid-discovery cancellation and controlled timeout all release
+workspace. The synthetic family rejects algebra calls during discovery, so
+enumerating unused physical states cannot pass this regression.

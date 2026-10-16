@@ -95,6 +95,31 @@ count certificates into full-order negative proofs. Revision numbers are local
 diagnostics, not global cache identities. A changed capture must create a new
 CapturedCatalog.
 
+Repeated captured requests
+--------------------------
+The same immutable CapturedCatalog instance may retain its complete potential
+producer index after a second lookup has demonstrated reuse. A one-off catalog
+does not retain a copy. The index includes physical returns beyond the first
+256 concrete variants, skips empty domains and virtual configuration returns,
+and contains no stock, state activations, candidate coverage or solver results.
+Changed catalog contents or priority order require a new CapturedCatalog.
+
+Retention transfers completed private storage instead of copying it. The cache
+has an independent 8 MiB estimated-container cap and spends one unit from the
+request's optional cache-preparation account; refusal leaves normal planning
+available. Concurrent builders publish one complete index, release duplicate
+request storage, and borrow the published map without mutating or clearing it.
+Cancelled or limited partial indexes are never published. producerIndexMetrics()
+reports hits, misses, resource keys, provider references and retained bytes.
+Host keys are already owned by the immutable catalog and are not copied.
+
+Borrowers avoid reserving a second whole-catalog index in request workspace.
+This reduces per-request allocation, but retained cache bytes remain live with
+the catalog; a smaller request peak is not a claim of lower total JVM RSS.
+Canonical view assembly also visits only active sources in original catalog
+order. Discovery/allocation order, variant ordinals, bindings and exact returns
+remain unchanged; inactive sources are still available for later discovery.
+
 Factorized stock allocation
 ---------------------------
 After the unchanged first turn fails, an optional auxiliary model finds a

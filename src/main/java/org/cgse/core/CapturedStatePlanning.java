@@ -5,6 +5,7 @@ package org.cgse.core;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -66,7 +67,11 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private final Map<String, Long> entityFloors = new LinkedHashMap<>();
     private final Map<String, BigInteger> unclaimed = new LinkedHashMap<>(), advanced = new LinkedHashMap<>();
     private final List<PlanStep> program = new ArrayList<>();
-    private List<K> activationStates = List.of();
+    private List<K> activationStates = new ArrayList<>();
+    private Iterator<Map.Entry<K, Long>> captureStock;
+    private Iterator<K> captureExternal;
+    private int captureSource, captureOutput, captureInput, captureCandidate;
+    private boolean captureStarted, captured;
     private CapturedCatalog<Key<K>>.Work planning;
     private CapturedStateExpansion<K> expansion;
     private GraphPlan<Key<K>> proposed;
@@ -118,26 +123,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (allowance < 1024) { stop(Reason.LOCAL_WORK_LIMIT); return; }
         if (!reserve(2048)) return;
         try {
-            for (var value : stock.entrySet()) { budget.compilationCheck(); known.add(value.getKey()); free.put(value.getKey(), BigInteger.valueOf(value.getValue())); }
-            known.addAll(external);
-            for (var source : entries) {
-                budget.compilationCheck();
-                for (var output : source.recipe().outputs()) known.add(output.what());
-                for (var input : source.recipe().inputs()) for (var candidate : input.candidates()) {
-                    budget.compilationCheck(); known.add(candidate.stack().what());
-                    if (candidate.remaining() != null) known.add(candidate.remaining());
-                    var family = candidate.family();
-                    if (family != null) {
-                        if (family.id() == null || family.id().isEmpty()) throw new IllegalArgumentException("Empty state family identity");
-                        families.putIfAbsent(family.id(), family);
-                    }
-                }
-            }
-            if (!reserve(160L * (known.size() + families.size()))) return;
-            activationStates = List.copyOf(known);
-            if (budget.proofJournal() != null) budget.proofJournal().markIncomplete();
-            budget.note("candidate_state", "start; families=" + families.size() + "; known=" + known.size() +
-                    "; allowance=" + allowance + "; negative_proofs=false");
+            captureStock = stock.entrySet().iterator();
+            captureExternal = external.iterator();
         } catch (RuntimeException | Error failure) { close(); throw failure; }
     }
 
@@ -151,7 +138,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             budget.checkpoint();
             budget.phase(!prepared ? PlanningBudget.Phase.BUILD : assembly == null ? PlanningBudget.Phase.SOLVE : PlanningBudget.Phase.VERIFY);
             if (budget.nodes() - workStarted >= allowance) return stop(Reason.LOCAL_WORK_LIMIT);
-            if (!prepared) prepare();
+            if (!captured) capture();
+            else if (!prepared) prepare();
             else if (expansion != null) {
                 if (expansion.step()) {
                     result = expansion.result();
@@ -194,6 +182,51 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         } catch (ArithmeticException overflow) {
             return stop(Reason.UNREPRESENTABLE_RESTORATION);
         } finally { if (observed != null) observed.step(observedWork, observedNanos); }
+    }
+
+    /** Retained discovery stays inside the arm's allowance before building its view. */
+    private void capture() {
+        if (captureStock.hasNext()) {
+            budget.compilationCheck();
+            var value = captureStock.next();
+            if (rememberKey(value.getKey())) free.put(value.getKey(), BigInteger.valueOf(value.getValue()));
+        } else if (captureExternal.hasNext()) {
+            budget.compilationCheck(); rememberKey(captureExternal.next());
+        } else if (captureSource < entries.size()) {
+            var recipe = entries.get(captureSource).recipe();
+            if (!captureStarted) {
+                budget.compilationCheck(); captureStarted = true;
+            } else if (captureOutput < recipe.outputs().size()) {
+                budget.compilationScan(); rememberKey(recipe.outputs().get(captureOutput++).what());
+            } else if (captureInput < recipe.inputs().size()) {
+                var choices = recipe.inputs().get(captureInput).candidates();
+                if (captureCandidate < choices.size()) {
+                    budget.compilationCheck(); var choice = choices.get(captureCandidate++);
+                    if (!rememberKey(choice.stack().what()) || choice.remaining() != null && !rememberKey(choice.remaining())) return;
+                    var family = choice.family();
+                    if (family != null) {
+                        String id = family.id();
+                        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Empty state family identity");
+                        if (!families.containsKey(id) && reserve(160)) families.put(id, family);
+                    }
+                } else {
+                    budget.compilationScan(); captureInput++; captureCandidate = 0;
+                }
+            } else {
+                budget.compilationScan(); captureSource++; captureOutput = captureInput = captureCandidate = 0; captureStarted = false;
+            }
+        } else {
+            budget.compilationCheck(); captured = true; captureStock = null; captureExternal = null;
+            if (budget.proofJournal() != null) budget.proofJournal().markIncomplete();
+            budget.note("candidate_state", "start; families=" + families.size() + "; known=" + known.size() +
+                    "; allowance=" + allowance + "; negative_proofs=false");
+        }
+    }
+
+    private boolean rememberKey(K key) {
+        if (known.contains(key)) return true;
+        if (!reserve(160)) return false;
+        known.add(key); activationStates.add(key); return true;
     }
 
     private void prepare() {
@@ -1150,6 +1183,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (verification != null) verification.close(); verification = null;
         if (assembly != null) assembly.close(); assembly = null;
         cursor = null; restorationWord = null; proposed = null;
+        captureStock = null; captureExternal = null;
         families.clear(); entityFamilies.clear(); known.clear(); activationStates = List.of(); auxiliary.clear(); sources.clear(); activations.clear(); pools.clear();
         free.clear(); restored.clear(); transitions.clear(); program.clear(); toolGroups.clear(); capacityCaps.clear(); entityFloors.clear(); unclaimed.clear(); advanced.clear();
         budget.release(memory); memory = 0; done = true;

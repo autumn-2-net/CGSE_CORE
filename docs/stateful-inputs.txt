@@ -38,6 +38,14 @@ retain their own capacities; an entity cannot be activated twice. Ordinary
 producer recipes can manufacture further tools. Capacity keys exist only in the
 auxiliary coordinates, never in host inventory or a submitted physical plan.
 
+Initial discovery of stocked keys, external supply, source outputs, candidate
+keys/returns and family identities is retained between steps. It does not scan
+the whole capture in the constructor. Every step checks cancellation, time and
+the arm's original work allowance, and reserves key/family storage before
+insertion. Large discovery may decline locally, leaving the canonical captured
+path its remaining budget. This is neither a negative state theorem nor a new
+allowance on resumption. It does not unfold unused nominal tool states.
+
 The restorer allocates actual entities to every slot before releasing that
 operation's returns. It generates only selected exact states and restores real
 GraphRecipe/PlanStep values, then checks funding, execution and the request.
@@ -376,6 +384,12 @@ The public tests are under tests/core/java/org/cgse/core:
     non-prototype manufacturing, return-only bridges and independent exact seed
     producers. Physical replay, delayed returns/save-load, incomplete coverage,
     changed stock and original-attempt resumption guard the positive selection.
+  CapturedStatePreparationTest: wide stock, external supply, source lists,
+    outputs, slots, candidates and family sets, with per-step work bounds,
+    local allowance, memory admission, cancellation and timeout cleanup.
+  CapturedIndexReuseTest: repeated large captures, changing stock and worn
+    tools/replacements, exact source priority, complete return-only producers,
+    independent retention caps, incomplete coverage and concurrent publication.
   StateRestorationCycleTest: 22,000 independent primitive-prefix comparisons,
     serial and nested word composition, exact pool identity/order/counts,
     wide resource arithmetic and budget cleanup.
