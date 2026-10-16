@@ -58,6 +58,11 @@ public final class CapturedCatalog<K> {
     private long producerHits, producerMisses;
     private final CapturedSupportCache<K> stateSupports;
     private final CapturedStateProducers<K> stateProducers;
+    private final CapturedStateSources<K> stateSourceHints;
+
+    CapturedStateSources.Metrics stateSourceMetrics() {
+        return stateSourceHints == null ? new CapturedStateSources.Metrics(0, 0, 0) : stateSourceHints.metrics();
+    }
 
     CapturedStateProducers.Metrics stateProducerMetrics() {
         return stateProducers == null ? new CapturedStateProducers.Metrics(0, 0, 0, 0) : stateProducers.metrics();
@@ -121,6 +126,7 @@ public final class CapturedCatalog<K> {
         stateFamilies = families;
         stateSupports = families && entries.size() > 128 ? new CapturedSupportCache<>() : null;
         stateProducers = stateSupports == null ? null : new CapturedStateProducers<>();
+        stateSourceHints = stateSupports == null ? null : new CapturedStateSources<>();
     }
 
     /** Same potential-output scope as Work's index, including unexpanded returns. */
@@ -194,8 +200,10 @@ public final class CapturedCatalog<K> {
         private CapturedStateSupport<K> stateSupport;
         private CapturedStockProjection<K> stateStock;
         private List<Entry<K>> stateSources;
-        private boolean fullStateTried, stateRecoveryTried;
+        private List<Integer> stateSourceIndices;
+        private boolean fullStateTried, stateRecoveryTried, stateHintsTried, stateHintTrial;
         private long stateStarted, stateAllowance, stockTrialStarted, stockTrialAllowance;
+        private long hintTrialStarted, hintTrialAllowance;
         private boolean reachableTried;
         private GraphPlan<K> reachablePlan;
         private List<CapturedReachableWitness.Variant<K>> reachableVariants = List.of();
@@ -268,6 +276,18 @@ public final class CapturedCatalog<K> {
             if (closed) throw new IllegalStateException("Closed captured planning work");
             budget.checkpoint();
             if (phase != 3) budget.phase(PlanningBudget.Phase.BUILD);
+            if (stateHintTrial && (phase == 8 || phase == 9) && budget.nodes() - hintTrialStarted >= hintTrialAllowance) {
+                if (stateSupport != null) stateSupport.close();
+                stateSupport = null;
+                if (statePlanning != null) statePlanning.close();
+                statePlanning = null; closeStateStock();
+                budget.note("candidate_state_source_hints", "limited; remaining=" + stateRemaining() + "; negative_transfer=false");
+                if (!beginStateRecovery()) {
+                    if (!fullStateTried) beginStatePlanning(entries);
+                    else phase = 1;
+                }
+                return false;
+            }
             if (phase == 0) {
                 indexPotentialProducer();
             } else if (phase == 1) {
@@ -293,7 +313,9 @@ public final class CapturedCatalog<K> {
                 if (statePlanning.step()) {
                     var plan = statePlanning.result(); statePlanning.close(); statePlanning = null;
                     if (plan != null) {
-                        if (stateRecoveryTried && stateSources != entries && stateSupports != null && sharedProducers)
+                        if (stateSourceHints != null && sharedProducers)
+                            stateSourceHints.retain(entries, stateSourceIndices, budget);
+                        if ((stateRecoveryTried || stateHintsTried) && stateSources != entries && stateSupports != null && sharedProducers)
                             stateSupports.retainExpanded(target, requiredSeeds.keySet(), stateSources, budget);
                         if (stateStock == null && stateSupports != null && sharedProducers)
                             stateSupports.retainStockKeys(target, requiredSeeds.keySet(), stateSources,
@@ -308,6 +330,7 @@ public final class CapturedCatalog<K> {
                 }
             } else if (phase == 9) {
                 if (stateSupport.step()) {
+                    stateSourceIndices = sharedProducers ? stateSupport.retainedIndices() : null;
                     var selected = stateSupport.result(); stateSupport.close(); stateSupport = null;
                     if (selected != null && sharedProducers) stateSupports.retain(target, requiredSeeds.keySet(), selected, budget);
                     if (selected == null && beginStateRecovery()) return false;
@@ -404,7 +427,22 @@ public final class CapturedCatalog<K> {
         }
 
         private boolean beginStateRecovery() {
-            if (stateRecoveryTried || entries.size() <= 128) return false;
+            stateHintTrial = false;
+            if (entries.size() <= 128) return false;
+            if (!stateHintsTried) {
+                stateHintsTried = true;
+                var hints = sharedProducers && stateSourceHints != null ? stateSourceHints.get(entries, budget) : null;
+                stateSupport = CapturedStateSupport.recoverHints(entries, producers, target, requiredSeeds.keySet(), budget,
+                        sharedProducers ? stateProducers : null, stateRemaining(), hints);
+                if (stateSupport != null) {
+                    stateHintTrial = true; hintTrialStarted = budget.nodes();
+                    hintTrialAllowance = Math.min(65_536, stateRemaining() / 4);
+                    budget.note("candidate_state_source_hints", "start; sources=" + hints.size() + "; remaining=" + stateRemaining() +
+                            "; allowance=" + hintTrialAllowance + "; negative_proofs=false");
+                    phase = 9; return true;
+                }
+            }
+            if (stateRecoveryTried) return false;
             stateRecoveryTried = true;
             stateSupport = CapturedStateSupport.recover(entries, producers, target, requiredSeeds.keySet(), budget,
                     sharedProducers ? stateProducers : null, stateRemaining());
@@ -416,6 +454,7 @@ public final class CapturedCatalog<K> {
         private void beginStatePlanning(List<Entry<K>> sources, List<K> stockKeys) {
             stateSources = sources;
             fullStateTried = sources == entries;
+            if (fullStateTried) stateSourceIndices = null;
             long remaining = stateRemaining();
             if (fullStateTried && phase == 8) budget.note("candidate_state_support", "retry_full_state; remaining=" + remaining +
                     "; shared_allowance=" + stateAllowance + "; negative_transfer=false");
@@ -433,8 +472,10 @@ public final class CapturedCatalog<K> {
             // share one lifetime allowance. A private miss cannot exclude sources.
             // The outer stock trial owns its deadline; do not halve the nested
             // recovery admission again before it has performed any actual work.
+            long remaining = stateRemaining();
+            if (stateHintTrial) remaining = Math.min(remaining, Math.max(0, hintTrialAllowance - (budget.nodes() - hintTrialStarted)));
             statePlanning = new CapturedStatePlanning<>(stateSources, target, amount, view, external, requiredSeeds,
-                    preserve, forceCraft, budget, stateRemaining());
+                    preserve, forceCraft, budget, remaining);
             phase = 8;
         }
 

@@ -122,8 +122,13 @@ public final class CapturedStateRecoveryPipelineTest {
     }
 
     private static void verify(GraphPlan<String> plan, Input input) {
+        verify(plan, input.entries(), input.stock(), input.target(), input.seeds());
+    }
+
+    static void verify(GraphPlan<String> plan, List<CapturedCatalog.Entry<String>> entries,
+            Map<String, Long> stock, String target, Map<String, Long> seeds) {
         PlanVerifier.verify(plan); PlanVerifier.verifyRuntimeInventory(plan);
-        var sources = new LinkedHashMap<String, CapturedCatalog.Entry<String>>(); input.entries().forEach(s -> sources.put(s.binding(), s));
+        var sources = new LinkedHashMap<String, CapturedCatalog.Entry<String>>(); entries.forEach(s -> sources.put(s.binding(), s));
         for (var recipe : plan.recipes().values()) {
             var source = sources.get(recipe.binding()); check(source != null && !recipe.binding().startsWith("noise:"), "Invented source / funded unrelated source");
             var outputs = new LinkedHashMap<String, Long>(); long[] fill = new long[source.recipe().inputs().size()];
@@ -144,7 +149,7 @@ public final class CapturedStateRecoveryPipelineTest {
         }
         var inventory = new LinkedHashMap<String, BigInteger>();
         plan.initialExact().forEach((key, count) -> {
-            check(count.signum() >= 0 && count.compareTo(BigInteger.valueOf(input.stock().getOrDefault(key, 0L))) <= 0, "Invented initial stock");
+            check(count.signum() >= 0 && count.compareTo(BigInteger.valueOf(stock.getOrDefault(key, 0L))) <= 0, "Invented initial stock");
             inventory.put(key, count);
         });
         var cursor = new PlanCursor(plan.steps()); int fired = 0;
@@ -160,11 +165,11 @@ public final class CapturedStateRecoveryPipelineTest {
             }
             cursor.dispatched(batch.runs());
         }
-        check(inventory.getOrDefault(input.target(), BigInteger.ZERO).signum() > 0, "Missed original target");
-        input.seeds().forEach((key, count) -> check(inventory.getOrDefault(key, BigInteger.ZERO).compareTo(BigInteger.valueOf(count)) >= 0, "Missed final physical seed"));
+        check(inventory.getOrDefault(target, BigInteger.ZERO).signum() > 0, "Missed original target");
+        seeds.forEach((key, count) -> check(inventory.getOrDefault(key, BigInteger.ZERO).compareTo(BigInteger.valueOf(count)) >= 0, "Missed final physical seed"));
     }
 
-    private static void runtime(GraphPlan<String> plan) {
+    static void runtime(GraphPlan<String> plan) {
         final class Host implements GraphJobRuntime.Adapter<String> {
             GraphJobRuntime<String> job = new GraphJobRuntime<>(plan, plan.initial(), Map.of());
             final Map<String, Long> physical = new LinkedHashMap<>(plan.initial());

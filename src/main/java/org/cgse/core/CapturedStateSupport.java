@@ -26,6 +26,7 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     private final long started, allowance;
     private final boolean recover;
     private final List<K> recoveryRequests;
+    private final List<Integer> sourceHints;
     private final Set<Integer> selected = new TreeSet<>();
     private final Set<K> requested = new HashSet<>();
     private final ArrayDeque<K> keys = new ArrayDeque<>();
@@ -43,7 +44,7 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     private int recoveryEntry, recoveryInput, recoveryCandidate, recoveryStart, recoveryEnd = -1, recoveryRounds, relatedKey;
     private StateFamily<K> relatedRule;
     private long memory = 2048;
-    private boolean done, closed;
+    private boolean done, closed, hintMatched;
 
     static <K> CapturedStateSupport<K> create(List<CapturedCatalog.Entry<K>> entries, Map<K, List<Integer>> producers,
             K target, Set<K> seeds, PlanningBudget budget) {
@@ -53,7 +54,7 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     static <K> CapturedStateSupport<K> create(List<CapturedCatalog.Entry<K>> entries, Map<K, List<Integer>> producers,
             K target, Set<K> seeds, PlanningBudget budget, CapturedStateProducers<K> retained) {
         if (budget.remainingWork() < 16_384 || !budget.tryReserve(2048)) return null;
-        return new CapturedStateSupport<>(entries, producers, target, seeds, budget, retained, false, Long.MAX_VALUE);
+        return new CapturedStateSupport<>(entries, producers, target, seeds, budget, retained, false, Long.MAX_VALUE, null);
     }
 
     /** Optional second support after a selected state attempt missed a source.
@@ -61,15 +62,25 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     static <K> CapturedStateSupport<K> recover(List<CapturedCatalog.Entry<K>> entries, Map<K, List<Integer>> producers,
             K target, Set<K> seeds, PlanningBudget budget, CapturedStateProducers<K> retained, long maximumWork) {
         if (budget.remainingWork() < 16_384 || maximumWork < 4096 || !budget.tryReserve(2048)) return null;
-        return new CapturedStateSupport<>(entries, producers, target, seeds, budget, retained, true, maximumWork);
+        return new CapturedStateSupport<>(entries, producers, target, seeds, budget, retained, true, maximumWork, null);
+    }
+
+    /** Hints are immutable global source positions from this same capture. */
+    static <K> CapturedStateSupport<K> recoverHints(List<CapturedCatalog.Entry<K>> entries, Map<K, List<Integer>> producers,
+            K target, Set<K> seeds, PlanningBudget budget, CapturedStateProducers<K> retained,
+            long maximumWork, List<Integer> hints) {
+        if (hints == null || hints.isEmpty() || budget.remainingWork() < 16_384 || maximumWork < 4096 || !budget.tryReserve(2048)) return null;
+        return new CapturedStateSupport<>(entries, producers, target, seeds, budget, retained, true, maximumWork, hints);
     }
 
     private CapturedStateSupport(List<CapturedCatalog.Entry<K>> entries, Map<K, List<Integer>> producers,
-            K target, Set<K> seeds, PlanningBudget budget, CapturedStateProducers<K> retained, boolean recover, long maximumWork) {
+            K target, Set<K> seeds, PlanningBudget budget, CapturedStateProducers<K> retained, boolean recover, long maximumWork,
+            List<Integer> sourceHints) {
         this.entries = entries; this.producers = producers; this.seeds = seeds.iterator(); this.budget = budget;
-        this.retained = retained; this.recover = recover;
+        this.retained = retained; this.recover = recover; this.sourceHints = sourceHints;
         recoveryRequests = recover ? new ArrayList<>() : List.of();
-        started = budget.nodes(); allowance = recover ? Math.min(262_144, Math.min(maximumWork / 4, budget.remainingWork() / 8)) :
+        started = budget.nodes(); allowance = sourceHints != null ? Math.min(8192, Math.min(maximumWork / 8, budget.remainingWork() / 16)) :
+                recover ? Math.min(262_144, Math.min(maximumWork / 4, budget.remainingWork() / 8)) :
                 Math.min(65_536, budget.remainingWork() / 16);
         try { require(target); }
         catch (RuntimeException | Error failure) { close(); throw failure; }
@@ -121,28 +132,29 @@ final class CapturedStateSupport<K> implements AutoCloseable {
 
     private void recoverSource() {
         if (recoveryEnd < 0) { recoveryEnd = recoveryRequests.size(); recoveryRounds++; }
-        if (recoveryEntry == entries.size()) {
+        if (recoveryEntry == (sourceHints == null ? entries.size() : sourceHints.size())) {
             // New ordinary dependencies may refer to a source visited earlier.
             // Reach a fixed point under the same allowance, not source order.
             if (recoveryEnd != recoveryRequests.size()) {
                 recoveryEntry = 0; recoveryStart = recoveryEnd; recoveryEnd = -1; return;
             }
-            budget.note("candidate_state_support_recovery", "closed; rounds=" + recoveryRounds + "; selected=" + selected.size());
+            budget.note(recoveryStage(), "closed; rounds=" + recoveryRounds + "; selected=" + selected.size());
             finish(); return;
         }
-        if (selected.contains(recoveryEntry)) { nextRecoverySource(); return; }
+        int source = sourceHints == null ? recoveryEntry : sourceHints.get(recoveryEntry);
+        if (selected.contains(source)) { nextRecoverySource(); return; }
         if (relatedRule != null) {
             if (relatedKey < recoveryEnd) {
                 // Compatibility only requests an extra positive candidate. It
                 // does not assert that this rule can reach the requested key.
                 if (relatedRule.accepts(recoveryRequests.get(relatedKey++))) {
                     relatedRule = null;
-                    select(recoveryEntry);
+                    hintMatched = true; select(source);
                 }
             } else relatedRule = null;
             return;
         }
-        var recipe = entries.get(recoveryEntry).recipe();
+        var recipe = entries.get(source).recipe();
         if (recipe.size() == 0) { nextRecoverySource(); return; }
         // Bound each cooperative step even for a very wide unselected entry.
         for (int scan = 0; scan < 32; scan++) {
@@ -161,7 +173,7 @@ final class CapturedStateSupport<K> implements AutoCloseable {
             budget.compilationCheck();
             if (before != null && family.accepts(before) && family.capacity(before) > 0) {
                 K after = family.nominalAfterOne(before);
-                if (after != null && requested.contains(after)) { select(recoveryEntry); return; }
+                if (after != null && requested.contains(after)) { hintMatched = true; select(source); return; }
             }
             // Later rounds inspect only newly discovered needs. Retaining the
             // finite key frontier avoids repeating every old family/key query.
@@ -176,10 +188,12 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     }
 
     private void finishBounded() {
-        budget.note("candidate_state_support_recovery", "bounded; rounds=" + recoveryRounds +
+        budget.note(recoveryStage(), "bounded; rounds=" + recoveryRounds +
                 "; selected=" + selected.size() + "; negative_proofs=false");
         finish();
     }
+
+    private String recoveryStage() { return sourceHints == null ? "candidate_state_support_recovery" : "candidate_state_source_hints"; }
 
     private void require(K key) {
         if (requested.contains(key)) return;
@@ -224,6 +238,7 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     }
 
     private void finish() {
+        if (sourceHints != null && !hintMatched) { decline("no_retained_state_source"); return; }
         if (selected.isEmpty() || selected.size() == entries.size()) { decline("unchanged_support"); return; }
         var sources = new ArrayList<CapturedCatalog.Entry<K>>(selected.size());
         // Original priority and original entry objects survive the selection.
@@ -250,6 +265,12 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     }
 
     List<CapturedCatalog.Entry<K>> result() { return result; }
+
+    /** Optional copy for later retention, not input to the current solve. */
+    List<Integer> retainedIndices() {
+        return result != null && selected.size() <= CapturedStateSources.MAX_SOURCES &&
+                budget.tryCacheCharge(selected.size()) ? List.copyOf(selected) : null;
+    }
 
     @Override public void close() {
         if (closed) return; closed = true;

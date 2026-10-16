@@ -37,10 +37,13 @@ public final class CapturedIndexReuseTest {
                 check(result.coverage().complete() != state, "Cache changed state coverage"); positives++;
                 if (run == 0) check(catalog.producerIndexMetrics().estimatedBytes() == 0, "One-off capture retained its index");
                 if (run == 1) {
-                    // The one-key rule projection additionally retains its
-                    // complete scan using four independent preparation units.
-                    check(budget.cachePreparationWork() == (state ? 7 : 1), "Index/support/rule retention did not use its independent account");
+                    // State retention also copies source positions and saves
+                    // the bounded cross-target source hint, independently of
+                    // search and compilation. Later hits still retain nothing.
+                    check(budget.cachePreparationWork() == (state ? 20 : 1),
+                            "Index/support/rule/source retention used " + budget.cachePreparationWork() + " preparation units");
                     check(catalog.stateProducerMetrics().entries() == (state ? 1 : 0), "Unexpected finite rule projection");
+                    check(catalog.stateSourceMetrics().sources() == (state ? 1 : 0), "Unexpected source hint retention");
                 }
                 if (run >= 2) {
                     check(budget.cachePreparationWork() == 0 && budget.compilationWork() < (state ? 3000 : 256), "Hot request rebuilt unrelated sources");

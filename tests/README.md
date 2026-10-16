@@ -1072,6 +1072,28 @@ identity, scope, independent retention quotas and aggregate cache limits.
 Recovery probes one transition at a declared boundary; it does not enumerate
 unused durability states or prove arbitrary state reachability.
 
+`CapturedStateSourceReuseTest` checks 140 public requests across distinct targets
+that need the same implicit tool return. The 96-request matrix includes 512 and
+16,384 ordinary/stateful noise sources, both source orders, terminal returns and
+work caps from 20,000 to 40 million. Each positive plan is replayed against its
+original source and physical inventory; warm compilation must stay below 2,000
+work units. Mixed simultaneous tools, replacement manufacturing, delayed returns,
+persistence, changed stock/seeds and replaced captures guard the reuse scope.
+An old source hint that cannot use current stock must preserve the full recovery
+path, which can discover and retain a newly funded source for the next target.
+Cancellation and an injected shared-clock advance check partial-trial cleanup
+and the original parent allowance. Source-hint discovery plus its trial has a
+shared cap of one quarter of the state remainder, at most 65,536 work units.
+
+`CapturedStateSourceCacheTest` checks immutable capture/position ownership,
+original source order, stateful-slot eligibility, invalid and oversized inputs,
+partial-scan refusal, independent cache quotas, cancellation and four concurrent
+publishers. The optional pool retains at most 128 source positions, under an
+8-KiB estimated-container cap; it contains no stock quantities, inferred bounds,
+complete coverage or negative solver facts. Only a verified selected state plan
+may populate this pool, and declined/expired hinted trials retain the original
+full source-discovery path.
+
 `CapturedPreviewScopeTest` checks that only restricted view owners omit optional
 refill previews, preserving complete capture previews and positive witnesses.
 `CapturedHandoffTest` injects limits after the real child's proof/witness is ready
