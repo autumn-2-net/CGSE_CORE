@@ -1,0 +1,135 @@
+// Copyright (c) 2026 autumn
+// SPDX-License-Identifier: MPL-2.0
+
+package org.cgse.core;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/** Independent small-integer allocation oracle, including nonuniform eligibility. */
+public final class StateEntityMatchingTest {
+    private static long checks;
+    private static int cases;
+
+    public static void main(String[] args) {
+        exhaustive(2, 3, 2, 3);
+        exhaustive(3, 2, 3, 2);
+        var random = new Random(0x51a7eL);
+        for (int i = 0; i < 1500; i++) {
+            int[] stock = new int[3], need = new int[3];
+            for (int j = 0; j < 3; j++) { stock[j] = 1 + random.nextInt(4); need[j] = 1 + random.nextInt(4); }
+            compare(stock, need, random.nextInt(8), random.nextInt(512), (i & 1) == 0);
+        }
+        boundaries();
+        System.out.println("StateEntityMatchingTest: cases=" + cases + "; assertions=" + checks);
+    }
+
+    private static void exhaustive(int demands, int supplies, int maxStock, int maxNeed) {
+        for (int stockCode = 0; stockCode < pow(maxStock, supplies); stockCode++) {
+            int[] stock = decode(stockCode, maxStock, supplies);
+            for (int needCode = 0; needCode < pow(maxNeed, demands); needCode++) {
+                int[] need = decode(needCode, maxNeed, demands);
+                for (int mixed = 0; mixed < (1 << demands); mixed++)
+                    for (int edges = 0; edges < (1 << (demands * supplies)); edges++)
+                        compare(stock, need, mixed, edges, (edges & 1) == 0);
+            }
+        }
+    }
+
+    private static void compare(int[] stock, int[] need, int mixed, int edges, boolean reverse) {
+        boolean expected = assignSlot(0, stock.clone(), need, mixed, edges);
+        var demands = new ArrayList<StateEntityAllocation.Demand>();
+        var supplies = new ArrayList<StateEntityAllocation.Supply<Integer>>();
+        for (int d = 0; d < need.length; d++) demands.add(new StateEntityAllocation.Demand(d, need[d], (mixed & (1 << d)) != 0));
+        for (int s = 0; s < stock.length; s++) supplies.add(new StateEntityAllocation.Supply<>(s, BigInteger.valueOf(stock[s]), s + 1));
+        if (reverse) { Collections.reverse(demands); Collections.reverse(supplies); }
+        var budget = budget();
+        try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> edge(edges, stock.length, d.slot(), s), budget)) {
+            check(work != null, "Small matching rejected");
+            int steps = 0;
+            while (!work.step()) check(++steps < 20_000, "Nonterminating continuation");
+            check(work.feasible() == expected, "Oracle mismatch: stock=" + Arrays.toString(stock) + "; need=" + Arrays.toString(need) +
+                    "; mixed=" + mixed + "; edges=" + edges);
+            if (expected) {
+                long[] spent = new long[stock.length], filled = new long[need.length];
+                int[] key = new int[need.length]; Arrays.fill(key, -1);
+                for (var pick : work.result()) {
+                    int d = pick.slot(), s = pick.state();
+                    check(pick.amount() > 0 && edge(edges, stock.length, d, s), "Ineligible entity");
+                    check((mixed & (1 << d)) != 0 || key[d] < 0 || key[d] == s, "Split an indivisible slot");
+                    key[d] = s; spent[s] += pick.amount(); filled[d] += pick.amount();
+                }
+                for (int s = 0; s < stock.length; s++) check(spent[s] <= stock[s], "Shared a physical entity twice");
+                for (int d = 0; d < need.length; d++) check(filled[d] == need[d], "Unfilled slot");
+            } else check(work.failedSlot() >= 0 && work.failedSlot() < need.length, "Lost allocation failure scope");
+        }
+        check(budget.reservedBytes() == 0, "Matching workspace leak"); cases++;
+    }
+
+    // Enumerate literal finite allocations, without residual flow or matching.
+    private static boolean assignSlot(int slot, int[] left, int[] need, int mixed, int edges) {
+        if (slot == need.length) return true;
+        if ((mixed & (1 << slot)) != 0) return split(slot, 0, need[slot], left, need, mixed, edges);
+        for (int s = 0; s < left.length; s++) if (edge(edges, left.length, slot, s) && left[s] >= need[slot]) {
+            left[s] -= need[slot]; boolean ok = assignSlot(slot + 1, left, need, mixed, edges); left[s] += need[slot];
+            if (ok) return true;
+        }
+        return false;
+    }
+
+    private static boolean split(int slot, int s, int remaining, int[] left, int[] need, int mixed, int edges) {
+        if (remaining == 0) return assignSlot(slot + 1, left, need, mixed, edges);
+        if (s == left.length) return false;
+        int max = edge(edges, left.length, slot, s) ? Math.min(left[s], remaining) : 0;
+        for (int use = 0; use <= max; use++) {
+            left[s] -= use; boolean ok = split(slot, s + 1, remaining - use, left, need, mixed, edges); left[s] += use;
+            if (ok) return true;
+        }
+        return false;
+    }
+
+    private static void boundaries() {
+        var demands = List.of(new StateEntityAllocation.Demand(0, Long.MAX_VALUE, true),
+                new StateEntityAllocation.Demand(1, Long.MAX_VALUE, true));
+        var supplies = List.of(new StateEntityAllocation.Supply<>("a", BigInteger.valueOf(Long.MAX_VALUE).multiply(BigInteger.TWO), 1),
+                new StateEntityAllocation.Supply<>("b", BigInteger.ONE, Long.MAX_VALUE));
+        var budget = budget();
+        try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> d.slot() == 0 || s.equals("a"), budget)) {
+            int steps = 0; while (!work.step()) check(++steps < 20, "Expanded quantities into physical instances");
+            check(work.feasible(), "BigInteger supply / long demand overflow");
+        }
+        check(budget.reservedBytes() == 0, "Wide matching leak");
+        // Uniform count is sufficient, but the subset of eligible keys is not.
+        compare(new int[]{2, 3}, new int[]{2, 2}, 3, 5, false);
+        // First whole-key choice must be undone to leave the only eligible key
+        // for the mixed demand. This exercises flow rollback into the DFS.
+        compare(new int[]{3, 3}, new int[]{2, 2}, 2, 11, false);
+        var tiny = new PlanningBudget(0, 100_000, 1, () -> false, System::nanoTime);
+        check(StateEntityMatching.create(demands, supplies, (d, s) -> true, tiny) == null, "Ignored memory cap");
+        check(tiny.reservedBytes() == 0, "Rejected workspace leaked");
+        var cancel = new AtomicBoolean();
+        var cancellable = new PlanningBudget(0, 100_000, 1 << 20, cancel::get, System::nanoTime);
+        try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> true, cancellable)) {
+            work.step(); cancel.set(true);
+            try { work.step(); throw new AssertionError("Ignored cancellation"); } catch (CancellationException expected) { checks++; }
+        }
+        check(cancellable.reservedBytes() == 0, "Cancelled continuation leak");
+        var interrupted = budget();
+        try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> true, interrupted)) { work.step(); }
+        check(interrupted.reservedBytes() == 0, "Abandoned continuation leak");
+    }
+
+    private static boolean edge(int edges, int width, int d, int s) { return (edges & (1 << (d * width + s))) != 0; }
+    private static int pow(int n, int p) { int result = 1; for (int i = 0; i < p; i++) result *= n; return result; }
+    private static int[] decode(int code, int radix, int count) {
+        int[] result = new int[count]; for (int i = 0; i < count; i++) { result[i] = 1 + code % radix; code /= radix; } return result;
+    }
+    private static PlanningBudget budget() { return new PlanningBudget(0, 1_000_000, 16 << 20, () -> false, System::nanoTime); }
+    private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); checks++; }
+}

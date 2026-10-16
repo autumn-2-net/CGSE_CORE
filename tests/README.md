@@ -60,6 +60,14 @@ early activation of already owned tools across stock/slot/recipe permutations.
 It replays each exact transition against the original captured source and checks
 runtime return routing through save/load, local work limits and incomplete coverage.
 
+`StateEntityMatchingTest` checks 56,798 finite allocation cases against an
+independent enumerator, with different slot eligibility, whole-key branching and
+integral augmenting paths, very large quantities, memory limits and cancellation.
+`CapturedStateSharingTest` covers shared tools under different wear rules,
+simultaneous matching after wear, manufactured replacements, disjoint eligibility,
+physical seed requirements and request-level incomplete coverage. It replays the
+original source rules and checks delayed actual returns through saved runtime state.
+
 `StateTransitionTest` verifies exact and uncertain return contracts and bounded
 state discovery. `StateReturnRuntimeTest` covers actual alternative receipts,
 parallel equivalent/disjoint return domains, partial returns, synchronous handoff,

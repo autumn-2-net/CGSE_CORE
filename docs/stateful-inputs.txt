@@ -59,15 +59,30 @@ state keys. A retained search assigns indivisible slots to whole same-key groups
 trying best-fit first and backtracking when that choice blocks another slot.
 Mixed slots then use the remaining entities, preferring longer-lived states.
 No returns become available until every slot of the firing has been allocated.
-The single-tool path does not build this allocator. Allocation failure concerns
+The single-family, single-tool path does not build this allocator. Allocation failure concerns
 these exact owned entities and slots, not all possible programs or count vectors.
+
+When several rules accept the same physical state, one activation offers their
+marginal capacities and restoration uses a shared owned-entity pool. Those
+capacities are not independent lifetime guarantees: every selected use applies
+its own exact transition to the same physical entity. A returned state remains
+owned if any captured rule can still use it, including when the just-used rule
+has exhausted its own capacity. A total entity read arc for fixed simultaneous
+choices prevents one activation from funding several concurrent tool slots.
+
+Slots with different eligibility rules use joint integral matching. Whole-key
+indivisible demands branch over state keys; mixed and unit demands use retained
+capacitated augmenting paths. A failed flow backtracks the whole-key assignment,
+rather than rejecting a valid alternative. Counts are never expanded into one
+node per entity. Failure is local to this firing and physical inventory.
 
 If a failed allocation needs an activation already selected by the proposal,
 restoration may advance that activation only when its physical input is currently
 owned. Ordinary inputs of the current firing are reserved first. A per-binding
 credit skips the corresponding later activation, so an entity is never activated
 twice. This can use a manufactured replacement as soon as it is present; it cannot
-borrow a future manufacturing output or an entity held by another family.
+borrow a future manufacturing output. Shared-rule slots may reassign eligible
+owned entities; different rules never create another copy of the physical tool.
 
 If entities are still insufficient, a local repair can re-propose with each
 activation's capacity capped by the selected number of firings using that family.
@@ -78,9 +93,16 @@ only a proposal restriction, not a bound on every valid execution of the catalog
 All old restored inventory, activation credits and coordinate-local plans are
 discarded before solving the changed auxiliary model. The allocation DFS retains
 its frontier between steps; a changed capacity model starts a new auxiliary solve.
+If marginal capacities overlook combined wear, a further positive-only proposal
+can require one more activated entity eligible for the failed rule. That floor
+is a candidate restriction, not a necessary bound on the original problem. It
+may request production of a replacement; actual restoration still cannot use
+that replacement until it has been produced and physically claimed.
 Neither path renews the arm's original work allowance or borrows cache-preparation
-budget. General temporal matching, arbitrary cross-family assignment and a complete
-restoration repair procedure are not implied by these bounded positive searches.
+budget. General temporal matching and a complete restoration repair procedure
+are not implied by these bounded positive searches. In particular, arbitrary
+transitions that first become eligible for an unrelated rule are not a complete
+state-domain expansion, and an auxiliary decline is still inconclusive.
 
 Exact transitions are interned within the same auxiliary variant, retaining the
 source binding, family choices, input slots and full outputs. Repeated execution
@@ -161,6 +183,11 @@ The public tests are under tests/core/java/org/cgse/core:
   CapturedStateEntityTest: changing stock/slot order, mixed and indivisible
     multi-tool firings, attrition, replacement production and activation ordering,
     physical source-level replay, saved runtime returns and restricted limits.
+  StateEntityMatchingTest: 56,798 independent finite allocation cases with
+    different slot eligibility, whole-key/flow rollback, wide counts and limits.
+  CapturedStateSharingTest: sequential cross-rule reuse, simultaneous matching,
+    combined wear and replacement production, disjoint rules, physical seeds,
+    primitive replay, delayed returns/save-load, request coverage and work caps.
   CapturedReachableTest: sparse candidate recovery and exact execution checks.
   RequestCoverageTest: request-level coverage and restricted-result boundaries.
   StateReturnRuntimeTest: alternatives, equivalent parallel owners, persistence,
