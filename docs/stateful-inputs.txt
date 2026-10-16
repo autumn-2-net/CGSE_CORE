@@ -114,6 +114,23 @@ on actual owned inputs and received returns. No shortcut is assumed for arbitrar
 changing-state callbacks. A periodic state word may be compressed after its exact
 selected transitions have been restored, using the existing plan optimizer.
 
+Within one unchanged auxiliary variant, repeated exact transitions can also
+trigger an observed-cycle checkpoint during restoration. A word is reusable
+only when all activated tool pools return to the same keys, multiplicities and
+iteration order. Its ordinary-input prefix requirements and resource deltas
+bound the number of complete copies; consumed configurations remain charged
+per firing. The restored program retains a serial Repeat of those exact
+transitions. Every runtime push still waits for actual physical inputs.
+Tool activation, entity loss, changed variants and proposal refinements discard
+the checkpoint. Manufacturing replacement tools cannot masquerade as a closed
+orbit. A word may accelerate successive long-sized cursor windows of an exact
+larger count. Optional checkpoint memory is released on decline or completion;
+work, cancellation and the arm's original allowance remain in force.
+This reuses observed finite words, without assuming that arbitrary state rules
+are periodic or that unobserved states may be skipped. Distinct one-way state
+chains do not allocate a checkpoint for every transition. An observed orbit is
+an executable witness, not a completeness proof for the family domain.
+
 Physical state seed requirements are checked on the restored final state. They
 are omitted from the capacity proposal, where activation consumes the physical
 key without representing its final return. This relaxation cannot authorize
@@ -127,6 +144,9 @@ calls and work. Internal outcomes distinguish verified candidates, restricted
 declines and local resource limits, including invalid algebra versus insufficient
 entities. Diagnostics also count candidate horizon refinements and advanced owned
 activations. The arm cannot continue beyond its original fixed allowance.
+Cycle diagnostics include the number of jumps and exact firings represented by
+their retained words; prefix analysis and checkpoint matching belong to restore
+cost, not a fresh search allowance.
 
 A failed auxiliary solve or failed restoration is not a global negative proof.
 Family domains remain incomplete; a verified witness is
@@ -202,6 +222,11 @@ The public tests are under tests/core/java/org/cgse/core:
   CapturedStateSharingTest: sequential cross-rule reuse, simultaneous matching,
     combined wear and replacement production, disjoint rules, physical seeds,
     primitive replay, delayed returns/save-load, request coverage and work caps.
+  StateRestorationCycleTest: 16,000 independent primitive-prefix comparisons,
+    exact pool identity/order/counts, wide resource arithmetic and budget cleanup.
+  CapturedStateCycleTest: finite prefixes and periodic words through long-sized
+    requests and wider intermediate counts, multiple physical tools/rules,
+    configurations, exact seeds, source identity, attrition and actual returns.
   CapturedReachableTest: sparse candidate recovery and exact execution checks.
   RequestCoverageTest: request-level coverage and restricted-result boundaries.
   StateReturnRuntimeTest: alternatives, equivalent parallel owners, persistence,
