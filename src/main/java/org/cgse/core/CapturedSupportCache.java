@@ -46,11 +46,22 @@ final class CapturedSupportCache<K> {
     }
 
     void retain(K target, Set<K> seeds, List<CapturedCatalog.Entry<K>> sources, PlanningBudget budget) {
+        retain(target, seeds, sources, budget, false);
+    }
+
+    /** A verified recovery may add original sources in their original order.
+     * Drop the old stock projection: the added sources may use other keys. */
+    void retainExpanded(K target, Set<K> seeds, List<CapturedCatalog.Entry<K>> sources, PlanningBudget budget) {
+        retain(target, seeds, sources, budget, true);
+    }
+
+    private void retain(K target, Set<K> seeds, List<CapturedCatalog.Entry<K>> sources, PlanningBudget budget, boolean expand) {
         if (sources == null || sources.isEmpty() || sources.size() > 128 || seeds.size() > MAX_SEEDS) return;
         var before = saved.get();
         // Copying the bounded scope and publishing references is optional work.
         // Lookup and all current-request deductions remain compilation/search.
         if (!budget.tryCacheCharge(1L + seeds.size() + sources.size() + before.hints.size())) return;
+        Hint<K> replaced = null;
         for (var hint : before.hints) {
             if (!budget.tryCacheScan(1)) return;
             if (!hint.target.equals(target) || hint.seeds.size() != seeds.size()) continue;
@@ -59,12 +70,21 @@ final class CapturedSupportCache<K> {
                 if (!budget.tryCacheScan(1)) return;
                 if (!hint.seeds.contains(seed)) { same = false; break; }
             }
-            if (same) return;
+            if (!same) continue;
+            if (!expand || sources.size() <= hint.sources.size()) return;
+            int matched = 0;
+            for (var source : sources) {
+                if (!budget.tryCacheScan(1)) return;
+                if (matched < hint.sources.size() && source == hint.sources.get(matched)) matched++;
+            }
+            if (matched != hint.sources.size()) return;
+            replaced = hint; break;
         }
         long bytes = 192L + 48L * seeds.size() + 16L * sources.size();
         var hints = new ArrayList<Hint<K>>();
         hints.add(new Hint<>(target, Set.copyOf(seeds), List.copyOf(sources), null, bytes));
         for (var hint : before.hints) {
+            if (hint == replaced) continue;
             if (hints.size() == MAX_ENTRIES || hint.bytes > MAX_BYTES - bytes) break;
             hints.add(hint); bytes += hint.bytes;
         }

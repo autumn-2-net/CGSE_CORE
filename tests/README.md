@@ -1050,6 +1050,28 @@ retention, while populating it and while reusing it, preserving original sources
 and their priority. Reuse selects a positive attempt; it carries no stock amounts
 or negative solver facts and does not unfold unused tool states.
 
+`CapturedStateRecoveryTest` checks optional discovery of implicit state-return
+sources after a selected state attempt fails. Sixty shuffled dependency chains
+exercise repeated discovery across sources, both with and without retained
+producer projections. Two 16,384-rule catalogs require keeping useful sources
+when discovery reaches its allowance. Parent work limits, cancellation, memory
+refusal, original source order and incomplete projection rejection are checked.
+The canonical producer index remains unchanged; a bounded selected subset is
+only a positive candidate, not a complete closure or infeasibility certificate.
+
+`CapturedStateRecoveryPipelineTest` checks 178 public requests with up to 16,384
+unrelated ordinary or stateful sources. Physical worn states are consumed as
+ordinary ingredients, requested directly, or retained as final seeds. Cold and
+warm requests, terminal returns, 8,192/Long.MAX_VALUE capacities, simultaneous
+tools, tool manufacturing and changed stock are checked with independent source
+semantics and integer execution replay. Delayed returns and runtime save/load
+exercise recovered plans. The third request must compile in fewer than 2,000
+work units. A verified recovery may extend a cached source list in its original
+order, dropping its old stock projection; `CapturedSupportCacheTest` guards
+identity, scope, independent retention quotas and aggregate cache limits.
+Recovery probes one transition at a declared boundary; it does not enumerate
+unused durability states or prove arbitrary state reachability.
+
 `CapturedPreviewScopeTest` checks that only restricted view owners omit optional
 refill previews, preserving complete capture previews and positive witnesses.
 `CapturedHandoffTest` injects limits after the real child's proof/witness is ready

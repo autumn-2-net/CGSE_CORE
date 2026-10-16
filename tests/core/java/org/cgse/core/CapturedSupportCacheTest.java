@@ -14,8 +14,34 @@ public final class CapturedSupportCacheTest {
     private record Key(int id) { @Override public int hashCode() { return 1; } }
 
     public static void main(String[] args) throws Exception {
-        scope(); limits(); cancellation(); concurrent();
+        scope(); expanded(); limits(); cancellation(); concurrent();
         System.out.println("CapturedSupportCacheTest: assertions=" + checks.get());
+    }
+
+    private static void expanded() {
+        var cache = new CapturedSupportCache<Key>(); var first = entry(1); var second = entry(2); var third = entry(3);
+        var target = new Key(0); var scope = Set.of(new Key(4));
+        cache.retain(target, scope, List.of(second), budget());
+        cache.retainStockKeys(target, scope, List.of(second), Set.of(new Key(5)), 1000, budget());
+        check(cache.select(target, scope, budget()).stockKeys() != null, "No projection to invalidate");
+        var b = budget();
+        cache.retainExpanded(target, scope, List.of(first, second, third), b);
+        check(b.nodes() == 0 && b.searchWork() == 0 && b.cachePreparationWork() > 0, "Expansion borrowed search / compiler quota");
+        var expanded = cache.select(target, scope, budget());
+        check(expanded.sources().equals(List.of(first, second, third)) && expanded.stockKeys() == null && cache.metrics().entries() == 1,
+                "Expanded support retained stale stock keys / duplicate scope");
+        cache.retainExpanded(target, scope, List.of(first, second), budget());
+        cache.retainExpanded(target, scope, List.of(third, second, first, entry(6)), budget());
+        cache.retainExpanded(target, scope, List.of(first, entry(2), third, entry(6)), budget());
+        check(cache.select(target, scope, budget()) == expanded, "Shrank / reordered support or substituted equal-looking source identity");
+        b = budget(); check(b.tryCacheCharge(PlanningBudget.CACHE_PREPARATION_WORK), "Cannot exhaust optional account");
+        cache.retainExpanded(target, scope, List.of(first, second, third, entry(7)), b);
+        check(cache.select(target, scope, budget()) == expanded && b.nodes() == 0, "Refused expansion changed ownership");
+        for (int i = 0; i < 50; i++) {
+            var key = new Key(100 + i); cache.retain(key, scope, List.of(second), budget());
+            cache.retainExpanded(key, scope, List.of(first, second, third), budget()); bounds(cache);
+        }
+        check(cache.metrics().entries() == 32, "Expansion bypassed aggregate cache caps");
     }
 
     private static void scope() {
