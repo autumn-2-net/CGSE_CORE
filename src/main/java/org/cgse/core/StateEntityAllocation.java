@@ -33,6 +33,8 @@ final class StateEntityAllocation<K> implements AutoCloseable {
     private int depth, mixed, bin;
     private long left, memory;
     private boolean done, feasible, emitting;
+    private boolean packingTried;
+    private StateEntityPacking<K> packing;
 
     static <K> StateEntityAllocation<K> create(List<Demand> demands, List<Supply<K>> supplies, PlanningBudget budget) {
         return create(demands, supplies, null, budget);
@@ -88,6 +90,12 @@ final class StateEntityAllocation<K> implements AutoCloseable {
         budget.checkpoint();
         if (done) return true;
         budget.check();
+        if (packing != null) {
+            if (!packing.step()) return false;
+            boolean possible = packing.possible(); packing.close(); packing = null;
+            if (!possible) done = true;
+            return done;
+        }
         if (emitting) {
             if (mixed == demands.size()) { feasible = done = true; return true; }
             Demand demand = demands.get(mixed);
@@ -127,6 +135,13 @@ final class StateEntityAllocation<K> implements AutoCloseable {
             if (candidate == preferred[depth]) return false;
         }
         if (candidate < 0 || candidate >= remaining.length) {
+            if (!packingTried) {
+                packingTried = true;
+                packing = StateEntityPacking.create(demands, indivisible, supplies, budget);
+                // Keep the exhausted branch in place until the original-stock
+                // bound finishes. It may only reject, never supply a witness.
+                if (packing != null) return false;
+            }
             preferred[depth] = -2;
             if (depth == 0) { done = true; return true; }
             depth--;
@@ -144,6 +159,7 @@ final class StateEntityAllocation<K> implements AutoCloseable {
     List<Pick<K>> result() { if (!feasible()) throw new IllegalStateException("No allocation witness"); return result; }
 
     @Override public void close() {
+        if (packing != null) packing.close(); packing = null;
         supplies.clear(); demands.clear(); result.clear(); Arrays.fill(remaining, null);
         budget.release(memory); memory = 0; done = true;
     }

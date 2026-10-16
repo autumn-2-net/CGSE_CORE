@@ -31,6 +31,8 @@ final class StateEntityMatching<K> implements AutoCloseable {
     private long memory;
     private boolean done, feasible, flowing, totalShortage, hallDeficit;
     private boolean partialEligibility, relaxationTried, relaxing, failedFlow;
+    private boolean packingTried;
+    private StateEntityPacking<K> packing;
 
     static <K> StateEntityMatching<K> create(List<StateEntityAllocation.Demand> demands,
             List<StateEntityAllocation.Supply<K>> supplies,
@@ -107,12 +109,20 @@ final class StateEntityMatching<K> implements AutoCloseable {
         budget.checkpoint();
         if (done) return true;
         budget.check();
+        if (packing != null) {
+            if (!packing.step()) return false;
+            boolean possible = packing.possible(); packing.close(); packing = null;
+            if (!possible) done = true;
+            return done;
+        }
         if (!flowing) {
             if (depth == fixed) { flowing = true; unmet = fixed; return false; }
             var demand = demands.get(depth);
             if (next[depth] == width) {
                 if (startRelaxation(false)) return false;
-                next[depth] = 0; failedSlot = demand.slot();
+                failedSlot = demand.slot();
+                if (startPacking()) return false;
+                next[depth] = 0;
                 if (depth == 0) { done = true; return true; }
                 undoFixed(); return false;
             }
@@ -135,6 +145,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
                     remaining[s] = remaining[s].subtract(BigInteger.valueOf(demands.get(d).amount()));
                 }
                 if (failedFlow) undoFixed();
+                startPacking();
                 return false;
             }
             for (int d = 0; d < demands.size(); d++) {
@@ -173,6 +184,16 @@ final class StateEntityMatching<K> implements AutoCloseable {
         relaxationTried = relaxing = flowing = true; failedFlow = fromFlow; unmet = 0;
         resetFlow();
         return true;
+    }
+
+    /** Preserve Hall feedback first. Once splittable flow succeeds (or all
+     * edges are allowed), a separate bound can detect whole-key fragmentation.
+     * It uses original supply counts, never the failed branch's residuals. */
+    private boolean startPacking() {
+        if (packingTried) return false;
+        packingTried = true;
+        packing = StateEntityPacking.create(demands, fixed, supplies, budget);
+        return packing != null;
     }
 
     private void resetFlow() {
@@ -251,6 +272,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
     List<StateEntityAllocation.Pick<K>> result() { if (!feasible()) throw new IllegalStateException("No matching witness"); return result; }
 
     @Override public void close() {
+        if (packing != null) packing.close(); packing = null;
         demands.clear(); supplies.clear(); result.clear(); Arrays.fill(remaining, null);
         budget.release(memory); memory = 0; done = true;
     }
