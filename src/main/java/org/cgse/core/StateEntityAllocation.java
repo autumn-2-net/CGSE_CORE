@@ -6,7 +6,9 @@ package org.cgse.core;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.function.ToIntFunction;
 
 /** Retained allocation of one family's owned entities to simultaneous slots.
  * Indivisible slots need one exact key; mixed slots can use the remaining keys.
@@ -25,6 +27,7 @@ final class StateEntityAllocation<K> implements AutoCloseable {
     private final List<Demand> demands;
     private final BigInteger[] remaining;
     private final int[] chosen, next, preferred;
+    private final int[] priorities;
     private final List<Pick<K>> result = new ArrayList<>();
     private final int indivisible;
     private int depth, mixed, bin;
@@ -32,15 +35,21 @@ final class StateEntityAllocation<K> implements AutoCloseable {
     private boolean done, feasible, emitting;
 
     static <K> StateEntityAllocation<K> create(List<Demand> demands, List<Supply<K>> supplies, PlanningBudget budget) {
+        return create(demands, supplies, null, budget);
+    }
+
+    static <K> StateEntityAllocation<K> create(List<Demand> demands, List<Supply<K>> supplies,
+            ToIntFunction<K> preference, PlanningBudget budget) {
         // At most one pick per indivisible slot. Splitting the mixed remainder
         // exhausts either a slot or a supply at each pick, hence O(slots + keys).
-        long bytes = 512L + 160L * demands.size() + 224L * supplies.size();
-        if (!budget.tryReserve(bytes)) return null;
-        try { return new StateEntityAllocation<>(demands, supplies, budget, bytes); }
+        long bytes = 512L + 160L * demands.size() + (preference == null ? 224L : 320L) * supplies.size();
+        if (!budget.tryReserve(bytes)) return preference == null ? null : create(demands, supplies, budget);
+        try { return new StateEntityAllocation<>(demands, supplies, preference, budget, bytes); }
         catch (RuntimeException | Error failure) { budget.release(bytes); throw failure; }
     }
 
-    private StateEntityAllocation(List<Demand> demands, List<Supply<K>> supplies, PlanningBudget budget, long bytes) {
+    private StateEntityAllocation(List<Demand> demands, List<Supply<K>> supplies, ToIntFunction<K> preference,
+            PlanningBudget budget, long bytes) {
         this.budget = budget; memory = bytes;
         this.demands = new ArrayList<>(demands); this.supplies = new ArrayList<>(supplies);
         this.demands.sort((a, b) -> {
@@ -50,11 +59,21 @@ final class StateEntityAllocation<K> implements AutoCloseable {
         });
         // Prefer using long-lived tools while several entities are needed in
         // parallel. Capacity is a heuristic only, not a survival certificate.
-        this.supplies.sort((a, b) -> { budget.check(); return Long.compare(b.capacity(), a.capacity()); });
+        var scores = preference == null ? null : new HashMap<K, Integer>();
+        if (scores != null) for (var supply : this.supplies) {
+            budget.check(); scores.put(supply.state(), preference.applyAsInt(supply.state()));
+        }
+        this.supplies.sort((a, b) -> {
+            budget.check();
+            int order = scores == null ? 0 : Integer.compare(scores.get(a.state()), scores.get(b.state()));
+            return order != 0 ? order : Long.compare(b.capacity(), a.capacity());
+        });
+        priorities = scores == null ? null : new int[supplies.size()];
         remaining = new BigInteger[supplies.size()];
         BigInteger available = BigInteger.ZERO, needed = BigInteger.ZERO;
         for (int i = 0; i < this.supplies.size(); i++) {
             budget.check(); remaining[i] = this.supplies.get(i).count(); available = available.add(remaining[i]);
+            if (priorities != null) priorities[i] = scores.get(this.supplies.get(i).state());
         }
         int fixed = 0;
         for (var demand : this.demands) { budget.check(); needed = needed.add(BigInteger.valueOf(demand.amount())); if (!demand.mixed()) fixed++; }
@@ -95,7 +114,9 @@ final class StateEntityAllocation<K> implements AutoCloseable {
             int best = -1;
             for (int i = 0; i < remaining.length; i++) {
                 budget.check();
-                if (remaining[i].compareTo(amount) >= 0 && (best < 0 || remaining[i].compareTo(remaining[best]) < 0)) best = i;
+                int order = best < 0 || priorities == null ? 0 : Integer.compare(priorities[i], priorities[best]);
+                if (remaining[i].compareTo(amount) >= 0 && (best < 0 || order < 0 ||
+                        order == 0 && remaining[i].compareTo(remaining[best]) < 0)) best = i;
             }
             preferred[depth] = best; next[depth] = -1;
         }

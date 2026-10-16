@@ -84,6 +84,29 @@ twice. This can use a manufactured replacement as soon as it is present; it cann
 borrow a future manufacturing output. Shared-rule slots may reassign eligible
 owned entities; different rules never create another copy of the physical tool.
 
+When several distinct initial keys were activated and a witnessed transition
+disabled a later rule, restoration can first retry the same counts AND execution
+word with different entity choices. Failed rules guide a preference for exact
+transitions that retain their eligibility. Single-rule allocation orders supplies
+and its best-fit alternatives; multi-rule matching orders each slot's allowed
+edges. Every supply and eligible edge remains searchable. These preferences
+neither reserve tools nor prove that a tool must be saved for a later operation.
+Whole-key backtracking and residual augmentations still decide one-firing
+feasibility; the ordering is not a minimum-cost or complete temporal allocation.
+
+This optional feedback retains up to eight distinct failed rules and 512 cached
+rule/state scores within one unchanged proposal. Its lifetime allowance is at
+most 32768 work units and one sixteenth of remaining request work, including
+subsequent restoration. Admission requires 16384 remaining work, at most 128
+active variants and 2048 ports. Preferences apply to at most 256 owned eligible
+keys and, for joint matching, 32 simultaneous demands. No domain is truncated:
+larger allocations use the ordinary allocator. If the extra preference workspace
+does not fit, allocation retries without scores before declining for memory.
+Repeated failure of the same rule
+does not restart this scout. A changed proposal clears all feedback and scores;
+the enclosing arm's fixed allowance still covers every attempt. Order recovery
+and entity refinement remain available if the chosen physical assignment fails.
+
 When an already restored transition disables another rule's physical eligibility,
 the restorer can retain the proposal's exact counts and try other execution words
 before requesting more entities. The blocked variant guides a bounded preferred
@@ -285,6 +308,14 @@ The public tests are under tests/core/java/org/cgse/core:
   StateScheduleRepairTest: 250 independently constructed executable multisets,
     physical-prefix replay of alternative words, exact counts above long,
     lifetime downstream-work limits, missing stock and memory/cancellation cleanup.
+  CapturedStateChoiceTest: forced material order with one/two/three specialized
+    tools, several distinct physical keys, mixed/indivisible and cross-rule slots,
+    long-sized requests, exact seeds, repeated conflicting feedback and limits.
+    Every source transition and count is checked; small plans get primitive
+    replay and delayed runtime returns/save-load. Private failure is inconclusive.
+  StateChoiceRepairTest: independent literal assignment oracles under arbitrary
+    per-key/per-edge preferences, whole-key backtracking and augmenting paths,
+    wide counts, cached feedback revisions, work/memory limits and cancellation.
   StateRestorationCycleTest: 22,000 independent primitive-prefix comparisons,
     serial and nested word composition, exact pool identity/order/counts,
     wide resource arithmetic and budget cleanup.

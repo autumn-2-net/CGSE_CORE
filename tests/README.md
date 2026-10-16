@@ -100,6 +100,16 @@ returns, save/load and cancellation checks. `StateScheduleRepairTest` replays
 alternative words for 250 independently constructed executable multisets, checks
 counts above long, and verifies nonrenewable downstream-work and memory limits.
 
+`CapturedStateChoiceTest` covers 97 positive cases where material dependencies
+fix the execution order but eligible tools are not interchangeable across future
+rules. It checks multiple specialized tools, simultaneous mixed/indivisible and
+cross-rule slots, quantities through `Long.MAX_VALUE`, exact seeds, forced
+production, independent physical replay, delayed returns and save/load. Conflicting
+preferences and low budgets cannot invent tools or export an infeasibility proof.
+`StateChoiceRepairTest` compares preferred allocation and matching with independent
+literal assignments; preference scores must never remove feasible choices. It
+also exercises wide quantities, score-cache revisions and lifetime work limits.
+
 `PlanCursorLoopTest` checks whole-loop skips against primitive expanded programs,
 including shared and nested occurrences, partial batches, stale boundaries,
 cancellation and saved exact counts above long. `CapturedStateLoopTest` preserves

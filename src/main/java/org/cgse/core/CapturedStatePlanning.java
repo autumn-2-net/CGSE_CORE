@@ -70,8 +70,11 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private CapturedCatalog<Key<K>>.Work planning;
     private GraphPlan<Key<K>> proposed;
     private PlanCursor cursor;
+    private PlanStep restorationWord;
     private StateEntityAllocation<K> allocation;
     private StateEntityMatching<K> matching;
+    private StateChoiceRepair<K> choiceRepair;
+    private int choiceCandidates;
     private StateScheduleRepair<Key<K>> orderRepair;
     private StateFamily<K> orderFailure;
     private boolean orderTried, searchingOrder;
@@ -616,7 +619,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                     }
                     supplies.add(new StateEntityAllocation.Supply<>(value.getKey(), value.getValue(), capacity));
                 }
-                allocation = StateEntityAllocation.create(group.demands(), supplies, budget);
+                var preferences = choiceRepair != null && choiceRepair.active() && supplies.size() <= 256 ? choiceRepair : null;
+                allocation = StateEntityAllocation.create(group.demands(), supplies,
+                        preferences == null ? null : state -> preferences.score(family, state), budget);
             } finally {
                 budget.release(transientBytes);
             }
@@ -652,10 +657,13 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                     }
                     if (capacity > 0) supplies.add(new StateEntityAllocation.Supply<>(value.getKey(), value.getValue(), capacity));
                 }
+                var preferences = choiceRepair != null && choiceRepair.active() && supplies.size() <= 256 &&
+                        group.demands().size() <= 32 ? choiceRepair : null;
                 matching = StateEntityMatching.create(group.demands(), supplies, (demand, key) -> {
                     var family = families.get(recipe.slots().get(demand.slot()).key().family());
                     return family.accepts(key) && family.capacity(key) > 0;
-                }, budget);
+                }, preferences == null ? null : (demand, key) ->
+                        preferences.score(families.get(recipe.slots().get(demand.slot()).key().family()), key), budget);
             } finally { budget.release(transientBytes); }
             if (matching == null) stop(Reason.WORKSPACE_DECLINED);
             return false;
@@ -710,8 +718,40 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         clearSelection();
         if (intactRecipe != null && advanceActivations(family, intactRecipe)) return;
         if (done) return;
+        if (repairChoices(family)) return;
         if (repairOrder(family, intactRecipe == null ? proposed.recipes().get(cursor.current().recipe()) : intactRecipe)) return;
         refineEntities(family);
+    }
+
+    /** Replaying the same word can choose another already owned entity at an
+     * earlier firing. The failed rule is a preference, never a reserved quota. */
+    private boolean repairChoices(StateFamily<K> family) {
+        if (!shared() || proposed.patternTimesExact().size() > 128) return false;
+        if (choiceRepair == null) {
+            // A lone physical key has no different initial choice. Leave its
+            // order / replacement recovery path and normal hot path unchanged.
+            K first = null; boolean alternatives = false;
+            long ports = 0;
+            for (String id : proposed.patternTimesExact().keySet()) {
+                budget.check(); var recipe = proposed.recipes().get(id);
+                ports += recipe.inputs().size() + recipe.outputs().size();
+                if (ports > 2048) return false;
+                var activating = activations.get(recipe.binding());
+                if (activating != null) {
+                    if (first == null) first = activating.state();
+                    else if (!first.equals(activating.state())) alternatives = true;
+                }
+            }
+            if (!alternatives || !lostEligibility(family)) return false;
+            choiceRepair = StateChoiceRepair.create(budget);
+            if (choiceRepair == null) return false;
+        } else if (!choiceRepair.active() || !lostEligibility(family)) return false;
+        if (!choiceRepair.protect(family)) return false;
+        finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+        resetRestoration(); startRestoration(restorationWord); choiceCandidates++;
+        budget.note("candidate_state", "retry_entity_choices; family=" + family.id() + "; candidate=" + choiceCandidates +
+                "; same_counts=true; same_order=true; negative_proofs=false");
+        return true;
     }
 
     private void refineEntities(StateFamily<K> family) {
@@ -806,7 +846,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     }
 
     private void startRestoration(PlanStep word) {
-        cursor = new PlanCursor(word);
+        restorationWord = word; cursor = new PlanCursor(word);
         for (var value : proposed.patternTimesExact().entrySet()) {
             budget.check();
             String binding = proposed.recipes().get(value.getKey()).binding();
@@ -935,6 +975,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         // All changed coordinates and the old physical restoration are private
         // to this arm. No old plan, certificate or partial inventory survives.
         resetRestoration(); proposed = null;
+        restorationWord = null;
+        if (choiceRepair != null) choiceRepair.close(); choiceRepair = null;
         if (orderRepair != null) orderRepair.close(); orderRepair = null;
         orderTried = false; searchingOrder = false; orderFailure = null;
     }
@@ -1046,6 +1088,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 "; activation_advances=" + activationAdvances + "; cycle_jumps=" + cycleJumps + "; cycle_firings=" + cycleFirings +
                 "; loop_jumps=" + loopJumps + "; loop_firings=" + loopFirings +
                 "; order_candidates=" + orderCandidates +
+                "; choice_candidates=" + choiceCandidates +
                 "; work=" + (budget.nodes() - workStarted));
     }
 
@@ -1076,12 +1119,13 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         clearSelection();
         clearCycle();
         clearLoop(); declinedLoop = null;
+        if (choiceRepair != null) choiceRepair.close(); choiceRepair = null;
         if (orderRepair != null) orderRepair.close(); orderRepair = null;
         if (planning != null) planning.close(); planning = null;
         if (production != null) production.close(); production = null;
         if (verification != null) verification.close(); verification = null;
         if (assembly != null) assembly.close(); assembly = null;
-        cursor = null; proposed = null;
+        cursor = null; restorationWord = null; proposed = null;
         families.clear(); entityFamilies.clear(); known.clear(); activationStates = List.of(); auxiliary.clear(); sources.clear(); activations.clear(); pools.clear();
         free.clear(); restored.clear(); transitions.clear(); program.clear(); toolGroups.clear(); capacityCaps.clear(); entityFloors.clear(); unclaimed.clear(); advanced.clear();
         budget.release(memory); memory = 0; done = true;

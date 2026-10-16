@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.function.ToIntBiFunction;
 
 /** Owned physical entities shared by slots with different eligibility rules.
  * Whole-key slots branch over keys; mixed and unit slots use integral residual
@@ -22,6 +23,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
     private final long[] flow, left;
     private final BigInteger[] remaining;
     private final int[] chosen, next, parentDemand, parentSupply, queue;
+    private final int[] priority;
     private final int fixed, width;
     private int depth, unmet, failedSlot;
     private long memory;
@@ -30,18 +32,26 @@ final class StateEntityMatching<K> implements AutoCloseable {
     static <K> StateEntityMatching<K> create(List<StateEntityAllocation.Demand> demands,
             List<StateEntityAllocation.Supply<K>> supplies,
             BiPredicate<StateEntityAllocation.Demand, K> eligible, PlanningBudget budget) {
+        return create(demands, supplies, eligible, null, budget);
+    }
+
+    static <K> StateEntityMatching<K> create(List<StateEntityAllocation.Demand> demands,
+            List<StateEntityAllocation.Supply<K>> supplies, BiPredicate<StateEntityAllocation.Demand, K> eligible,
+            ToIntBiFunction<StateEntityAllocation.Demand, K> preference, PlanningBudget budget) {
         long edges = (long) demands.size() * supplies.size();
         if (edges > Integer.MAX_VALUE - 8) return null;
         // Includes the eligibility/flow matrix and worst-case materialized picks.
-        long bytes = 768L + 192L * demands.size() + 224L * supplies.size() + 96L * edges;
-        if (!budget.tryReserve(bytes)) return null;
-        try { return new StateEntityMatching<>(demands, supplies, eligible, budget, bytes); }
+        long bytes = 768L + 192L * demands.size() + (preference == null ? 224L : 256L) * supplies.size() +
+                (preference == null ? 96L : 104L) * edges;
+        if (!budget.tryReserve(bytes)) return preference == null ? null : create(demands, supplies, eligible, budget);
+        try { return new StateEntityMatching<>(demands, supplies, eligible, preference, budget, bytes); }
         catch (RuntimeException | Error failure) { budget.release(bytes); throw failure; }
     }
 
     private StateEntityMatching(List<StateEntityAllocation.Demand> demands,
             List<StateEntityAllocation.Supply<K>> supplies,
-            BiPredicate<StateEntityAllocation.Demand, K> eligible, PlanningBudget budget, long bytes) {
+            BiPredicate<StateEntityAllocation.Demand, K> eligible,
+            ToIntBiFunction<StateEntityAllocation.Demand, K> preference, PlanningBudget budget, long bytes) {
         this.budget = budget; memory = bytes;
         this.demands = new ArrayList<>(demands); this.supplies = new ArrayList<>(supplies);
         this.demands.sort((a, b) -> {
@@ -52,6 +62,9 @@ final class StateEntityMatching<K> implements AutoCloseable {
         this.supplies.sort((a, b) -> { budget.check(); return Long.compare(b.capacity(), a.capacity()); });
         width = supplies.size(); int count = demands.size(), indivisible = 0;
         allowed = new boolean[count * width]; flow = new long[allowed.length];
+        priority = preference == null ? null : new int[allowed.length];
+        int[] scores = preference == null ? null : new int[width];
+        Integer[] order = preference == null ? null : new Integer[width];
         remaining = new BigInteger[width]; left = new long[count];
         BigInteger available = BigInteger.ZERO, needed = BigInteger.ZERO;
         for (int s = 0; s < width; s++) {
@@ -64,6 +77,16 @@ final class StateEntityMatching<K> implements AutoCloseable {
             left[d] = demand.amount();
             for (int s = 0; s < width; s++) {
                 budget.check(); allowed[d * width + s] = eligible.test(demand, this.supplies.get(s).state());
+                if (scores != null) {
+                    scores[s] = allowed[d * width + s] ? preference.applyAsInt(demand, this.supplies.get(s).state()) : Integer.MAX_VALUE;
+                    order[s] = s;
+                }
+            }
+            if (scores != null) {
+                // Stable per-slot edge order is only a search preference. All
+                // allowed edges remain available to branches and augmentations.
+                Arrays.sort(order, (a, b) -> { budget.check(); return Integer.compare(scores[a], scores[b]); });
+                for (int s = 0; s < width; s++) { budget.check(); priority[d * width + s] = order[s]; }
             }
         }
         fixed = indivisible; unmet = fixed;
@@ -88,7 +111,8 @@ final class StateEntityMatching<K> implements AutoCloseable {
                 if (depth == 0) { done = true; return true; }
                 undoFixed(); return false;
             }
-            int s = next[depth]++;
+            int ordinal = next[depth]++;
+            int s = priority == null ? ordinal : priority[depth * width + ordinal];
             BigInteger use = BigInteger.valueOf(demand.amount());
             if (!allowed[depth * width + s] || remaining[s].compareTo(use) < 0) return false;
             remaining[s] = remaining[s].subtract(use); chosen[depth++] = s;
@@ -133,7 +157,8 @@ final class StateEntityMatching<K> implements AutoCloseable {
         int head = 0, tail = 0; queue[tail++] = root; parentDemand[root] = -2;
         while (head < tail) {
             int d = queue[head++];
-            for (int s = 0; s < width; s++) {
+            for (int ordinal = 0; ordinal < width; ordinal++) {
+                int s = priority == null ? ordinal : priority[d * width + ordinal];
                 budget.check();
                 if (!allowed[d * width + s] || parentSupply[s] != -1) continue;
                 parentSupply[s] = d;
