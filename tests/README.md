@@ -68,15 +68,26 @@ simultaneous matching after wear, manufactured replacements, disjoint eligibilit
 physical seed requirements and request-level incomplete coverage. It replays the
 original source rules and checks delayed actual returns through saved runtime state.
 
-`StateRestorationCycleTest` compares 16,000 ordinary-resource prefix cases with
+`StateRestorationCycleTest` compares 22,000 ordinary-resource prefix cases with
 primitive execution, including read arcs, consumed configurations, external
 supply, colliding state hashes, ordered pool identity, wide counts and cleanup.
+It also compares serial dispatch repetition and nested word composition with
+independent primitive execution, including consumed configuration requirements.
 `CapturedStateCycleTest` checks observed periodic restoration through billion-use
 and long-sized requests, including intermediate counts larger than long. It
 preserves multiple physical entities, cross-rule matching, finite prefixes,
 binding changes, exact final seeds, replacement attrition, cancellation and
 request coverage. Production-restored words also run with delayed actual returns
 and save/load. Closed observed words do not prove an entire state family complete.
+
+`PlanCursorLoopTest` checks whole-loop skips against primitive expanded programs,
+including shared and nested occurrences, partial batches, stale boundaries,
+cancellation and saved exact counts above long. `CapturedStateLoopTest` preserves
+interleaved host bindings and actual tool ownership through billion-round loops,
+mixed rules, multiple tools, nested dispatches and per-dispatch configurations.
+Its three-source shared-rule family uses the standard 40M budget: finding the
+auxiliary schedule remains separate from accelerating physical restoration.
+Delayed and rejected returns plus save/load are replayed on the restored words.
 
 `StateTransitionTest` verifies exact and uncertain return contracts and bounded
 state discovery. `StateReturnRuntimeTest` covers actual alternative receipts,

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** An observed exact word, scoped to one unchanged auxiliary variant. Tool
+/** An observed exact word, scoped to an unchanged auxiliary execution context. Tool
  * pools must recur in iteration order as well as quantity: allocation ties
  * may depend on that order. Ordinary stock is guarded by exact prefix needs. */
 final class StateRestorationCycle<K> implements AutoCloseable {
@@ -23,6 +23,8 @@ final class StateRestorationCycle<K> implements AutoCloseable {
     private final List<PlanStep> word = new ArrayList<>();
     private final Map<K, BigInteger> required = new LinkedHashMap<>(), delta = new LinkedHashMap<>();
     private long memory;
+    private long nodes;
+    private BigInteger exactFirings = BigInteger.ZERO;
 
     private StateRestorationCycle(String anchor, PlanningBudget budget) { this.anchor = anchor; this.budget = budget; }
 
@@ -50,19 +52,37 @@ final class StateRestorationCycle<K> implements AutoCloseable {
      * configurations are required but absent from spent; consumed ones remain
      * charged once for every serial firing, including within a repeated word. */
     boolean record(String transition, Map<K, BigInteger> needed, Map<K, BigInteger> spent, Map<K, BigInteger> produced) {
-        if (!reserve(96)) return false;
-        word.add(new PlanStep.Batch(transition, 1));
+        return record(transition, 1, 1, needed, spent, produced);
+    }
+
+    /** Maps describe one already executed dispatch, including its configuration
+     * inputs. Repetitions are serial dispatches, never a wider simultaneous batch. */
+    boolean record(String transition, long runs, long repetitions, Map<K, BigInteger> needed,
+                   Map<K, BigInteger> spent, Map<K, BigInteger> produced) {
+        if (runs <= 0 || repetitions <= 0) throw new IllegalArgumentException("Empty observed dispatch");
+        if (!reserve(repetitions == 1 ? 96 : 160)) return false;
+        PlanStep step = new PlanStep.Batch(transition, runs);
+        word.add(repetitions == 1 ? step : new PlanStep.Repeat(step, repetitions));
+        nodes += repetitions == 1 ? 1 : 2;
+        BigInteger count = BigInteger.valueOf(repetitions);
+        exactFirings = exactFirings.add(BigInteger.valueOf(runs).multiply(count));
         for (var value : needed.entrySet()) {
             budget.check(); if (!key(value.getKey())) return false;
-            required.put(value.getKey(), required.get(value.getKey()).max(value.getValue().subtract(delta.get(value.getKey()))));
+            BigInteger need = value.getValue();
+            if (repetitions > 1) {
+                BigInteger loss = spent.getOrDefault(value.getKey(), BigInteger.ZERO)
+                        .subtract(produced.getOrDefault(value.getKey(), BigInteger.ZERO));
+                if (loss.signum() > 0) need = need.add(loss.multiply(count.subtract(BigInteger.ONE)));
+            }
+            required.put(value.getKey(), required.get(value.getKey()).max(need.subtract(delta.get(value.getKey()))));
         }
         for (var value : spent.entrySet()) {
             budget.check(); if (!key(value.getKey())) return false;
-            delta.put(value.getKey(), delta.get(value.getKey()).subtract(value.getValue()));
+            delta.put(value.getKey(), delta.get(value.getKey()).subtract(value.getValue().multiply(count)));
         }
         for (var value : produced.entrySet()) {
             budget.check(); if (!key(value.getKey())) return false;
-            delta.put(value.getKey(), delta.get(value.getKey()).add(value.getValue()));
+            delta.put(value.getKey(), delta.get(value.getKey()).add(value.getValue().multiply(count)));
         }
         return true;
     }
@@ -83,9 +103,35 @@ final class StateRestorationCycle<K> implements AutoCloseable {
         return true;
     }
 
+    /** Compose a separately witnessed inner orbit into the enclosing word.
+     * The immutable body is the same one retained by the physical program. */
+    boolean record(StateRestorationCycle<K> nested, PlanStep body, long copies) {
+        if (nested == this || copies <= 0 || nested.word.isEmpty()) throw new IllegalArgumentException("Invalid nested word");
+        if (!reserve(Math.addExact(128L, Math.multiplyExact(96L, nested.nodes)))) return false;
+        word.add(new PlanStep.Repeat(body, copies));
+        nodes += nested.nodes + 2;
+        BigInteger count = BigInteger.valueOf(copies);
+        exactFirings = exactFirings.add(nested.exactFirings.multiply(count));
+        for (var value : nested.required.entrySet()) {
+            budget.check(); if (!key(value.getKey())) return false;
+            BigInteger need = value.getValue(), change = nested.delta.get(value.getKey());
+            if (change.signum() < 0) need = need.subtract(change.multiply(count.subtract(BigInteger.ONE)));
+            required.put(value.getKey(), required.get(value.getKey()).max(need.subtract(delta.get(value.getKey()))));
+        }
+        for (var value : nested.delta.entrySet()) {
+            budget.check(); if (!key(value.getKey())) return false;
+            delta.put(value.getKey(), delta.get(value.getKey()).add(value.getValue().multiply(count)));
+        }
+        return true;
+    }
+
     long copies(long remainingFirings, Map<K, BigInteger> free, Set<K> external) {
         if (word.isEmpty()) return 0;
-        long copies = remainingFirings / word.size();
+        return copiesOfWord(remainingFirings / word.size(), free, external);
+    }
+
+    long copiesOfWord(long copies, Map<K, BigInteger> free, Set<K> external) {
+        if (word.isEmpty()) return 0;
         for (var value : required.entrySet()) {
             budget.check();
             K key = value.getKey();
@@ -108,6 +154,8 @@ final class StateRestorationCycle<K> implements AutoCloseable {
     }
 
     int firings() { return word.size(); }
+    BigInteger exactFirings() { return exactFirings; }
+    long nodes() { return nodes; }
     PlanStep word() { return new PlanStep.Sequence(word); }
 
     private boolean key(K key) {

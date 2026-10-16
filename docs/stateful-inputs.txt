@@ -131,6 +131,24 @@ are periodic or that unobserved states may be skipped. Distinct one-way state
 chains do not allocate a checkpoint for every transition. An observed orbit is
 an executable witness, not a completeness proof for the family domain.
 
+Restoration also observes heterogeneous Repeat boundaries already present in the
+auxiliary program. The boundary identifies a live cursor occurrence, including
+its position and remaining iterations; sharing the same program node does not
+authorize skipping another occurrence or a partially executed body. After an
+exact transition has recurred, the restorer can retain a word spanning several
+source recipes and several iterations. It repeats that word only when all ordered
+tool pools recur and ordinary prefix requirements permit every copy. Counts of
+physical firings remain exact even when their sum exceeds long.
+Nested ordinary batches, serial fixed-point dispatches and separately verified
+inner state cycles compose into the same prefix/delta summary. Consumed
+configurations are charged per serial dispatch. Source identities remain in the
+word; activation (including previously advanced activation credits), tool loss
+and proposal changes invalidate the checkpoint. Declined workspace admission
+keeps the existing restoration path and never increases the arm allowance.
+This consumes an explicit auxiliary loop, not a proof that an arbitrary flat
+schedule has a repeat or that every physical ordering has been explored. A
+capacity proposal that cannot yet be scheduled remains a separate search limit.
+
 Physical state seed requirements are checked on the restored final state. They
 are omitted from the capacity proposal, where activation consumes the physical
 key without representing its final return. This relaxation cannot authorize
@@ -147,6 +165,8 @@ activations. The arm cannot continue beyond its original fixed allowance.
 Cycle diagnostics include the number of jumps and exact firings represented by
 their retained words; prefix analysis and checkpoint matching belong to restore
 cost, not a fresh search allowance.
+The analogous loop_jumps/loop_firings counters identify reuse at heterogeneous
+auxiliary Repeat boundaries, separately from single-variant cycle jumps.
 
 A failed auxiliary solve or failed restoration is not a global negative proof.
 Family domains remain incomplete; a verified witness is
@@ -222,11 +242,17 @@ The public tests are under tests/core/java/org/cgse/core:
   CapturedStateSharingTest: sequential cross-rule reuse, simultaneous matching,
     combined wear and replacement production, disjoint rules, physical seeds,
     primitive replay, delayed returns/save-load, request coverage and work caps.
-  StateRestorationCycleTest: 16,000 independent primitive-prefix comparisons,
-    exact pool identity/order/counts, wide resource arithmetic and budget cleanup.
+  StateRestorationCycleTest: 22,000 independent primitive-prefix comparisons,
+    serial and nested word composition, exact pool identity/order/counts,
+    wide resource arithmetic and budget cleanup.
   CapturedStateCycleTest: finite prefixes and periodic words through long-sized
     requests and wider intermediate counts, multiple physical tools/rules,
     configurations, exact seeds, source identity, attrition and actual returns.
+  PlanCursorLoopTest: independent primitive schedules, shared/nested Repeat
+    occurrences, partial-batch and stale-boundary rejection, wide counts/reload.
+  CapturedStateLoopTest: interleaved source bindings, different tool rules,
+    simultaneous physical tools, nested dispatches/configuration consumption,
+    replacements, incomplete coverage and delayed/rejected runtime returns.
   CapturedReachableTest: sparse candidate recovery and exact execution checks.
   RequestCoverageTest: request-level coverage and restricted-result boundaries.
   StateReturnRuntimeTest: alternatives, equivalent parallel owners, persistence,

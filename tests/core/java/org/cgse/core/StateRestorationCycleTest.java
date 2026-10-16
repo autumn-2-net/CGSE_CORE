@@ -20,6 +20,8 @@ public final class StateRestorationCycleTest {
 
     public static void main(String[] args) {
         randomPrefixes();
+        repeatedDispatches();
+        composedWords();
         identities();
         wideAmounts();
         limits();
@@ -90,6 +92,53 @@ public final class StateRestorationCycleTest {
         check(budget.reservedBytes() == 0, "Detached word bookkeeping leaked");
     }
 
+    private static void repeatedDispatches() {
+        var random = new Random(0x51e71a1L);
+        for (int sample = 0; sample < 4000; sample++) {
+            var budget = budget(); var primitive = new ArrayList<Firing>();
+            BigInteger firings = BigInteger.ZERO;
+            try (var word = StateRestorationCycle.start("loop", pools(), budget)) {
+                for (int j = 0, n = 1 + random.nextInt(5); j < n; j++) {
+                    int[] need = new int[3], spent = new int[3], produced = new int[3];
+                    for (int k = 0; k < 3; k++) {
+                        need[k] = random.nextInt(8); spent[k] = random.nextInt(need[k] + 1); produced[k] = random.nextInt(8);
+                    }
+                    int runs = 1 + random.nextInt(6), times = 1 + random.nextInt(5);
+                    check(word.record("r" + j, runs, times, amounts(need), amounts(spent), amounts(produced)), "Repeated dispatch declined");
+                    firings = firings.add(BigInteger.valueOf((long) runs * times));
+                    for (int i = 0; i < times; i++) primitive.add(new Firing(need, spent, produced));
+                }
+                check(word.exactFirings().equals(firings), "Repeated dispatch lost exact firings");
+                int[] initial = {random.nextInt(51), random.nextInt(51), random.nextInt(51)};
+                long[] inventory = {initial[0], initial[1], initial[2]};
+                int limit = random.nextInt(30), completed = 0;
+                outer: for (; completed < limit; completed++) {
+                    var next = inventory.clone();
+                    for (var f : primitive) {
+                        for (int k = 0; k < 3; k++) if (next[k] < f.needed[k]) break outer;
+                        for (int k = 0; k < 3; k++) next[k] += f.produced[k] - f.spent[k];
+                    }
+                    inventory = next;
+                }
+                var free = amounts(initial);
+                long copies = word.copiesOfWord(limit, free, Set.of());
+                check(copies == completed, "Serial configuration/prefix requirement changed under repetition");
+                word.apply(copies, free);
+                for (int k = 0; k < 3; k++) check(free.getOrDefault("k" + k, BigInteger.ZERO).equals(BigInteger.valueOf(inventory[k])), "Repeated delta differs from primitive replay");
+                cases++;
+            }
+            check(budget.reservedBytes() == 0, "Repeated dispatch workspace leaked");
+        }
+        var budget = budget();
+        try (var word = StateRestorationCycle.start("wide-loop", pools(), budget)) {
+            check(word.record("wide", Long.MAX_VALUE, Long.MAX_VALUE, Map.of(), Map.of(), Map.of()), "Wide word declined");
+            BigInteger expected = BigInteger.valueOf(Long.MAX_VALUE).pow(2);
+            check(word.exactFirings().equals(expected), "Wide word overflowed");
+            check(PlanCountComputation.of(word.word()).equals(Map.of("wide", expected)), "Wide serial word was flattened");
+        }
+        check(budget.reservedBytes() == 0, "Wide word retained memory");
+    }
+
     private static void wideAmounts() {
         var budget = budget(); BigInteger huge = BigInteger.ONE.shiftLeft(90), loss = huge.subtract(BigInteger.ONE);
         try (var cycle = StateRestorationCycle.start("last", pools(), budget)) {
@@ -101,6 +150,52 @@ public final class StateRestorationCycleTest {
             check(free.get("raw").equals(BigInteger.ONE), "Wide accumulated delta overflowed");
         }
         check(budget.reservedBytes() == 0, "Wide cycle leaked");
+    }
+
+    private static void composedWords() {
+        var random = new Random(0x71eeacceL);
+        for (int sample = 0; sample < 2000; sample++) {
+            var budget = budget(); var base = new ArrayList<Firing>();
+            for (int i = 0; i < 4; i++) {
+                int[] need = new int[3], spent = new int[3], produced = new int[3];
+                for (int k = 0; k < 3; k++) { need[k] = random.nextInt(6); spent[k] = random.nextInt(need[k] + 1); produced[k] = random.nextInt(6); }
+                base.add(new Firing(need, spent, produced));
+            }
+            int repetitions = 1 + random.nextInt(5);
+            var primitive = new ArrayList<Firing>(); primitive.add(base.get(0));
+            for (int i = 0; i < repetitions; i++) primitive.addAll(base.subList(1, 3));
+            primitive.add(base.get(3));
+            try (var outer = StateRestorationCycle.start("outer", pools(), budget)) {
+                var first = base.get(0);
+                check(outer.record("prefix", amounts(first.needed), amounts(first.spent), amounts(first.produced)), "Prefix declined");
+                try (var inner = StateRestorationCycle.start("inner", pools(), budget)) {
+                    for (int i = 1; i < 3; i++) {
+                        var f = base.get(i); check(inner.record("inner" + i, amounts(f.needed), amounts(f.spent), amounts(f.produced)), "Inner word declined");
+                    }
+                    check(outer.record(inner, inner.word(), repetitions), "Nested composition declined");
+                }
+                var last = base.get(3);
+                check(outer.record("suffix", amounts(last.needed), amounts(last.spent), amounts(last.produced)), "Suffix declined");
+                check(outer.exactFirings().equals(BigInteger.valueOf(2L + 2L * repetitions)), "Composed exact count changed");
+                var counts = PlanCountComputation.of(outer.word());
+                check(counts.equals(Map.of("prefix", BigInteger.ONE, "inner1", BigInteger.valueOf(repetitions), "inner2", BigInteger.valueOf(repetitions), "suffix", BigInteger.ONE)), "Closed inner workspace mutated outer word");
+                int[] initial = {random.nextInt(41), random.nextInt(41), random.nextInt(41)};
+                long[] inventory = {initial[0], initial[1], initial[2]}; int max = random.nextInt(21), completed = 0;
+                outerLoop: for (; completed < max; completed++) {
+                    var next = inventory.clone();
+                    for (var f : primitive) {
+                        for (int k = 0; k < 3; k++) if (next[k] < f.needed[k]) break outerLoop;
+                        for (int k = 0; k < 3; k++) next[k] += f.produced[k] - f.spent[k];
+                    }
+                    inventory = next;
+                }
+                var free = amounts(initial); long copies = outer.copiesOfWord(max, free, Set.of());
+                check(copies == completed, "Nested prefix differed from primitive execution"); outer.apply(copies, free);
+                for (int k = 0; k < 3; k++) check(free.getOrDefault("k" + k, BigInteger.ZERO).equals(BigInteger.valueOf(inventory[k])), "Nested material delta changed");
+                cases++;
+            }
+            check(budget.reservedBytes() == 0, "Composed word leaked");
+        }
     }
 
     private static void limits() {

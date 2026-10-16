@@ -75,6 +75,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private StateRestorationCycle<K> cycle;
     private String cycleVariant;
     private boolean cycleDisabled;
+    private StateRestorationCycle<K> loopCycle;
+    private PlanCursor.LoopBoundary loopAnchor, declinedLoop;
+    private boolean loopEvidence;
     private AllocationSearch.Candidate<K> assembly;
     private PlanVerification<K> verification;
     private ForceCraftProof<K> production;
@@ -89,6 +92,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private BigInteger restoredFirings = BigInteger.ZERO;
     private BigInteger cycleFirings = BigInteger.ZERO;
     private int cycleJumps;
+    private int loopJumps;
+    private BigInteger loopFirings = BigInteger.ZERO;
     private Outcome outcome = new Outcome(Status.RUNNING, Reason.NONE);
     private boolean prepared, done;
 
@@ -292,8 +297,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private void restore() {
         long before = budget.threadWork();
         budget.check();
+        if (cursor.hasMixedLoops()) observeLoop();
         var batch = cursor.current();
         if (batch == null) {
+            restoreWork += budget.threadWork() - before;
             assembly = new AllocationSearch.Candidate<>(new PlanStep.Sequence(program), restored, target, amount, stock,
                     seeds, external, preserve, force, false, budget, started);
             return;
@@ -309,6 +316,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         }
         var activating = activations.get(recipe.binding());
         if (activating != null) {
+            // Even a credited activation changes the proposal ownership ledger;
+            // it cannot be silently included in a repeated physical word.
+            clearLoop();
             BigInteger count = BigInteger.valueOf(batch.runs());
             BigInteger credited = advanced.getOrDefault(recipe.binding(), BigInteger.ZERO).min(count);
             if (credited.signum() > 0) advanced.compute(recipe.binding(), (key, value) -> value.subtract(credited));
@@ -429,6 +439,13 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         restoredFirings = restoredFirings.add(BigInteger.valueOf(dispatched));
         cursor.dispatched(dispatched);
         clearSelection();
+        if (cursor.hasMixedLoops()) {
+            if (!retainedEntities) clearLoop();
+            else {
+                loopEvidence |= stateful && reused;
+                if (loopCycle != null) recordLoop(recipe, id, runs, repetitions, ordinaryNeeded, ordinarySpent);
+            }
+        }
         if (stateful && retainedEntities && repetitions == 1 && batch.runs() > 1)
             repeatCycle(recipe, id, reused, batch.runs() - 1, ordinaryNeeded, ordinarySpent);
         else {
@@ -476,6 +493,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (budget.tryReserve(bytes)) {
                 memory += bytes;
                 PlanStep word = cycle.word();
+                // A repeated inner batch is part of the outer exact word too.
+                // Reuse its checked prefix/delta instead of expanding it or
+                // silently omitting the skipped firings from the outer guard.
+                if (loopCycle != null && !loopCycle.record(cycle, word, copies)) declineLoop();
                 cycle.apply(copies, free);
                 program.add(new PlanStep.Repeat(word, copies));
                 programNodes += cycle.firings() + 2L;
@@ -490,6 +511,63 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
 
     private void clearCycle() {
         if (cycle != null) cycle.close(); cycle = null;
+    }
+
+    private void observeLoop() {
+        var boundary = cursor.loopBoundary(budget);
+        if (loopCycle != null && !cursor.insideLoop(loopAnchor)) clearLoop();
+        if (boundary == null) return;
+        if (loopCycle != null) {
+            // Nested repeats remain part of the current word; only the exact
+            // anchored Repeat occurrence can authorize advancing this cursor.
+            if (!boundary.sameLoop(loopAnchor)) return;
+            long iterations = loopAnchor.remaining() - boundary.remaining();
+            if (iterations <= 0 || !loopCycle.matches("", pools)) return;
+            long copies = loopCycle.copiesOfWord(boundary.remaining() / iterations, free, external);
+            if (copies > 0) {
+                long bytes = Math.addExact(128L, Math.multiplyExact(96L, loopCycle.nodes()));
+                if (budget.tryReserve(bytes)) {
+                    memory += bytes;
+                    PlanStep word = loopCycle.word();
+                    loopCycle.apply(copies, free);
+                    program.add(new PlanStep.Repeat(word, copies));
+                    programNodes += loopCycle.nodes() + 2;
+                    cursor.skipLoop(boundary, Math.multiplyExact(iterations, copies));
+                    BigInteger skipped = loopCycle.exactFirings().multiply(BigInteger.valueOf(copies));
+                    restoredFirings = restoredFirings.add(skipped);
+                    loopFirings = loopFirings.add(skipped); loopJumps++;
+                    clearCycle(); cycleVariant = null; cycleDisabled = false;
+                }
+            }
+            declinedLoop = boundary;
+            clearLoop();
+        } else if (loopEvidence && !pools.isEmpty() && boundary.remaining() > 1 && !boundary.sameLoop(declinedLoop)) {
+            loopCycle = StateRestorationCycle.start("", pools, budget);
+            if (loopCycle == null) declinedLoop = boundary;
+            else loopAnchor = boundary;
+        }
+    }
+
+    private void recordLoop(GraphRecipe<Key<K>> recipe, String transition, long runs, long repetitions,
+                            Map<K, BigInteger> needed, Map<K, BigInteger> spent) {
+        long temporary = 64L + 160L * recipe.executionOutputs().size();
+        if (!budget.tryReserve(temporary)) { declineLoop(); return; }
+        try {
+            var produced = new LinkedHashMap<K, BigInteger>();
+            for (var output : recipe.executionOutputs().entrySet()) {
+                budget.check();
+                if (!output.getKey().entity()) produced.merge(output.getKey().physical(),
+                        BigInteger.valueOf(output.getValue()).multiply(BigInteger.valueOf(runs)), BigInteger::add);
+            }
+            if (!loopCycle.record(transition, runs, repetitions, needed, spent, produced)) declineLoop();
+        } finally { budget.release(temporary); }
+    }
+
+    private void declineLoop() { declinedLoop = loopAnchor; clearLoop(); }
+
+    private void clearLoop() {
+        if (loopCycle != null) loopCycle.close();
+        loopCycle = null; loopAnchor = null; loopEvidence = false;
     }
 
     /** Allocate all simultaneous slots before mutating any owned inventory. */
@@ -640,6 +718,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         // Replacing a depleted tool can restore the same pool shape while
         // consuming finite unclaimed inventory. That is not a closed orbit.
         clearCycle();
+        clearLoop();
         unclaimed.put(binding, remaining.subtract(count));
         pool(families.get(activating.families().get(0))).merge(activating.state(), count, BigInteger::add);
         return true;
@@ -752,6 +831,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         // to this arm. No old plan, certificate or partial inventory survives.
         cursor = null; proposed = null;
         clearCycle(); cycleVariant = null; cycleDisabled = false;
+        clearLoop(); declinedLoop = null;
         toolGroups.clear(); pools.clear(); restored.clear(); transitions.clear(); program.clear(); free.clear(); unclaimed.clear(); advanced.clear();
         budget.release(memory - proposalMemory); memory = proposalMemory;
         for (var value : stock.entrySet()) { budget.check(); free.put(value.getKey(), BigInteger.valueOf(value.getValue())); }
@@ -846,6 +926,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 "; program_nodes=" + programNodes + "; restored_firings=" + restoredFirings +
                 "; restore_calls=" + restoreCalls + "; restore_work=" + restoreWork + "; refinements=" + refinements +
                 "; activation_advances=" + activationAdvances + "; cycle_jumps=" + cycleJumps + "; cycle_firings=" + cycleFirings +
+                "; loop_jumps=" + loopJumps + "; loop_firings=" + loopFirings +
                 "; work=" + (budget.nodes() - workStarted));
     }
 
@@ -875,6 +956,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         finishObservation(PlanningBudget.CandidateOutcome.ABANDONED);
         clearSelection();
         clearCycle();
+        clearLoop(); declinedLoop = null;
         if (planning != null) planning.close(); planning = null;
         if (production != null) production.close(); production = null;
         if (verification != null) verification.close(); verification = null;
