@@ -171,11 +171,20 @@ their successor must respect its remaining guaranteed capacity. Discovered keys
 never become inventory. A fresh private catalog owns new variant identities and
 incomplete coverage; it imports neither canonical negative facts nor a previous
 finite view's proof scope. Its first short attempt uses existing physically funded
-forward recovery, then the usual graph/count portfolio. All stages share one
-allowance, capped at 262144 work units and one eighth of remaining request work,
-with admission requiring 16384 work. The forward attempt uses at most 8192 units
-and one sixteenth of that allowance. The enclosing arm's lifetime cap also stays
-in force. Exact verification, physical seeds and forced-production checks precede
+forward recovery, then the usual graph/count portfolio. The parent hands off
+half of its actual remaining lifetime allowance, capped at 262144 work units;
+admission requires at least 1024 units in that handoff. It reuses the ordered
+eligible keys already discovered by activation instead of testing every ordinary
+inventory key a second time. Initial, declared and manufactured eligible states
+remain candidates, never manufactured stock.
+
+The forward attempt starts with at most 8192 units and one sixteenth of the
+boundary allowance. Once, it can continue to at most half the boundary's remaining
+starting allowance (still capped at 8192) when observed net target progress
+predicts affordable completion, or assembly/verification has already begun.
+This scheduling estimate is charged, has no proof meaning, and cannot renew
+either the boundary or parent lifetime budget. The remainder stays available
+for count recovery and validation. Exact verification, physical seeds and forced-production checks precede
 acceptance; a private miss, workspace refusal or quota exit resumes the original
 incomplete capture without an infeasibility claim. This is bounded positive
 recovery, not a complete state closure or arbitrary symbolic-state solver.
@@ -201,6 +210,21 @@ attempt directly. The ordinary canonical path remains available afterwards.
 There is no transfer of negative facts or completeness from the selected view.
 Finite captured producer discovery is not a complete oracle for arbitrary
 opaque state callbacks, and a missing provider cannot prove global infeasibility.
+
+Repeated requests can borrow a completed source selection from the same immutable
+capture under the bounded structural-hint cache described in
+captured-candidate-domains.txt. Target and required-seed keys define this scope;
+all physical stock, capacities, proposals and returned states are request-local.
+The private auxiliary capture suppresses optional refill previews its owner cannot
+use. Complete ordinary captures retain their existing refill behavior.
+
+CapturedStateReuseTest exercises 48 cold/warm budget/order combinations with
+512 or 16384 unrelated sources, sparse/full inventory and different initial tool
+states. Its known feasible low-budget boundaries require source-level physical
+replay; larger stock scans may still return UNKNOWN under very small quotas.
+There is no general stock-key eligibility cache: immutable family callbacks must
+still inspect a new request's previously unseen inventory. This remains a limit
+when a very large inventory is paired with a small compilation/state allowance.
 
 Exact transitions are interned within the same auxiliary variant, retaining the
 source binding, family choices, input slots and full outputs. Repeated execution

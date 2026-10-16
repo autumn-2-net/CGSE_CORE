@@ -79,6 +79,7 @@ public final class CapturedHandoffTest {
                     "test did not reach the incomplete 256-prefix");
             check(child(work).limited(new PlanningBudget.Exhausted(limit)).result() == GraphPlan.Result.INFEASIBLE,
                     "prefix should have a real completed local proof");
+            check(!budget.failureDetail().startsWith("PROVEN_INFEASIBLE"), "Limited prefix published a global failure detail");
             assertLimit(work.limited(exhaust(budget, clock, limit)), limit, "incomplete prefix");
         }
         clean(budget, "prefix");
@@ -167,7 +168,8 @@ public final class CapturedHandoffTest {
             // The stock allocation proposed spending the mandatory seed. Its
             // genuine restricted count proof cannot close the full capture.
             for (int i = 0; i < 200000 && !Boolean.TRUE.equals(read(child, "quantityBlocked")); i++)
-                if (child.step()) throw new AssertionError("support proof not retained before publication");
+                if (child.step() && !Boolean.TRUE.equals(read(child, "quantityBlocked")))
+                    throw new AssertionError("support proof not retained before publication");
             check(Boolean.TRUE.equals(read(child, "quantityBlocked")), "no completed support proof");
             check(child.limited(new PlanningBudget.Exhausted(PlanningBudget.Limit.SEARCH_LIMIT)).result() == GraphPlan.Result.INFEASIBLE,
                     "support proof not INFEASIBLE");
@@ -229,10 +231,15 @@ public final class CapturedHandoffTest {
     }
 
     private static GraphPlanningWork<String> awaitProof(CapturedCatalog<String>.Work work) throws Exception {
+        // A restricted child can now finish in the same step as its proof:
+        // it no longer builds a refill preview the parent will discard. Stop
+        // before parent publication, as in verifiedWitness(), and retain the
+        // identical proof/coverage/limit assertions at this handoff boundary.
+        var child = awaitChild(work);
         for (int i = 0; i < 200000; i++) {
-            var child = child(work);
-            if (child != null && Boolean.TRUE.equals(read(child, "quantityBlocked"))) return child;
-            if (work.step()) throw new AssertionError("outer finished before proof handoff: " + work.result().plan().result());
+            if (Boolean.TRUE.equals(read(child, "quantityBlocked"))) return child;
+            if (child.step() && !Boolean.TRUE.equals(read(child, "quantityBlocked")))
+                throw new AssertionError("child finished without the expected quantity proof: " + child.result().result());
         }
         throw new AssertionError("proof boundary not reached");
     }

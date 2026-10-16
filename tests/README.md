@@ -996,3 +996,19 @@ Preparation yields between elements and stops at its original local allowance;
 memory refusal, mid-discovery cancellation and controlled timeout all release
 workspace. The synthetic family rejects algebra calls during discovery, so
 enumerating unused physical states cannot pass this regression.
+
+`CapturedSupportCacheTest` checks target/seed-key scope under deliberate hash
+collisions, immutable source order, 32-entry/64-KiB limits, oversized scopes,
+cancellation, independent retention-account refusal and four concurrent writers.
+`CapturedStateReuseTest` checks 48 cold/warm cyclic-tool budget combinations with
+up to 16,384 irrelevant sources, sparse/full stock and reversed source order.
+Small physical plans are replayed against the original tool rules and stock.
+Changed tool states, missing tools, manufactured replacements, required-seed
+amounts, force/preserve modes, capture replacement and explicit parent remainders
+guard against stale results or renewed budgets. Known feasible cases that remain
+limited are recorded as inconclusive, never given an infeasibility oracle.
+`CapturedPreviewScopeTest` checks that only restricted view owners omit optional
+refill previews, preserving complete capture previews and positive witnesses.
+`CapturedHandoffTest` injects limits after the real child's proof/witness is ready
+and before parent publication; it also covers children that finish in the same
+step as their local proof because no discarded preview is needed.

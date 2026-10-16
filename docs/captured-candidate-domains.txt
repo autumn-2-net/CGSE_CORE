@@ -120,6 +120,29 @@ Canonical view assembly also visits only active sources in original catalog
 order. Discovery/allocation order, variant ordinals, bindings and exact returns
 remain unchanged; inactive sources are still available for later discovery.
 
+Large captures with state families may additionally retain completed positive
+source-selection hints. Each hint belongs to this exact immutable capture,
+target key and required-seed KEY SET; stock, requested quantities, seed amounts,
+force/preserve flags and all solver outcomes are recomputed for each request.
+Only hints computed after producer-index reuse are retained. No partial selector
+or absence result is published, and a failed selected attempt still resumes the
+original state path with the remainder of its original allowance.
+
+This optional cache has separate limits of 32 hints and 64 KiB of estimated
+containers. Hints contain at most 128 original source references and 64 seed
+keys, preserving source identity and priority. Retention uses the independent
+cache-preparation account; current-request lookup remains compilation work.
+Immutable snapshots publish with one nonblocking attempt; competing publication
+may skip a hint, never a request. stateSupportMetrics() exposes hits, misses,
+entry count and estimated retained bytes. As with the producer index, this is
+catalog-lifetime memory, excluded from request peaks, not a JVM RSS bound.
+
+A restricted capture or recovered support skips the optional refill preview
+that its owner would discard. It retains local negative conclusions for control
+flow, without exporting a global failure detail. Complete canonical captures
+continue to build verified refill previews. Restricted misses never become
+global infeasibility proofs, including at limit/child-publication handoffs.
+
 Factorized stock allocation
 ---------------------------
 After the unchanged first turn fails, an optional auxiliary model finds a

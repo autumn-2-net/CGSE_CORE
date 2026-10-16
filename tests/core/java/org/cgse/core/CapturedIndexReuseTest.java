@@ -36,7 +36,7 @@ public final class CapturedIndexReuseTest {
                 check(result.plan().feasible(), "Repeated request exhausted compilation: " + budget.diagnostics());
                 check(result.coverage().complete() != state, "Cache changed state coverage"); positives++;
                 if (run == 0) check(catalog.producerIndexMetrics().estimatedBytes() == 0, "One-off capture retained its index");
-                if (run == 1) check(budget.cachePreparationWork() == 1, "Index transfer did not use its independent account");
+                if (run == 1) check(budget.cachePreparationWork() == (state ? 3 : 1), "Index/support retention did not use its independent account");
                 if (run >= 2) {
                     check(budget.cachePreparationWork() == 0 && budget.compilationWork() < (state ? 3000 : 256), "Hot request rebuilt unrelated sources");
                     check(budget.peakBytes() < (1L << 20), "Borrower recharged or copied the full retained index");

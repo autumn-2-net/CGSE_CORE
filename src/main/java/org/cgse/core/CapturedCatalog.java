@@ -56,6 +56,16 @@ public final class CapturedCatalog<K> {
                                 long references, long bytes) {}
     private volatile Producers<K> retainedProducers;
     private long producerHits, producerMisses;
+    private final CapturedSupportCache<K> stateSupports;
+
+    /** Source-selection hints only, scoped to this capture and exact target/seed-key set. */
+    public record StateSupportCacheMetrics(long hits, long misses, int entries, long estimatedBytes, long maximumBytes) {}
+
+    public StateSupportCacheMetrics stateSupportMetrics() {
+        if (stateSupports == null) return new StateSupportCacheMetrics(0, 0, 0, 0, CapturedSupportCache.MAX_BYTES);
+        var values = stateSupports.metrics();
+        return new StateSupportCacheMetrics(values.hits(), values.misses(), values.entries(), values.bytes(), values.maximumBytes());
+    }
 
     /** Structural containers only; stock, coverage and solver results are never retained here. */
     public record ProducerCacheMetrics(long hits, long misses, int keys, long references,
@@ -104,6 +114,7 @@ public final class CapturedCatalog<K> {
         }
         captureComplete = complete;
         stateFamilies = families;
+        stateSupports = families && entries.size() > 128 ? new CapturedSupportCache<>() : null;
     }
 
     /** Same potential-output scope as Work's index, including unexpanded returns. */
@@ -279,6 +290,7 @@ public final class CapturedCatalog<K> {
             } else if (phase == 9) {
                 if (stateSupport.step()) {
                     var selected = stateSupport.result(); stateSupport.close(); stateSupport = null;
+                    if (selected != null && sharedProducers) stateSupports.retain(target, requiredSeeds.keySet(), selected, budget);
                     beginStatePlanning(selected == null ? entries : selected);
                 }
             } else {
@@ -319,6 +331,11 @@ public final class CapturedCatalog<K> {
                 for (K key : requiredSeeds.keySet()) discover(key);
                 if (stateFamilies) {
                     stateStarted = budget.nodes(); stateAllowance = budget.remainingWork() / 2;
+                    var selected = stateSupports == null ? null : stateSupports.get(target, requiredSeeds.keySet(), budget);
+                    if (selected != null) {
+                        budget.note("candidate_state_support", "reused; selected=" + selected.size() + "; catalog=" + entries.size() + "; negative_proofs=false");
+                        beginStatePlanning(selected); return;
+                    }
                     if (entries.size() > 128) stateSupport = CapturedStateSupport.create(entries, producers, target, requiredSeeds.keySet(), budget);
                     if (stateSupport != null) phase = 9;
                     else beginStatePlanning(entries);
@@ -457,7 +474,8 @@ public final class CapturedCatalog<K> {
                 // A new immutable compiler owns this exact coverage. Never import
                 // restricted negative clauses, closures or sessions into the next one.
                 solving = new GraphPlanningWork<>(indexing.result(), target, amount, stock, external, requiredSeeds,
-                        preserve, forceCraft, budget).catalysts(catalystPolicy);
+                        preserve, forceCraft, budget).catalysts(catalystPolicy)
+                        .missingPreview(coverage.complete() && !allocationView);
                 indexing = null;
                 solveStarted = budget.searchWork();
                 solveAllowance = Math.max(256, Math.min(32768, budget.remainingWork() / 4));

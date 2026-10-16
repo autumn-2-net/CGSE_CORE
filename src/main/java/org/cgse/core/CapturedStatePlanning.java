@@ -168,7 +168,15 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                     // rule becoming available after another rule changes a tool.
                     // The private exact capture cannot export negative results.
                     if (families.size() < 2) return stop(Reason.AUXILIARY_RESULT);
-                    expansion = CapturedStateExpansion.create(entries, known, target, amount, stock, external, seeds, preserve, force, budget);
+                    // Every activation has already checked all rules against
+                    // its exact key. Reuse that ordered eligibility projection;
+                    // ordinary inventory keys cannot seed a state boundary.
+                    Iterable<K> eligible = () -> activations.values().stream().map(Activation::state).iterator();
+                    // Hand off part of this arm's actual remainder rather than
+                    // applying a second admission floor to the original request.
+                    // Keep the other half available to the original state path.
+                    long remaining = Math.max(0, allowance - (budget.nodes() - workStarted));
+                    expansion = CapturedStateExpansion.create(entries, eligible, target, amount, stock, external, seeds, preserve, force, budget, remaining / 2);
                     if (expansion == null) return stop(Reason.AUXILIARY_RESULT);
                     return false;
                 }

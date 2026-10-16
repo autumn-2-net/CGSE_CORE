@@ -43,7 +43,8 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
     private final List<CapturedCatalog.Entry<K>> expanded = new ArrayList<>();
     private final Map<K, List<Integer>> producers = new LinkedHashMap<>();
     private CapturedReachableWitness<K> reachable;
-    private long reachableStarted;
+    private long reachableStarted, reachableAllowance;
+    private boolean reachableExtended;
     private CapturedCatalog<K>.Work planning;
     private PlanVerification<K> verification;
     private ForceCraftProof<K> production;
@@ -52,20 +53,28 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
     private long memory;
     private boolean prepared, seeded, boundary, closed, done;
 
-    static <K> CapturedStateExpansion<K> create(List<CapturedCatalog.Entry<K>> entries, Set<K> known,
+    static <K> CapturedStateExpansion<K> create(List<CapturedCatalog.Entry<K>> entries, Iterable<K> known,
             K target, long amount, Map<K, Long> stock, Set<K> external, Map<K, Long> seeds,
             boolean preserve, boolean force, PlanningBudget budget) {
-        if (entries.size() > MAX_ENTRIES || budget.remainingWork() < 16_384 || !budget.tryReserve(2048)) return null;
-        return new CapturedStateExpansion<>(entries, known, target, amount, stock, external, seeds, preserve, force, budget);
+        return create(entries, known, target, amount, stock, external, seeds, preserve, force, budget,
+                budget.remainingWork() < 16_384 ? 0 : budget.remainingWork() / 8);
     }
 
-    private CapturedStateExpansion(List<CapturedCatalog.Entry<K>> entries, Set<K> known, K target, long amount,
-            Map<K, Long> stock, Set<K> external, Map<K, Long> seeds, boolean preserve, boolean force, PlanningBudget budget) {
+    static <K> CapturedStateExpansion<K> create(List<CapturedCatalog.Entry<K>> entries, Iterable<K> known,
+            K target, long amount, Map<K, Long> stock, Set<K> external, Map<K, Long> seeds,
+            boolean preserve, boolean force, PlanningBudget budget, long maximumWork) {
+        long allowance = Math.min(262_144, Math.min(maximumWork, budget.remainingWork()));
+        if (entries.size() > MAX_ENTRIES || allowance < 1024 || !budget.tryReserve(2048)) return null;
+        return new CapturedStateExpansion<>(entries, known, target, amount, stock, external, seeds, preserve, force, budget, allowance);
+    }
+
+    private CapturedStateExpansion(List<CapturedCatalog.Entry<K>> entries, Iterable<K> known, K target, long amount,
+            Map<K, Long> stock, Set<K> external, Map<K, Long> seeds, boolean preserve, boolean force, PlanningBudget budget, long allowance) {
         this.entries = entries; this.known = known.iterator(); this.target = target; this.amount = amount;
         this.stock = stock; this.external = external; this.seeds = seeds; this.preserve = preserve; this.force = force;
         this.budget = budget; memory = 2048; started = budget.nodes();
         // One allowance includes discovery, compilation, solve and verification.
-        allowance = Math.min(262_144, budget.remainingWork() / 8);
+        this.allowance = allowance;
     }
 
     boolean step() {
@@ -81,7 +90,16 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
             else if (reachable != null) {
                 // Try a short physically funded prefix before asking the count
                 // portfolio to schedule this newly discovered finite graph.
-                if (budget.nodes() - reachableStarted >= Math.min(8192, allowance / 16) || reachable.step()) {
+                if (!reachableExtended && budget.nodes() - reachableStarted >= reachableAllowance) {
+                    reachableExtended = true;
+                    long maximum = Math.min(8192, Math.max(0, allowance - (reachableStarted - started)) / 2);
+                    long spent = budget.nodes() - reachableStarted;
+                    if (maximum > reachableAllowance && reachable.promising(maximum - spent)) {
+                        reachableAllowance = maximum;
+                        budget.note("candidate_state_boundary", "continue_funded_prefix; spent=" + spent + "; allowance=" + reachableAllowance);
+                    }
+                }
+                if (budget.nodes() - reachableStarted >= reachableAllowance || reachable.step()) {
                     proposed = reachable.result(); reachable.close(); reachable = null;
                     if (proposed != null) verification = new PlanVerification<>(proposed, budget);
                     else planning = new CapturedCatalog<>(expanded, false).begin(target, amount, stock, external, seeds, preserve, force, budget);
@@ -231,6 +249,7 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
         budget.note("candidate_state_boundary", "expanded; states=" + states.size() + "; added=" + added +
                 "; allowance=" + allowance + "; negative_proofs=false");
         reachableStarted = budget.nodes();
+        reachableAllowance = Math.min(8192, allowance / 16);
         reachable = new CapturedReachableWitness<>(expanded, producers, target, amount, stock, external, seeds, preserve, force, budget);
     }
 
