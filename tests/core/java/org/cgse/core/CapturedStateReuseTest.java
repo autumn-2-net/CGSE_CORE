@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Repeated cyclic tool requests must rediscover physical stock, not the same catalog support. */
 public final class CapturedStateReuseTest {
-    private static int checks, feasible, limited;
+    private static int checks, feasible;
     private record Rule(boolean even) implements StateFamily<String> {
         public String id() { return even ? "even" : "odd"; }
         public boolean accepts(String k) { return k.startsWith("tool:") && (Integer.parseInt(k.substring(5)) % 2 == 0) == even; }
@@ -18,7 +18,7 @@ public final class CapturedStateReuseTest {
 
     public static void main(String[] args) {
         budgets(); scopes(); parentAllowance();
-        System.out.println("CapturedStateReuseTest: feasible=" + feasible + "; limited=" + limited + "; assertions=" + checks);
+        System.out.println("CapturedStateReuseTest: feasible=" + feasible + "; assertions=" + checks);
     }
 
     private static void budgets() {
@@ -30,23 +30,16 @@ public final class CapturedStateReuseTest {
                 stock.put("tool:" + (run % 2 * 2), 1L); stock.put("raw", n);
                 if (fullStock) for (int i = 0; i < filler; i++) stock.put("noise-input:" + i, 1L);
                 var b = budget(cap); var result = solve(catalog, stock, n, Map.of(), false, false, b);
-                boolean funded = !fullStock || cap >= (filler < 16384 ? 20_000 : 250_000);
-                if (funded) {
-                    check(result.plan().feasible(), "Funded state path was cut off: " + b.diagnostics());
-                    verify(result.plan(), stock, n, Map.of(), false); feasible++;
-                } else {
-                    // A finite work cap is not evidence that these physically
-                    // feasible inputs are infeasible. Future improvements may solve them.
-                    check(result.plan().result() != GraphPlan.Result.INFEASIBLE, "Incomplete state coverage became a global proof");
-                    if (result.plan().feasible()) { verify(result.plan(), stock, n, Map.of(), false); feasible++; } else limited++;
-                }
+                check(result.plan().feasible(), "Funded state path was cut off: " + b.diagnostics());
+                verify(result.plan(), stock, n, Map.of(), false); feasible++;
                 check(!result.coverage().complete(), "Opaque state family acquired complete coverage");
                 if (run == 0) check(catalog.stateSupportMetrics().entries() == 0, "One-off capture retained source hints");
                 if (run >= 2) {
                     check(b.diagnostics().contains("reused; selected=2;"), "Repeated target rescanned its full source catalog");
                     check(b.cachePreparationWork() == 0, "Cache hit renewed retention work");
-                    if (funded) check(b.compilationWork() < (fullStock ? 4L * filler + 1000 : 1000), "Repeated state discovery rescanned unrelated producer structure");
-                    check(b.peakBytes() < (4L << 20), "Repeated request copied the whole retained producer index");
+                    if (fullStock) check(b.diagnostics().contains("candidate_state_stock") && b.diagnostics().contains("projected=2;"), "Large stock did not use the positive key trial");
+                    check(b.compilationWork() < 1000, "Repeated state discovery rescanned unrelated producer/stock structure");
+                    check(b.peakBytes() < 600_000, "Repeated request copied unrelated source/stock structure");
                 }
                 check(!b.failureDetail().startsWith("PROVEN_INFEASIBLE"), "Private capacity failure published a global failure detail");
                 check(b.searchWork() <= cap && b.compilationWork() <= cap, "Repeated state path renewed request allowances");

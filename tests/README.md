@@ -4,10 +4,12 @@ Production sources live in `src/main/java`. Everything in this directory is test
 test data, or test provenance. The stable suite needs only Python 3 and JDK 17:
 
 ```text
-python tests/run.py --java-home <jdk17> --suite standard
+python tests/run.py --java-home <jdk17> --suite standard --timeout 600
 ```
 
 The runner writes classes, logs and machine-readable results below `build/tests`.
+The 600-second process timeout allows large historical batches to finish on four
+logical CPUs; it does not change their per-request work limits.
 Exit status **0** means every selected check passed, **1** means a failed assertion,
 compilation/setup failure or malformed fixture, and **2** means an explicit unresolved
 budget limit. A known SAT case remains SAT in the manifest when the current search
@@ -1005,8 +1007,22 @@ up to 16,384 irrelevant sources, sparse/full stock and reversed source order.
 Small physical plans are replayed against the original tool rules and stock.
 Changed tool states, missing tools, manufactured replacements, required-seed
 amounts, force/preserve modes, capture replacement and explicit parent remainders
-guard against stale results or renewed budgets. Known feasible cases that remain
-limited are recorded as inconclusive, never given an infeasibility oracle.
+guard against stale results or renewed budgets. All 48 requests require verified
+plans, including the eight formerly limited large-stock requests. Warm compilation
+must stay below 1,000 work units and request workspace below 600,000 bytes.
+
+`CapturedStockReuseTest` checks positive stock-key hints under changing durability,
+quantities, external supply, target stock, required seeds and capture identity.
+Unknown worn keys and mixed simultaneous entities must trigger a full-stock retry;
+missing tools cannot reuse old quantities or become a global negative proof.
+Manufactured replacements, forced production, cancellation, low budgets and four
+concurrent requests are checked with physical source replay. `CapturedStockProjectionTest`
+checks independent optional retention, hash collisions, aggregate entry/byte limits,
+partial preparation refusal, immutable hints and resumable current-stock reads.
+The retained hints contain keys, not amounts; request workspace excludes their
+separate 64-KiB estimated-container cap. All attempts share the original state-arm
+allowance.
+
 `CapturedPreviewScopeTest` checks that only restricted view owners omit optional
 refill previews, preserving complete capture previews and positive witnesses.
 `CapturedHandoffTest` injects limits after the real child's proof/witness is ready

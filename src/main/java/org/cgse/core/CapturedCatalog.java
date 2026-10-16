@@ -58,7 +58,7 @@ public final class CapturedCatalog<K> {
     private long producerHits, producerMisses;
     private final CapturedSupportCache<K> stateSupports;
 
-    /** Source-selection hints only, scoped to this capture and exact target/seed-key set. */
+    /** Source/key hints only, scoped to this capture and exact target/seed-key set. */
     public record StateSupportCacheMetrics(long hits, long misses, int entries, long estimatedBytes, long maximumBytes) {}
 
     public StateSupportCacheMetrics stateSupportMetrics() {
@@ -186,8 +186,10 @@ public final class CapturedCatalog<K> {
         private CapturedReachableWitness<K> reachable;
         private CapturedStatePlanning<K> statePlanning;
         private CapturedStateSupport<K> stateSupport;
+        private CapturedStockProjection<K> stateStock;
+        private List<Entry<K>> stateSources;
         private boolean fullStateTried;
-        private long stateStarted, stateAllowance;
+        private long stateStarted, stateAllowance, stockTrialStarted, stockTrialAllowance;
         private boolean reachableTried;
         private GraphPlan<K> reachablePlan;
         private List<CapturedReachableWitness.Variant<K>> reachableVariants = List.of();
@@ -196,7 +198,7 @@ public final class CapturedCatalog<K> {
         private List<Integer> providers = List.of();
         private int provider;
         private int entry, output, input, candidate;
-        private int phase; // 0 index, 1 discover, 2 freeze, 3 solve, 4 stock, 5 flow, 6 recovered counts, 7 reachable, 8 state capacity, 9 state support
+        private int phase; // 0 index, 1 discover, 2 freeze, 3 solve, 4 stock, 5 flow, 6 recovered counts, 7 reachable, 8 state capacity, 9 state support, 10 stock projection
         private Iterator<Integer> flattenSources;
         private DomainState flattenState;
         private int flattenVariant;
@@ -279,12 +281,20 @@ public final class CapturedCatalog<K> {
             } else if (phase == 7) {
                 recoverReachable();
             } else if (phase == 8) {
+                if (stateStock != null && budget.nodes() - stockTrialStarted >= stockTrialAllowance) {
+                    retryFullStock(); return false;
+                }
                 if (statePlanning.step()) {
                     var plan = statePlanning.result(); statePlanning.close(); statePlanning = null;
                     if (plan != null) {
+                        if (stateStock == null && stateSupports != null && sharedProducers)
+                            stateSupports.retainStockKeys(target, requiredSeeds.keySet(), stateSources,
+                                    plan.initialExact().keySet(), stock.size(), budget);
+                        closeStateStock();
                         allocationView = true;
                         finish(plan, GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL);
-                    } else if (!fullStateTried) beginStatePlanning(entries);
+                    } else if (stateStock != null) retryFullStock();
+                    else if (!fullStateTried) beginStatePlanning(entries);
                     else phase = 1;
                 }
             } else if (phase == 9) {
@@ -292,6 +302,17 @@ public final class CapturedCatalog<K> {
                     var selected = stateSupport.result(); stateSupport.close(); stateSupport = null;
                     if (selected != null && sharedProducers) stateSupports.retain(target, requiredSeeds.keySet(), selected, budget);
                     beginStatePlanning(selected == null ? entries : selected);
+                }
+            } else if (phase == 10) {
+                if (budget.nodes() - stockTrialStarted >= stockTrialAllowance) retryFullStock();
+                else if (stateStock.step()) {
+                    var projected = stateStock.result();
+                    if (projected == null) retryFullStock();
+                    else {
+                        budget.note("candidate_state_stock", "projected=" + projected.size() + "; inventory=" + stock.size() +
+                                "; trial_allowance=" + stockTrialAllowance + "; negative_proofs=false");
+                        startStatePlanning(projected);
+                    }
                 }
             } else {
                 boolean done = slice == null ? solving.step() : solving.advance(slice);
@@ -331,10 +352,10 @@ public final class CapturedCatalog<K> {
                 for (K key : requiredSeeds.keySet()) discover(key);
                 if (stateFamilies) {
                     stateStarted = budget.nodes(); stateAllowance = budget.remainingWork() / 2;
-                    var selected = stateSupports == null ? null : stateSupports.get(target, requiredSeeds.keySet(), budget);
-                    if (selected != null) {
-                        budget.note("candidate_state_support", "reused; selected=" + selected.size() + "; catalog=" + entries.size() + "; negative_proofs=false");
-                        beginStatePlanning(selected); return;
+                    var hint = stateSupports == null ? null : stateSupports.select(target, requiredSeeds.keySet(), budget);
+                    if (hint != null) {
+                        budget.note("candidate_state_support", "reused; selected=" + hint.sources().size() + "; catalog=" + entries.size() + "; negative_proofs=false");
+                        beginStatePlanning(hint.sources(), hint.stockKeys()); return;
                     }
                     if (entries.size() > 128) stateSupport = CapturedStateSupport.create(entries, producers, target, requiredSeeds.keySet(), budget);
                     if (stateSupport != null) phase = 9;
@@ -368,15 +389,45 @@ public final class CapturedCatalog<K> {
         }
 
         private void beginStatePlanning(List<Entry<K>> sources) {
+            beginStatePlanning(sources, null);
+        }
+
+        private void beginStatePlanning(List<Entry<K>> sources, List<K> stockKeys) {
+            stateSources = sources;
             fullStateTried = sources == entries;
-            long remaining = Math.max(0, stateAllowance - (budget.nodes() - stateStarted));
+            long remaining = stateRemaining();
             if (fullStateTried && phase == 8) budget.note("candidate_state_support", "retry_full_state; remaining=" + remaining +
                     "; shared_allowance=" + stateAllowance + "; negative_transfer=false");
+            if (remaining >= 2048) stateStock = CapturedStockProjection.create(stockKeys, stock, budget);
+            if (stateStock != null) {
+                stockTrialStarted = budget.nodes(); stockTrialAllowance = remaining / 2;
+                phase = 10;
+            } else startStatePlanning(stock);
+        }
+
+        private long stateRemaining() { return Math.max(0, stateAllowance - (budget.nodes() - stateStarted)); }
+
+        private void startStatePlanning(Map<K, Long> view) {
             // Selection, the small positive attempt and original state attempt
             // share one lifetime allowance. A private miss cannot exclude sources.
-            statePlanning = new CapturedStatePlanning<>(sources, target, amount, stock, external, requiredSeeds,
-                    preserve, forceCraft, budget, remaining);
+            // The outer stock trial owns its deadline; do not halve the nested
+            // recovery admission again before it has performed any actual work.
+            statePlanning = new CapturedStatePlanning<>(stateSources, target, amount, view, external, requiredSeeds,
+                    preserve, forceCraft, budget, stateRemaining());
             phase = 8;
+        }
+
+        private void retryFullStock() {
+            if (statePlanning != null) statePlanning.close();
+            statePlanning = null; closeStateStock();
+            budget.note("candidate_state_stock", "retry_full_stock; remaining=" + stateRemaining() +
+                    "; shared_allowance=" + stateAllowance + "; negative_transfer=false");
+            startStatePlanning(stock);
+        }
+
+        private void closeStateStock() {
+            if (stateStock != null) stateStock.close();
+            stateStock = null;
         }
 
         private void producer(K key) {
@@ -739,6 +790,7 @@ public final class CapturedCatalog<K> {
             statePlanning = null;
             if (stateSupport != null) stateSupport.close();
             stateSupport = null;
+            closeStateStock(); stateSources = null;
             reachablePlan = null;
             reachableVariants = List.of();
             flowCounts.clear();
