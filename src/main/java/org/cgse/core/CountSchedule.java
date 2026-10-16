@@ -54,6 +54,7 @@ final class CountSchedule<K> implements AutoCloseable {
     private boolean wordApplied, wordDisabled;
     private final BitSet visited = new BitSet();
     private boolean guidedTried, guiding;
+    private boolean preferredOnly;
 
     private enum WitnessSource {
         RECURRENCE,
@@ -108,6 +109,25 @@ final class CountSchedule<K> implements AutoCloseable {
                 throw error;
             }
         }
+    }
+
+    /** One bounded, positive-only scan requested by downstream state feedback.
+     * Its owner retains the ordinary schedule continuation separately. */
+    static <K> CountSchedule<K> preferred(RecipeCountModel<K> model, BigInteger[] counts,
+                                        int[] order, PlanningBudget budget) {
+        if (order.length != counts.length) throw new IllegalArgumentException("Incomplete recipe order");
+        var seen = new BitSet(order.length);
+        for (int index : order) {
+            budget.check();
+            if (index < 0 || index >= order.length || seen.get(index)) throw new IllegalArgumentException("Invalid recipe order");
+            seen.set(index);
+        }
+        var work = new CountSchedule<>(model, counts, budget);
+        work.preferredOnly = true;
+        work.startupChecked = true;
+        work.repairingOrder = true;
+        work.repairOrder = order.clone();
+        return work;
     }
 
     boolean step() {
@@ -211,6 +231,22 @@ final class CountSchedule<K> implements AutoCloseable {
             int recipe = (cursor++ + rotation) % count;
             if (variant >= orders) recipe = count - 1 - recipe;
             if (repairingOrder) recipe = repairOrder[cursor - 1];
+            if (preferredOnly) {
+                // An activation/producer late in the order can enable an
+                // earlier preferred rule. Reconsider ready rules immediately;
+                // do not let later rules destroy its physical eligibility.
+                int unavailable = -1;
+                for (int index : repairOrder) {
+                    budget.check();
+                    if (visited.get(index)) continue;
+                    if (unavailable < 0) unavailable = index;
+                    if (remaining[index].signum() > 0 && limit(summaries.get(index), remaining[index]).signum() > 0) {
+                        unavailable = index; break;
+                    }
+                }
+                recipe = unavailable;
+                visited.set(recipe);
+            }
             if (guiding) {
                 recipe = guidedOrder.choose(held, remaining, visited);
                 visited.set(recipe);
@@ -352,6 +388,7 @@ final class CountSchedule<K> implements AutoCloseable {
             reset();
             return false;
         }
+        if (preferredOnly) return finish(Result.UNKNOWN);
         if (!guidedTried && !smallMultiset()) {
             guidedTried = true;
             guidedOrder = new CountScheduleOrder<>(model, summaries, budget);
@@ -731,7 +768,7 @@ final class CountSchedule<K> implements AutoCloseable {
             if (restartExact()) return false;
         }
         if (value == Result.UNKNOWN && exact && !reverseTried && prepareReverse()) return false;
-        if (value == Result.UNKNOWN && !boundedTried) {
+        if (value == Result.UNKNOWN && !boundedTried && !preferredOnly) {
             boundedTried = true;
             bounded = new CountBoundedSchedule<>(model, original, budget);
             if (bounded.result() == null) {

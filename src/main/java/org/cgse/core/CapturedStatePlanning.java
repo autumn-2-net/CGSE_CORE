@@ -72,6 +72,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private PlanCursor cursor;
     private StateEntityAllocation<K> allocation;
     private StateEntityMatching<K> matching;
+    private StateScheduleRepair<Key<K>> orderRepair;
+    private StateFamily<K> orderFailure;
+    private boolean orderTried, searchingOrder;
+    private int orderCandidates;
     private StateRestorationCycle<K> cycle;
     private String cycleVariant;
     private boolean cycleDisabled;
@@ -133,16 +137,20 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         var observed = observation;
         long observedWork = observed == null ? 0 : budget.threadWork(), observedNanos = observed == null ? 0 : System.nanoTime();
         try (var costs = budget.trace(PlanningCostTrace.Origin.ALLOCATION,
-                !prepared ? PlanningCostTrace.Stage.PREPARE : verification != null ? PlanningCostTrace.Stage.VERIFY :
+                !prepared ? PlanningCostTrace.Stage.PREPARE : searchingOrder ? PlanningCostTrace.Stage.SCHEDULE : verification != null ? PlanningCostTrace.Stage.VERIFY :
                         assembly != null ? PlanningCostTrace.Stage.ASSEMBLE : proposed != null ? PlanningCostTrace.Stage.RESTORE : PlanningCostTrace.Stage.SEARCH)) {
             budget.checkpoint();
             budget.phase(!prepared ? PlanningBudget.Phase.BUILD : assembly == null ? PlanningBudget.Phase.SOLVE : PlanningBudget.Phase.VERIFY);
             if (budget.nodes() - workStarted >= allowance) return stop(Reason.LOCAL_WORK_LIMIT);
             if (!prepared) prepare();
+            else if (searchingOrder) reschedule();
             else if (verification != null) verify();
             else if (assembly != null) {
                 if (assembly.step()) {
-                    if (assembly.plan == null) return stop(Reason.UNFUNDED_EXACT_RESTORATION);
+                    if (assembly.plan == null) {
+                        if (continueOrder()) return false;
+                        return stop(Reason.UNFUNDED_EXACT_RESTORATION);
+                    }
                     verification = new PlanVerification<>(assembly.plan, budget);
                 }
             } else if (proposed != null) restore();
@@ -150,16 +158,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 proposed = planning.result().plan();
                 planning.close(); planning = null;
                 if (!proposed.feasible()) return stop(Reason.AUXILIARY_RESULT);
-                cursor = new PlanCursor(proposed.steps());
                 proposalMemory = memory;
-                for (var value : proposed.patternTimesExact().entrySet()) {
-                    budget.check();
-                    String binding = proposed.recipes().get(value.getKey()).binding();
-                    if (!activations.containsKey(binding)) continue;
-                    if (!unclaimed.containsKey(binding) && !reserve(224)) return true;
-                    unclaimed.merge(binding, value.getValue(), BigInteger::add);
-                }
-                observation = budget.observeCandidate(PlanningBudget.CandidateOrigin.ALLOCATION);
+                startRestoration(proposed.steps());
             }
             return done;
         } catch (PlanningBudget.Exhausted limit) {
@@ -386,6 +386,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (external.contains(needed.getKey())) continue;
             BigInteger available = free.getOrDefault(needed.getKey(), BigInteger.ZERO);
             if (available.compareTo(needed.getValue()) < 0) {
+                if (continueOrder()) return;
                 stop(Reason.ORDINARY_INPUT_OWNERSHIP); return;
             }
             if (repeating) {
@@ -709,7 +710,111 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         clearSelection();
         if (intactRecipe != null && advanceActivations(family, intactRecipe)) return;
         if (done) return;
+        if (repairOrder(family, intactRecipe == null ? proposed.recipes().get(cursor.current().recipe()) : intactRecipe)) return;
+        refineEntities(family);
+    }
+
+    private void refineEntities(StateFamily<K> family) {
         if (!refineCapacity(family) && !done && !refineSharedEntities(family) && !done) stop(Reason.INSUFFICIENT_DISTINCT_ENTITIES);
+    }
+
+    /** A changed physical key can disable another rule without exhausting the
+     * first rule's marginal capacity. Prefer the blocked rule in another exact
+     * schedule of these same counts before asking for additional entities. */
+    private boolean repairOrder(StateFamily<K> family, GraphRecipe<Key<K>> blocked) {
+        if (orderRepair != null) {
+            orderFailure = family;
+            return continueOrder(blocked.id());
+        }
+        if (orderTried || !shared() || proposed.patternTimesExact().size() > 128) return false;
+        long ports = 0;
+        for (String id : proposed.patternTimesExact().keySet()) {
+            budget.check();
+            var recipe = proposed.recipes().get(id);
+            ports += recipe.inputs().size() + recipe.outputs().size();
+            if (ports > 2048) return false;
+        }
+        if (!lostEligibility(family)) return false;
+        orderTried = true;
+        long transientBytes = 128L + 128L * ports;
+        if (!budget.tryReserve(transientBytes)) return false;
+        try {
+            var available = new LinkedHashMap<Key<K>, Long>();
+            var supplied = new LinkedHashSet<Key<K>>();
+            for (String id : proposed.patternTimesExact().keySet()) for (var key : proposed.recipes().get(id).inputs().keySet()) {
+                budget.check();
+                if (key.family() != null) continue;
+                long count = stock.getOrDefault(key.physical(), 0L);
+                if (count > 0) available.put(key, count);
+                if (external.contains(key.physical())) supplied.add(key);
+            }
+            orderRepair = StateScheduleRepair.create(proposed.recipes(), proposed.patternTimesExact(), available,
+                    supplied, blocked.id(), budget);
+        } finally { budget.release(transientBytes); }
+        if (orderRepair == null) return false;
+        orderFailure = family; searchingOrder = true;
+        finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+        budget.note("candidate_state", "retry_same_counts; blocked=" + blocked.binding() + "; family=" + family.id() + "; negative_proofs=false");
+        return true;
+    }
+
+    private boolean lostEligibility(StateFamily<K> family) {
+        // Inspect already witnessed transitions only, on failure. This is an
+        // admission hint, not a learned precedence or a necessary entity bound.
+        if (transitions.size() > 512) return false;
+        for (var transition : transitions.keySet()) {
+            boolean otherRule = false;
+            for (var slot : proposed.recipes().get(transition.variant()).slots()) {
+                budget.check();
+                if (slot.key().family() != null && !slot.key().entity() && !family.id().equals(slot.key().family())) otherRule = true;
+            }
+            if (!otherRule) continue;
+            BigInteger before = BigInteger.ZERO, after = BigInteger.ZERO;
+            for (var slot : transition.slots()) {
+                budget.check();
+                if (family.accepts(slot.key()) && family.capacity(slot.key()) > 0) before = before.add(BigInteger.valueOf(slot.amount()));
+            }
+            for (var output : transition.outputs().entrySet()) {
+                budget.check();
+                if (family.accepts(output.getKey()) && family.capacity(output.getKey()) > 0) after = after.add(BigInteger.valueOf(output.getValue()));
+            }
+            if (before.compareTo(after) > 0) return true;
+        }
+        return false;
+    }
+
+    private boolean continueOrder() {
+        return continueOrder(null);
+    }
+
+    private boolean continueOrder(String blocked) {
+        if (orderRepair == null || !orderRepair.reject(blocked)) return false;
+        finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+        searchingOrder = true; return true;
+    }
+
+    private void reschedule() {
+        if (!orderRepair.step()) return;
+        var word = orderRepair.witness();
+        if (word == null) {
+            orderRepair.close(); orderRepair = null; searchingOrder = false;
+            refineEntities(orderFailure); return;
+        }
+        resetRestoration();
+        startRestoration(word); searchingOrder = false; orderCandidates++;
+        budget.note("candidate_state", "restore_alternative_order; candidate=" + orderCandidates + "; same_counts=true");
+    }
+
+    private void startRestoration(PlanStep word) {
+        cursor = new PlanCursor(word);
+        for (var value : proposed.patternTimesExact().entrySet()) {
+            budget.check();
+            String binding = proposed.recipes().get(value.getKey()).binding();
+            if (!activations.containsKey(binding)) continue;
+            if (!unclaimed.containsKey(binding) && !reserve(224)) return;
+            unclaimed.merge(binding, value.getValue(), BigInteger::add);
+        }
+        observation = budget.observeCandidate(PlanningBudget.CandidateOrigin.ALLOCATION);
     }
 
     private boolean claim(String binding, Activation<K> activating, BigInteger count) {
@@ -829,7 +934,17 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private void resetProposal() {
         // All changed coordinates and the old physical restoration are private
         // to this arm. No old plan, certificate or partial inventory survives.
-        cursor = null; proposed = null;
+        resetRestoration(); proposed = null;
+        if (orderRepair != null) orderRepair.close(); orderRepair = null;
+        orderTried = false; searchingOrder = false; orderFailure = null;
+    }
+
+    private void resetRestoration() {
+        cursor = null;
+        clearSelection();
+        if (production != null) production.close(); production = null;
+        if (verification != null) verification.close(); verification = null;
+        if (assembly != null) assembly.close(); assembly = null;
         clearCycle(); cycleVariant = null; cycleDisabled = false;
         clearLoop(); declinedLoop = null;
         toolGroups.clear(); pools.clear(); restored.clear(); transitions.clear(); program.clear(); free.clear(); unclaimed.clear(); advanced.clear();
@@ -917,7 +1032,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (force) {
             if (production == null) production = new ForceCraftProof<>(assembly.plan, verification, seeds, budget);
             if (!production.step()) return;
-            if (!production.proved()) { stop(Reason.FORCE_CRAFT_NOT_PROVED); return; }
+            if (!production.proved()) {
+                if (!continueOrder()) stop(Reason.FORCE_CRAFT_NOT_PROVED);
+                return;
+            }
         }
         result = assembly.plan; done = true;
         outcome = new Outcome(Status.VERIFIED, Reason.NONE);
@@ -927,6 +1045,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 "; restore_calls=" + restoreCalls + "; restore_work=" + restoreWork + "; refinements=" + refinements +
                 "; activation_advances=" + activationAdvances + "; cycle_jumps=" + cycleJumps + "; cycle_firings=" + cycleFirings +
                 "; loop_jumps=" + loopJumps + "; loop_firings=" + loopFirings +
+                "; order_candidates=" + orderCandidates +
                 "; work=" + (budget.nodes() - workStarted));
     }
 
@@ -957,6 +1076,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         clearSelection();
         clearCycle();
         clearLoop(); declinedLoop = null;
+        if (orderRepair != null) orderRepair.close(); orderRepair = null;
         if (planning != null) planning.close(); planning = null;
         if (production != null) production.close(); production = null;
         if (verification != null) verification.close(); verification = null;

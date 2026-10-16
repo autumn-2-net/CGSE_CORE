@@ -84,6 +84,27 @@ twice. This can use a manufactured replacement as soon as it is present; it cann
 borrow a future manufacturing output. Shared-rule slots may reassign eligible
 owned entities; different rules never create another copy of the physical tool.
 
+When an already restored transition disables another rule's physical eligibility,
+the restorer can retain the proposal's exact counts and try other execution words
+before requesting more entities. The blocked variant guides a bounded preferred
+scan: newly enabled rules are reconsidered after activation or production. Later
+failures can promote another blocked variant while retaining earlier ordering
+hints. The ordinary count scheduler remains a separate resumable continuation.
+These hints never impose a necessary precedence or exclude a count vector.
+Each attempt starts again from actual initial stock and empty activation credits;
+no partial physical inventory survives. Every candidate still undergoes exact
+entity allocation, source restoration, seed/production checks and verification.
+An unavailable ordinary input or rejected final assembly may resume order search.
+
+This optional repair admits at most 128 active variants and 2048 input/output
+ports. It tests at most eight candidate words within a lifetime allowance capped
+at 32768 work units and one sixteenth of remaining request work, including failed
+downstream restoration. It neither renews the enclosing arm nor spends cache
+preparation budget. On allocation failure, memory refusal or exhausted alternatives
+retain the existing entity-refinement path. Scheduler failure is inconclusive for state families.
+Admission examines witnessed cross-rule eligibility loss, not arbitrary temporal
+constraints; this is not complete temporal matching or state-domain exploration.
+
 If entities are still insufficient, a local repair can re-propose with each
 activation's capacity capped by the selected number of firings using that family.
 One physical tool can serve at most once per firing. This prevents a long-lived
@@ -179,6 +200,8 @@ their retained words; prefix analysis and checkpoint matching belong to restore
 cost, not a fresh search allowance.
 The analogous loop_jumps/loop_firings counters identify reuse at heterogeneous
 auxiliary Repeat boundaries, separately from single-variant cycle jumps.
+retry_same_counts and order_candidates identify state-feedback order attempts;
+their scheduling cost remains separate from physical restoration and verification.
 
 A failed auxiliary solve or failed restoration is not a global negative proof.
 Family domains remain incomplete; a verified witness is
@@ -254,6 +277,14 @@ The public tests are under tests/core/java/org/cgse/core:
   CapturedStateSharingTest: sequential cross-rule reuse, simultaneous matching,
     combined wear and replacement production, disjoint rules, physical seeds,
     primitive replay, delayed returns/save-load, request coverage and work caps.
+  CapturedStateOrderTest: two/three/five interacting state rules, recipe/slot/stock
+    permutations, simultaneous entities, long-sized quantities, manufactured
+    replacements, impossible ordinary gates, exact seeds and force/preserve modes.
+    Source-level replay, delayed runtime returns/save-load, cancellation and
+    incomplete family coverage remain mandatory after order repair.
+  StateScheduleRepairTest: 250 independently constructed executable multisets,
+    physical-prefix replay of alternative words, exact counts above long,
+    lifetime downstream-work limits, missing stock and memory/cancellation cleanup.
   StateRestorationCycleTest: 22,000 independent primitive-prefix comparisons,
     serial and nested word composition, exact pool identity/order/counts,
     wide resource arithmetic and budget cleanup.

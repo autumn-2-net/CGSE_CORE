@@ -90,6 +90,16 @@ its candidate. Shared-rule state loops additionally run at a 400,000 request
 budget as well as the unchanged 40M setting; exact source and runtime verification
 still follows every accepted candidate.
 
+`CapturedStateOrderTest` covers execution-order recovery for two, three and five
+rules sharing physical tools. Recipe/slot/stock permutations, simultaneous tools,
+quantities up to `Long.MAX_VALUE`, exact final seeds, forced production and
+replacement manufacturing are checked against source semantics and primitive
+execution. An ordinary gate can make every ordering impossible; restricted
+failure must remain inconclusive. Restored programs also pass delayed actual
+returns, save/load and cancellation checks. `StateScheduleRepairTest` replays
+alternative words for 250 independently constructed executable multisets, checks
+counts above long, and verifies nonrenewable downstream-work and memory limits.
+
 `PlanCursorLoopTest` checks whole-loop skips against primitive expanded programs,
 including shared and nested occurrences, partial batches, stale boundaries,
 cancellation and saved exact counts above long. `CapturedStateLoopTest` preserves
