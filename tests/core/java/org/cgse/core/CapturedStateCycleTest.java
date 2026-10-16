@@ -127,10 +127,22 @@ public final class CapturedStateCycleTest {
         var plan = require(solve(entries, stock, 1_000_000_000L, Map.of("t:0", 1L), true, 80_000));
         verifySource(plan, entries, stock, 1_000_000_000L);
         check(plan.patternTimesExact().values().stream().reduce(BigInteger.ZERO, BigInteger::add).equals(BigInteger.valueOf(1_000_000_000L)), "Force craft used stocked products");
-        check(solve(entries, stock, 1_000_000_000L, Map.of("t:1", 1L), true, 80_000).plan == null, "Cycle lost exact final seed state");
+        // The even-count proposal ends in t:0, but returned raw permits one
+        // additional firing. Boundary recovery may change counts to meet t:1;
+        // rejecting every plan here would encode the old algorithm's limitation.
+        var adjusted = require(solve(entries, stock, 1_000_000_000L, Map.of("t:1", 1L), true, 80_000));
+        verifySource(adjusted, entries, stock, 1_000_000_000L);
+        BigInteger firings = adjusted.patternTimesExact().values().stream().reduce(BigInteger.ZERO, BigInteger::add);
+        check(firings.testBit(0) && firings.compareTo(BigInteger.valueOf(1_000_000_000L)) >= 0,
+                "Exact final state did not require odd, physically produced counts");
+        check(adjusted.seeds().equals(Map.of("t:1", 1L)) &&
+                SequenceSummary.of(adjusted.steps(), adjusted.recipes()).delta("t:1").equals(BigInteger.ONE), "Lost requested final seed");
+        var consumed = List.of(entry("consuming", List.of(tool(f, 1), ordinary("raw")), "product"));
+        check(solve(consumed, Map.of("t:0", 1L, "raw", 1_000_000_000L, "product", 1_000_000_000L),
+                1_000_000_000L, Map.of("t:1", 1L), true, 80_000).plan == null, "Unfunded extra firing supplied final seed");
         var overlap = List.of(entry("overlap", List.of(tool(f, 1), ordinary("t:0")), "product"));
         check(solve(overlap, Map.of("t:0", 1L), 8, Map.of(), false, 80_000).plan == null, "A pooled entity funded an ordinary slot");
-        cases += 3;
+        cases += 4;
     }
 
     private static void sourceBoundaries() {

@@ -12,9 +12,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-/** Positive-only, request-local expansion of exact cross-rule state boundaries.
+/** Positive-only, request-local expansion of exact state boundaries.
  * Discovered keys are candidate domains, never stock. Same-rule wear chains are
- * not recursively unfolded. A fresh finite capture owns all changed ordinals;
+ * not recursively unfolded: a declared physical input, target or seed can also
+ * justify solving the one-step transitions of the already known states.
+ * A fresh finite capture owns all changed ordinals;
  * neither its negative results nor its coverage replace the original capture. */
 final class CapturedStateExpansion<K> implements AutoCloseable {
     private static final int MAX_ENTRIES = 128, MAX_PORTS = 4096, MAX_RULES = 32, MAX_STATES = 128;
@@ -35,11 +37,13 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
     private final PlanningBudget budget;
     private final long started, allowance;
     private final Iterator<K> known;
+    private final Iterator<Map.Entry<K, Long>> requiredSeeds;
     private final List<List<Domain<K>>> drafts = new ArrayList<>();
     private final List<Use<K>> uses = new ArrayList<>();
     private final Map<String, StateFamily<K>> rules = new LinkedHashMap<>();
     private final List<K> states = new ArrayList<>();
     private final Set<K> seen = new LinkedHashSet<>();
+    private final Set<K> materialNeeds = new LinkedHashSet<>();
     private final List<CapturedCatalog.Entry<K>> expanded = new ArrayList<>();
     private final Map<K, List<Integer>> producers = new LinkedHashMap<>();
     private CapturedReachableWitness<K> reachable;
@@ -51,7 +55,7 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
     private GraphPlan<K> proposed, result;
     private int entry, state, use, freeze, ports, added;
     private long memory;
-    private boolean prepared, seeded, boundary, closed, done;
+    private boolean requestedTarget, prepared, seeded, boundary, closed, done;
 
     static <K> CapturedStateExpansion<K> create(List<CapturedCatalog.Entry<K>> entries, Iterable<K> known,
             K target, long amount, Map<K, Long> stock, Set<K> external, Map<K, Long> seeds,
@@ -72,6 +76,7 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
             Map<K, Long> stock, Set<K> external, Map<K, Long> seeds, boolean preserve, boolean force, PlanningBudget budget, long allowance) {
         this.entries = entries; this.known = known.iterator(); this.target = target; this.amount = amount;
         this.stock = stock; this.external = external; this.seeds = seeds; this.preserve = preserve; this.force = force;
+        requiredSeeds = seeds.entrySet().iterator();
         this.budget = budget; memory = 2048; started = budget.nodes();
         // One allowance includes discovery, compilation, solve and verification.
         this.allowance = allowance;
@@ -137,8 +142,18 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
 
     private void prepare() {
         if (entry == entries.size()) {
+            if (!requestedTarget) {
+                if (!charge()) return;
+                requestedTarget = true; requireMaterial(target); return;
+            }
+            if (requiredSeeds.hasNext()) {
+                if (!charge()) return;
+                var seed = requiredSeeds.next();
+                if (seed.getValue() > 0) requireMaterial(seed.getKey());
+                return;
+            }
             prepared = true;
-            if (rules.size() < 2) decline("no_cross_rule_domain");
+            if (rules.isEmpty()) decline("no_state_domain");
             return;
         }
         var source = entries.get(entry++);
@@ -165,6 +180,7 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
                 domain.candidates.add(new CapturedRecipe.Candidate<>(candidate.stack(), candidate.remaining(),
                         candidate.configuration(), candidate.reusable()));
                 var family = candidate.family();
+                if (family == null && candidate.stack().amount() > 0 && !requireMaterial(candidate.stack().what())) return;
                 if (family == null || candidate.stack().amount() != 1 || candidate.configuration() || candidate.reusable()) continue;
                 if (seenRules.add(family.id())) {
                     if (!reserve(256)) return;
@@ -173,6 +189,13 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
                 }
             }
         }
+    }
+
+    private boolean requireMaterial(K key) {
+        if (materialNeeds.contains(key)) return true;
+        if (materialNeeds.size() == MAX_PORTS) { decline("material_domain_limit"); return false; }
+        if (!reserve(128)) return false;
+        materialNeeds.add(key); return true;
     }
 
     private void seed() {
@@ -209,6 +232,10 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
             transition.domain().candidates.add(candidate); added++;
         }
         if (after == null) return;
+        // Capacity tokens cannot supply an exact physical state consumed by an
+        // ordinary recipe or required at completion. This is a positive reason
+        // to solve the finite capture, never permission to unfold all wear.
+        if (materialNeeds.contains(after)) boundary = true;
         for (var other : rules.values()) {
             if (!charge()) return;
             // Follow changes that unlock another use rule, not every decrement
@@ -280,7 +307,7 @@ final class CapturedStateExpansion<K> implements AutoCloseable {
         if (reachable != null) reachable.close(); reachable = null;
         if (verification != null) verification.close(); verification = null;
         if (production != null) production.close(); production = null;
-        drafts.clear(); uses.clear(); rules.clear(); states.clear(); seen.clear(); expanded.clear(); producers.clear(); proposed = null;
+        drafts.clear(); uses.clear(); rules.clear(); states.clear(); seen.clear(); materialNeeds.clear(); expanded.clear(); producers.clear(); proposed = null;
         budget.release(memory); memory = 0; done = true;
     }
 }

@@ -136,6 +136,18 @@ or an unrelated finite solve; unbounded eligibility chains and oversized output
 sets must stop at the local support limit. Work/memory refusal and cancellation
 cannot renew the allowance, leak workspace or prove the original domain empty.
 
+`CapturedStateMaterialTest` adds 73 requests for exact returned states used as
+ordinary ingredients, direct targets, final seeds, reusable read arcs and consumed
+configurations. One deterministic rule suffices; capacities through `Long.MAX_VALUE`
+must not expand unused wear states. It covers both source/stock orders, one to four
+simultaneous tools, ordinary tool manufacturing, forced/preserved requests and
+changed inventories. Returned plans undergo independent source-contract and
+physical-inventory replay plus delayed runtime returns/save-load. Unfunded
+manufacturing, insufficient simultaneous entities, spent final seeds, distant
+undeclared transitions, quota/memory refusal and cancellation remain safe.
+Only one-step transitions of known states and cross-rule boundaries are tried;
+this finite recovery does not claim completeness for arbitrary wear paths.
+
 `PlanCursorLoopTest` checks whole-loop skips against primitive expanded programs,
 including shared and nested occurrences, partial batches, stale boundaries,
 cancellation and saved exact counts above long. `CapturedStateLoopTest` preserves

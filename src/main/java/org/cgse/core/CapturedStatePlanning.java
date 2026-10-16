@@ -154,6 +154,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 if (assembly.step()) {
                     if (assembly.plan == null) {
                         if (continueOrder()) return false;
+                        if (expandStateBoundary(Reason.UNFUNDED_EXACT_RESTORATION)) return false;
                         return stop(Reason.UNFUNDED_EXACT_RESTORATION);
                     }
                     verification = new PlanVerification<>(assembly.plan, budget);
@@ -164,21 +165,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 planning.close(); planning = null;
                 if (!proposed.feasible()) {
                     proposed = null;
-                    // Capacity activation cannot express a previously ineligible
-                    // rule becoming available after another rule changes a tool.
-                    // The private exact capture cannot export negative results.
-                    if (families.size() < 2) return stop(Reason.AUXILIARY_RESULT);
-                    // Every activation has already checked all rules against
-                    // its exact key. Reuse that ordered eligibility projection;
-                    // ordinary inventory keys cannot seed a state boundary.
-                    Iterable<K> eligible = () -> activations.values().stream().map(Activation::state).iterator();
-                    // Hand off part of this arm's actual remainder rather than
-                    // applying a second admission floor to the original request.
-                    // Keep the other half available to the original state path.
-                    long remaining = Math.max(0, allowance - (budget.nodes() - workStarted));
-                    expansion = CapturedStateExpansion.create(entries, eligible, target, amount, stock, external, seeds, preserve, force, budget, remaining / 2);
-                    if (expansion == null) return stop(Reason.AUXILIARY_RESULT);
-                    return false;
+                    if (expandStateBoundary(Reason.AUXILIARY_RESULT)) return false;
+                    return stop(Reason.AUXILIARY_RESULT);
                 }
                 proposalMemory = memory;
                 startRestoration(proposed.steps());
@@ -190,6 +178,21 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         } catch (ArithmeticException overflow) {
             return stop(Reason.UNREPRESENTABLE_RESTORATION);
         } finally { if (observed != null) observed.step(observedWork, observedNanos); }
+    }
+
+    private boolean expandStateBoundary(Reason reason) {
+        // Capacity activation omits exact returned states as ordinary material,
+        // final seeds and newly eligible rules. Retry a fresh finite capture;
+        // its negative results cannot prove anything about the original domain.
+        finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+        if (proposed != null) resetProposal();
+        // Activation has already checked eligibility for these exact keys.
+        Iterable<K> eligible = () -> activations.values().stream().map(Activation::state).iterator();
+        long remaining = Math.max(0, allowance - (budget.nodes() - workStarted));
+        expansion = CapturedStateExpansion.create(entries, eligible, target, amount, stock, external, seeds, preserve, force, budget, remaining / 2);
+        if (expansion == null) return false;
+        budget.note("candidate_state", "expand_boundary; reason=" + reason + "; negative_proofs=false");
+        return true;
     }
 
     /** Retained discovery stays inside the arm's allowance before building its view. */
