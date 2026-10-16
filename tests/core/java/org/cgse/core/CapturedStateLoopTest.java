@@ -68,14 +68,14 @@ public final class CapturedStateLoopTest {
     }
 
     private static void sharedRules() {
-        for (boolean reverse : new boolean[]{false, true}) for (long n : new long[]{96, 1_000_000_000L}) {
+        for (long cap : new long[]{400_000, 40_000_000}) for (boolean reverse : new boolean[]{false, true}) for (long n : new long[]{96, 1_000_000_000L}) {
             var a = new Cycle(7, 1, 0); var b = new Cycle(7, 2, 0);
             var entries = ring(List.of(a, b, a), 2);
             if (reverse) Collections.reverse(entries);
             var stock = new LinkedHashMap<String, Long>();
             stock.put(reverse ? "t:1" : "t:0", 1L); stock.put(reverse ? "t:0" : "t:1", 1L);
             stock.put("raw", n); stock.put("baton0", 1L);
-            var solved = solve(entries, stock, n, Map.of(), false, 40_000_000);
+            var solved = solve(entries, stock, n, Map.of(), false, cap);
             var plan = require(solved);
             if (n > 96) check(a.calls + b.calls < 300, "Shared-rule loops were expanded per request");
             source(plan, entries, stock, n); exactCounts(plan, entries, n);

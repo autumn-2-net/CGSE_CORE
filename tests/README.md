@@ -80,6 +80,16 @@ binding changes, exact final seeds, replacement attrition, cancellation and
 request coverage. Production-restored words also run with delayed actual returns
 and save/load. Closed observed words do not prove an entire state family complete.
 
+`CountScheduleWordTest` checks 4,000 random executed words with independent
+primitive inventory replay, maximal safe repeat counts and shared read arcs.
+Fifty-four ring schedules cover recipe permutations, startup activations and
+counts above long. Finite supply, missing startup stock, rejected acceleration,
+cancellation, memory refusal and a nonrenewable work allowance are checked too.
+The original scan remains available if acceleration fails or assembly rejects
+its candidate. Shared-rule state loops additionally run at a 400,000 request
+budget as well as the unchanged 40M setting; exact source and runtime verification
+still follows every accepted candidate.
+
 `PlanCursorLoopTest` checks whole-loop skips against primitive expanded programs,
 including shared and nested occurrences, partial batches, stale boundaries,
 cancellation and saved exact counts above long. `CapturedStateLoopTest` preserves

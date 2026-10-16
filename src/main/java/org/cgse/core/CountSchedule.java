@@ -50,6 +50,8 @@ final class CountSchedule<K> implements AutoCloseable {
     private boolean reverseExact, reverseTried;
     private long memory, labelMemory, programMemory;
     private CountScheduleOrder<K> guidedOrder;
+    private CountScheduleWord<K> word;
+    private boolean wordApplied, wordDisabled;
     private final BitSet visited = new BitSet();
     private boolean guidedTried, guiding;
 
@@ -158,13 +160,37 @@ final class CountSchedule<K> implements AutoCloseable {
                 BigInteger bound = remaining[i].divide(used[i]);
                 extra = extra == null ? bound : extra.min(bound);
             }
-            extra = limit(summary, extra == null ? BigInteger.ZERO : extra);
+            BigInteger countExtra = extra == null ? BigInteger.ZERO : extra;
+            extra = limit(summary, countExtra);
             if (extra.signum() > 0) {
                 apply(summary, extra);
                 for (int i = 0; i < used.length; i++) remaining[i] = remaining[i].subtract(used[i].multiply(extra));
             }
             if (!reserveProgram(extra)) return finish(Result.UNKNOWN);
             program.add(PlanStep.repeat(passBody, extra.add(BigInteger.ONE)));
+            // One fixed scan order can split a resource-return cycle over
+            // several passes. Join only witnessed passes, then check the full
+            // prefix and remaining multiset before skipping any future work.
+            if (extra.signum() == 0 && countExtra.signum() > 0 && !rejectedWitness && !wordDisabled) {
+                if (word == null) word = new CountScheduleWord<>(summaries, original, budget);
+                var jump = word.observe(passBody, summary, used, remaining, held, model.external);
+                if (jump != null) {
+                    long bytes = 128L + 8L * jump.passes() + 16L * ((jump.copies().bitLength() + 62L) / 63);
+                    if (!budget.tryReserve(bytes)) { word.close(); }
+                    else {
+                        memory += bytes; programMemory += bytes;
+                        apply(jump.summary(), jump.copies());
+                        for (int i = 0; i < remaining.length; i++) {
+                            budget.check();
+                            remaining[i] = remaining[i].subtract(jump.counts()[i].multiply(jump.copies()));
+                        }
+                        program.add(PlanStep.repeat(jump.body(), jump.copies()));
+                        wordApplied = true;
+                        budget.note("count_schedule_word", "witnessed_passes=" + jump.passes() + "; extra_copies=" + jump.copies());
+                        word.reset();
+                    }
+                }
+            } else if (word != null) word.reset();
             pass.clear();
             Arrays.fill(used, BigInteger.ZERO);
             cursor = 0;
@@ -212,6 +238,7 @@ final class CountSchedule<K> implements AutoCloseable {
                 witnessSource = WitnessSource.GREEDY;
                 return finish(Result.WITNESS);
             }
+            if (wordApplied) return nextAttempt();
             if (!guiding && !repairTried && prepareRepairOrder()) {
                 repairingOrder = true;
                 reset();
@@ -270,6 +297,8 @@ final class CountSchedule<K> implements AutoCloseable {
     }
 
     private void reset() {
+        if (word != null) word.reset();
+        wordApplied = false;
         remaining = original.clone();
         used = new BigInteger[original.length];
         Arrays.fill(used, BigInteger.ZERO);
@@ -316,6 +345,13 @@ final class CountSchedule<K> implements AutoCloseable {
     }
 
     private boolean nextAttempt() {
+        if (wordApplied) {
+            // An exact repeated word may change later greedy choices. Failure
+            // or downstream rejection still owes the original, unskipped scan.
+            wordDisabled = true;
+            reset();
+            return false;
+        }
         if (!guidedTried && !smallMultiset()) {
             guidedTried = true;
             guidedOrder = new CountScheduleOrder<>(model, summaries, budget);
@@ -708,6 +744,9 @@ final class CountSchedule<K> implements AutoCloseable {
         if (exact) budget.note("count_schedule_por", "components=" + independentComponents +
                 "; states=" + seen.size() + "; sleep_labels=" + labels + "; independent_interleavings_skipped=" + orderedAway +
                 "; reverse=" + reverseExact + "; result=" + value);
+        // Assembly retains the schedule, but no completed candidate needs this
+        // optional word workspace. A rejected acceleration retries without it.
+        if (word != null) { word.close(); word = null; }
         result = value;
         // The caller may reject this prefix after exact seed/production
         // assembly. Keep its reservation until accepted, retried, or closed.
@@ -759,6 +798,7 @@ final class CountSchedule<K> implements AutoCloseable {
 
     @Override
     public void close() {
+        if (word != null) { word.close(); word = null; }
         if (chains != null) { chains.close(); chains = null; }
         if (guidedOrder != null) {
             guidedOrder.close();

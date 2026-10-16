@@ -149,6 +149,18 @@ This consumes an explicit auxiliary loop, not a proof that an arbitrary flat
 schedule has a repeat or that every physical ordering has been explored. A
 capacity proposal that cannot yet be scheduled remains a separate search limit.
 
+The count scheduler can now construct such loops when a fixed recipe scan splits
+one return cycle across multiple passes. It retains a bounded word of already
+executed passes and combines their exact prefix requirements and deltas. Extra
+copies must fit both current resources and the remaining count of every recipe;
+an activation or exhausted branch cannot silently recur. This is a candidate
+acceleration, with no new negative inference. If accelerated scheduling fails or
+assembly rejects its witness, the same scan is retried without the shortcut.
+Word construction uses the current scheduling allowance, preserves continuation
+state between visits, and releases its optional workspace before assembly.
+It does not change the physical state proof: the restored tools must still recur
+at an exact auxiliary loop boundary before restoration can skip any firings.
+
 Physical state seed requirements are checked on the restored final state. They
 are omitted from the capacity proposal, where activation consumes the physical
 key without representing its final return. This relaxation cannot authorize
