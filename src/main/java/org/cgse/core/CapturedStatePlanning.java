@@ -785,6 +785,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     }
 
     private void allocationFailed(StateFamily<K> family, GraphRecipe<Key<K>> intactRecipe) {
+        boolean fragmented = allocation != null && allocation.failure() == StateEntityAllocation.Failure.WHOLE_KEY_FRAGMENTATION;
         // Retain the failed residual graph while trying the cheaper repairs.
         // Its certificate storage remains owned until feedback has been used.
         var failed = matching; matching = null;
@@ -795,6 +796,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (repairChoices(family)) return;
             if (repairOrder(family, intactRecipe == null ? proposed.recipes().get(cursor.current().recipe()) : intactRecipe)) return;
             if (failed != null && intactRecipe != null && refineEntityUnion(failed.deficit(), intactRecipe)) return;
+            // The owned entity total already fits. Reducing per-entity lifetime
+            // cannot repair this firing's whole-key partition; try another
+            // activation first, retaining the actual wear capacities.
+            if (!done && fragmented && refineEntityCount(family)) return;
             if (!done) refineEntities(family);
         } finally { if (failed != null) failed.close(); }
     }
@@ -892,7 +897,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     }
 
     private void refineEntities(StateFamily<K> family) {
-        if (!refineCapacity(family) && !done && !refineSharedEntities(family) && !done) stop(Reason.INSUFFICIENT_DISTINCT_ENTITIES);
+        if (!refineCapacity(family) && !done && !refineEntityCount(family) && !done) stop(Reason.INSUFFICIENT_DISTINCT_ENTITIES);
     }
 
     /** A changed physical key can disable another rule without exhausting the
@@ -1085,11 +1090,14 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         return true;
     }
 
-    /** Marginal family capacities can all fit while their combined wear does
-     * not. Try another owned entity in a fresh, restricted proposal. This is
-     * neither a learned necessary bound nor an infeasibility certificate. */
-    private boolean refineSharedEntities(StateFamily<K> family) {
-        if (!shared()) return false;
+    /** Marginal capacities can fit while combined wear or whole-key slots do
+     * not. A single family can also need another manufactured entity to join
+     * fragments into whole slots. Try more owned entities in a fresh restricted
+     * proposal; the extra count is a search hint, not a necessary bound. */
+    private boolean refineEntityCount(StateFamily<K> family) {
+        // A uniform family needs a declared simultaneous-entity coordinate.
+        // Ordinary single-tool recipes keep their existing capacity path.
+        if (!shared() && !entityFamilies.contains(family.id())) return false;
         BigInteger count = BigInteger.ZERO;
         for (var value : proposed.patternTimesExact().entrySet()) {
             budget.check();
@@ -1100,7 +1108,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         long required = count.longValueExact() + 1;
         if (required <= entityFloors.getOrDefault(family.id(), 0L)) return false;
         finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
-        budget.note("candidate_state", "refine_shared_entities; family=" + family.id() + "; required=" + required +
+        budget.note("candidate_state", "refine_entity_count; family=" + family.id() + "; shared=" + shared() + "; required=" + required +
                 "; retry=" + (refinements + 1) + "; negative_proofs=false");
         resetProposal();
         if (!entityFloors.containsKey(family.id()) && !reserve(128)) return true;

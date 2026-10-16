@@ -80,7 +80,7 @@ public final class CapturedStateSharingTest {
         }
         check(budget.reservedBytes() == 0, "Restoration / retry leaked");
         check(budget.searchWork() < 100_000 && budget.peakBytes() < (16L << 20), "Small shared-tool request ballooned");
-        if (repair) check(budget.diagnostics().contains("refine_shared_entities"), "Combined wear did not request a replacement entity");
+        if (repair) check(budget.diagnostics().contains("refine_entity_count"), "Combined wear did not request a replacement entity");
         PlanningCostTraceTest.conserved(budget);
         replay(plan, entries, stock, n); cases++; return plan;
     }

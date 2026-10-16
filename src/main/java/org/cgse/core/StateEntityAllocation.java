@@ -14,6 +14,7 @@ import java.util.function.ToIntFunction;
  * Indivisible slots need one exact key; mixed slots can use the remaining keys.
  * A failure concerns this inventory and these slots, never a count-model cut. */
 final class StateEntityAllocation<K> implements AutoCloseable {
+    enum Failure { NONE, ENTITY_SHORTAGE, WHOLE_KEY_FRAGMENTATION }
     record Demand(int slot, long amount, boolean mixed) {
         Demand { if (slot < 0 || amount <= 0) throw new IllegalArgumentException("Entity demand"); }
     }
@@ -33,6 +34,7 @@ final class StateEntityAllocation<K> implements AutoCloseable {
     private int depth, mixed, bin;
     private long left, memory;
     private boolean done, feasible, emitting;
+    private Failure failure = Failure.NONE;
     private boolean packingTried;
     private StateEntityPacking<K> packing;
 
@@ -82,7 +84,7 @@ final class StateEntityAllocation<K> implements AutoCloseable {
         indivisible = fixed; mixed = fixed;
         chosen = new int[fixed]; next = new int[fixed]; preferred = new int[fixed];
         Arrays.fill(chosen, -1); Arrays.fill(preferred, -2);
-        if (needed.compareTo(available) > 0) done = true;
+        if (needed.compareTo(available) > 0) { done = true; failure = Failure.ENTITY_SHORTAGE; }
     }
 
     /** One retained branch, undo, or output fragment; never restarts the DFS. */
@@ -93,7 +95,7 @@ final class StateEntityAllocation<K> implements AutoCloseable {
         if (packing != null) {
             if (!packing.step()) return false;
             boolean possible = packing.possible(); packing.close(); packing = null;
-            if (!possible) done = true;
+            if (!possible) { done = true; failure = Failure.WHOLE_KEY_FRAGMENTATION; }
             return done;
         }
         if (emitting) {
@@ -143,7 +145,7 @@ final class StateEntityAllocation<K> implements AutoCloseable {
                 if (packing != null) return false;
             }
             preferred[depth] = -2;
-            if (depth == 0) { done = true; return true; }
+            if (depth == 0) { done = true; failure = Failure.WHOLE_KEY_FRAGMENTATION; return true; }
             depth--;
             remaining[chosen[depth]] = remaining[chosen[depth]].add(BigInteger.valueOf(demands.get(depth).amount()));
             chosen[depth] = -1;
@@ -156,6 +158,9 @@ final class StateEntityAllocation<K> implements AutoCloseable {
     }
 
     boolean feasible() { return done && feasible; }
+    /** Only an exhausted current-inventory allocation has a failure kind.
+     * Cancellation, closing and a successful allocation do not establish one. */
+    Failure failure() { return failure; }
     List<Pick<K>> result() { if (!feasible()) throw new IllegalStateException("No allocation witness"); return result; }
 
     @Override public void close() {

@@ -45,6 +45,10 @@ public final class StateEntityAllocationTest {
             int steps = 0;
             while (!allocation.step()) check(++steps < 1000, "Lost retained search progress");
             feasible = allocation.feasible();
+            int totalStock = java.util.Arrays.stream(stock).sum(), totalDemand = java.util.Arrays.stream(amounts).sum();
+            var expectedFailure = feasible ? StateEntityAllocation.Failure.NONE : totalStock < totalDemand ?
+                    StateEntityAllocation.Failure.ENTITY_SHORTAGE : StateEntityAllocation.Failure.WHOLE_KEY_FRAGMENTATION;
+            check(allocation.failure() == expectedFailure, "Physical shortage and whole-key fragmentation were conflated");
             if (feasible) {
                 long[] used = new long[stock.length], filled = new long[amounts.length];
                 var key = new HashMap<Integer, Integer>();
@@ -103,6 +107,7 @@ public final class StateEntityAllocationTest {
             budget = budget();
             try (var allocation = StateEntityAllocation.create(demands, supply, budget)) {
                 for (int i = 0; i < stop && !allocation.step(); i++) {}
+                check(allocation.failure() == StateEntityAllocation.Failure.NONE, "An unfinished allocation became a deficit");
             }
             check(budget.reservedBytes() == 0 && supply.get(0).count().equals(BigInteger.valueOf(Long.MAX_VALUE).multiply(BigInteger.TWO)), "Abandonment changed the source inventory");
         }
@@ -113,6 +118,7 @@ public final class StateEntityAllocationTest {
             boolean caught = false;
             try { allocation.step(); } catch (java.util.concurrent.CancellationException expected) { caught = true; }
             check(caught, "Ignored cancellation");
+            check(allocation.failure() == StateEntityAllocation.Failure.NONE, "Cancellation invented a physical deficit");
         }
         check(budget.reservedBytes() == 0, "Cancelled allocation leaked");
         budget = new PlanningBudget(0, 100_000, 128, () -> false, System::nanoTime);
