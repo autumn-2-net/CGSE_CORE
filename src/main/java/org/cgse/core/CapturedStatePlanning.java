@@ -107,9 +107,14 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
 
     CapturedStatePlanning(List<CapturedCatalog.Entry<K>> entries, K target, long amount, Map<K, Long> stock,
                           Set<K> external, Map<K, Long> seeds, boolean preserve, boolean force, PlanningBudget budget) {
+        this(entries, target, amount, stock, external, seeds, preserve, force, budget, budget.remainingWork() / 2);
+    }
+
+    CapturedStatePlanning(List<CapturedCatalog.Entry<K>> entries, K target, long amount, Map<K, Long> stock,
+                          Set<K> external, Map<K, Long> seeds, boolean preserve, boolean force, PlanningBudget budget, long maximumWork) {
         this.entries = entries; this.target = target; this.amount = amount; this.stock = stock;
         this.external = external; this.seeds = seeds; this.preserve = preserve; this.force = force; this.budget = budget;
-        workStarted = budget.nodes(); allowance = budget.remainingWork() / 2;
+        workStarted = budget.nodes(); allowance = Math.min(maximumWork, budget.remainingWork() / 2);
         if (allowance < 1024) { stop(Reason.LOCAL_WORK_LIMIT); return; }
         if (!reserve(2048)) return;
         try {

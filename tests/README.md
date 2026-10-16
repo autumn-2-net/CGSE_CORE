@@ -110,6 +110,17 @@ preferences and low budgets cannot invent tools or export an infeasibility proof
 literal assignments; preference scores must never remove feasible choices. It
 also exercises wide quantities, score-cache revisions and lifetime work limits.
 
+`CapturedStateSupportTest` compares retained source selection with 1,200
+independent full-scan finite closures. It checks borrowed-index ownership,
+original entry order, retained work, cancellation and memory/source limits.
+`CapturedStateSupportPipelineTest` adds 30 positive requests with up to 16,384
+irrelevant sources, separate state rules, reversed source order, simultaneous
+mixed/indivisible tools and quantities through `Long.MAX_VALUE`. Manufactured
+non-prototype tools, return-only bridges and independent required seed producers
+must survive selection. Physical replay and delayed runtime returns/save-load
+verify plans; selected failures must resume the original attempt, preserve
+incomplete coverage and share its existing lifetime budget.
+
 `CapturedStateExpansionTest` covers 44 positive requests with omitted cross-rule
 state candidates. Four- and eight-state cycles, source/slot/stock permutations,
 quantities through `Long.MAX_VALUE`, simultaneous mixed/indivisible tools,

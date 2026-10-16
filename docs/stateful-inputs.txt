@@ -172,6 +172,28 @@ acceptance; a private miss, workspace refusal or quota exit resumes the original
 incomplete capture without an infeasibility claim. This is bounded positive
 recovery, not a complete state closure or arbitrary symbolic-state solver.
 
+For catalogs larger than 128 sources, CapturedStateSupport first attempts a
+request-local selection for this positive state arm. It borrows the existing
+captured producer index, starts from the target and exact required seeds, and
+retains all captured candidates and providers of each discovered input. For each
+supported state rule, it also checks indexed producer keys for positive usable
+capacity. This includes manufactured non-prototype tools and sources connected
+only by a captured actual return. It neither unfolds nominal transitions nor
+copies unrelated source domains. Entry identity, priority, bindings and physical
+stock remain unchanged; the 128-source expansion limit applies to this selected
+support rather than the entire unrelated catalog.
+
+The selection is retained across steps and admits at most 128 sources, 4096
+ports, 32 rules and 8192 requested keys. It requires 16384 remaining work and
+uses at most 65536 compilation work units or one sixteenth of remaining work.
+Selection and the selected/full state attempts share the original state arm's
+single lifetime allowance. A selected miss resumes the full original state
+attempt with the remaining allowance; a declined selection starts that original
+attempt directly. The ordinary canonical path remains available afterwards.
+There is no transfer of negative facts or completeness from the selected view.
+Finite captured producer discovery is not a complete oracle for arbitrary
+opaque state callbacks, and a missing provider cannot prove global infeasibility.
+
 Exact transitions are interned within the same auxiliary variant, retaining the
 source binding, family choices, input slots and full outputs. Repeated execution
 words can therefore share recipe IDs. An immutable transition returning the
@@ -346,6 +368,14 @@ The public tests are under tests/core/java/org/cgse/core:
     replay and delayed returns/save-load validate the resulting physical plans.
     Unfunded stock, unbounded state domains, same-rule wear/charge, cancellation
     and tight budgets guard positive-only coverage and bounded workspace.
+  CapturedStateSupportTest: 1200 independently scanned finite source closures,
+    original entry identity/order, borrowed producer-index ownership, retained
+    scanning, cancellation and tight work/memory/source limits.
+  CapturedStateSupportPipelineTest: up to 16384 irrelevant sources and separate
+    state rules, source permutations, long-sized orders, mixed/indivisible tools,
+    non-prototype manufacturing, return-only bridges and independent exact seed
+    producers. Physical replay, delayed returns/save-load, incomplete coverage,
+    changed stock and original-attempt resumption guard the positive selection.
   StateRestorationCycleTest: 22,000 independent primitive-prefix comparisons,
     serial and nested word composition, exact pool identity/order/counts,
     wide resource arithmetic and budget cleanup.

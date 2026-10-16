@@ -128,6 +128,9 @@ public final class CapturedCatalog<K> {
         private CapturedFlowWitness<K> flowWitness;
         private CapturedReachableWitness<K> reachable;
         private CapturedStatePlanning<K> statePlanning;
+        private CapturedStateSupport<K> stateSupport;
+        private boolean fullStateTried;
+        private long stateStarted, stateAllowance;
         private boolean reachableTried;
         private GraphPlan<K> reachablePlan;
         private List<CapturedReachableWitness.Variant<K>> reachableVariants = List.of();
@@ -136,7 +139,7 @@ public final class CapturedCatalog<K> {
         private List<Integer> providers = List.of();
         private int provider;
         private int entry, output, input, candidate;
-        private int phase; // 0 index, 1 discover, 2 freeze, 3 solve, 4 stock, 5 flow, 6 recovered counts, 7 reachable, 8 state capacity
+        private int phase; // 0 index, 1 discover, 2 freeze, 3 solve, 4 stock, 5 flow, 6 recovered counts, 7 reachable, 8 state capacity, 9 state support
         private int flattenEntry, flattenVariant;
         private List<GraphRecipe<K>> concrete = new ArrayList<>();
         private List<GraphRecipe<K>> allocationRecipes = new ArrayList<>();
@@ -222,7 +225,13 @@ public final class CapturedCatalog<K> {
                     if (plan != null) {
                         allocationView = true;
                         finish(plan, GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL);
-                    } else phase = 1;
+                    } else if (!fullStateTried) beginStatePlanning(entries);
+                    else phase = 1;
+                }
+            } else if (phase == 9) {
+                if (stateSupport.step()) {
+                    var selected = stateSupport.result(); stateSupport.close(); stateSupport = null;
+                    beginStatePlanning(selected == null ? entries : selected);
                 }
             } else {
                 boolean done = slice == null ? solving.step() : solving.advance(slice);
@@ -242,9 +251,10 @@ public final class CapturedCatalog<K> {
                 discover(target);
                 for (K key : requiredSeeds.keySet()) discover(key);
                 if (stateFamilies) {
-                    statePlanning = new CapturedStatePlanning<>(entries, target, amount, stock, external, requiredSeeds,
-                            preserve, forceCraft, budget);
-                    phase = 8;
+                    stateStarted = budget.nodes(); stateAllowance = budget.remainingWork() / 2;
+                    if (entries.size() > 128) stateSupport = CapturedStateSupport.create(entries, producers, target, requiredSeeds.keySet(), budget);
+                    if (stateSupport != null) phase = 9;
+                    else beginStatePlanning(entries);
                 } else phase = 1;
                 return;
             }
@@ -271,6 +281,18 @@ public final class CapturedCatalog<K> {
         private void nextIndexEntry() {
             entry++;
             output = input = candidate = 0;
+        }
+
+        private void beginStatePlanning(List<Entry<K>> sources) {
+            fullStateTried = sources == entries;
+            long remaining = Math.max(0, stateAllowance - (budget.nodes() - stateStarted));
+            if (fullStateTried && phase == 8) budget.note("candidate_state_support", "retry_full_state; remaining=" + remaining +
+                    "; shared_allowance=" + stateAllowance + "; negative_transfer=false");
+            // Selection, the small positive attempt and original state attempt
+            // share one lifetime allowance. A private miss cannot exclude sources.
+            statePlanning = new CapturedStatePlanning<>(sources, target, amount, stock, external, requiredSeeds,
+                    preserve, forceCraft, budget, remaining);
+            phase = 8;
         }
 
         private void producer(K key) {
@@ -620,6 +642,8 @@ public final class CapturedCatalog<K> {
             reachable = null;
             if (statePlanning != null) statePlanning.close();
             statePlanning = null;
+            if (stateSupport != null) stateSupport.close();
+            stateSupport = null;
             reachablePlan = null;
             reachableVariants = List.of();
             flowCounts.clear();
