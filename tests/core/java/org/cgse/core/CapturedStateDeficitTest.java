@@ -40,8 +40,34 @@ public final class CapturedStateDeficitTest {
                     check(budget.reservedBytes() == 0, "Deficit/proposal workspace leak");
                     PlanningCostTraceTest.conserved(budget); cases++;
                 }
-        staleStock(); limits();
+        subsets(); staleStock(); limits();
         System.out.println("CapturedStateDeficitTest: requests=" + cases);
+    }
+
+    private static void subsets() {
+        // Unlike a total entity shortage, excess C-only tools must not hide
+        // the simultaneous A/B shortage. Each whole-key slot needs n copies
+        // of one physical state, and the only manufactured key serves A.
+        for (boolean reverse : List.of(false, true)) for (boolean slots : List.of(false, true))
+            for (boolean stocks : List.of(false, true)) for (int tools : List.of(2, 3))
+                for (int mixed : List.of(0, 1, 2, 7)) for (boolean direct : List.of(false, true)) {
+                    var inputs = new ArrayList<>(List.of(tool("A", "X", tools, (mixed & 1) != 0),
+                            tool("B", "X", tools, (mixed & 2) != 0), tool("C", "Z", tools, (mixed & 4) != 0), raw("raw")));
+                    if (slots) Collections.reverse(inputs);
+                    var entries = new ArrayList<>(List.of(entry("pair", inputs, "out"), entry("forge", List.of(raw("metal")), "Y")));
+                    if (reverse) Collections.reverse(entries);
+                    var stock = stock(stocks, tools, 3); stock.put("Z", tools * 2L);
+                    var budget = budget(40_000_000); budget.enableMetrics();
+                    GraphPlan<String> plan;
+                    if (direct) try (var task = new CapturedStatePlanning<>(entries, "out", 3, stock, Set.of(), Map.of(), false, false, budget)) {
+                        while (!task.step()) {} plan = task.result();
+                    } else plan = new CapturedCatalog<>(entries).plan("out", 3, stock, false, false, budget).plan();
+                    check(plan != null && plan.feasible(), "Lost indivisible subset repair: " + budget.diagnostics());
+                    replay(plan, entries, stock, 3);
+                    check(budget.searchWork() < 150_000, "Enumerated whole-key assignments in a small repair");
+                    check(budget.reservedBytes() == 0, "Subset repair workspace leak");
+                    PlanningCostTraceTest.conserved(budget); cases++;
+                }
     }
 
     private static void staleStock() {
@@ -99,11 +125,15 @@ public final class CapturedStateDeficitTest {
                 var output = new LinkedHashMap<String, Long>();
                 for (var value : source.recipe().outputs()) output.merge(value.what(), value.amount(), Long::sum);
                 long[] filled = new long[source.recipe().inputs().size()];
+                String[] chosen = new String[filled.length];
                 for (var slot : recipe.slots()) {
                     check(inventory.getOrDefault(slot.key(), 0L) >= slot.amount(), "Reused an entity simultaneously");
                     inventory.merge(slot.key(), -slot.amount(), Long::sum);
                     var input = source.recipe().inputs().get(slot.inputSlot());
                     var candidate = input.candidates().get(0); filled[slot.inputSlot()] += slot.amount();
+                    check(source.recipe().mixed(input) || chosen[slot.inputSlot()] == null || chosen[slot.inputSlot()].equals(slot.key()),
+                            "Split an indivisible physical slot");
+                    chosen[slot.inputSlot()] = slot.key();
                     if (candidate.family() == null) check(candidate.stack().what().equals(slot.key()), "Changed an ordinary input");
                     else {
                         check(candidate.family().accepts(slot.key()), "Wrong physical tool for a slot");

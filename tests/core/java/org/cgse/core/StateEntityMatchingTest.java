@@ -26,7 +26,7 @@ public final class StateEntityMatchingTest {
             for (int j = 0; j < 3; j++) { stock[j] = 1 + random.nextInt(4); need[j] = 1 + random.nextInt(4); }
             compare(stock, need, random.nextInt(8), random.nextInt(512), (i & 1) == 0);
         }
-        boundaries();
+        boundaries(); subsetPruning(); retainedRelaxation();
         System.out.println("StateEntityMatchingTest: cases=" + cases + "; assertions=" + checks);
     }
 
@@ -71,9 +71,8 @@ public final class StateEntityMatchingTest {
             } else {
                 check(work.failedSlot() >= 0 && work.failedSlot() < need.length, "Lost allocation failure scope");
                 var deficit = work.deficit();
-                boolean whole = false;
-                for (int d = 0; d < need.length; d++) whole |= need[d] > 1 && (mixed & (1 << d)) == 0;
-                if (!whole) check(deficit != null, "Failed integral flow lost its Hall deficit");
+                boolean relaxed = assignSlot(0, stock.clone(), need, (1 << need.length) - 1, edges);
+                check((deficit == null) == relaxed, "Lost subset deficit or exported a whole-key branch failure");
                 if (deficit != null) {
                     // Reconstruct the certificate using only original input
                     // eligibility and quantities, independently of residual flow.
@@ -130,12 +129,16 @@ public final class StateEntityMatchingTest {
         check(budget.reservedBytes() == 0, "Wide matching leak");
         var deficient = List.of(new StateEntityAllocation.Supply<>("a", BigInteger.valueOf(Long.MAX_VALUE).multiply(BigInteger.TWO), 1),
                 new StateEntityAllocation.Supply<>("b", BigInteger.valueOf(Long.MAX_VALUE), 1));
-        try (var work = StateEntityMatching.create(demands, deficient, (d, s) -> s.equals("b"), budget)) {
-            while (!work.step()) {}
-            var deficit = work.deficit();
-            check(deficit != null && deficit.required().compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0,
-                    "Wide deficit overflow");
-            check(deficit.available().equals(BigInteger.valueOf(Long.MAX_VALUE)), "Counted an ineligible large supply");
+        for (boolean mixed : List.of(false, true)) {
+            var wide = List.of(new StateEntityAllocation.Demand(0, Long.MAX_VALUE, mixed),
+                    new StateEntityAllocation.Demand(1, Long.MAX_VALUE, mixed));
+            try (var work = StateEntityMatching.create(wide, deficient, (d, s) -> s.equals("b"), budget)) {
+                while (!work.step()) {}
+                var deficit = work.deficit();
+                check(deficit != null && deficit.required().compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0,
+                        "Wide deficit overflow");
+                check(deficit.available().equals(BigInteger.valueOf(Long.MAX_VALUE)), "Counted an ineligible large supply");
+            }
         }
         var indivisible = List.of(new StateEntityAllocation.Demand(0, 2, false));
         var split = List.of(new StateEntityAllocation.Supply<>("a", BigInteger.ONE, 1),
@@ -163,6 +166,75 @@ public final class StateEntityMatchingTest {
         var interrupted = budget();
         try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> true, interrupted)) { work.step(); }
         check(interrupted.reservedBytes() == 0, "Abandoned continuation leak");
+    }
+
+    private static void subsetPruning() {
+        // Total supply 24 equals demand 24, but eleven whole-key slots need
+        // 22 entities from only ten two-entity keys. The two surplus entities
+        // accepted by the last slot cannot fill this deficient subset.
+        for (boolean reverse : List.of(false, true)) for (boolean prefer : List.of(false, true)) {
+            var demands = new ArrayList<StateEntityAllocation.Demand>();
+            var supplies = new ArrayList<StateEntityAllocation.Supply<Integer>>();
+            for (int d = 0; d < 12; d++) demands.add(new StateEntityAllocation.Demand(d, 2, false));
+            for (int s = 0; s < 11; s++) supplies.add(new StateEntityAllocation.Supply<>(s, BigInteger.valueOf(s == 10 ? 4 : 2), 1));
+            if (reverse) { Collections.reverse(demands); Collections.reverse(supplies); }
+            var budget = new PlanningBudget(0, 20_000, 1 << 20, () -> false, System::nanoTime);
+            try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> d.slot() == 11 ? s == 10 : s < 10,
+                    prefer ? (d, s) -> s : null, budget)) {
+                int steps = 0;
+                while (!work.step()) check(++steps < 100, "Enumerated permutations of a deficient subset");
+                var deficit = work.deficit();
+                check(!work.feasible() && deficit != null, "Missed the eleven-slot shortage");
+                check(new java.util.HashSet<>(deficit.slots()).equals(new java.util.HashSet<>(java.util.stream.IntStream.range(0, 11).boxed().toList())),
+                        "Included the unrelated supply domain");
+                check(deficit.required().equals(BigInteger.valueOf(22)) && deficit.available().equals(BigInteger.valueOf(20)),
+                        "Invalid whole-key subset certificate");
+            }
+            check(budget.reservedBytes() == 0, "Relaxed subset workspace leak"); cases++;
+        }
+        // A splittable relaxation can succeed while the exact packing cannot.
+        // Eligibility is deliberately nonuniform so the relaxation is tried.
+        compare(new int[]{1, 1, 2}, new int[]{2, 2}, 0, 35, false);
+    }
+
+    private static void retainedRelaxation() {
+        for (boolean mixed : List.of(false, true)) {
+            var demands = List.of(new StateEntityAllocation.Demand(0, 2, false), new StateEntityAllocation.Demand(1, 2, mixed));
+            var supplies = List.of(new StateEntityAllocation.Supply<>(0, BigInteger.TWO, 1), new StateEntityAllocation.Supply<>(1, BigInteger.TWO, 1));
+            // First whole-key choice takes key 0, starving the second slot.
+            // Relaxation succeeds after either a whole-key or mixed-flow dead
+            // end. Exact search must resume and move the first slot to key 1.
+            var budget = budget();
+            try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> d.slot() == 0 || s == 0, (d, s) -> s, budget)) {
+                while (!work.step()) check(work.deficit() == null, "Partial matching exported a fact");
+                check(work.feasible() && work.deficit() == null, "Relaxation destroyed retained choices");
+                for (var pick : work.result()) check(pick.state() == 1 - pick.slot() && pick.amount() == 2, "Used relaxed fragments as an exact witness");
+            }
+            check(budget.reservedBytes() == 0, "Resumed relaxation workspace leak");
+            // Sweep work/cancellation boundaries through constructor, exact
+            // branching, relaxed flow and restoration. Interrupted work must
+            // not export a deficient subset or escape ownership accounting.
+            for (int limit = 1; limit <= 160; limit++) {
+                var capped = new PlanningBudget(0, limit, 1 << 20, () -> false, System::nanoTime);
+                try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> d.slot() == 0 || s == 0, capped)) {
+                    while (!work.step()) {}
+                    check(work.feasible() && work.deficit() == null, "Budget created a negative result");
+                } catch (PlanningBudget.Exhausted expected) { /* No finished proof was returned. */ }
+                // The rejecting check itself is charged before Exhausted.
+                check(capped.searchWork() <= limit + 1L && capped.reservedBytes() == 0,
+                        "Relaxation renewed a cap or leaked: limit=" + limit + "; work=" + capped.searchWork() + "; bytes=" + capped.reservedBytes());
+            }
+            for (int at = 0; at < 16; at++) {
+                var cancelled = new AtomicBoolean();
+                var cancellable = new PlanningBudget(0, 100_000, 1 << 20, cancelled::get, System::nanoTime);
+                try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> d.slot() == 0 || s == 0, cancellable)) {
+                    for (int step = 0; step < at && !work.step(); step++) {}
+                    cancelled.set(true);
+                    try { work.step(); throw new AssertionError("Ignored relaxed-search cancellation"); } catch (CancellationException expected) {}
+                }
+                check(cancellable.reservedBytes() == 0, "Cancelled relaxation workspace leak");
+            }
+        }
     }
 
     private static boolean edge(int edges, int width, int d, int s) { return (edges & (1 << (d * width + s))) != 0; }

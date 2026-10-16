@@ -29,7 +29,8 @@ final class StateEntityMatching<K> implements AutoCloseable {
     private final int fixed, width;
     private int depth, unmet, failedSlot;
     private long memory;
-    private boolean done, feasible, flowing, totalShortage;
+    private boolean done, feasible, flowing, totalShortage, hallDeficit;
+    private boolean partialEligibility, relaxationTried, relaxing, failedFlow;
 
     static <K> StateEntityMatching<K> create(List<StateEntityAllocation.Demand> demands,
             List<StateEntityAllocation.Supply<K>> supplies,
@@ -79,6 +80,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
             left[d] = demand.amount();
             for (int s = 0; s < width; s++) {
                 budget.check(); allowed[d * width + s] = eligible.test(demand, this.supplies.get(s).state());
+                partialEligibility |= !allowed[d * width + s];
                 if (scores != null) {
                     scores[s] = allowed[d * width + s] ? preference.applyAsInt(demand, this.supplies.get(s).state()) : Integer.MAX_VALUE;
                     order[s] = s;
@@ -109,6 +111,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
             if (depth == fixed) { flowing = true; unmet = fixed; return false; }
             var demand = demands.get(depth);
             if (next[depth] == width) {
+                if (startRelaxation(false)) return false;
                 next[depth] = 0; failedSlot = demand.slot();
                 if (depth == 0) { done = true; return true; }
                 undoFixed(); return false;
@@ -122,6 +125,18 @@ final class StateEntityMatching<K> implements AutoCloseable {
         }
         while (unmet < demands.size() && left[unmet] == 0) { budget.check(); unmet++; }
         if (unmet == demands.size()) {
+            if (relaxing) {
+                // Relaxed flow is only a necessary check. Restore the retained
+                // whole-key branch, not the relaxed (possibly split) witness.
+                relaxing = false; flowing = false; unmet = fixed;
+                resetFlow();
+                for (int d = 0; d < depth; d++) {
+                    budget.check(); int s = chosen[d];
+                    remaining[s] = remaining[s].subtract(BigInteger.valueOf(demands.get(d).amount()));
+                }
+                if (failedFlow) undoFixed();
+                return false;
+            }
             for (int d = 0; d < demands.size(); d++) {
                 budget.check(); var demand = demands.get(d);
                 if (d < fixed) result.add(new StateEntityAllocation.Pick<>(demand.slot(), supplies.get(chosen[d]).state(), demand.amount()));
@@ -134,7 +149,8 @@ final class StateEntityMatching<K> implements AutoCloseable {
         }
         if (augment(unmet)) return false;
         failedSlot = demands.get(unmet).slot();
-        if (fixed == 0) { done = true; return true; }
+        if (relaxing || fixed == 0) { hallDeficit = done = true; return true; }
+        if (startRelaxation(true)) return false;
         // A failed flow only rejects this whole-key assignment. Restore its
         // residual inventory and continue the retained indivisible search.
         for (int d = fixed; d < demands.size(); d++) {
@@ -146,6 +162,25 @@ final class StateEntityMatching<K> implements AutoCloseable {
             }
         }
         flowing = false; undoFixed(); return false;
+    }
+
+    /** On the first failed branch, test the splittable relaxation on original
+     * inventory. Its Hall deficit can reject all whole-key assignments. A
+     * successful relaxation resumes the exact branch; it never emits a plan.
+     * Delay this check so a successful first assignment keeps its old cost. */
+    private boolean startRelaxation(boolean fromFlow) {
+        if (relaxationTried || !partialEligibility || fixed == 0) return false;
+        relaxationTried = relaxing = flowing = true; failedFlow = fromFlow; unmet = 0;
+        resetFlow();
+        return true;
+    }
+
+    private void resetFlow() {
+        for (int s = 0; s < width; s++) { budget.check(); remaining[s] = supplies.get(s).count(); }
+        for (int d = 0; d < demands.size(); d++) {
+            budget.check(); left[d] = demands.get(d).amount();
+            for (int s = 0; s < width; s++) { budget.check(); flow[d * width + s] = 0; }
+        }
     }
 
     private void undoFixed() {
@@ -179,7 +214,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
                     }
                     left[root] -= use; return true;
                 }
-                for (int other = fixed; other < demands.size(); other++) {
+                for (int other = relaxing ? 0 : fixed; other < demands.size(); other++) {
                     budget.check();
                     if (parentDemand[other] != -1 || flow[other * width + s] == 0) continue;
                     parentDemand[other] = s; queue[tail++] = other;
@@ -192,11 +227,11 @@ final class StateEntityMatching<K> implements AutoCloseable {
     boolean feasible() { return done && feasible; }
     int failedSlot() { return failedSlot; }
 
-    /** The failed residual search exposes a deficient set without another
-     * matching solve. Whole-key branch failures alone are not Hall deficits.
-     * Keep feedback small even when the allocation itself is much larger. */
+    /** Failed exact or relaxed residual flow exposes a deficient set.
+     * Whole-key branch failures alone are not Hall deficits. Keep feedback
+     * small even when the allocation itself is much larger. */
     Deficit deficit() {
-        if (!done || feasible || memory == 0 || (!totalShortage && fixed != 0) || demands.size() > 32) return null;
+        if (!done || feasible || memory == 0 || (!totalShortage && !hallDeficit) || demands.size() > 32) return null;
         var slots = new ArrayList<Integer>();
         BigInteger required = BigInteger.ZERO, available = BigInteger.ZERO;
         for (int d = 0; d < demands.size(); d++) {
