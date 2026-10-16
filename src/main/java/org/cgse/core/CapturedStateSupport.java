@@ -21,6 +21,7 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     private static final int MAX_SOURCES = 128, MAX_PORTS = 4096, MAX_RULES = 32, MAX_KEYS = 8192;
     private final List<CapturedCatalog.Entry<K>> entries;
     private final Map<K, List<Integer>> producers;
+    private final CapturedStateProducers<K> retained;
     private final PlanningBudget budget;
     private final long started, allowance;
     private final Set<Integer> selected = new TreeSet<>();
@@ -32,6 +33,8 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     private final Iterator<K> seeds;
     private StateFamily<K> scanningRule;
     private Iterator<K> producerKeys;
+    private CapturedStateProducers<K>.Capture capturing;
+    private boolean projected;
     private List<Integer> providers = List.of();
     private List<CapturedCatalog.Entry<K>> result;
     private int provider, scanning = -1, output, input, candidate, ports;
@@ -40,13 +43,19 @@ final class CapturedStateSupport<K> implements AutoCloseable {
 
     static <K> CapturedStateSupport<K> create(List<CapturedCatalog.Entry<K>> entries, Map<K, List<Integer>> producers,
             K target, Set<K> seeds, PlanningBudget budget) {
+        return create(entries, producers, target, seeds, budget, null);
+    }
+
+    static <K> CapturedStateSupport<K> create(List<CapturedCatalog.Entry<K>> entries, Map<K, List<Integer>> producers,
+            K target, Set<K> seeds, PlanningBudget budget, CapturedStateProducers<K> retained) {
         if (budget.remainingWork() < 16_384 || !budget.tryReserve(2048)) return null;
-        return new CapturedStateSupport<>(entries, producers, target, seeds, budget);
+        return new CapturedStateSupport<>(entries, producers, target, seeds, budget, retained);
     }
 
     private CapturedStateSupport(List<CapturedCatalog.Entry<K>> entries, Map<K, List<Integer>> producers,
-            K target, Set<K> seeds, PlanningBudget budget) {
+            K target, Set<K> seeds, PlanningBudget budget, CapturedStateProducers<K> retained) {
         this.entries = entries; this.producers = producers; this.seeds = seeds.iterator(); this.budget = budget;
+        this.retained = retained;
         started = budget.nodes(); allowance = Math.min(65_536, budget.remainingWork() / 16);
         try { require(target); }
         catch (RuntimeException | Error failure) { close(); throw failure; }
@@ -64,10 +73,21 @@ final class CapturedStateSupport<K> implements AutoCloseable {
             else if (!keys.isEmpty()) { providers = producers.getOrDefault(keys.removeFirst(), List.of()); provider = 0; }
             else if (producerKeys != null && producerKeys.hasNext()) {
                 K key = producerKeys.next();
-                if (scanningRule.accepts(key) && scanningRule.capacity(key) > 0) require(key);
-            } else if (!pendingRules.isEmpty()) {
-                scanningRule = pendingRules.removeFirst(); producerKeys = producers.keySet().iterator();
-            } else finish();
+                if (projected || scanningRule.accepts(key) && scanningRule.capacity(key) > 0) {
+                    require(key);
+                    if (!done && capturing != null) capturing.add(key);
+                }
+            } else {
+                if (capturing != null) { capturing.complete(); capturing = null; }
+                if (!pendingRules.isEmpty()) {
+                    scanningRule = pendingRules.removeFirst();
+                    var keys = retained == null ? null : retained.get(scanningRule, producers, budget);
+                    projected = keys != null;
+                    producerKeys = (projected ? keys : producers.keySet()).iterator();
+                    if (projected) budget.note("candidate_state_producers", "reused; keys=" + keys.size() + "; catalog_keys=" + producers.size());
+                    else if (retained != null) capturing = retained.begin(scanningRule, producers, budget);
+                } else finish();
+            }
             return done;
         } catch (PlanningBudget.Exhausted limit) {
             if (limit.limit() != PlanningBudget.Limit.MEMORY_LIMIT) throw limit;
@@ -147,6 +167,8 @@ final class CapturedStateSupport<K> implements AutoCloseable {
     @Override public void close() {
         if (closed) return; closed = true;
         selected.clear(); requested.clear(); keys.clear(); pending.clear(); rules.clear(); pendingRules.clear();
+        if (capturing != null) capturing.close();
+        capturing = null;
         producerKeys = null; scanningRule = null; providers = List.of();
         budget.release(memory); memory = 0; done = true;
     }

@@ -77,17 +77,20 @@ public final class CapturedStateSupportTest {
         } while (changed);
         var expected = new ArrayList<CapturedCatalog.Entry<String>>();
         for (int i = 0; i < entries.size(); i++) if (selected.contains(i)) expected.add(entries.get(i));
-        var budget = budget(40_000_000, 8L << 20);
-        try (var work = CapturedStateSupport.create(entries, index(entries), target, seeds, budget)) {
-            check(work != null, "Small support not admitted"); int steps = 0;
-            while (!work.step()) check(++steps < 20_000, "Retained scan restarted or failed to converge");
-            if (expected.isEmpty() || expected.size() == entries.size()) check(work.result() == null, "Published an unchanged source set");
-            else {
-                check(expected.equals(work.result()), "Indexed closure differs from full finite fixed point");
-                for (int i = 0; i < expected.size(); i++) check(expected.get(i) == work.result().get(i), "Copied / reordered original capture semantics");
+        var retained = new CapturedStateProducers<String>(); var index = index(entries);
+        for (int pass = 0; pass < 3; pass++) {
+            var budget = budget(40_000_000, 8L << 20);
+            try (var work = CapturedStateSupport.create(entries, index, target, seeds, budget, pass == 0 ? null : retained)) {
+                check(work != null, "Small support not admitted"); int steps = 0;
+                while (!work.step()) check(++steps < 20_000, "Retained scan restarted or failed to converge");
+                if (expected.isEmpty() || expected.size() == entries.size()) check(work.result() == null, "Published an unchanged source set");
+                else {
+                    check(expected.equals(work.result()), "Indexed closure differs from full finite fixed point");
+                    for (int i = 0; i < expected.size(); i++) check(expected.get(i) == work.result().get(i), "Copied / reordered original capture semantics");
+                }
             }
+            check(budget.reservedBytes() == 0 && budget.searchWork() == 0, "Compiler support leaked or consumed search allowance");
         }
-        check(budget.reservedBytes() == 0 && budget.searchWork() == 0, "Compiler support leaked or consumed search allowance");
     }
 
     static Map<String, List<Integer>> index(List<CapturedCatalog.Entry<String>> entries) {

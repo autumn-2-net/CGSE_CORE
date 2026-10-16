@@ -1023,6 +1023,21 @@ The retained hints contain keys, not amounts; request workspace excludes their
 separate 64-KiB estimated-container cap. All attempts share the original state-arm
 allowance.
 
+`CapturedStateProducerReuseTest` checks 48 cold/warm requests whose new targets
+share a tool-manufacturing boundary, with up to 16,384 unrelated producer keys,
+both recipe orders and existing/manufactured tools. The twelve former low-budget
+misses require physically replayed witnesses. Current stock, external supply,
+seed/force/preserve modes, replaced captures, new producers, cancellation,
+memory/work limits and four concurrent targets guard the scope of reuse.
+`CapturedStateProducerCacheTest` checks identical rule/index ownership, immutable
+complete projections, partial-scan refusal, independent preparation quotas,
+concurrent publication and 32-entry/64-KiB estimated-container limits. Only a
+completed scan may be retained; no more than 256 keys per rule are admitted.
+The 1,200 finite closure oracles in `CapturedStateSupportTest` now run without
+retention, while populating it and while reusing it, preserving original sources
+and their priority. Reuse selects a positive attempt; it carries no stock amounts
+or negative solver facts and does not unfold unused tool states.
+
 `CapturedPreviewScopeTest` checks that only restricted view owners omit optional
 refill previews, preserving complete capture previews and positive witnesses.
 `CapturedHandoffTest` injects limits after the real child's proof/witness is ready

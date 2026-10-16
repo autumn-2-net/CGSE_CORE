@@ -57,6 +57,11 @@ public final class CapturedCatalog<K> {
     private volatile Producers<K> retainedProducers;
     private long producerHits, producerMisses;
     private final CapturedSupportCache<K> stateSupports;
+    private final CapturedStateProducers<K> stateProducers;
+
+    CapturedStateProducers.Metrics stateProducerMetrics() {
+        return stateProducers == null ? new CapturedStateProducers.Metrics(0, 0, 0, 0) : stateProducers.metrics();
+    }
 
     /** Source/key hints only, scoped to this capture and exact target/seed-key set. */
     public record StateSupportCacheMetrics(long hits, long misses, int entries, long estimatedBytes, long maximumBytes) {}
@@ -115,6 +120,7 @@ public final class CapturedCatalog<K> {
         captureComplete = complete;
         stateFamilies = families;
         stateSupports = families && entries.size() > 128 ? new CapturedSupportCache<>() : null;
+        stateProducers = stateSupports == null ? null : new CapturedStateProducers<>();
     }
 
     /** Same potential-output scope as Work's index, including unexpanded returns. */
@@ -357,7 +363,8 @@ public final class CapturedCatalog<K> {
                         budget.note("candidate_state_support", "reused; selected=" + hint.sources().size() + "; catalog=" + entries.size() + "; negative_proofs=false");
                         beginStatePlanning(hint.sources(), hint.stockKeys()); return;
                     }
-                    if (entries.size() > 128) stateSupport = CapturedStateSupport.create(entries, producers, target, requiredSeeds.keySet(), budget);
+                    if (entries.size() > 128) stateSupport = CapturedStateSupport.create(entries, producers, target, requiredSeeds.keySet(), budget,
+                            sharedProducers ? stateProducers : null);
                     if (stateSupport != null) phase = 9;
                     else beginStatePlanning(entries);
                 } else phase = 1;
