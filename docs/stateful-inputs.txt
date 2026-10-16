@@ -44,8 +44,39 @@ GraphRecipe/PlanStep values, then checks funding, execution and the request.
 Aggregate capacity alone cannot prove that enough separate tools exist for a
 multi-tool operation or that fragments can be combined. Dispatch still needs
 the physical inputs: use capacity does not permit concurrent reuse of one tool.
+For slots whose supported candidates all use the same family, the auxiliary
+model also requires the simultaneous entity count as a read arc. Activation
+supplies one entity marker as well as use capacity. This lets the proposal select
+additional stocked or manufactured tools instead of repeatedly relying on one
+long-lived entity. Markers are not physical inventory and do not prove that the
+entities survive every later use. Slots with different family/ordinary choices
+do not acquire unconditional requirements from independent choice marginals.
+The arc is only added for simultaneous demand above one: positive use capacity
+already requires an activation, so ordinary one-tool recipes keep the smaller view.
+
+Exact transitions are interned within the same auxiliary variant, retaining the
+source binding, family choices, input slots and full outputs. Repeated execution
+words can therefore share recipe IDs. An immutable transition returning the
+identical state admits a serial Repeat without enumerating each firing: exact
+ordinary-resource prefix bounds limit the repeat count. Consumed configuration
+inputs remain charged per iteration; the runtime still gates each provider push
+on actual owned inputs and received returns. No shortcut is assumed for arbitrary
+changing-state callbacks. A periodic state word may be compressed after its exact
+selected transitions have been restored, using the existing plan optimizer.
+
+Physical state seed requirements are checked on the restored final state. They
+are omitted from the capacity proposal, where activation consumes the physical
+key without representing its final return. This relaxation cannot authorize
+losing a required seed: assembly and final verification retain the original seeds.
+
 Restoration consumes work and memory budget and has cancellation checkpoints;
 very large requested executions may still exhaust that budget.
+Restoration, assembly and verification have separate cost-trace stages. Candidate
+diagnostics include restored firings, unique transitions, program nodes, restore
+calls and work. Internal outcomes distinguish verified candidates, restricted
+declines and local resource limits, including invalid algebra versus insufficient
+entities. General matching/reordering repair after a decline and continuation
+after the arm's fixed allowance are not implemented by these outcomes.
 
 A failed auxiliary solve or failed restoration is not a global negative proof.
 Family domains remain incomplete; a verified witness is
@@ -93,6 +124,10 @@ The public tests are under tests/core/java/org/cgse/core:
   StateTransitionTest: exact/unknown contracts and finite closure boundaries.
   CapturedStateTest: large state spaces, separate worn entities, new tools,
     configuration inputs, unchanged/saturated capacity and proof/budget limits.
+  CapturedStateRestoreTest: fixed points up to one billion firings, repeated
+    state words, entity read arcs, manufactured tools, slot/order alternatives,
+    exact seed preservation, per-dispatch inputs, cost attribution and actual
+    return gating through save/load of a production-restored plan.
   CapturedReachableTest: sparse candidate recovery and exact execution checks.
   RequestCoverageTest: request-level coverage and restricted-result boundaries.
   StateReturnRuntimeTest: alternatives, equivalent parallel owners, persistence,

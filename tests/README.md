@@ -44,6 +44,14 @@ physical ownership, mixed worn tools, replacement-tool production and bounded
 restoration of only the selected uses. Their auxiliary failures are not proofs
 about unexpanded state domains.
 
+`CapturedStateRestoreTest` guards exact transition identity and compact serial
+witnesses up to one billion fixed-state uses. It checks entity multiplicity and
+replacement-tool production, mixed/indivisible slots and order changes, ordinary
+returns, consumed/reusable configuration inputs, physical seed preservation and
+restoration cost attribution. The production-restored plan runs through actual
+return gating and saved runtime state; a compressed count cannot authorize
+concurrent use of a single tool. Periodic changing states retain their exact word.
+
 `StateTransitionTest` verifies exact and uncertain return contracts and bounded
 state discovery. `StateReturnRuntimeTest` covers actual alternative receipts,
 parallel equivalent/disjoint return domains, partial returns, synchronous handoff,

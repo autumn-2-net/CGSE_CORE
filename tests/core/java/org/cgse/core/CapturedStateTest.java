@@ -60,6 +60,10 @@ public final class CapturedStateTest {
         check(plan.recipes().size() <= amount + 1, "Unused concrete variants retained");
         check(budget.peakBytes() < (32L << 20), "Capacity proposal workspace ballooned");
         check(budget.reservedBytes() == 0, "State request leaked budget ownership");
+        // A one-tool use already implies one activation. Extra entity read arcs
+        // and repeat-bound arithmetic must not tax every changing-state firing.
+        if (amount == 768) check(budget.searchWork() < 50_000 && budget.compilationWork() < 10_000,
+                "Changing-state restoration acquired redundant capacity-model work");
         PlanningCostTraceTest.conserved(budget);
         System.out.println("state amount=" + amount + "; capacity=" + capacity + "; last=" + last + "; search=" +
                 budget.searchWork() + "; compile=" + budget.compilationWork() + "; peak=" + budget.peakBytes());
