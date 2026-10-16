@@ -168,6 +168,20 @@ Cancellation refunds only held inventory; late machine returns go to the host's
 ordinary storage. Host adapters must publish and clear all alternative-key
 subscriptions, including synchronous returns and rejected dispatches.
 
+For DAG execution, each resource subscribes only unfinished operations that do
+not already have a notification in the awakened queue. A receipt removes a
+notified operation from all its input subscriptions until that operation is
+polled again. Resubscription precedes provider handoff so synchronous receipts
+remain visible. Completion removes subscriptions; reload builds them only for
+the unaccepted suffix. Resource-local ranks preserve the original recipe order,
+including after retries, while the existing two ready lanes retain fairness.
+Small subscriber sets use one scalar word; larger sets use hierarchical bitmaps
+and reverse input incidences. Storage is linear in retained input incidences,
+and repeated callbacks do not scan already-notified or completed consumers.
+This also applies to distinct source bindings that cannot share a transition ID.
+Notifications do not confer material ownership: actual held inputs still gate
+every dispatch, and every owed return must arrive before completion.
+
 Regression entry points
 ------------------------
 The public tests are under tests/core/java/org/cgse/core:
@@ -194,6 +208,14 @@ The public tests are under tests/core/java/org/cgse/core:
     rejection, cancellation and checkpoint/replacement behavior.
   StateReturnConcurrencyTest: aggregate headroom and transient subscriptions.
   StateReturnPlaceholderTest: completion markers cannot discard pending returns.
+  DagReturnWakeupTest: actual returns advance exact-state chains, fair retries,
+    synchronous partial/full acceptance and saved-prefix retirement.
+  DagWakeIndexTest: independent ordered-set checks through 65,537 operations,
+    sparse resources, bitmap-level boundaries and bounded empty lookups.
+  DagWakeEquivalenceTest: 384,000 events against an independent queue model,
+    preserving dispatch order, retries, synchronous callbacks and exact counts.
+  DagSharedWakeTest: distinct bindings sharing tools, bounded notification work,
+    delayed/separate receipts, concurrent tools, rejection and saved ownership.
 
 These are core regressions. A host must additionally test actual provider
 capture, dispatch, inventory routing and persistence in its own environment.

@@ -80,6 +80,14 @@ discarding unresolved physical state returns.
 128/1000-state chains within two dispatch checks, including a saved prefix.
 It also preserves normal/retry service under repeated wakeups and rejects
 duplicate dispatches after synchronous full or partial acceptance.
+`DagWakeIndexTest` compares active subscribers with independent ordered sets
+through 65,537 operations, including sparse keys and all bitmap-level boundaries.
+`DagWakeEquivalenceTest` compares 384,000 events with an independent queue model:
+recipe order, lane fairness, retry deadlines, synchronous receipts, accepted
+prefixes and counts beyond long must agree. `DagSharedWakeTest` retains distinct
+source bindings and checks linear notification work for up to 8,192 consumers.
+Its physical runtime cases cover one/four tools, partial dispatch, separate and
+synchronous receipts, older returns during rejection, and saved ownership.
 
 The `Historical*Test` programs provide 31 maintained regressions. The migration
 index maps 44 archived sources, including two reference helpers and aliases
