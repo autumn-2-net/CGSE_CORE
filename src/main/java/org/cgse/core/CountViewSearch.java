@@ -306,9 +306,11 @@ final class CountViewSearch implements AutoCloseable {
                 // while allowing a later new view one admission check too.
                 if (!partitionViews.add(view)) continue;
                 var domains = models.domains(view);
-                var partition = wideAllocationViews.contains(view) ?
+                CountContinuation partition = wideAllocationViews.contains(view) ?
                         CountGroupedPartition.createWide(view.rows(), domains.lower(), domains.upper(), budget, CountPortfolioPolicy.MIN_QUANTUM) :
                         CountGroupedPartition.createMultiway(view.rows(), domains.lower(), domains.upper(), budget, CountPortfolioPolicy.MIN_QUANTUM);
+                if (partition == null) partition = CountVectorPartition.create(
+                        view.rows(), domains.lower(), domains.upper(), budget, CountPortfolioPolicy.MIN_QUANTUM);
                 if (partition == null) continue;
                 Search search = new Search(view, policy.add(view.shape().cost(), Engine.GROUPED_PARTITION), Engine.GROUPED_PARTITION);
                 search.specialist = partition;
@@ -704,7 +706,8 @@ final class CountViewSearch implements AutoCloseable {
                 policy.selections(search.scheduling) == 0);
         if (sampled) for (Search search : searches) {
             if (search.done || !search.scheduling.eligible ||
-                    !(search.specialist instanceof CountGroupedPartition || search.specialist instanceof CountRelaxationNeighborhood ||
+                    !(search.specialist instanceof CountGroupedPartition || search.specialist instanceof CountVectorPartition ||
+                            search.specialist instanceof CountRelaxationNeighborhood ||
                             search.specialist instanceof CountPackingCore) ||
                     search.progress == 0) continue;
             // Reachable sums or a usable LP point leave an owned candidate

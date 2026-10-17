@@ -2785,6 +2785,152 @@
       "maximum_observed_work": 6000000,
       "expected": "SAT",
       "evidence": "Existing canonical feasibility oracle and independent primitive replay. Guard first-plan observed cost under the unchanged 40M request envelope: building an optional projection for a short-lived suffix must not displace the original completion opportunity. This is not a 6M request-budget claim."
+    },
+    {
+      "name": "vector-allocation/manual_fuel_n24_c3_d2_a3_s43_aliases",
+      "source": "cases/graph/07/0755a1462e63cbe25d078c21f2589ad940e3e1505990c11698baf5deec7cdf5c.json",
+      "sha256_lf": "c2ef1c6ae843dc19d46617d24a6ac0452f3a8cb19bb6d5ec7f3b1d9a6f929741",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks."
+    },
+    {
+      "name": "vector-allocation/manual_fuel_n24_c2_d2_a2_s43_shuffle",
+      "source": "cases/graph/0a/0ac7259cc632d99596c1dcf77ea79cffa0b04a4bb71e3bc3c2f13c1fa50c7cf9.json",
+      "sha256_lf": "ee0824c4d0609a34e9d87987bbad6efdaad7ae0daf5b560d0e05b8579c4ac3bf",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks."
+    },
+    {
+      "name": "vector-allocation/manual_fuel_n24_c3_d2_a3_s43_shuffle",
+      "source": "cases/graph/57/577e9e3a3c699bd46a89d024549c7d26a1cd6479325ff656307dfc9f36471b5f.json",
+      "sha256_lf": "2abd6b8bb1167ab1d2e0c99c4ce443071df57ab5f7abf25f9f4233b90879e1c9",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks."
+    },
+    {
+      "name": "vector-allocation/manual_small_n24_c3_d3_a1_s107_shuffle",
+      "source": "cases/graph/66/6611a83e899ba4699af4ea69c28fa1019072e44c2d1f77e2c953180b092dc79a.json",
+      "sha256_lf": "b85f4bdabe5da3fa4adaef89830447281e0044a364d9f55a7371f7bcf8517a46",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks."
+    },
+    {
+      "name": "vector-allocation/manual_fuel_n24_c2_d2_a2_s43_aliases",
+      "source": "cases/graph/9f/9f56c95e8d8afe5fba3b94ebce934247ddaaf7a69ca2c0590d41b232110915bb.json",
+      "sha256_lf": "5b16e7326a60c6a5cece15f5fa026e43908cbee82530405ae76643bf2ab0c1bf",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks."
+    },
+    {
+      "name": "vector-allocation/manual_small_n40_c3_d3_a1_s107_shuffle",
+      "source": "cases/graph/a7/a7bbfbd7644b91388fd3fd2e564c1a222a9963e334a7e29058a7d89e8efce66a.json",
+      "sha256_lf": "21d5cccc1f2e1024e1607616c2434550f9f452cebaae55f10d3af11c1f33dbbf",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks."
+    },
+    {
+      "name": "vector-allocation/manual_small_n24_c3_d3_a1_s313_shuffle",
+      "source": "cases/graph/b2/b20ae2881aef4ef53ba778dc838c0b89e4bea51395b33ccfeed9fe650d810ac7.json",
+      "sha256_lf": "13f1c8f0962ddda09449ec53e1a17a52b9c6e1a24bec47bc1b78c6cb3b407c55",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks."
+    },
+    {
+      "name": "vector-allocation/manual_small_n24_c3_d3_a1_s43_shuffle",
+      "source": "cases/graph/f9/f9ba27b44dcb0b8ea5fac60debb7f61dabecf46200cf7bf4b8003428161bf243.json",
+      "sha256_lf": "007154b650f2b791b736356c0b3362471c25cc8f3e5ee3f79a020e9b4363a913",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks."
+    },
+    {
+      "name": "vector-allocation/manual_fuel_n24_c2_d2_a2_s43_shuffle/w4-fixed",
+      "source": "cases/graph/0a/0ac7259cc632d99596c1dcf77ea79cffa0b04a4bb71e3bc3c2f13c1fa50c7cf9.json",
+      "sha256_lf": "ee0824c4d0609a34e9d87987bbad6efdaad7ae0daf5b560d0e05b8579c4ac3bf",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "vector-allocation/manual_fuel_n24_c2_d2_a2_s43_shuffle/w4-expanded",
+      "source": "cases/graph/0a/0ac7259cc632d99596c1dcf77ea79cffa0b04a4bb71e3bc3c2f13c1fa50c7cf9.json",
+      "sha256_lf": "ee0824c4d0609a34e9d87987bbad6efdaad7ae0daf5b560d0e05b8579c4ac3bf",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "vector-allocation/manual_small_n40_c3_d3_a1_s107_shuffle/w4-fixed",
+      "source": "cases/graph/a7/a7bbfbd7644b91388fd3fd2e564c1a222a9963e334a7e29058a7d89e8efce66a.json",
+      "sha256_lf": "21d5cccc1f2e1024e1607616c2434550f9f452cebaae55f10d3af11c1f33dbbf",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "vector-allocation/manual_small_n40_c3_d3_a1_s107_shuffle/w4-expanded",
+      "source": "cases/graph/a7/a7bbfbd7644b91388fd3fd2e564c1a222a9963e334a7e29058a7d89e8efce66a.json",
+      "sha256_lf": "21d5cccc1f2e1024e1607616c2434550f9f452cebaae55f10d3af11c1f33dbbf",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks.",
+      "workers": 4,
+      "expanded_budget": true
     }
   ]
 }
