@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class CountVectorPartitionTest {
     private record Model(List<ExactLinearProgram.Constraint> rows, BigInteger[] low, BigInteger[] high,
                          BigInteger[] witness) {}
-    private record Result(BigInteger[] counts, long work, int pauses) {}
+    private record Result(BigInteger[] counts, long work, int pauses, String diagnostics) {}
 
     public static void main(String[] args) throws Exception {
         int solved = 0;
@@ -33,13 +33,18 @@ public final class CountVectorPartitionTest {
             var model = model(1, false);
             check(Arrays.equals(solve(model, 127, null).counts, solve(model, 127, pool).counts), "Worker handoff changed the candidate");
         } finally { pool.shutdownNow(); }
+        residualMatching();
         boundaries();
         System.out.println("Vector partition: 12 whole/sliced pairs, 12 permutations, worker handoff and scope/limit controls; solved=" + solved);
     }
 
     private static Model model(int seed, boolean shifted) {
-        var random = new Random(920137L + seed);
         int groups = 6 + seed % 4, bins = 2 + seed % 2, dimensions = 2 + seed % 2;
+        return model(seed, shifted, groups, bins, dimensions, 31);
+    }
+
+    private static Model model(int seed, boolean shifted, int groups, int bins, int dimensions, int weights) {
+        var random = new Random(920137L + seed);
         int n = groups * bins;
         var low = new BigInteger[n]; var high = new BigInteger[n]; var witness = new BigInteger[n];
         var capacity = new int[groups]; var rows = new ArrayList<ExactLinearProgram.Constraint>();
@@ -59,7 +64,7 @@ public final class CountVectorPartitionTest {
         }
         // Two or three independent weight vectors shared by all destinations.
         for (int d = 0; d < dimensions; d++) {
-            int[] weight = new int[groups]; for (int g = 0; g < groups; g++) weight[g] = 1 + random.nextInt(31);
+            int[] weight = new int[groups]; for (int g = 0; g < groups; g++) weight[g] = 1 + random.nextInt(weights);
             for (int b = 0; b < bins; b++) {
                 var terms = new TreeMap<Integer, BigInteger>();
                 for (int g = 0; g < groups; g++) terms.put(g * bins + b, BigInteger.valueOf(-weight[g]));
@@ -67,6 +72,43 @@ public final class CountVectorPartitionTest {
             }
         }
         return new Model(rows, low, high, witness);
+    }
+
+    private static void residualMatching() throws Exception {
+        for (int seed : new int[] { 0, 1, 6, 32 }) {
+            var model = model(seed, seed == 6, 18 + seed % 7, 3, 2, 997);
+            check(valid(model, model.witness), "Residual constructive oracle");
+            var whole = solve(model, 262144, null);
+            var sliced = solve(model, seed == 0 ? 1 : 113, null);
+            check(whole.counts != null && sliced.counts != null, "Residual decomposition lost a known witness: " + seed);
+            check(whole.diagnostics.contains("count_match_admission"), "Residual domain not reconsidered");
+            check(whole.diagnostics.contains("proven_infeasible=true"), "Partial-allocation conflict not exercised");
+            // Several chosen first bins have no completion, even though the
+            // original model is feasible. Their exact exhaustion must retry the
+            // decomposition without publishing a global negative conclusion.
+        }
+        var model = model(1, false, 19, 3, 2, 997);
+        var pool = Executors.newSingleThreadExecutor();
+        try {
+            check(Arrays.equals(solve(model, 127, null).counts, solve(model, 127, pool).counts),
+                    "Residual table was lost across workers");
+        } finally { pool.shutdownNow(); }
+        var cancel = new AtomicBoolean();
+        var budget = new PlanningBudget(0, 16_000_000, 64L << 20, cancel::get, System::nanoTime);
+        try (var search = CountVectorPartition.create(model.rows, model.low, model.high, budget, 4096)) {
+            check(search != null, "Residual cancellation admission");
+            while (!budget.diagnostics().contains("count_match_admission")) {
+                if (!search.step()) continue;
+                check(search.paused(), "Residual table not reached before cancellation"); search.resume(4096);
+            }
+            check(budget.reservedBytes() > 0, "Missing owned residual frontier");
+            cancel.set(true);
+            boolean stopped = false;
+            try { search.step(); } catch (CancellationException expected) { stopped = true; }
+            check(stopped, "Residual matcher ignored cancellation");
+        }
+        check(budget.reservedBytes() == 0, "Residual matcher or retained lattice leaked");
+        System.out.println("Residual matching: 4 conflicted decompositions, sliced/shifted domains, worker handoff and cancellation");
     }
 
     private static Model permute(Model model, int seed) {
@@ -102,7 +144,7 @@ public final class CountVectorPartitionTest {
             check(!search.matches(model.rows, model.low, changed), "Foreign domains reused");
         }
         check(budget.reservedBytes() == 0, "Leaked vector/affine memory");
-        return new Result(counts, budget.nodes(), pauses);
+        return new Result(counts, budget.nodes(), pauses, budget.diagnostics());
     }
 
     private static void boundaries() throws Exception {

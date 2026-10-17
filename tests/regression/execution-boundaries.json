@@ -2931,6 +2931,218 @@
       "evidence": "1e4ec568 exhausts the same 40M request. Coupled vector allocation composes retained affine/kernel searches; the resulting original recipe plan independently passes funded-prefix, target and seed checks.",
       "workers": 4,
       "expanded_budget": true
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a3_s107_aliases",
+      "source": "cases/graph/03/0332f9ca981e64384e1af5ab32f2c4faa5536580e8d41a25ded4fc7f03fd4925.json",
+      "sha256_lf": "2ea41a0c86323cc248b131db7805cb9ab1d632e347f5168b41e3a98eb33f5cf2",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a3_s107_aliases/w4-fixed",
+      "source": "cases/graph/03/0332f9ca981e64384e1af5ab32f2c4faa5536580e8d41a25ded4fc7f03fd4925.json",
+      "sha256_lf": "2ea41a0c86323cc248b131db7805cb9ab1d632e347f5168b41e3a98eb33f5cf2",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a3_s107_aliases/w4-expanded",
+      "source": "cases/graph/03/0332f9ca981e64384e1af5ab32f2c4faa5536580e8d41a25ded4fc7f03fd4925.json",
+      "sha256_lf": "2ea41a0c86323cc248b131db7805cb9ab1d632e347f5168b41e3a98eb33f5cf2",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a2_s43_aliases",
+      "source": "cases/graph/15/15ed54a891f38156048f1c3575826d330747aa5ffcf13eddb5278c2070ae0e30.json",
+      "sha256_lf": "a9b751148e482da09c90e54e9e2848c61c9ce235bf6fadf34d5b1868c075b93b",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a1_s107_aliases",
+      "source": "cases/graph/1c/1cf8cb80ecba065a4d4817a552a7dcce9c12158a8a3b4c599e2e3fd5ea972b15.json",
+      "sha256_lf": "56aaeca5a56674904210bc04a3e8cca0bc7554308515e145cf7b82809a8cac99",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a2_s313_shuffle",
+      "source": "cases/graph/2f/2f5a15440dd295a655f5ca4226d46f50f299e01318e952966c0b5a35575f7f5b.json",
+      "sha256_lf": "01ff278960e19866379ccb1bc149fa1111fb7c7833a01e24aeebc7e778037c5b",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a1_s107_shuffle",
+      "source": "cases/graph/47/471cafe30deb1ea3818b095be948a241fae43190e82874cfc4fd8f52f8c219a3.json",
+      "sha256_lf": "21f5f5b7d5546b2aae4fc4f4d63cb61bc057738d309a998f606daad56fd857b5",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a1_s107_shuffle/w4-fixed",
+      "source": "cases/graph/47/471cafe30deb1ea3818b095be948a241fae43190e82874cfc4fd8f52f8c219a3.json",
+      "sha256_lf": "21f5f5b7d5546b2aae4fc4f4d63cb61bc057738d309a998f606daad56fd857b5",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a1_s107_shuffle/w4-expanded",
+      "source": "cases/graph/47/471cafe30deb1ea3818b095be948a241fae43190e82874cfc4fd8f52f8c219a3.json",
+      "sha256_lf": "21f5f5b7d5546b2aae4fc4f4d63cb61bc057738d309a998f606daad56fd857b5",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts.",
+      "workers": 4,
+      "expanded_budget": true
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a3_s107_shuffle",
+      "source": "cases/graph/8e/8ee04bec471096adb15e50637117cb9599fd72fb8acbe393815a328d3ff29b78.json",
+      "sha256_lf": "176832e2a35f66af504ddd6ea52393161833874bb1b3fad30df7dede5d166d02",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a2_s43_shuffle",
+      "source": "cases/graph/a9/a936cbac99e92ecb5b608590f74010865b663b59a83f833576e3b4f949a423bf.json",
+      "sha256_lf": "e5d5c7692bc37ea77c8c9468e9793d68422884e48f1bb93cee6e89b358b56d99",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a1_s43_aliases",
+      "source": "cases/graph/d3/d39e3ac309d415f43d7f8c9f97439e54984f4aca51eadae3e5b59810ac25393d.json",
+      "sha256_lf": "728c604702504df30b1a395ca85418002aa814b9579122f8097170d65c0e83fe",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a1_s43_shuffle",
+      "source": "cases/graph/f4/f4a85eacdfe1661f2f65a5292b38ef2e1899c292b3c85cb512e2d9b290a6c89b.json",
+      "sha256_lf": "30833d6c259ef5140854dd1d6c2f1283da53587618ff3fb78f6c4517375710b0",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_fuel_n24_c3_d2_a1_s313_shuffle",
+      "source": "cases/graph/f9/f9e368d7a3b7172dd4aef457ccc8ddd200b2c00804dba9f26a9bf01d87d52400.json",
+      "sha256_lf": "388ef62877050482156eda03332ed38bd1b26d22e9bbf0351e0c4e0a6dd983f7",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "expected": "SAT",
+      "evidence": "358786c7 exhausts the same 40M request. Affine allocation with residual finite-domain matching produces an independently validated original-recipe plan. Exhausted partial allocations remain local conflicts."
+    },
+    {
+      "name": "residual-matching/manual_small_n24_c3_d3_a1_s313_shuffle/work-2000000",
+      "source": "cases/graph/b2/b20ae2881aef4ef53ba778dc838c0b89e4bea51395b33ccfeed9fe650d810ac7.json",
+      "sha256_lf": "13f1c8f0962ddda09449ec53e1a17a52b9c6e1a24bec47bc1b78c6cb3b407c55",
+      "orders": [
+        0
+      ],
+      "work": 2000000,
+      "expected": "SAT",
+      "evidence": "Short-budget positive boundary; original primitive prefixes, target and seeds independently verified."
+    },
+    {
+      "name": "residual-matching/manual_small_n24_c3_d3_a1_s313_shuffle/work-4000000",
+      "source": "cases/graph/b2/b20ae2881aef4ef53ba778dc838c0b89e4bea51395b33ccfeed9fe650d810ac7.json",
+      "sha256_lf": "13f1c8f0962ddda09449ec53e1a17a52b9c6e1a24bec47bc1b78c6cb3b407c55",
+      "orders": [
+        0
+      ],
+      "work": 4000000,
+      "expected": "SAT",
+      "evidence": "Short-budget positive boundary; original primitive prefixes, target and seeds independently verified."
+    },
+    {
+      "name": "residual-matching/manual_small_n24_c3_d3_a1_s43_shuffle/work-2000000",
+      "source": "cases/graph/f9/f9ba27b44dcb0b8ea5fac60debb7f61dabecf46200cf7bf4b8003428161bf243.json",
+      "sha256_lf": "007154b650f2b791b736356c0b3362471c25cc8f3e5ee3f79a020e9b4363a913",
+      "orders": [
+        0
+      ],
+      "work": 2000000,
+      "expected": "SAT",
+      "evidence": "Short-budget positive boundary; original primitive prefixes, target and seeds independently verified."
+    },
+    {
+      "name": "residual-matching/manual_small_n24_c3_d3_a1_s43_shuffle/work-4000000",
+      "source": "cases/graph/f9/f9ba27b44dcb0b8ea5fac60debb7f61dabecf46200cf7bf4b8003428161bf243.json",
+      "sha256_lf": "007154b650f2b791b736356c0b3362471c25cc8f3e5ee3f79a020e9b4363a913",
+      "orders": [
+        0
+      ],
+      "work": 4000000,
+      "expected": "SAT",
+      "evidence": "Short-budget positive boundary; original primitive prefixes, target and seeds independently verified."
     }
   ]
 }
