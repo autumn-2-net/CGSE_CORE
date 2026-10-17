@@ -17,10 +17,10 @@ import java.util.function.ToIntBiFunction;
 final class StateEntityMatching<K> implements AutoCloseable {
     /** Hall deficit in this one-firing inventory, never a future-supply bound. */
     record Deficit(List<Integer> slots, BigInteger required, BigInteger available) {}
-    /** Exact whole-key allocation failed although splittable flow can fit.
-     * All competing slots are retained: the last blocked slot alone does not
-     * identify which manufactured entity could repair this firing. */
-    record Fragmentation(List<Integer> slots) {}
+    /** Whole-key allocation failed although splittable flow can fit. A
+     * positive threshold carries a checked cohort subset; otherwise all
+     * competing slots are retained after exhaustive allocation failure. */
+    record Fragmentation(List<Integer> slots, long threshold, int available) {}
     private final PlanningBudget budget;
     private final List<StateEntityAllocation.Demand> demands;
     private final List<StateEntityAllocation.Supply<K>> supplies;
@@ -37,6 +37,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
     private boolean partialEligibility, relaxationTried, relaxing, failedFlow;
     private boolean packingTried, wholeKeyFailure;
     private StateEntityPacking<K> packing;
+    private StateEntityCohorts<K> cohorts;
 
     static <K> StateEntityMatching<K> create(List<StateEntityAllocation.Demand> demands,
             List<StateEntityAllocation.Supply<K>> supplies,
@@ -113,6 +114,13 @@ final class StateEntityMatching<K> implements AutoCloseable {
         budget.checkpoint();
         if (done) return true;
         budget.check();
+        if (cohorts != null) {
+            if (!cohorts.step()) return false;
+            if (!cohorts.possible()) {
+                failedSlot = cohorts.failedSlot(); wholeKeyFailure = done = true;
+            } else { cohorts.close(); cohorts = null; }
+            return done;
+        }
         if (packing != null) {
             if (!packing.step()) return false;
             boolean possible = packing.possible(); packing.close(); packing = null;
@@ -196,6 +204,10 @@ final class StateEntityMatching<K> implements AutoCloseable {
     private boolean startPacking() {
         if (packingTried) return false;
         packingTried = true;
+        if (partialEligibility) {
+            cohorts = StateEntityCohorts.create(demands, fixed, supplies, allowed, budget);
+            if (cohorts != null) return true;
+        }
         packing = StateEntityPacking.create(demands, fixed, supplies, budget);
         return packing != null;
     }
@@ -255,10 +267,15 @@ final class StateEntityMatching<K> implements AutoCloseable {
     /** Request-local recovery evidence, not an entity shortage or a global
      * count bound. Pending/cancelled searches and closed storage export none. */
     Fragmentation fragmentation() {
-        if (!done || feasible || !wholeKeyFailure || memory == 0 || demands.size() > 32) return null;
+        if (!done || feasible || !wholeKeyFailure || memory == 0) return null;
+        if (cohorts != null) {
+            var deficit = cohorts.deficit();
+            if (deficit != null) return new Fragmentation(deficit.slots(), deficit.threshold(), deficit.available());
+        }
+        if (demands.size() > 32) return null;
         var slots = new ArrayList<Integer>();
         for (var demand : demands) { budget.check(); slots.add(demand.slot()); }
-        return new Fragmentation(List.copyOf(slots));
+        return new Fragmentation(List.copyOf(slots), 0, 0);
     }
 
     /** Failed exact or relaxed residual flow exposes a deficient set.
@@ -286,6 +303,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
 
     @Override public void close() {
         if (packing != null) packing.close(); packing = null;
+        if (cohorts != null) cohorts.close(); cohorts = null;
         demands.clear(); supplies.clear(); result.clear(); Arrays.fill(remaining, null);
         budget.release(memory); memory = 0; done = true;
     }

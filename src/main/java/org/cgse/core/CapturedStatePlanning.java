@@ -808,15 +808,17 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
      * rather than arbitrarily replacing the last failed slot's tool. An entity
      * contributes once to this union even if several rules accept it. These
      * are restricted proposal hints, not canonical cuts or negative proofs.
-     * Whole-key failure deliberately retains mixed competitors too: adding an
-     * entity for them can release an intact cohort for another slot. */
+     * A checked cohort subset excludes unrelated slots. Otherwise retain all
+     * mixed competitors: replacing their entities can release an intact cohort. */
     private boolean refineEntityUnion(StateEntityMatching<K> failed, GraphRecipe<Key<K>> blocked) {
         var deficit = failed.deficit();
         if (deficit != null) return refineEntityUnion(deficit.slots(), deficit.required(), false,
                 "; matching_required=" + deficit.required() + "; matching_available=" + deficit.available(), blocked);
         var fragmentation = failed.fragmentation();
         return fragmentation != null && refineEntityUnion(fragmentation.slots(), BigInteger.ZERO, true,
-                "; failure=whole_key_fragmentation", blocked);
+                "; failure=whole_key_fragmentation" + (fragmentation.threshold() > 0 ?
+                        "; cohort_size=" + fragmentation.threshold() + "; matching_slots=" + fragmentation.slots().size() +
+                        "; matching_cohorts=" + fragmentation.available() : ""), blocked);
     }
 
     private boolean refineEntityUnion(List<Integer> slots, BigInteger minimum, boolean fragmented,
@@ -826,6 +828,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         for (int slot : slots) {
             budget.check(); ids.add(blocked.slots().get(slot).key().family());
         }
+        // A checked fragmented subset can contain several slots of just one
+        // family. Its lifetime is not the obstruction: directly reuse that
+        // family's entity coordinate instead of first shrinking capacities.
+        if (fragmented && ids.size() == 1) return refineEntityCount(families.get(ids.first()));
         if (ids.size() < 2) return false;
         var group = List.copyOf(ids);
         boolean existing = entityUnionFloors.containsKey(group);

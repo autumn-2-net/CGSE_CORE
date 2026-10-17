@@ -78,8 +78,21 @@ public final class StateEntityMatchingTest {
                 check((fragmentation != null) == relaxed, "Lost whole-key failure or confused it with a Hall deficit");
                 if (fragmentation != null) {
                     var scope = new java.util.HashSet<>(fragmentation.slots());
-                    check(scope.size() == need.length && scope.size() == fragmentation.slots().size(), "Lost competing slots");
-                    for (int d = 0; d < need.length; d++) check(scope.contains(d), "Lost original slot identity");
+                    check(!scope.isEmpty() && scope.size() == fragmentation.slots().size(), "Invalid fragmentation scope");
+                    if (fragmentation.threshold() == 0) {
+                        check(scope.size() == need.length, "Lost competing slots without a subset certificate");
+                        for (int d = 0; d < need.length; d++) check(scope.contains(d), "Lost original slot identity");
+                    } else {
+                        long available = 0;
+                        for (int d : scope) check(d >= 0 && d < need.length && (mixed & (1 << d)) == 0 &&
+                                need[d] >= fragmentation.threshold(), "Invented a whole-slot cohort");
+                        for (int s = 0; s < stock.length; s++) {
+                            boolean neighbor = false;
+                            for (int d : scope) neighbor |= edge(edges, stock.length, d, s);
+                            if (neighbor) available += stock[s] / fragmentation.threshold();
+                        }
+                        check(available < scope.size() && available == fragmentation.available(), "Invalid original-inventory cohort certificate");
+                    }
                 }
                 if (deficit != null) {
                     // Reconstruct the certificate using only original input
