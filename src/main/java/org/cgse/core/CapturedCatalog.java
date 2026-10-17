@@ -77,6 +77,12 @@ public final class CapturedCatalog<K> {
         return new StateSupportCacheMetrics(values.hits(), values.misses(), values.entries(), values.bytes(), values.maximumBytes());
     }
 
+    /** Logical retained auxiliary caches, independent of a request's workspace reservation. */
+    public long retainedCacheBytes() {
+        return stateSupportMetrics().estimatedBytes() + producerIndexMetrics().estimatedBytes() +
+                stateProducerMetrics().bytes() + stateSourceMetrics().bytes();
+    }
+
     /** Structural containers only; stock, coverage and solver results are never retained here. */
     public record ProducerCacheMetrics(long hits, long misses, int keys, long references,
                                        long estimatedBytes, long maximumBytes) {}

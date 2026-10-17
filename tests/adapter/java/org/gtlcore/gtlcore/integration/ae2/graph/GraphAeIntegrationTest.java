@@ -83,6 +83,7 @@ public final class GraphAeIntegrationTest {
         encoded.setTag(patternTag);
         IPatternDetails actualPattern = new AEProcessingPattern(AEItemKey.of(encoded));
         GraphFallbackIntegrationTest.run(input, output, actualPattern);
+        GraphBudgetConfigTest.run(input, output);
         GraphPlanReuseIntegrationTest.run(input, output);
         wideQuantity(input, output, actualPattern);
         var normalize = GtlPatternCatalog.class.getDeclaredMethod("normalize", IPatternDetails.class, String.class, KeyCounter.class, Level.class);

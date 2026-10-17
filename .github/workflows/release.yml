@@ -1,0 +1,96 @@
+name: Release CGSE
+run-name: Release CGSE from ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cgse-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Read repository version and validate unused tag
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == refs/heads/main ]] || { echo 'Release from main only'; exit 1; }
+          RELEASE_VERSION=$(sed -n 's/^version=//p' gradle/cgse.properties | tr -d '\r')
+          [[ "$RELEASE_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo 'Invalid stable version'; exit 1; }
+          if git show-ref --verify --quiet "refs/tags/v$RELEASE_VERSION"; then
+            echo 'Version already tagged; update gradle/cgse.properties before releasing'
+            exit 1
+          fi
+          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> "$GITHUB_ENV"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build and run portable regressions
+        run: bash gradlew --no-daemon --max-workers=4 --continue clean build
+      - name: Verify and prepare release assets
+        run: |
+          python3 -m unittest discover -s tests/tools
+          python3 tools/release/check_abi.py --jar "build/libs/cgse-core-$RELEASE_VERSION.jar"
+          python3 tools/release/verify_artifacts.py --version "$RELEASE_VERSION"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cgse-release
+          path: build/release/*
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      RELEASE_VERSION: ${{ needs.build.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: cgse-release
+          path: release
+      - name: Publish release from the tested commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release
+          sha256sum --check SHA256SUMS.txt
+          # Recheck the tag after building. Never overwrite a published version.
+          tags=$(gh api --paginate "repos/$GH_REPO/git/matching-refs/tags/v$RELEASE_VERSION")
+          if jq -e --arg ref "refs/tags/v$RELEASE_VERSION" 'any(.[]; .ref == $ref)' <<< "$tags"; then
+            echo 'Version was tagged while building; refusing to overwrite'
+            exit 1
+          fi
+          # Creating the ref fails atomically if another publisher claimed it.
+          gh api "repos/$GH_REPO/git/refs" -f "ref=refs/tags/v$RELEASE_VERSION" -f "sha=$GITHUB_SHA"
+          cat > "$RUNNER_TEMP/cgse-release-notes.txt" <<EOF
+          Minecraft 1.20.1 / Forge 47
+
+          玩家只需将 **cgse-$RELEASE_VERSION-forge-1.20.1.jar** 放入 mods，然后重启游戏或服务端。
+          GTLCore 需要先更新至支持独立引擎的版本（1.2.3.2-fix7 起）。
+          cgse-core-*.jar 是开发用 Java 库，源码包也是开发资料，均不要放入 mods。
+          EOF
+          gh release create "v$RELEASE_VERSION" ./* --verify-tag --draft \
+            --title "CGSE $RELEASE_VERSION" --notes-file "$RUNNER_TEMP/cgse-release-notes.txt" --generate-notes
+          gh release edit "v$RELEASE_VERSION" --draft=false

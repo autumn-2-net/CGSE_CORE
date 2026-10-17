@@ -277,9 +277,11 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 countSearch = parkedCounts;
                 parkedCounts = null;
                 if (phase == 19) {
-                    // Extra visits during an active view earn at most a quarter
-                    // of that view's charged work. Repeated full grants here
-                    // starved stock/allocation witnesses when counts plateaued.
+                    // Extra visits earn at most half of the active view's work:
+                    // the stock view retains two thirds of the shared turns,
+                    // while full-model proof continuations receive enough work
+                    // to finish instead of being stranded behind restricted
+                    // repairs. Repeated unrestricted grants still starve views.
                     stockCountTurn = true;
                     stockCountStarted = budget.searchWork();
                     countSearch.resumeBounded(stockCountCredit());
@@ -1239,7 +1241,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     private long frontierWork() { return budget.searchWork() - pausedSearchWork; }
 
     private long stockCountCredit() {
-        return stockView == null ? 0 : Math.max(0, stockView.searchWork() / 4 - stockCountWork);
+        return stockView == null ? 0 : Math.max(0, stockView.searchWork() / 2 - stockCountWork);
     }
 
     private boolean optionalQuantityTurn() {

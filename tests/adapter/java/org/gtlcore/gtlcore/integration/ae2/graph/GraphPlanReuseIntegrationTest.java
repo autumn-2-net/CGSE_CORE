@@ -39,7 +39,7 @@ final class GraphPlanReuseIntegrationTest {
         try {
             ConfigHolder.INSTANCE = new ConfigHolder();
             ConfigHolder.INSTANCE.diagnostics.ae2GraphDiagnosticLogging = false;
-            ConfigHolder.INSTANCE.performance.ae2GraphFallback = false;
+            ConfigHolder.INSTANCE.ae.ae2GraphFallback = false;
             var firstBinding = pattern(input, output);
             var currentBinding = pattern(input, output);
             check(firstBinding != currentBinding && PatternFingerprint.of(firstBinding).equals(PatternFingerprint.of(currentBinding)),

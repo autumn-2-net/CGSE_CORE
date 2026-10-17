@@ -9,6 +9,18 @@
     {
       "source": "tools/view/src/main/java/org/cgse/view",
       "target": "src/main/java/org/cgse/view"
+    },
+    {
+      "source": "gradle/engine.gradle",
+      "target": "cgse-engine/engine.gradle"
+    },
+    {
+      "source": "gradle/cgse.properties",
+      "target": "cgse-engine/cgse.properties"
+    },
+    {
+      "source": "NOTICE",
+      "target": "cgse-engine/NOTICE"
     }
   ],
   "bootstrap": {},

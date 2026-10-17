@@ -74,6 +74,24 @@ class SyncTest(unittest.TestCase):
         self.assertEqual(1, len(problems))
         self.assertNotIn('src/main/java/core.java', updates)
 
+    def test_single_file_mapping_survives_history_and_guards_local_changes(self):
+        self.manifest['roots'].append(dict(source='product/engine.properties', target='cgse-engine/cgse.properties'))
+        self.put(self.repo / 'product/engine.properties', b'version=0.1.0\n')
+        self.put(self.repo / sync.MANIFEST, json.dumps(self.manifest).encode())
+        self.init_git(self.repo)
+        first = self.commit_source('engine packaging baseline')
+        state = self.initial()
+        reconstructed = sync.snapshot(first)
+        self.assertEqual(state, reconstructed)
+        self.put(self.repo / 'product/engine.properties', b'version=0.1.1\n')
+        updates, problems, _ = sync.plan(self.host, self.manifest, reconstructed)
+        self.assertEqual([], problems)
+        self.assertEqual(b'version=0.1.1\n', updates['cgse-engine/cgse.properties'])
+        self.put(self.host / 'cgse-engine/cgse.properties', b'version=local\n')
+        updates, problems, _ = sync.plan(self.host, self.manifest, reconstructed)
+        self.assertTrue(any('cgse-engine/cgse.properties' in problem for problem in problems))
+        self.assertNotIn('cgse-engine/cgse.properties', updates)
+
     def test_unknown_first_install_and_local_deletion_are_rejected(self):
         self.put(self.host / 'src/main/java/core.java', b'unknown\n')
         self.assertTrue(sync.plan(self.host, self.manifest, {})[1])

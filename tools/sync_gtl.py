@@ -101,7 +101,7 @@ def snapshot(commit):
     for mapping in manifest['roots']:
         prefix = mapping['source'].rstrip('/') + '/'
         for source, value in values.items():
-            if not source.startswith(prefix):
+            if source != mapping['source'] and not source.startswith(prefix):
                 continue
             rel = mapped_path(mapping, source)
             safe(ROOT, rel)
@@ -116,7 +116,8 @@ def plan(target, manifest, state):
     old_files = state.get('files', {})
     for mapping in manifest['roots']:
         source_root = safe(ROOT, mapping['source'])
-        for source in sorted(source_root.rglob('*')):
+        sources = [source_root] if source_root.is_file() else sorted(source_root.rglob('*'))
+        for source in sources:
             if not source.is_file():
                 continue
             safe(ROOT, source.relative_to(ROOT))

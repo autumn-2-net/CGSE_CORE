@@ -322,6 +322,8 @@ public final class GraphPacketProbe {
                 check(ga.gtlcore$getGraphSeed() == gb.gtlcore$getGraphSeed(), "Seed changed");
                 check(ga.gtlcore$isMissingGraphSeed() == gb.gtlcore$isMissingGraphSeed(), "Missing seed changed");
                 check(ga.gtlcore$getCraftTimes() == gb.gtlcore$getCraftTimes(), "Runs changed");
+                check(ga.gtlcore$getGroupedToolStates() == gb.gtlcore$getGroupedToolStates(), "Grouped tool states changed");
+                check(ga.gtlcore$getMissingKeys().equals(gb.gtlcore$getMissingKeys()), "Exact missing keys changed");
             }
             var originalTree = ((ICraftingPlanSummary) source).getJob();
             var copiedTree = ((ICraftingPlanSummary) copy).getJob();

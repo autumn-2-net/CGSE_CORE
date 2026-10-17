@@ -1,61 +1,14 @@
-import java.security.MessageDigest
-
 plugins {
     id 'java-library'
 }
 
-group = 'org.cgse'
-version = '0.1.0-SNAPSHOT'
-
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(17)
-    withSourcesJar()
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.release = 17
-    options.encoding = 'UTF-8'
-}
-
-// Archive builds must not accidentally inherit a surrounding checkout's HEAD.
-def readGit = { List<String> arguments ->
-    try {
-        def output = providers.exec {
-            workingDir rootDir
-            commandLine(['git'] + arguments)
-            ignoreExitValue = true
-        }
-        return output.result.get().exitValue == 0 ? output.standardOutput.asText.get().trim() : null
-    } catch (Exception ignored) {
-        return null
-    }
-}
-def identityPaths = ['src/main', 'tools/view/src/main', 'build.gradle', 'settings.gradle', 'LICENSE', 'NOTICE']
-def buildIdentity = providers.provider {
-    def top = readGit(['rev-parse', '--show-toplevel'])
-    def ownCheckout = top != null && file(top).canonicalFile == rootDir.canonicalFile
-    def revision = ownCheckout ? readGit(['rev-parse', 'HEAD']) : null
-    def changes = ownCheckout ? readGit(['status', '--porcelain', '--untracked-files=all', '--'] + identityPaths) : null
-    def digest = MessageDigest.getInstance('SHA-256')
-    def sources = files(identityPaths.collect { path -> file(path).isDirectory() ? fileTree(path) : file(path) })
-    sources.files.findAll { it.isFile() }.sort { relativePath(it) }.each { source ->
-        digest.update(relativePath(source).replace('\\', '/').getBytes('UTF-8'))
-        digest.update((byte) 0)
-        digest.update(source.getText('UTF-8').replace('\r\n', '\n').getBytes('UTF-8'))
-        digest.update((byte) 0)
-    }
-    ['Implementation-Revision': revision ?: 'unknown',
-     'Implementation-Source-Dirty': changes == null ? 'unknown' : Boolean.toString(!changes.isEmpty()),
-     'Implementation-Source-SHA256': digest.digest().encodeHex().toString()]
-}
-
-tasks.withType(Jar).configureEach {
-    from(rootProject.files('LICENSE', 'NOTICE')) { into 'META-INF' }
-    manifest.attributes('Bundle-License': 'https://mozilla.org/MPL/2.0/',
-            'Implementation-URL': 'https://github.com/autumn-2-net/CGSE_CORE')
-    inputs.property('cgseBuildIdentity', buildIdentity)
-    doFirst { manifest.attributes(buildIdentity.get()) }
-}
+ext.cgseConfigFile = file('gradle/cgse.properties')
+ext.cgseIdentityPaths = ['src/main', 'tools/view/src/main', 'build.gradle', 'settings.gradle',
+                         'gradle/engine.gradle', 'gradle/forge.gradle', 'gradle/cgse.properties',
+                         'packaging/forge', 'LICENSE', 'NOTICE']
+ext.cgseLicenseFiles = files('LICENSE', 'NOTICE')
+apply from: 'gradle/engine.gradle'
+apply from: 'gradle/forge.gradle'
 
 sourceSets {
     // Standalone core checks also use the portable replay/fixture helpers.
@@ -120,8 +73,3 @@ tasks.register('viewJar', Jar) {
 
 check.dependsOn coreRegression, viewRegression
 assemble.dependsOn viewJar
-
-jar {
-    manifest.attributes('Implementation-Title': 'Compiled Graph Solving Engine',
-            'Implementation-Version': project.version)
-}

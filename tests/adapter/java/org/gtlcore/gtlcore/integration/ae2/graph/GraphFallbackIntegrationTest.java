@@ -43,7 +43,7 @@ public final class GraphFallbackIntegrationTest {
             field(work,"compiler",compiler);field(work,"prepared",new CapturedPatternCatalog.Prepared(compiler,Map.of("binding",binding),null));
             field(work,"planning",new RequestPlanningWork<>(compiler,target,7L,stock,Set.of(),null,true,false,
                     CalculationStrategy.REPORT_MISSING_ITEMS.toString(),CatalystPolicy.MINIMAL,
-                    ConfigHolder.INSTANCE.performance.ae2GraphFallback,bounded,budget,request::isCancelled,report->{}));
+                    ConfigHolder.INSTANCE.ae.ae2GraphFallback,bounded,budget,request::isCancelled,report->{}));
         }
         field(work,"selected",new GraphPlan<>(target,7,true,new PlanStep.Sequence(List.of()),Map.of(),Map.of(),Map.of(),Map.of(),GraphPlan.Result.UNKNOWN,0,0));
         if(cancelled)request.cancel(false);
@@ -60,7 +60,7 @@ public final class GraphFallbackIntegrationTest {
         var prior=ConfigHolder.INSTANCE;
         try {
             ConfigHolder.INSTANCE=new ConfigHolder();
-            check(ConfigHolder.INSTANCE.performance.ae2GraphFallback,"fallback not enabled by default");
+            check(ConfigHolder.INSTANCE.ae.ae2GraphFallback,"fallback not enabled by default");
             for(var limit:List.of(PlanningBudget.Limit.SEARCH_LIMIT,PlanningBudget.Limit.TIMEOUT,PlanningBudget.Limit.MEMORY_LIMIT,PlanningBudget.Limit.GRAPH_LIMIT)) {
                 var result=limited(work(input,target,binding,false,false,true),limit);
                 check(result.fallback()&&result.simulation()&&result.missingItems().get(input)==1,"wrong routed fallback");
@@ -69,9 +69,9 @@ public final class GraphFallbackIntegrationTest {
             Object unknown=work(input,target,binding,true,false,true);
             check(finish(unknown),"UNKNOWN fallback did not finish");
             check(((AeGraphPlan)((PlanningScheduler.Work<?>)unknown).result()).fallback(),"bounded alternatives lost marker");
-            ConfigHolder.INSTANCE.performance.ae2GraphFallback=false;
+            ConfigHolder.INSTANCE.ae.ae2GraphFallback=false;
             reject(work(input,target,binding,false,false,true),PlanningBudget.Limit.SEARCH_LIMIT);
-            ConfigHolder.INSTANCE.performance.ae2GraphFallback=true;
+            ConfigHolder.INSTANCE.ae.ae2GraphFallback=true;
             reject(work(input,target,binding,false,true,true),PlanningBudget.Limit.SEARCH_LIMIT);
             reject(work(input,target,binding,false,false,false),PlanningBudget.Limit.MEMORY_LIMIT);
             reject(work(input,target,binding,false,false,true),PlanningBudget.Limit.QUEUE_LIMIT);

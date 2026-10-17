@@ -77,6 +77,7 @@ final class GraphAeAdapterTest {
         check(adapter.resolve(wrongSlot) == null && adapter.bindingFailure().equals("INPUT_SLOT_CHANGED"),
                 "slot mismatch is distinguished from fingerprint drift");
         check(adapter.capacity(recipe, 100) == 5, "actual adapter respects provider operation capacity");
+        check(recipe.inputs().equals(provider.preflightInputs), "preflight sees the exact selected input states");
         provider.expanded = false;
         check(adapter.capacity(recipe, 100) == 1, "disabled provider keeps one-pattern semantics");
         provider.expanded = true;
@@ -87,8 +88,15 @@ final class GraphAeAdapterTest {
         check(consumed[0] == 1000.0 / water.getAmountPerOperation(), "GTL expanded energy rule charges one pattern, using AE's fluid operation unit");
         check(service.requested, "expected output advertised before push");
         provider.toolsPresent = false;
-        check(adapter.capacity(recipe, 100) == 0 && adapter.reason().equals("MISSING_TOOL"), "missing-tool preflight blocks before handoff");
+        check(adapter.capacity(recipe, 100) == 0 && adapter.reason().equals("PROVIDER_REJECTED"), "generic preflight failure is not mislabeled as a missing shared tool");
         check(provider.calls == 1, "missing tools cannot reach true/refund path");
+        check(GraphProviderRequirements.missing(pattern, List.of(provider)) == null, "generic rejection is not a missing-equipment warning");
+        provider.missingTool = true;
+        check(adapter.capacity(recipe, 100) == 0 && adapter.reason().equals("MISSING_TOOL"), "specific shared-tool failure remains visible");
+        check(GraphProviderRequirements.missing(pattern, List.of(provider)) != null, "confirmation explains an actual missing tool");
+        var alternative = new TestProvider(pattern);
+        check(GraphProviderRequirements.missing(pattern, List.of(provider, alternative)) == null, "an equipped alternative provider clears the warning");
+        provider.missingTool = false;
         provider.toolsPresent = true;
         energyLimit[0] = 0;
         check(adapter.capacity(recipe, 100) == 0 && adapter.reason().equals("WAIT_ENERGY"), "insufficient energy blocks");
@@ -169,7 +177,8 @@ final class GraphAeAdapterTest {
     private static final class TestProvider implements ICraftingProvider, IAutoExpandSettings, IPatternProviderAutoExpand, GraphDispatchPreflight {
 
         final IPatternDetails pattern;
-        boolean toolsPresent = true, expanded = true, reject, mutateOnReject;
+        boolean toolsPresent = true, expanded = true, reject, mutateOnReject, missingTool;
+        Map<AEKey, Long> preflightInputs;
         int calls;
         long room = Long.MAX_VALUE;
         long maxOperations = 5;
@@ -200,7 +209,13 @@ final class GraphAeAdapterTest {
 
         @Override
         public boolean gtlcore$canProduceGraphPattern(IPatternDetails pattern) {
+            preflightInputs = GraphDispatchContext.selectedInputs();
             return toolsPresent;
+        }
+
+        @Override
+        public String gtlcore$graphBlockReason(IPatternDetails pattern) {
+            return missingTool ? "MISSING_TOOL" : "PROVIDER_REJECTED";
         }
 
         @Override

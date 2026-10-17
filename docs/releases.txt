@@ -1,0 +1,47 @@
+CGSE releases
+
+The first independent release is 0.1.0. gradle/cgse.properties records the
+default version and the supported Java API / snapshot compatibility line.
+0.1.x releases must preserve public binary signatures and persisted snapshots.
+Incompatible changes require a new compatibility line and an integration update.
+The release gate compares public/protected binary signatures with api/0.1.txt,
+including abstract-method obligations. This catches linkage breaks; it does not
+replace semantic regression and old-order replay checks. Keep the baseline when
+adding compatible methods; deliberately changing it requires a compatibility review.
+
+Build: ./gradlew assemble
+Override the version: ./gradlew -PcgseVersion=0.1.1 assemble
+Install only cgse-VERSION-forge-1.20.1.jar in mods. The cgse-core jar is a Java
+library for integrations; do not put it directly in mods.
+
+GTLCore fix7 and later compile their own copied engine project, without needing
+this checkout. Forge negotiates the single org.cgse:cgse-engine nested library.
+Each container requires [its-bundled-version,next-incompatible-line), so even
+older Forge JarJar selectors cannot choose a lower compatible version simply
+because it was found first. Remove the optional mod to use GTL's built-in engine.
+No runtime hot swap is performed. Adapter, GUI and machine changes still need
+a GTL update. A newer engine from an incompatible line is rejected at startup.
+
+The optional Forge container has no packets or registries, so it can be installed
+on a dedicated server without requiring the same optional mod on clients.
+GTL's existing client packet and order codec remain in the GTL integration.
+
+Set the release version in gradle/cgse.properties, then in GitHub Actions select
+Release CGSE, Run workflow, and main. There is no version input: the workflow
+reads the version from that selected commit and builds without an override.
+The workflow tests and builds that selected commit, validates the exact assets,
+then creates tag vVERSION and a Release containing the Forge mod, pure Java
+library, library sources and SHA256SUMS.txt. Existing tags are never replaced.
+The artifact names, tag and Release all use the same checked-in version.
+Before the next release, update gradle/cgse.properties and commit that change;
+source sync carries the same version into GTL. Never label different released
+engine implementations with the same version: equal versions may select either
+copy, and version negotiation cannot infer code freshness from a commit hash.
+The local case archive and player evidence are never included in these artifacts.
+
+When syncing the copied engine to GTL, also copy gradle/engine.gradle and
+gradle/cgse.properties to cgse-engine/, along with NOTICE. The full license stays
+at the root of the CGSE repository; it is not copied into the GTL checkout. Keep the
+engine source path src/main/java/org/cgse/core, excluded from GTL's main source
+set. The copied org.cgse.view presentation helpers stay in GTL's main jar.
+Put the upstream CGSE commit in the sync commit message, as before.

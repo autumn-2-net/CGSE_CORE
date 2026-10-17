@@ -1,0 +1,35 @@
+modLoader="lowcodefml"
+loaderVersion="[47,)"
+license="MPL-2.0"
+
+[[mods]]
+modId="cgse"
+version="${version}"
+displayName="CGSE"
+displayURL="https://github.com/autumn-2-net/CGSE_CORE"
+authors="autumn-2-net"
+description="Compiled Graph Solving Engine / 编译图求解引擎"
+# No packets or registries: the optional engine can be installed on the server alone.
+displayTest="IGNORE_ALL_VERSION"
+
+[[dependencies.cgse]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.cgse]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.20.2)"
+ordering="NONE"
+side="BOTH"
+
+# Older GTL builds place engine classes directly in their root jar.
+[[dependencies.cgse]]
+modId="gtlcore"
+mandatory=false
+versionRange="[1.2.3.2-fix7,)"
+ordering="NONE"
+side="BOTH"

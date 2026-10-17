@@ -17,6 +17,7 @@ public final class CountSessionBudgetTest {
         var owner = budget();
         try (var model = model(owner, 2)) {
             independentAccounts(model);
+            configuredRetention(model);
             exhaustedAccounts(model);
             interruptions(model);
             concurrentAccess(model);
@@ -68,6 +69,20 @@ public final class CountSessionBudgetTest {
             if (cache.cacheMetrics().entries() == 0) check(cache.cacheMetrics().estimatedBytes() == 0, "Partial publication leaked");
             cache.remember(model, List.of(conflict(model)), budget());
             check(cache.cacheMetrics().entries() == 1, "Refused preparation poisoned next request");
+        }
+    }
+
+    private static void configuredRetention(RecipeCountModel<?> model) {
+        for (boolean disabled : new boolean[]{false, true}) {
+            var b = new PlanningBudget(0, 1, 1, disabled ? 0 : 32768, 1, () -> false, System::nanoTime);
+            if (!disabled) check(b.tryCacheCharge(20000), "Could not arrange an enlarged cache account");
+            var cache = new CountSessions();
+            cache.remember(model, List.of(conflict(model)), b);
+            check(cache.cacheMetrics().entries() == (disabled ? 0 : 1),
+                    "Session proof ignored the configured retention allowance");
+            check(b.searchWork() == 0 && b.compilationWork() == 0 && b.reservedBytes() == 0,
+                    "Configured retention borrowed request work or memory");
+            if (!disabled) verified(model, cache.reuse(model, budget()));
         }
     }
 

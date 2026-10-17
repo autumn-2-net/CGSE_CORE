@@ -1,0 +1,33 @@
+import groovy.json.JsonOutput
+
+def metadata = tasks.register('generateForgeMetadata') {
+    inputs.property('version', version)
+    inputs.property('range', cgseVersionRange)
+    def output = layout.buildDirectory.dir('generated/forge-resources')
+    outputs.dir(output)
+    doLast {
+        def target = output.get().file('META-INF/jarjar/metadata.json').asFile
+        target.parentFile.mkdirs()
+        target.setText(JsonOutput.prettyPrint(JsonOutput.toJson([jars: [[
+                identifier: [group: 'org.cgse', artifact: 'cgse-engine'],
+                version: [range: cgseVersionRange, artifactVersion: version.toString()],
+                path: "META-INF/jarjar/cgse-engine-${version}.jar", isObfuscated: false
+        ]]])) + '\n', 'UTF-8')
+    }
+}
+
+tasks.register('forgeJar', Jar) {
+    group = 'build'
+    description = 'Builds the optional Forge 1.20.1 engine update mod.'
+    archiveBaseName = 'cgse'
+    archiveClassifier = 'forge-1.20.1'
+    filteringCharset = 'UTF-8'
+    from('packaging/forge') { expand(version: project.version) }
+    from(metadata)
+    from(tasks.named('jar')) {
+        into 'META-INF/jarjar'
+        rename { "cgse-engine-${project.version}.jar" }
+    }
+    manifest.attributes('Automatic-Module-Name': 'org.cgse.forge', 'FMLModType': 'MOD')
+}
+assemble.dependsOn tasks.named('forgeJar')

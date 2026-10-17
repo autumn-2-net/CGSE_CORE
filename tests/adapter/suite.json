@@ -2,6 +2,7 @@
   "schema": "cgse-test-suite-v1",
   "tests": [
     {"id": "host-contracts", "requires": "Explicit compatible GTL host checkout and Minecraft/AE classpath; use tests/adapter/cgse-adapter.init.gradle. Portable tests do not execute these host contracts."},
+    {"id": "tool-preview", "requires": "Disposable Forge server with GT/AE, remapped GTL artifact and the independent tools/tool-preview-probe/ToolPreviewProbe.java test mod (gtlsubmissionprobe). Run toolpreviewfixed; toolpreviewbaseline reproduces historical ungrouped rows. Not a portable or player-network test."},
     {"id": "live-server", "requires": "Explicit disposable Forge server, host and AEDUMP artifacts; use tests/adapter/live/run.py. Its automatically discovered test_runner.py only tests the runner's rollback behavior."}
   ]
 }

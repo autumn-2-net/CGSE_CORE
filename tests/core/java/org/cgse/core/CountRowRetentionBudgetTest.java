@@ -18,6 +18,7 @@ public final class CountRowRetentionBudgetTest {
         try (var model = RecipeCountModel.forShell(RECIPES, Map.of("out", BigInteger.ONE),
                 Map.of("ore", 11L, "dust", 17L), Set.of(), owner)) {
             independentAccounts(model);
+            configuredRetention(model);
             exhaustedAccounts(model);
             interruptions(model);
             concurrentPreparation(model);
@@ -103,6 +104,19 @@ public final class CountRowRetentionBudgetTest {
         b.check(); check(b.searchWork() == 1 && b.failureDetail().isEmpty(), "Cache cap aborted an order");
         remember(cache, model, budget());
         check(cache.cacheMetrics().entries() == 1, "Refusal poisoned a later request");
+    }
+
+    private static void configuredRetention(RecipeCountModel<?> model) {
+        for (boolean disabled : new boolean[]{false, true}) {
+            var b = new PlanningBudget(0, 1, 1, disabled ? 0 : 32768, 1, () -> false, System::nanoTime);
+            if (!disabled) check(b.tryCacheCharge(20000), "Could not arrange an enlarged cache account");
+            var cache = new CountRowTemplates(); remember(cache, model, b);
+            check(cache.cacheMetrics().entries() == (disabled ? 0 : 1),
+                    "Row derivation ignored the configured retention allowance");
+            check(b.searchWork() == 0 && b.compilationWork() == 0 && b.reservedBytes() == 0,
+                    "Configured retention borrowed request work or memory");
+            if (!disabled) check(cache.reuse(model, budget()).get(0).row().equals(consequence()), "Retained row changed");
+        }
     }
 
     private static void interruptions(RecipeCountModel<?> model) {
