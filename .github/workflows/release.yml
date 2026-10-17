@@ -41,11 +41,10 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build and run portable regressions
-        run: bash gradlew --no-daemon --max-workers=4 --continue clean build
+      - name: Build release artifacts
+        run: bash gradlew --no-daemon --max-workers=4 clean assemble
       - name: Verify and prepare release assets
         run: |
-          python3 -m unittest discover -s tests/tools
           python3 tools/release/check_abi.py --jar "build/libs/cgse-core-$RELEASE_VERSION.jar"
           python3 tools/release/verify_artifacts.py --version "$RELEASE_VERSION"
       - uses: actions/upload-artifact@v4

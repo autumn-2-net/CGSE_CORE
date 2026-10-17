@@ -29,7 +29,9 @@ GTL's existing client packet and order codec remain in the GTL integration.
 Set the release version in gradle/cgse.properties, then in GitHub Actions select
 Release CGSE, Run workflow, and main. There is no version input: the workflow
 reads the version from that selected commit and builds without an override.
-The workflow tests and builds that selected commit, validates the exact assets,
+The workflow compiles and packages that selected commit, checks binary API
+compatibility and validates the exact assets. It does not run the regression suite;
+use ./gradlew build locally when a complete portable regression run is needed. It
 then creates tag vVERSION and a Release containing the Forge mod, pure Java
 library, library sources and SHA256SUMS.txt. Existing tags are never replaced.
 The artifact names, tag and Release all use the same checked-in version.
