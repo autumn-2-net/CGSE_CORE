@@ -14,7 +14,7 @@ import java.util.List;
  * subset of this firing; success is never an exact allocation or a plan. */
 final class StateEntityCohorts<K> implements AutoCloseable {
     record Deficit(List<Integer> slots, long threshold, int available) {}
-    private enum Phase { THRESHOLD, GROUP, SUPPLIES, RESET, MATCH }
+    private enum Phase { THRESHOLD, GROUP, SUPPLIES, MATCH }
     private final List<StateEntityAllocation.Demand> demands;
     private final List<StateEntityAllocation.Supply<K>> supplies;
     private final boolean[] allowed;
@@ -59,19 +59,19 @@ final class StateEntityCohorts<K> implements AutoCloseable {
                 phase = Phase.GROUP;
             }
             case GROUP -> {
-                if (active < fixed && demands.get(active).amount() == threshold) active++;
-                else { index = root = 0; phase = Phase.SUPPLIES; }
+                if (active < fixed && demands.get(active).amount() == threshold) assigned[active++] = -1;
+                else { index = 0; phase = Phase.SUPPLIES; }
             }
             case SUPPLIES -> {
                 if (index < width) {
+                    // Descending thresholds only grow capacities and append
+                    // slots. The previous matching remains feasible: retain
+                    // used/assigned and augment only the newly active slots.
+                    // Augmenting paths may still move any earlier assignment.
                     // Clamp before narrowing, even for supplies wider than long.
                     capacity[index] = supplies.get(index).count().divide(divisor).min(BigInteger.valueOf(active)).intValueExact();
-                    used[index++] = 0;
-                } else { index = 0; phase = Phase.RESET; }
-            }
-            case RESET -> {
-                if (index < active) assigned[index++] = -1;
-                else phase = Phase.MATCH;
+                    index++;
+                } else phase = Phase.MATCH;
             }
             case MATCH -> {
                 if (root == active) phase = Phase.THRESHOLD;
