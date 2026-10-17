@@ -75,6 +75,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private int captureSource, captureOutput, captureInput, captureCandidate;
     private boolean captureStarted, captured;
     private CapturedCatalog<Key<K>>.Work planning;
+    private CapturedProposalRepair<Key<K>> proposalRepair;
     private CapturedStateExpansion<K> expansion;
     private GraphPlan<Key<K>> proposed;
     private PlanCursor cursor;
@@ -148,6 +149,14 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                     expansion.close(); expansion = null;
                     if (result == null) return stop(Reason.AUXILIARY_RESULT);
                     done = true; outcome = new Outcome(Status.VERIFIED, Reason.NONE);
+                }
+            }
+            else if (proposalRepair != null) {
+                if (proposalRepair.step()) {
+                    proposed = proposalRepair.result();
+                    proposalRepair.close(); proposalRepair = null;
+                    if (proposed == null) beginProposal();
+                    else { proposalMemory = memory; startRestoration(proposed.steps()); }
                 }
             }
             else if (searchingOrder) reschedule();
@@ -344,6 +353,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     }
 
     private void beginProposal() {
+        beginProposal(null);
+    }
+
+    private void beginProposal(Map<String, BigInteger> previous) {
         var available = new LinkedHashMap<Key<K>, Long>();
         stock.forEach((key, count) -> available.put(Key.physical(key), count));
         var required = new LinkedHashMap<Key<K>, Long>();
@@ -363,6 +376,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         entityUnionFloors.forEach((group, count) -> required.put(Key.entities(group), count));
         var emitted = new LinkedHashSet<Key<K>>();
         external.forEach(key -> emitted.add(Key.physical(key)));
+        proposalRepair = CapturedProposalRepair.create(auxiliary, previous, Key.physical(target), amount, available, emitted,
+                required, preserve, force, budget);
+        if (proposalRepair != null) return;
         planning = new CapturedCatalog<>(auxiliary, false).begin(Key.physical(target), amount, available, emitted,
                 required, preserve, force, budget);
     }
@@ -864,6 +880,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         budget.note("candidate_state", "refine_entity_union; families=" + group + "; required=" + required +
                 evidence +
                 "; retry=" + (refinements + 1) + "; negative_proofs=false");
+        var previous = proposed.patternTimesExact();
         resetProposal();
         if (!existing && !reserve(256L + 64L * group.size() + 256L * producers)) return true;
         entityUnionFloors.put(group, required); refinements++;
@@ -880,7 +897,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             auxiliary.set(i, new CapturedCatalog.Entry<>(old.id(), old.binding(), new CapturedRecipe<>(
                     old.recipe().inputs(), outputs, old.recipe().external(), old.recipe().captureBounded())));
         }
-        beginProposal(); return true;
+        beginProposal(previous); return true;
     }
 
     /** Replaying the same word can choose another already owned entity at an
@@ -1090,6 +1107,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
         budget.note("candidate_state", "refine_entity_horizon; family=" + family.id() + "; horizon=" + horizon +
                 "; restored_firings=" + restoredFirings + "; retry=" + (refinements + 1) + "; negative_proofs=false");
+        var previous = proposed.patternTimesExact();
         resetProposal();
         if (!capacityCaps.containsKey(family.id()) && !reserve(128)) return true;
         capacityCaps.put(family.id(), horizon); refinements++;
@@ -1104,7 +1122,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             auxiliary.set(i, new CapturedCatalog.Entry<>(old.id(), old.binding(), new CapturedRecipe<>(
                     old.recipe().inputs(), outputs, old.recipe().external(), old.recipe().captureBounded())));
         }
-        beginProposal();
+        beginProposal(previous);
         return true;
     }
 
@@ -1128,10 +1146,11 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
         budget.note("candidate_state", "refine_entity_count; family=" + family.id() + "; shared=" + shared() + "; required=" + required +
                 "; retry=" + (refinements + 1) + "; negative_proofs=false");
+        var previous = proposed.patternTimesExact();
         resetProposal();
         if (!entityFloors.containsKey(family.id()) && !reserve(128)) return true;
         entityFloors.put(family.id(), required); refinements++;
-        beginProposal(); return true;
+        beginProposal(previous); return true;
     }
 
     private void resetProposal() {
@@ -1285,6 +1304,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (choiceRepair != null) choiceRepair.close(); choiceRepair = null;
         if (orderRepair != null) orderRepair.close(); orderRepair = null;
         if (planning != null) planning.close(); planning = null;
+        if (proposalRepair != null) proposalRepair.close(); proposalRepair = null;
         if (expansion != null) expansion.close(); expansion = null;
         if (production != null) production.close(); production = null;
         if (verification != null) verification.close(); verification = null;

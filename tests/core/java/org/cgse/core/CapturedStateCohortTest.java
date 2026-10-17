@@ -44,13 +44,15 @@ public final class CapturedStateCohortTest {
         check(plan != null && plan.feasible(), "Disjoint stock blocked a funded witness: " + budget.diagnostics());
         replay(plan, entries, stock, amount);
         // Four-tool cohorts already need >500k work for the first auxiliary
-        // count witness, before any restoration feedback. Check that cost
-        // separately from the number of subsequent replacement proposals.
+        // count witness. The later feedback must repair that assignment rather
+        // than paying for several equally expensive fresh count searches.
         var refinements = java.util.regex.Pattern.compile("refinements=(\\d+)").matcher(budget.diagnostics());
         check(refinements.find() && Integer.parseInt(refinements.group(1)) <= n + 1,
                 "Replacement feedback scaled with disjoint inventory: n=" + n + "; amount=" + amount + "; surplus=" + surplus +
                         "; order=" + order + "; direct=" + direct + "; " + budget.diagnostics());
-        check(budget.searchWork() < (n == 2 ? 300_000 : 4_000_000), "Proposal used over its regression allowance: " + budget.searchWork());
+        check(budget.diagnostics().contains("candidate_state_repair@") && budget.diagnostics().contains("result=verified; recipes="),
+                "Replacement did not reuse a checked auxiliary assignment");
+        check(budget.searchWork() < (n == 2 ? 200_000 : 800_000), "Proposal used over its regression allowance: " + budget.searchWork());
         check(budget.reservedBytes() == 0 && budget.peakBytes() < (32L << 20), "Cohort proposal leaked or ballooned");
         PlanningCostTraceTest.conserved(budget); requests++;
     }
