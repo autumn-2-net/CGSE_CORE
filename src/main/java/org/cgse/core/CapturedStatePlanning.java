@@ -795,7 +795,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (done) return;
             if (repairChoices(family)) return;
             if (repairOrder(family, intactRecipe == null ? proposed.recipes().get(cursor.current().recipe()) : intactRecipe)) return;
-            if (failed != null && intactRecipe != null && refineEntityUnion(failed.deficit(), intactRecipe)) return;
+            if (failed != null && intactRecipe != null && refineEntityUnion(failed, intactRecipe)) return;
             // The owned entity total already fits. Reducing per-entity lifetime
             // cannot repair this firing's whole-key partition; try another
             // activation first, retaining the actual wear capacities.
@@ -804,14 +804,26 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         } finally { if (failed != null) failed.close(); }
     }
 
-    /** Request an additional entity eligible for any slot in a deficient set,
+    /** Request an additional entity eligible for any deficient or fragmented slot,
      * rather than arbitrarily replacing the last failed slot's tool. An entity
      * contributes once to this union even if several rules accept it. These
-     * are restricted proposal hints, not canonical cuts or negative proofs. */
-    private boolean refineEntityUnion(StateEntityMatching.Deficit deficit, GraphRecipe<Key<K>> blocked) {
-        if (deficit == null || !shared() || activations.size() > 128 || proposed.patternTimesExact().size() > 128) return false;
+     * are restricted proposal hints, not canonical cuts or negative proofs.
+     * Whole-key failure deliberately retains mixed competitors too: adding an
+     * entity for them can release an intact cohort for another slot. */
+    private boolean refineEntityUnion(StateEntityMatching<K> failed, GraphRecipe<Key<K>> blocked) {
+        var deficit = failed.deficit();
+        if (deficit != null) return refineEntityUnion(deficit.slots(), deficit.required(), false,
+                "; matching_required=" + deficit.required() + "; matching_available=" + deficit.available(), blocked);
+        var fragmentation = failed.fragmentation();
+        return fragmentation != null && refineEntityUnion(fragmentation.slots(), BigInteger.ZERO, true,
+                "; failure=whole_key_fragmentation", blocked);
+    }
+
+    private boolean refineEntityUnion(List<Integer> slots, BigInteger minimum, boolean fragmented,
+                                      String evidence, GraphRecipe<Key<K>> blocked) {
+        if (!shared() || activations.size() > 128 || proposed.patternTimesExact().size() > 128) return false;
         var ids = new java.util.TreeSet<String>();
-        for (int slot : deficit.slots()) {
+        for (int slot : slots) {
             budget.check(); ids.add(blocked.slots().get(slot).key().family());
         }
         if (ids.size() < 2) return false;
@@ -825,9 +837,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             for (String id : group) { budget.check(); if (activating.families().contains(id)) accepted++; }
             if (accepted > 0) { producers++; partial |= accepted < group.size(); }
         }
-        // Identical eligibility has no new choice to expose. Preserve the
-        // existing combined-wear and horizon refinement for that common case.
-        if (!partial) return false;
+        // Identical eligibility has no Hall choice to expose. Whole-key
+        // fragmentation can still need manufacturing to complete a cohort.
+        if (!partial && !fragmented) return false;
         BigInteger count = BigInteger.ZERO;
         for (var value : proposed.patternTimesExact().entrySet()) {
             budget.check();
@@ -838,13 +850,13 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 if (activating.families().contains(id)) { count = count.add(value.getValue()); break; }
             }
         }
-        BigInteger needed = count.add(BigInteger.ONE).max(deficit.required());
+        BigInteger needed = count.add(BigInteger.ONE).max(minimum);
         if (needed.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0) return false;
         long required = needed.longValueExact();
         if (required <= entityUnionFloors.getOrDefault(group, 0L)) return false;
         finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
         budget.note("candidate_state", "refine_entity_union; families=" + group + "; required=" + required +
-                "; matching_required=" + deficit.required() + "; matching_available=" + deficit.available() +
+                evidence +
                 "; retry=" + (refinements + 1) + "; negative_proofs=false");
         resetProposal();
         if (!existing && !reserve(256L + 64L * group.size() + 256L * producers)) return true;

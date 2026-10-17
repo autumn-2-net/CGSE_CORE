@@ -58,6 +58,7 @@ public final class StateEntityMatchingTest {
                     "; mixed=" + mixed + "; edges=" + edges);
             if (expected) {
                 check(work.deficit() == null, "Feasible allocation exported a deficit");
+                check(work.fragmentation() == null, "Feasible allocation exported fragmentation");
                 long[] spent = new long[stock.length], filled = new long[need.length];
                 int[] key = new int[need.length]; Arrays.fill(key, -1);
                 for (var pick : work.result()) {
@@ -73,6 +74,13 @@ public final class StateEntityMatchingTest {
                 var deficit = work.deficit();
                 boolean relaxed = assignSlot(0, stock.clone(), need, (1 << need.length) - 1, edges);
                 check((deficit == null) == relaxed, "Lost subset deficit or exported a whole-key branch failure");
+                var fragmentation = work.fragmentation();
+                check((fragmentation != null) == relaxed, "Lost whole-key failure or confused it with a Hall deficit");
+                if (fragmentation != null) {
+                    var scope = new java.util.HashSet<>(fragmentation.slots());
+                    check(scope.size() == need.length && scope.size() == fragmentation.slots().size(), "Lost competing slots");
+                    for (int d = 0; d < need.length; d++) check(scope.contains(d), "Lost original slot identity");
+                }
                 if (deficit != null) {
                     // Reconstruct the certificate using only original input
                     // eligibility and quantities, independently of residual flow.
@@ -144,8 +152,12 @@ public final class StateEntityMatchingTest {
         var split = List.of(new StateEntityAllocation.Supply<>("a", BigInteger.ONE, 1),
                 new StateEntityAllocation.Supply<>("b", BigInteger.ONE, 1));
         try (var work = StateEntityMatching.create(indivisible, split, (d, s) -> true, budget)) {
+            check(work.fragmentation() == null, "Pending whole-key search exported feedback");
             while (!work.step()) {}
             check(!work.feasible() && work.deficit() == null, "Whole-key failure became a false Hall deficit");
+            check(work.fragmentation() != null, "Exact search lost its completed whole-key failure");
+            work.close();
+            check(work.fragmentation() == null, "Released matching exported recovery storage");
         }
         check(budget.reservedBytes() == 0, "Deficit workspace leaked");
         // Uniform count is sufficient, but the subset of eligible keys is not.
@@ -161,6 +173,7 @@ public final class StateEntityMatchingTest {
         try (var work = StateEntityMatching.create(demands, supplies, (d, s) -> true, cancellable)) {
             work.step(); cancel.set(true);
             try { work.step(); throw new AssertionError("Ignored cancellation"); } catch (CancellationException expected) { checks++; }
+            check(work.fragmentation() == null, "Cancelled matching invented fragmentation");
         }
         check(cancellable.reservedBytes() == 0, "Cancelled continuation leak");
         var interrupted = budget();

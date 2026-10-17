@@ -17,6 +17,10 @@ import java.util.function.ToIntBiFunction;
 final class StateEntityMatching<K> implements AutoCloseable {
     /** Hall deficit in this one-firing inventory, never a future-supply bound. */
     record Deficit(List<Integer> slots, BigInteger required, BigInteger available) {}
+    /** Exact whole-key allocation failed although splittable flow can fit.
+     * All competing slots are retained: the last blocked slot alone does not
+     * identify which manufactured entity could repair this firing. */
+    record Fragmentation(List<Integer> slots) {}
     private final PlanningBudget budget;
     private final List<StateEntityAllocation.Demand> demands;
     private final List<StateEntityAllocation.Supply<K>> supplies;
@@ -31,7 +35,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
     private long memory;
     private boolean done, feasible, flowing, totalShortage, hallDeficit;
     private boolean partialEligibility, relaxationTried, relaxing, failedFlow;
-    private boolean packingTried;
+    private boolean packingTried, wholeKeyFailure;
     private StateEntityPacking<K> packing;
 
     static <K> StateEntityMatching<K> create(List<StateEntityAllocation.Demand> demands,
@@ -112,7 +116,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
         if (packing != null) {
             if (!packing.step()) return false;
             boolean possible = packing.possible(); packing.close(); packing = null;
-            if (!possible) done = true;
+            if (!possible) wholeKeyFailure = done = true;
             return done;
         }
         if (!flowing) {
@@ -123,7 +127,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
                 failedSlot = demand.slot();
                 if (startPacking()) return false;
                 next[depth] = 0;
-                if (depth == 0) { done = true; return true; }
+                if (depth == 0) { wholeKeyFailure = done = true; return true; }
                 undoFixed(); return false;
             }
             int ordinal = next[depth]++;
@@ -247,6 +251,15 @@ final class StateEntityMatching<K> implements AutoCloseable {
 
     boolean feasible() { return done && feasible; }
     int failedSlot() { return failedSlot; }
+
+    /** Request-local recovery evidence, not an entity shortage or a global
+     * count bound. Pending/cancelled searches and closed storage export none. */
+    Fragmentation fragmentation() {
+        if (!done || feasible || !wholeKeyFailure || memory == 0 || demands.size() > 32) return null;
+        var slots = new ArrayList<Integer>();
+        for (var demand : demands) { budget.check(); slots.add(demand.slot()); }
+        return new Fragmentation(List.copyOf(slots));
+    }
 
     /** Failed exact or relaxed residual flow exposes a deficient set.
      * Whole-key branch failures alone are not Hall deficits. Keep feedback
