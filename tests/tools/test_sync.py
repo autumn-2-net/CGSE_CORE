@@ -100,6 +100,23 @@ class SyncTest(unittest.TestCase):
         (self.host / 'src/main/java/core.java').unlink()
         self.assertTrue(sync.plan(self.host, self.manifest, state)[1])
 
+    def test_source_root_relocation_preserves_host_and_remains_idempotent(self):
+        self.init_git(self.repo)
+        previous = self.commit_source('shared source root')
+        self.initial()
+        baseline = sync.snapshot(previous)
+        self.manifest['roots'][0]['target'] = 'cgse-engine/src/main/java'
+        self.put(self.repo / 'product/core.java', b'core v2\n')
+        updates, problems, entries = sync.plan(self.host, self.manifest, baseline)
+        self.assertEqual([], problems)
+        self.assertEqual({'src/main/java/core.java': None,
+                          'cgse-engine/src/main/java/core.java': b'core v2\n'}, updates)
+        sync.apply(self.host, updates)
+        self.assertFalse((self.host / 'src/main/java/core.java').exists())
+        self.assertEqual(b'core v2\n', (self.host / 'cgse-engine/src/main/java/core.java').read_bytes())
+        self.assertEqual(b'host-owned adapter\n', (self.host / 'src/main/java/HostAdapter.java').read_bytes())
+        self.assertEqual(({}, []), sync.plan(self.host, self.manifest, {'files': entries})[:2])
+
     def test_retirement_is_hash_guarded_and_scoped(self):
         state = self.initial()
         (self.repo / 'product/core.java').unlink()

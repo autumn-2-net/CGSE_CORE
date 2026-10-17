@@ -43,7 +43,9 @@ The local case archive and player evidence are never included in these artifacts
 
 When syncing the copied engine to GTL, also copy gradle/engine.gradle and
 gradle/cgse.properties to cgse-engine/, along with NOTICE. The full license stays
-at the root of the CGSE repository; it is not copied into the GTL checkout. Keep the
-engine source path src/main/java/org/cgse/core, excluded from GTL's main source
-set. The copied org.cgse.view presentation helpers stay in GTL's main jar.
+at the root of the CGSE repository; it is not copied into the GTL checkout. Copy
+engine sources to cgse-engine/src/main/java/org/cgse/core. Each Gradle module
+must own a distinct source directory: sharing GTL's src/main/java between both
+modules with package include/exclude filters causes ambiguous IDE imports.
+The copied org.cgse.view presentation helpers stay in GTL's main source set/jar.
 Put the upstream CGSE commit in the sync commit message, as before.

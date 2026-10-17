@@ -206,12 +206,14 @@ public final class RequestCoverageTest {
 
         b = budget(2_000_000);
         var omitted = domainRequest(prefix, new CapturedCatalog<>(List.of(entry), false), 1, Map.of(), Set.of(), null, false, b);
-        try {
-            run(omitted, b);
-            throw new AssertionError("Incomplete provider registry published a proof");
-        } catch (ExecutionException failure) {
-            check(PlanningFailure.result(failure) == GraphPlan.Result.INCOMPLETE_MODEL, "Incomplete registry was not scoped");
-        }
+        var conditional = run(omitted, b);
+        check(conditional.result() == GraphPlan.Result.INCOMPLETE_MODEL && conditional.conditionalPreview() && !conditional.feasible(),
+                "Incomplete registry published a proof or lost its verified refill");
+        check(conditional.seedOptimality() == null && omitted.reuseCandidate() == null && !omitted.fallbackMode(),
+                "Conditional refill gained optimality, feasibility reuse or fallback provenance");
+        PlanVerifier.verify(new GraphPlan<>(conditional.target(), conditional.amount(), conditional.preserveSeeds(), conditional.steps(),
+                conditional.recipes(), conditional.initialExact(), conditional.seeds(), Map.of(), GraphPlan.Result.FEASIBLE,
+                conditional.searchNodes(), conditional.planningNanos()));
 
         // A return outside the 256-window can itself be the requested target.
         // The empty prefix must not make this a direct emitter/unavailable goal.
