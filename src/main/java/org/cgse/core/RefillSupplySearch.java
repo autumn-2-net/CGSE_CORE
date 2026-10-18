@@ -7,7 +7,7 @@ import java.util.*;
 
 /** Optional main-planner prefix witnesses inside a completed refill's supply ceiling. */
 final class RefillSupplySearch<K> implements AutoCloseable {
-    private enum Phase { ROOT, DISCOVER, INPUTS, OUTPUTS, TRIAL, SUPPLY, SEARCH, SUMMARY, COPY, NEEDS, BINDINGS, MISSING, VERIFY, DONE }
+    private enum Phase { ROOT, DISCOVER, INPUTS, OUTPUTS, COMPILE, MACROS, MACRO_SUMMARY, CYCLES, TRIAL, SUPPLY, SEARCH, SUMMARY, COPY, NEEDS, BINDINGS, MISSING, VERIFY, DONE }
     private final GraphPlan<K> original;
     private GraphPlan<K> result, base, candidate;
     private final RefillProducerOrder<K> order;
@@ -15,9 +15,10 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     private final Set<K> external;
     private final boolean force, ignoreTargetStock;
     private final PlanningBudget budget;
-    private final long started, allowance;
+    private final long started;
+    private long passStarted, allowance;
     private final String retainedFailure;
-    private final Iterator<K> roots;
+    private Iterator<K> roots;
     private Phase phase = Phase.ROOT;
     private K root;
     private int rank, trial, incidences;
@@ -33,11 +34,16 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     private Iterator<Map.Entry<K, BigInteger>> entries;
     private Iterator<Map.Entry<String, GraphRecipe<K>>> bindingEntries;
     private BackwardCoverability<K> searching;
+    private LinearMacroCompilation<K> compiling;
+    private RefillCycleActions<K> cycling;
+    private List<BackwardCoverability.Action<K>> macros;
+    private Iterator<GraphRecipe<K>> compiledRecipes;
+    private PlanStep macro;
     private SummaryComputation<K> summarizing;
     private SequenceSummary<K> summary;
     private PlanVerification<K> verifying;
     private PlanStep prefix;
-    private boolean strict, mergingBindings;
+    private boolean strict, mergingBindings, accelerated, shortcutsRelevant;
     private long memory;
 
     RefillSupplySearch(GraphPlan<K> original, RefillProducerOrder<K> order, Map<K, Long> stock,
@@ -45,6 +51,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
         this.original = result = original; this.order = order; this.stock = stock; this.external = external;
         this.force = force; this.ignoreTargetStock = ignoreTargetStock; this.budget = budget;
         roots = original.missingExact().keySet().iterator(); started = budget.nodes();
+        passStarted = started;
         allowance = Math.min(8192, budget.remainingWork() / 4); retainedFailure = budget.failureDetail();
     }
 
@@ -52,7 +59,22 @@ final class RefillSupplySearch<K> implements AutoCloseable {
         try {
             budget.checkpoint();
             if (phase == Phase.DONE) return true;
-            if (budget.nodes() - started >= allowance) return finish();
+            if (budget.nodes() - passStarted >= allowance) return finish();
+            if (phase == Phase.COMPILE) {
+                if (!compiling.step()) return false;
+                compiledRecipes = compiling.recipes().values().iterator(); phase = Phase.MACROS; return false;
+            }
+            if (phase == Phase.MACRO_SUMMARY) {
+                if (!summarizing.step()) return false;
+                macros.add(new BackwardCoverability.Action<>(macro, summarizing.result()));
+                summarizing.close(); summarizing = null; macro = null; phase = Phase.MACROS; return false;
+            }
+            if (phase == Phase.CYCLES) {
+                if (!cycling.step()) return false;
+                macros = cycling.actions();
+                if (macros.isEmpty()) endRoot(); else phase = Phase.TRIAL;
+                return false;
+            }
             if (phase == Phase.SEARCH) {
                 if (!searching.step()) return false;
                 if (searching.result() != BackwardCoverability.Result.WITNESS) { endTrial(); return false; }
@@ -76,11 +98,11 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             for (int i = 0; i < 64; i++) {
                 budget.check();
                 if (advance()) return true;
-                if (phase == Phase.SEARCH || phase == Phase.SUMMARY || phase == Phase.VERIFY) return false;
+                if (phase == Phase.COMPILE || phase == Phase.MACRO_SUMMARY || phase == Phase.CYCLES || phase == Phase.SEARCH || phase == Phase.SUMMARY || phase == Phase.VERIFY) return false;
             }
             return false;
         } catch (PlanningBudget.Exhausted limit) {
-            budget.failureDetail(retainedFailure); return finish();
+            budget.failureDetail(retainedFailure); return stop();
         }
     }
 
@@ -113,7 +135,12 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                 } else if (!pending.isEmpty()) sources = pending.removeFirst().sources.iterator();
                 else {
                     sources = null; recipe = null;
-                    if (recipes.isEmpty() || visited.size() < 2) endRoot(); else phase = Phase.TRIAL;
+                    if (recipes.isEmpty() || visited.size() < 2) endRoot();
+                    else if (accelerated) {
+                        macros = new ArrayList<>();
+                        compiling = new LinearMacroCompilation<>(recipes, base.target(), Set.of(), budget);
+                        phase = Phase.COMPILE;
+                    } else { shortcutsRelevant = true; macros = List.of(); phase = Phase.TRIAL; }
                 }
             }
             case INPUTS, OUTPUTS -> {
@@ -126,6 +153,21 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                     }
                 } else if (phase == Phase.INPUTS) { ports = recipe.outputs().keySet().iterator(); phase = Phase.OUTPUTS; }
                 else { ports = null; phase = Phase.DISCOVER; }
+            }
+            case MACROS -> {
+                if (compiledRecipes.hasNext()) {
+                    var compiled = compiledRecipes.next();
+                    if (recipes.containsKey(compiled.id())) break;
+                    // Preserve the actual chain word and all intermediate keys.
+                    // The contracted endpoint recipe alone is not an exact
+                    // summary when an intermediate is also a suffix obligation.
+                    reserve(512L * (domain.size() + recipes.size()));
+                    macro = compiling.expand(new PlanStep.Batch(compiled.id(), 1));
+                    summarizing = new SummaryComputation<>(macro, recipes, budget); phase = Phase.MACRO_SUMMARY;
+                } else {
+                    compiledRecipes = null; compiling.close(); compiling = null;
+                    cycling = new RefillCycleActions<>(recipes, macros, root, budget); phase = Phase.CYCLES;
+                }
             }
             case TRIAL -> {
                 if (trial == 4) { endRoot(); break; }
@@ -153,7 +195,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                 } else {
                     ports = null;
                     searching = new BackwardCoverability<>(List.copyOf(recipes.values()), supplied, goals, trialExternal,
-                            List.of(), budget, Math.min(2048, Math.max(0, allowance - (budget.nodes() - started))), true);
+                            macros, budget, Math.min(2048, Math.max(0, allowance - (budget.nodes() - passStarted))), true);
                     phase = Phase.SEARCH;
                 }
             }
@@ -215,10 +257,24 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     }
     private void endRoot() {
         endTrial(); sources = null; recipe = null; pending = null; visited = null; domain = null;
+        if (compiling != null) { compiling.close(); compiling = null; }
+        if (cycling != null) { cycling.close(); cycling = null; }
+        macros = null; compiledRecipes = null; macro = null;
         recipes = null; bindings = null; initial = null; deficits = null; supplied = null; goals = null; trialExternal = null; tried = null;
         phase = Phase.ROOT;
     }
     private boolean finish() {
+        if (!accelerated && shortcutsRelevant && !result.missingExact().isEmpty() && budget.remainingWork() >= 4096) {
+            // Keep the old bounded search's completed incumbent. A faster
+            // shortcut can otherwise choose an incomparable bill early and
+            // prevent a later root from retaining its previous improvement.
+            endRoot(); accelerated = true; roots = result.missingExact().keySet().iterator();
+            passStarted = budget.nodes(); allowance = Math.min(8192, budget.remainingWork() / 4);
+            return false;
+        }
+        return stop();
+    }
+    private boolean stop() {
         phase = Phase.DONE;
         budget.note("refill_supply", (result == original ? "retained_original" : "improved") + "; work=" + (budget.nodes() - started));
         return true;

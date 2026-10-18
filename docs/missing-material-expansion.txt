@@ -186,8 +186,30 @@ of a new feedstock. The retained plan stays available during the search and at
 parent publication limits. No partially checked prefix or restricted absence
 result is published. Ordinary fallback does not enable this cyclic search.
 
-Entry requires at least4096 remaining work units; the whole optional pass uses
-at most min(8192, remaining/4) plus one continuation. Each witness trial is capped
+After the primitive search retains its best completed bill, an optional second
+pass supplies exact shortcut actions to the same antichain. LinearMacroCompilation
+contracts single-input/single-output chains using integer throughput ratios.
+Its words are expanded and summarized against original physical recipes, retaining
+intermediate requirements and peaks. RefillCycleActions also composes a root-
+consuming action with a root-producing action through a shared transfer key. If
+the first produces a and the second consumes b, their multiplicities are b/gcd(a,b)
+and a/gcd(a,b). Only positive-net-root round trips are proposed. Side inputs,
+returned tools, coproducts and all intermediate keys stay in the exact summary.
+Original primitive actions remain available for partial chains and interleavings.
+
+The shortcut pass starts from the completed primitive-search bill, not the older
+unrefined bill. Taking a different early witness can otherwise trade an already
+eliminated deficit for less of another material. Both passes enforce componentwise
+dominance and verify the complete expanded word before retaining it. Shortcut
+construction visits at most512 pairing/key entries and adds at most8 round trips
+per neighborhood. It is not a general cycle enumerator; compilation and summaries
+are bounded by the same small neighborhood and remaining optional work.
+
+Entry requires at least4096 remaining work units. Each of the two optional passes
+uses at most min(8192, remaining/4) plus one continuation; the second starts only
+with at least4096 remaining units and skips roots without shortcuts. This adds a
+bounded improvement cost without reducing the original search's quota, while the
+request's total work/time/memory caps stay unchanged. Each witness trial is capped
 at2048 units. Glue traversals use64-operation slices; the reused antichain has its
 own coarser slice, bounded by that trial cap, not a64-operation latency guarantee.
 Neighborhood ports bound its synchronous setup; scratch and child workspaces are
@@ -281,6 +303,11 @@ forced/ignored/external target stock, physical binding conflicts and excluded or
 configuration sources. It exercises the real main/fallback distinction, exact
 counts beyond long, interrupted constructors, parent retention, budget/cancellation
 exits and one-worker scheduling. No full-catalog or live-world coverage is implied.
+RefillLinearPrefixTest covers longer main-planner chains, inverse firing ratios,
+intermediate obligations and preservation of the primitive-search incumbent.
+Its240 arithmetic/literal round-trip oracles retain tool and coproduct semantics;
+exact totals beyond long, compiler/summary interruptions and one-worker handoffs
+exercise the shortcut path without treating restricted search failure as proof.
 MissingExpansionLimitTest observes real production state-machine transitions
 to expansion, then interrupts work/time/memory or cancellation. It exercises
 both completed and absent root proofs, completed child publication, ordinary
@@ -320,7 +347,8 @@ Known boundaries after the refill review at 224e9172:
 - A bounded alternative pass covers stock-funded producer mixtures that the
   single-source proposals miss, with whole-bill dominance guarding acceptance.
   Its hints and greedy allocation are incomplete. Root main planning now tries
-  bounded cyclic prefix synthesis within the completed supply ceiling. Large
+  bounded cyclic prefix synthesis within the completed supply ceiling, with
+  exact linear-chain and paired round-trip shortcuts after primitive search. Large
   neighborhoods, useful routes outside that support and quantities not sampled
   can still remain boundaries. Ordinary fallback retains its cheaper expansion.
   A stopped expansion is not proof that a material has no useful producer, nor
