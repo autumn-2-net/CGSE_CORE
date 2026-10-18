@@ -155,6 +155,46 @@ owner interrupted during improvement. Work/time/memory exits retain that plan;
 cancellation still propagates. The opportunity gate and cap limit extra work but
 do not make this quality improvement free, or guarantee all possible mixtures.
 
+After ordinary expansion, mixtures and word reduction, the root main planner may
+use RefillSupplySearch to prepare a small cyclic input more cheaply. It borrows
+the completed producer ranking, following cyclic inputs of the same rank. Each
+neighborhood is limited to 12 recipes, 16 material keys and 128 original ports;
+ordinary acyclic shortages never enter a coverability search. Discovery uses
+saved cursors and respects excluded sources and existing physical bindings.
+Consumed configuration recipes decline this optional search.
+
+For each cyclic shortage m, a few strictly lower supplies (0, 1, floor(m/2), m-1)
+are tried. Other keys retain the ceiling of current stock plus the completed
+missing bill. The goals are the ORIGINAL suffix's initial requirements on every
+touched key. Thus a searched prefix must restore what the existing suffix needs,
+including resources shared with other branches and final seed reservations. A
+forced target additionally has to retain its supplied quantity: prefix net target
+consumption is rejected, even when the target is an external supply.
+
+This reuses BackwardCoverability's exact antichain and original recipe actions in
+a witness-only mode. A local cutoff or closed restricted search reports UNKNOWN,
+does not enter the forward/PDR/induction portfolio, and exports no absence proof.
+The original BackwardCoverability constructor retains its existing portfolio and
+proof behavior. A constructor interrupted after reserving its first node now
+releases that workspace before propagating the exception.
+
+A discovered prefix is summarized, its exact requirements are composed with the
+unchanged suffix, and the complete funded plan is verified. Only a strictly
+componentwise smaller missing bill is accepted; available stock withdrawals may
+increase. There is no exchange rate between materials and no artificial supply
+of a new feedstock. The retained plan stays available during the search and at
+parent publication limits. No partially checked prefix or restricted absence
+result is published. Ordinary fallback does not enable this cyclic search.
+
+Entry requires at least4096 remaining work units; the whole optional pass uses
+at most min(8192, remaining/4) plus one continuation. Each witness trial is capped
+at2048 units. Glue traversals use64-operation slices; the reused antichain has its
+own coarser slice, bounded by that trial cap, not a64-operation latency guarantee.
+Neighborhood ports bound its synchronous setup; scratch and child workspaces are
+charged. Work/time/memory limits keep the best verified bill; cancellation remains
+exceptional. These are small candidate searches, not binary search proofs of
+minimum supply or a complete multi-objective frontier.
+
 Refill preparation, source selection, input/output support evaluation, full-vector
 comparison, applying a selected prefix, reversing prefixes and building deficits
 also retain cursors. Each expansion step performs at most 64 operations, or calls
@@ -235,6 +275,12 @@ arithmetic quantity bounds, actual primitive replay, stock variations, final
 seeds and required coproducts. Reversed catalogs, shared/zero/deep/huge words,
 ordinary chains, structural cutoffs and work/time/memory/cancellation exits
 exercise the applicability scan, including real one-worker scheduler handoffs.
+RefillSupplySearchTest checks synthesized two/three/five-recipe prefixes with
+independent primitive replay, existing stock, final seeds, coproduct obligations,
+forced/ignored/external target stock, physical binding conflicts and excluded or
+configuration sources. It exercises the real main/fallback distinction, exact
+counts beyond long, interrupted constructors, parent retention, budget/cancellation
+exits and one-worker scheduling. No full-catalog or live-world coverage is implied.
 MissingExpansionLimitTest observes real production state-machine transitions
 to expansion, then interrupts work/time/memory or cancellation. It exercises
 both completed and absent root proofs, completed child publication, ordinary
@@ -273,11 +319,12 @@ Known boundaries after the refill review at 224e9172:
   production credit is retained even if it is surplus.
 - A bounded alternative pass covers stock-funded producer mixtures that the
   single-source proposals miss, with whole-bill dominance guarding acceptance.
-  Its hints and greedy allocation are incomplete. Same-rank multi-step cycles
-  can remain seed boundaries when improving them requires synthesizing a new
-  route; pruning an existing word does not provide that route. A stopped
-  expansion is not proof that a material has no useful producer, nor a
-  certificate of minimum supply.
+  Its hints and greedy allocation are incomplete. Root main planning now tries
+  bounded cyclic prefix synthesis within the completed supply ceiling. Large
+  neighborhoods, useful routes outside that support and quantities not sampled
+  can still remain boundaries. Ordinary fallback retains its cheaper expansion.
+  A stopped expansion is not proof that a material has no useful producer, nor
+  a certificate of minimum supply.
 - Refill enumeration/publication and final verifier key traversal use bounded
   continuations; verifier union construction and repeated recipe-disjointness
   scans are eliminated. Recipe construction remains linear. Host key/recipe

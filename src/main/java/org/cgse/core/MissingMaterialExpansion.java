@@ -45,6 +45,8 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private boolean partialOpportunity, mixtureOpportunity, comparingMixture;
     private MissingMaterialExpansion<K> improvement;
     private RefillWordPruning<K> pruning;
+    private RefillSupplySearch<K> cycleSearch;
+    private boolean cycleSearchEnabled, cycleSearchTried;
     private long improvementStart, improvementWork;
     private String retainedFailure;
     private List<PlanStep> steps;
@@ -74,6 +76,9 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         if (plan.feasible() || plan.missingExact().isEmpty()) return false;
         return !(plan.steps() instanceof PlanStep.Batch) || hasProducibleMissing(compiler, plan);
     }
+    /** The main planner may search a small cyclic prefix; ordinary fallback
+     * keeps its existing expansion/word-reduction responsibilities. */
+    MissingMaterialExpansion<K> refineCycles(boolean enabled) { cycleSearchEnabled = enabled; return this; }
     private static <K> boolean hasProducibleMissing(GraphCompiler<K> compiler, GraphPlan<K> plan) {
         // Only a cheap index lookup here. Source inspection belongs to the
         // budgeted continuation, including rejected/excluded alternatives.
@@ -81,6 +86,10 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         return false;
     }
     boolean step() {
+        if (cycleSearch != null) {
+            if (!cycleSearch.step()) return false;
+            result = cycleSearch.result(); cycleSearch.close(); cycleSearch = null; return true;
+        }
         if (phase == Phase.PRUNE) {
             phase = Phase.DONE;
             // This terminal bill was complete before entering this pass. Do
@@ -90,7 +99,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         }
         if (pruning != null) {
             if (!pruning.step()) return false;
-            result = pruning.result(); pruning.close(); pruning = null; return true;
+            result = pruning.result(); pruning.close(); pruning = null; return searchCycles();
         }
         if (improvement != null) return improve();
         // Do not put a complete child slice after this pass's own operations.
@@ -121,7 +130,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         for (int i = 0; i < OPERATIONS_PER_STEP; i++) {
             budget.check();
             if (advance()) return true;
-            if (phase == Phase.RANK || phase == Phase.VERIFY || pruning != null) return false;
+            if (phase == Phase.RANK || phase == Phase.VERIFY || pruning != null || cycleSearch != null) return false;
         }
         return false;
     }
@@ -259,7 +268,13 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             pruning = new RefillWordPruning<>(result, stock, external, forceCraft, ignoreTargetStock, budget, pruningAllowance(), known);
             return false;
         }
-        return true;
+        return searchCycles();
+    }
+    private boolean searchCycles() {
+        if (!cycleSearchEnabled || cycleSearchTried || order == null || result.feasible() || budget.remainingWork() < 4096) return true;
+        cycleSearchTried = true;
+        cycleSearch = new RefillSupplySearch<>(result, order, stock, external, forceCraft, ignoreTargetStock, budget);
+        return false;
     }
     private long pruningAllowance() {
         return Math.min(budget.remainingWork() / 4,
@@ -445,9 +460,10 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         @Override public void close() { budget.release(bytes); bytes = 0; }
     }
 
-    GraphPlan<K> result() { return result; }
+    GraphPlan<K> result() { return cycleSearch == null ? result : cycleSearch.result(); }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     @Override public void close() {
+        if (cycleSearch != null) { cycleSearch.close(); cycleSearch = null; }
         if (pruning != null) { pruning.close(); pruning = null; }
         if (improvement != null) { improvement.close(); improvement = null; }
         if (proposal != null) { proposal.close(); proposal = null; }

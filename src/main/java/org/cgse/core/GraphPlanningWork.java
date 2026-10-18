@@ -1291,7 +1291,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     private boolean expandMissing(GraphPlan<K> plan) {
         if (!missingPreview || !MissingMaterialExpansion.needed(compiler, plan)) return false;
         if (verifying != null) { verifying.close(); verifying = null; }
-        missingExpansion = new MissingMaterialExpansion<>(compiler, plan, stock, external, excluded, forceCraft, false, budget);
+        missingExpansion = new MissingMaterialExpansion<>(compiler, plan, stock, external, excluded, forceCraft, false, budget).refineCycles(nesting == 0);
         budget.note("missing_expansion", "start; verified_program_retained; initial_keys=" + plan.missingExact().size());
         phase = 21;
         return true;
