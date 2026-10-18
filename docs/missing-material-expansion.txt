@@ -70,6 +70,48 @@ a fully stock-funded producer remains. No item/fluid exchange rate or sum
 of unlike missing quantities is used. Candidate scratch memory is charged
 and released even when comparison or evaluation exhausts a budget.
 
+Mixed-source stock allocation is an optional improvement of the completed bill.
+While inspecting ordinary candidates, expansion detects positive partial batches
+that introduce no additional deficits. Only if such a hint remains useful after
+whole-source selection does a second bounded pass try these batch counts. Every
+whole-source candidate is still considered before taking a partial source, so a
+later wholly funded producer keeps its priority.
+
+For an input with amount a, net loss l > 0, suffix requirement R and allowable
+initial ceiling C = stock + existing deficit, a no-added-deficit batch must obey
+
+  n <= 1 + floor((C - a) / l), and n <= floor((C - R) / l).
+
+If a > C there is no positive funded batch. Returned inputs with zero net loss
+still require their startup amount. External inputs omit the inventory bound;
+forced-target consumption additionally respects the existing production credit.
+The minimum of these exact bounds is evaluated again through the normal complete
+support/rank checks. All counts remain BigInteger, including amounts beyond long.
+Input scanning is resumable and does not enumerate firings or durability states.
+The alternative borrows the completed producer ranking and source lists from its
+parent: compiler, missing roots, external supplies and exclusions are identical,
+and no ranking data is mutated. The parent alone owns and releases that workspace.
+This avoids repeating graph discovery/SCC work for the optional search.
+
+Partial funding alone is not a quality guarantee: a greedy choice can consume
+stock needed by another branch, or lose a useful coproduct. Therefore the ordinary
+expanded, verified plan is retained before attempting any mixture. The alternative
+starts from the same original suffix, stock, exclusions and seed obligations; its
+complete word is verified before comparing the final missing-material vectors.
+It is accepted only when every missing quantity is no larger and at least one is
+smaller. Equal or incomparable bills retain the original exact plan. This compares
+new supplies, not an invented material price or equal initial-stock consumption.
+
+The optional pass uses the remaining request budget after ordinary expansion. Its
+local work allowance is the minimum of one quarter of remaining work, 8192 units,
+and max(512, four times ordinary expansion work); a continuation can overshoot that
+soft allowance by at most 64 operations. Fewer than 512 remaining units skip it.
+It shares request time/cancellation/memory limits and never changes configured
+main/fallback/cache allowances. The verified ordinary plan is available to an
+owner interrupted during improvement. Work/time/memory exits retain that plan;
+cancellation still propagates. The opportunity gate and cap limit extra work but
+do not make this quality improvement free, or guarantee all possible mixtures.
+
 Refill preparation, source selection, input/output support evaluation, full-vector
 comparison, applying a selected prefix, reversing prefixes and building deficits
 also retain cursors. Each expansion step performs at most 64 operations, or calls
@@ -86,7 +128,8 @@ step call. Public GraphPlan and PlanStep.Sequence constructors still defensively
 copy and validate caller-owned collections. Public signatures are unchanged.
 
 After expansion, PlanVerification checks the funded complete word again. A
-work/time/memory exit does not publish the partially expanded bill. Existing
+work/time/memory exit does not publish a partially expanded bill; an already
+completed ordinary bill remains available during optional improvement. Existing
 main and fallback budgets remain independent and unchanged. Feasible plans
 skip this pass. Incomplete capture stays conditional: expansion does not prove
 missing recipe/state domains infeasible or claim globally minimal supplies.
@@ -132,6 +175,11 @@ RefillQualityTest covers growth plateaus with stock and final seeds, joint
 production under reversed input/source order, incomparable supplies, useful
 coproducts, target credit and temporary-workspace cleanup. Its arithmetic
 quantity oracle and primitive replay are independent of candidate selection.
+RefillMixtureTest checks 500 independent multi-source allocation oracles, reversed
+source order, returned-input startup, shared stock, final seeds, target credit,
+excluded sources and exact counts beyond long. It retains the old whole bill when
+a locally funded coproduct choice makes the final supplies worse. Real scheduler
+handoffs and work/time/memory/cancellation exits cover the optional continuation.
 MissingExpansionLimitTest observes real production state-machine transitions
 to expansion, then interrupts work/time/memory or cancellation. It exercises
 both completed and absent root proofs, completed child publication, ordinary
@@ -165,9 +213,12 @@ Known boundaries after the refill review at 224e9172:
   the finish-only suffix now needs one. A separate verified suffix rewrite or
   upstream count improvement is needed; local refill quality is not global
   minimality.
-- Single-producer whole-deficit proposals do not cover all stock-funded
-  source mixtures. Same-rank multi-step cycles can remain seed boundaries.
-  A stopped expansion is not proof that a material has no useful producer.
+- A bounded alternative pass covers stock-funded producer mixtures that the
+  single-source proposals miss, with whole-bill dominance guarding acceptance.
+  Its hints and greedy allocation are incomplete. Same-rank multi-step cycles
+  can remain seed boundaries; excessive batches inside the original suffix are
+  not rewritten. A stopped expansion is not proof that a material has no useful
+  producer, nor a certificate of minimum supply.
 - Refill enumeration/publication and final verifier key traversal use bounded
   continuations; verifier union construction and repeated recipe-disjointness
   scans are eliminated. Recipe construction remains linear. Host key/recipe
