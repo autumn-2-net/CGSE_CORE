@@ -707,7 +707,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 }
                 var preferences = choiceRepair != null && choiceRepair.active() && supplies.size() <= 256 ? choiceRepair : null;
                 allocation = StateEntityAllocation.create(group.demands(), supplies,
-                        preferences == null ? null : state -> preferences.score(family, state), budget);
+                        preferences == null ? null : state -> preferences.score(family, state),
+                        preferences == null || !preferences.costsEnabled() ? null : state -> preferences.cost(family, state), budget);
             } finally {
                 budget.release(transientBytes);
             }
@@ -749,7 +750,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                     var family = families.get(recipe.slots().get(demand.slot()).key().family());
                     return family.accepts(key) && family.capacity(key) > 0;
                 }, preferences == null ? null : (demand, key) ->
-                        preferences.score(families.get(recipe.slots().get(demand.slot()).key().family()), key), budget);
+                        preferences.score(families.get(recipe.slots().get(demand.slot()).key().family()), key),
+                        preferences == null || !preferences.costsEnabled() ? null : (demand, key) ->
+                        preferences.cost(families.get(recipe.slots().get(demand.slot()).key().family()), key), budget);
             } finally { budget.release(transientBytes); }
             if (matching == null) stop(Reason.WORKSPACE_DECLINED);
             return false;
@@ -922,17 +925,32 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             }
             if (!alternatives) return false;
         } else if (!choiceRepair.active()) return false;
+        if (choiceRepair != null) choiceRepair.finishCosts();
         boolean capacityFeedback = !lostStateResource(family, false);
         if (capacityFeedback && !lostStateResource(family, true)) return false;
         if (choiceRepair == null) {
             choiceRepair = StateChoiceRepair.create(budget);
             if (choiceRepair == null) return false;
         }
-        if (!choiceRepair.protect(family)) return false;
+        boolean quantified = false;
+        if (!choiceRepair.protect(family)) {
+            if (families.size() > 8 || !choiceRepair.canRefineCosts()) return false;
+            long bytes = 384L + 48L * proposed.patternTimesExact().size();
+            if (!budget.tryReserve(bytes)) return false;
+            try {
+                var states = new ArrayList<K>();
+                for (String id : proposed.patternTimesExact().keySet()) {
+                    budget.check(); var activating = activations.get(proposed.recipes().get(id).binding());
+                    if (activating != null) states.add(activating.state());
+                }
+                quantified = choiceRepair.refineCosts(family, new ArrayList<>(families.values()), states);
+            } finally { budget.release(bytes); }
+            if (!quantified) return false;
+        }
         finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
         resetRestoration(); startRestoration(restorationWord); choiceCandidates++;
         budget.note("candidate_state", "retry_entity_choices; family=" + family.id() + "; candidate=" + choiceCandidates +
-                "; feedback=" + (capacityFeedback ? "guaranteed_uses" : "eligibility") +
+                "; feedback=" + (quantified ? "quantified_uses" : capacityFeedback ? "guaranteed_uses" : "eligibility") +
                 "; same_counts=true; same_order=true; negative_proofs=false");
         return true;
     }
@@ -1070,6 +1088,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     }
 
     private boolean continueOrder(String blocked) {
+        if (choiceRepair != null) choiceRepair.finishCosts();
         if (orderRepair == null || !orderRepair.reject(blocked)) return false;
         finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
         searchingOrder = true; return true;

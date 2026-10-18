@@ -120,6 +120,23 @@ does not restart this scout. A changed proposal clears all feedback and scores;
 the enclosing arm's fixed allowance still covers every attempt. Order recovery
 and entity refinement remain available if the chosen physical assignment fails.
 
+If the same protected rule fails again, selected activation states can admit one
+additional quantitative choice trial. Two choices must share the existing
+eligibility/wear score yet differ in the blocked rule's exact one-step capacity
+loss. The analysis admits at most eight families and 256 sampled states, uses at
+most 1024 work and one eighth of the choice scout's remaining lifetime, and needs
+at least 64 work. It neither enumerates unobserved states nor supplies an entity.
+
+That trial breaks equal qualitative scores by nonnegative lost uses, compared as
+long values without narrowing, floating point or summed weights. Eligibility and
+qualitative wear retain their original priority. Both whole-key allocation and
+cross-rule matching precompute immutable costs before sorting. Optional cost
+workspace yields to the existing qualitative allocator when it cannot fit.
+There is only one cost trial per unchanged proposal, within the original lifetime
+allowance, including downstream restoration. A failed trial clears its cost bias
+before ordinary choice/order recovery continues. It is a positive heuristic for
+one repeatedly blocked rule, not a minimum-cost matching or temporal proof.
+
 When an already restored transition disables another rule's physical eligibility
 or reduces its guaranteed uses, the restorer can retain the proposal's exact
 counts and try other execution words before requesting more entities. A single
@@ -443,6 +460,13 @@ The public tests are under tests/core/java/org/cgse/core:
   StateChoiceRepairTest: independent literal assignment oracles under arbitrary
     per-key/per-edge preferences, whole-key backtracking and augmenting paths,
     wide counts, cached feedback revisions, work/memory limits and cancellation.
+  CapturedStateChoiceCostsTest: 85 positive cases with unequal cross-rule wear,
+    forced material order, mixed/whole/wide cohorts, matching and new tools;
+    primitive physical/source checks, delayed returns, save/load, failed cost
+    trials, work caps, cancellation and worker handoff.
+  StateChoiceCostsTest: 1501 exhaustive-oracle allocation comparisons with exact
+    long-sized costs, primary rank preservation, optional-workspace fallback,
+    single-trial lifetime and failure cleanup.
   CapturedStateExpansionTest: omitted cross-rule state cycles, source/slot/stock
     permutations, long-sized orders, multiple physical tools, mixed/indivisible
     slots, manufactured tools, exact seeds and forced/preserved requests. Source

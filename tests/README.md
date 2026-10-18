@@ -184,6 +184,18 @@ impossible; additional stocked or manufactured tools must still recover that
 case. Source checks, literal inventory replay, delayed returns/save-load,
 worker handoff, cancellation and work caps guard the same-count recovery.
 
+`CapturedStateChoiceCostsTest` retains 85 positive combinations where general
+uses damage two tools' later specialized capacity by different amounts. A literal
+blue-first witness funds the forced material chain. It covers four wear ratios,
+2/3/7/31 general uses, source/slot/stock orders, mixed/whole and wide cohorts,
+cross-rule matching, manufactured tools, forced production, exact source/physical
+checks, delayed returns/save-load, worker handoff, cancellation and work caps.
+An independently bounded impossible neighbor exercises rejection of the cost trial.
+`StateChoiceCostsTest` compares 1501 allocations with exhaustive literal oracles;
+exact long-sized costs may only break qualitative ties, never remove an eligible
+edge or split a whole-key demand. It checks denied workspace, constructor failure,
+single-trial lifetime, unchanged ordinary scores and cancellation cleanup.
+
 `CapturedStateOrderFeedbackTest` retains 109 positive combinations with 2/3/5/8
 destructive rules and 2/7/31 light uses. It checks a constructive temporal order,
 recipe/slot/stock permutations, whole/mixed and wide cohorts, exact seeds,

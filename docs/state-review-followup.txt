@@ -1,7 +1,7 @@
 State-model review follow-up (2026-10-18)
 =======================================
-Review baseline: 5fb82e52. Inventory checked through 8ef89118 and the
-structural ordering extension described below. Earlier case reports retain
+Review baseline: 5fb82e52. Inventory checked through 8b6d15e3 and the
+quantitative choice extension described below. Earlier case reports retain
 their original versions and results; they are not current full-suite verdicts.
 
 Implemented portions of the review
@@ -160,6 +160,58 @@ validation, not a full corpus or live-host run.
 Assemble, integrated Forge/AE-dump packaging and all 1478 baseline ABI entries
 pass. Both new tests also pass against the packaged engine; only
 CapturedStatePlanning and StateScheduleRepair differ among 753 engine classes.
+
+Follow-up F2 gap: unequal damage hidden by qualitative ties
+---------------------------------------------------------
+Two tools can remain eligible for a later rule while losing different numbers
+of its guaranteed uses. The existing feedback assigns both the same wear flag;
+the ordinary longest-lived-tool tie-break can keep spending the more expensive
+tool. Once that protected rule fails again, the old choice scout has no new
+preference to try, even when the material order is forced and counts are correct.
+
+A synthetic family warms two cohorts unchanged, spends n general uses, opens
+their parts into specialized-work tokens, then consumes those tokens. Red starts
+at (n+1)*10*scale durability, general costs 10*scale and special costs 10. Blue
+starts at n*10+5, general costs 10 and special costs 5. General on blue first
+leaves exactly one blue special use and all (n+1)*scale red uses. This is an
+independent physical witness, not an assertion inferred from a solver result.
+On 8b6d15e3, 32 of 64 scale/count/order combinations solve and 32 remain UNKNOWN.
+
+After ordinary qualitative feedback fails for the same protected rule, a bounded
+activation-state comparison can request one additional same-word choice trial.
+Only ties with different exact lost-use costs admit it. The old eligibility/wear
+priorities remain primary; a long-valued one-step loss for that failed rule breaks
+ties in the entity allocator and matching edges. No eligibility edge, material
+gate, state transition or count is changed. A failed trial restores the old cost-
+free preferences, and all candidates still require exact source and physical
+verification. No negative conclusion or temporal-optimality claim is added.
+
+The admission scan has eight-family/256-state bounds and at most 1024 work or one
+eighth of the choice continuation's remaining allowance, with a 64-work minimum.
+The single additional replay shares the existing 32768/one-sixteenth lifetime.
+Optional cost workspace falls back to qualitative allocation before declining.
+No public API, host adapter, cache account, solver cap or version changes.
+
+All 64 combinations now solve. The original 32 positives retain exactly the same
+search work, compilation work and peak reservation in the comparison. At n=7,
+scale=10, order=0, public search work changes from 42019 (UNKNOWN) to 33624
+(feasible), and compilation work from 5569 to 4535. These are work counters, not
+timing claims. Tests extend the family to 85 positive variants, independent
+source/physical replay and 1501 literal allocation comparisons, plus runtime,
+failure and resource-limit controls. Local inputs and original results are
+registered under state-choice-cost-20261018; this is not a player attribution.
+
+Thirty-seven existing state/allocation/runtime/cache/metrics programs pass on
+both the frozen baseline and final code. Thirty-six reported outputs are equal;
+the concurrent source-cache test passes with a variable assertion count because
+each worker inspects the snapshot visible at its own lookup. Assemble, integrated
+Forge/AE-dump packaging, all 1478 baseline ABI entries and both new tests against
+the packaged library pass. Four implementation classes change; six nested
+records/enums differ in class bytes but preserve disassembled code/descriptors.
+The initial local class-delta script incorrectly expected only four changed
+class files; that failed check and its subsequent inspection are retained.
+All jobs use four logical CPUs, serial heavy processes. This remains focused
+state-subsystem validation, not a full corpus or live-host regression.
 
 Still open, with concrete implementation boundaries
 ---------------------------------------------------
