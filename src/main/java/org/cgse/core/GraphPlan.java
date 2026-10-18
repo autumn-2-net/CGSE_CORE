@@ -174,6 +174,31 @@ public final class GraphPlan<K> {
         return result == Result.FEASIBLE || result == Result.FEASIBLE_NOT_PROVEN_OPTIMAL;
     }
 
+    /** Transfer validated private refill builders. Callers must never mutate
+     * them again; the public constructor retains its defensive copies and
+     * amount validation. Metadata proofs from the old word are not inherited. */
+    static <K> GraphPlan<K> ownedRefill(GraphPlan<K> original, PlanStep steps,
+                                      Map<String, GraphRecipe<K>> recipes, Map<K, BigInteger> initial,
+                                      Map<K, BigInteger> missing, Result result, long searchNodes) {
+        return new GraphPlan<>(original, steps, recipes, initial, missing, result, searchNodes);
+    }
+
+    private GraphPlan(GraphPlan<K> original, PlanStep steps, Map<String, GraphRecipe<K>> recipes,
+                      Map<K, BigInteger> initial, Map<K, BigInteger> missing, Result result, long searchNodes) {
+        this.target = original.target;
+        this.amount = original.amount;
+        this.preserveSeeds = original.preserveSeeds;
+        this.steps = steps;
+        this.recipes = Collections.unmodifiableMap(recipes);
+        this.initial = Collections.unmodifiableMap(initial);
+        this.seeds = original.seeds;
+        this.missing = Collections.unmodifiableMap(missing);
+        this.result = result;
+        this.seedOptimality = null;
+        this.searchNodes = searchNodes;
+        this.planningNanos = original.planningNanos;
+    }
+
     /**
      * Verified execution after supplying this plan's deficits, without a proof
      * that omitted alternatives cannot fulfill the original order. Never a

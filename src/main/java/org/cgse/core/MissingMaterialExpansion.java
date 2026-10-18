@@ -11,6 +11,8 @@ import java.util.*;
  * Existing execution words, physical bindings and seed obligations are retained.
  */
 final class MissingMaterialExpansion<K> implements AutoCloseable {
+    private static final int OPERATIONS_PER_STEP = 64;
+    private enum Phase { START, REQUIREMENTS, RECIPES, RANK, QUEUE, SELECT, SOURCE, SUPPORT, COMPARE, APPLY, STEPS, DEFICITS, PUBLISH, VERIFY, DONE }
     private final GraphPlan<K> original;
     private final GraphCompiler<K> compiler;
     private final Map<K, Long> stock;
@@ -26,7 +28,19 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private PriorityQueue<K> pending;
     private PlanVerification<K> verification;
     private GraphPlan<K> candidate, result;
-    private int phase;
+    private Phase phase = Phase.START;
+    private Iterator<Map.Entry<K, BigInteger>> entries;
+    private Iterator<Map.Entry<String, GraphRecipe<K>>> bindings;
+    private Iterator<K> keys;
+    private Iterator<RefillProducerOrder<K>.Source> sources;
+    private K expanding;
+    private GraphRecipe<K> source;
+    private BigInteger plateauRuns;
+    private Proposal selected, proposal;
+    private boolean outputSupport, comparingSelected, strict;
+    private List<PlanStep> steps;
+    private Map<K, BigInteger> deficits;
+    private int prefixIndex;
     private long memory;
     private BigInteger targetDelta = BigInteger.ZERO;
 
@@ -43,79 +57,189 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         return false;
     }
     boolean step() {
-        budget.check();
-        if (phase == 0) {
-            reserve(256L + 128L * original.initialExact().size() + 96L * original.recipes().size());
-            required.putAll(original.initialExact()); recipes.putAll(original.recipes());
-            order = new RefillProducerOrder<>(compiler, original.missingExact().keySet(), external, excluded, budget);
-            phase = 1; return false;
-        }
-        if (phase == 1) {
+        // Do not put a complete child slice after this pass's own operations.
+        if (phase == Phase.RANK) {
             if (!order.step()) return false;
             pending = new PriorityQueue<>(Comparator.<K>comparingInt(order::rank).reversed());
-            for (K key : required.keySet()) { budget.check(); enqueue(key); }
-            phase = 2; return false;
+            keys = required.keySet().iterator(); phase = Phase.QUEUE; return false;
         }
-        if (phase == 2) {
-            if (pending.isEmpty()) { phase = 3; return false; }
-            K key = pending.remove(); queued.remove(key);
-            if (deficit(key, required.getOrDefault(key, BigInteger.ZERO), targetDelta).signum() == 0) return false;
-            var node = order.get(key);
-            if (node == null || node.sources.isEmpty()) return false;
-            Proposal selected = null;
-            try {
-                // Stable source priority remains the tie-break for incomparable
-                // supplies. A strict componentwise improvement may replace it.
-                for (var source : node.sources) {
-                    budget.check(); var recipe = source.recipe;
-                    GraphRecipe<K> existing = recipes.get(recipe.id());
-                    if (existing != null && !existing.equals(recipe)) continue;
-                    BigInteger count = CheckedAmounts.ceilDiv(deficit(key, required.getOrDefault(key, BigInteger.ZERO), targetDelta), gain(recipe, key));
-                    selected = prefer(selected, proposal(recipe, key, count));
-                    BigInteger plateau = plateau(recipe, key, count);
-                    if (!plateau.equals(count)) selected = prefer(selected, proposal(recipe, key, plateau));
-                    if (selected != null && selected.funded) break;
+        if (phase == Phase.VERIFY) {
+            if (!verification.step()) return false;
+            result = candidate; phase = Phase.DONE;
+            budget.note("missing_expansion", "backward_requirements; prefixes=" + prefix.size() + "; missing_keys=" + result.missingExact().size());
+            return true;
+        }
+        for (int i = 0; i < OPERATIONS_PER_STEP; i++) {
+            budget.check();
+            if (advance()) return true;
+            if (phase == Phase.RANK || phase == Phase.VERIFY) return false;
+        }
+        return false;
+    }
+    private boolean advance() {
+        switch (phase) {
+            case START -> {
+                reserve(256L + 128L * original.initialExact().size() + 96L * original.recipes().size());
+                entries = original.initialExact().entrySet().iterator(); phase = Phase.REQUIREMENTS;
+            }
+            case REQUIREMENTS -> {
+                if (entries.hasNext()) { var entry = entries.next(); required.put(entry.getKey(), entry.getValue()); }
+                else { entries = null; bindings = original.recipes().entrySet().iterator(); phase = Phase.RECIPES; }
+            }
+            case RECIPES -> {
+                if (bindings.hasNext()) { var entry = bindings.next(); recipes.put(entry.getKey(), entry.getValue()); }
+                else {
+                    bindings = null;
+                    order = new RefillProducerOrder<>(compiler, original.missingExact().keySet(), external, excluded, budget);
+                    phase = Phase.RANK;
                 }
-                if (selected == null) return false;
-                reserve(160L + 128L * (selected.recipe.inputs().size() + selected.recipe.outputs().size()));
-                targetDelta = selected.delta;
-                // Prepending changes requirements only on this recipe's support.
-                // Reverse prefix order at publication, without copying the old word.
-                for (var entry : selected.needs.entrySet()) {
-                    budget.check();
+            }
+            case QUEUE -> {
+                if (keys.hasNext()) enqueue(keys.next());
+                else { keys = null; phase = Phase.SELECT; }
+            }
+            case SELECT -> {
+                if (pending.isEmpty()) {
+                    if (prefix.isEmpty()) { result = original; phase = Phase.DONE; return true; }
+                    if (forceCraft && targetDelta.signum() < 0) throw new IllegalStateException("Refill lost verified production credit");
+                    steps = new ArrayList<>(); prefixIndex = prefix.size(); phase = Phase.STEPS;
+                } else {
+                    expanding = pending.remove(); queued.remove(expanding);
+                    if (deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta).signum() == 0) break;
+                    var node = order.get(expanding);
+                    if (node == null || node.sources.isEmpty()) break;
+                    sources = node.sources.iterator(); phase = Phase.SOURCE;
+                }
+            }
+            case SOURCE -> {
+                // Evaluate both counts before the funded-source early exit.
+                // A plateau must not skip its old count's useful coproducts.
+                if (plateauRuns != null) {
+                    BigInteger runs = plateauRuns; plateauRuns = null; beginProposal(runs);
+                } else if (selected != null && selected.funded || !sources.hasNext()) {
+                    sources = null; source = null;
+                    if (selected == null) phase = Phase.SELECT;
+                    else {
+                        reserve(160L + 128L * ((long) selected.recipe.inputs().size() + selected.recipe.outputs().size()));
+                        targetDelta = selected.delta; entries = selected.needs.entrySet().iterator(); phase = Phase.APPLY;
+                    }
+                } else {
+                    source = sources.next().recipe;
+                    GraphRecipe<K> existing = recipes.get(source.id());
+                    if (existing != null && !existing.equals(source)) break;
+                    BigInteger count = CheckedAmounts.ceilDiv(deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta), gain(source, expanding));
+                    BigInteger plateau = plateau(source, expanding, count);
+                    plateauRuns = plateau.equals(count) ? null : plateau;
+                    beginProposal(count);
+                }
+            }
+            case SUPPORT -> inspectSupport();
+            case COMPARE -> compare();
+            case APPLY -> {
+                // Only a completely evaluated/compared proposal can mutate the
+                // retained suffix. No other proposal runs during partial apply.
+                if (entries.hasNext()) {
+                    var entry = entries.next();
                     if (entry.getValue().signum() == 0) required.remove(entry.getKey());
                     else required.put(entry.getKey(), entry.getValue());
                     enqueue(entry.getKey());
+                } else {
+                    recipes.put(selected.recipe.id(), selected.recipe);
+                    prefix.add(PlanStep.batch(selected.recipe.id(), selected.runs));
+                    selected.close(); selected = null; entries = null; phase = Phase.SELECT;
                 }
-                recipes.put(selected.recipe.id(), selected.recipe);
-                prefix.add(PlanStep.batch(selected.recipe.id(), selected.runs));
-            } finally { if (selected != null) selected.close(); }
-            return false;
-        }
-        if (phase == 3) {
-            if (prefix.isEmpty()) { result = original; return true; }
-            if (forceCraft && targetDelta.signum() < 0) throw new IllegalStateException("Refill lost verified production credit");
-            var steps = new ArrayList<PlanStep>(prefix.size() + 1);
-            for (int i = prefix.size() - 1; i >= 0; i--) { budget.check(); steps.add(prefix.get(i)); }
-            steps.add(original.steps());
-            var deficits = new LinkedHashMap<K, BigInteger>();
-            for (var entry : required.entrySet()) {
-                budget.check(); BigInteger value = missing(entry.getKey(), entry.getValue());
-                if (value.signum() > 0) deficits.put(entry.getKey(), value);
             }
-            candidate = new GraphPlan<>(original.target(), original.amount(), original.preserveSeeds(),
-                    new PlanStep.Sequence(steps), recipes, required, original.seeds(), deficits,
-                    deficits.isEmpty() ? GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL : original.result(),
-                    budget.nodes(), original.planningNanos());
-            var funded = new GraphPlan<>(candidate.target(), candidate.amount(), candidate.preserveSeeds(),
-                    candidate.steps(), candidate.recipes(), candidate.initialExact(), candidate.seeds(), Map.of(),
-                    GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL, budget.nodes(), candidate.planningNanos());
-            verification = new PlanVerification<>(funded, budget); phase = 4; return false;
+            case STEPS -> {
+                if (prefixIndex > 0) steps.add(prefix.get(--prefixIndex));
+                else {
+                    steps.add(original.steps()); deficits = new LinkedHashMap<>();
+                    entries = required.entrySet().iterator(); phase = Phase.DEFICITS;
+                }
+            }
+            case DEFICITS -> {
+                if (entries.hasNext()) {
+                    var entry = entries.next(); BigInteger value = missing(entry.getKey(), entry.getValue());
+                    if (value.signum() > 0) deficits.put(entry.getKey(), value);
+                } else { entries = null; phase = Phase.PUBLISH; }
+            }
+            case PUBLISH -> {
+                // These private builders are never mutated after transfer. The
+                // public constructors still defensively copy caller collections.
+                candidate = GraphPlan.ownedRefill(original, FrozenPlanSteps.owned(steps), recipes, required, deficits,
+                        deficits.isEmpty() ? GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL : original.result(), budget.nodes());
+                var funded = GraphPlan.ownedRefill(candidate, candidate.steps(), candidate.recipes(), candidate.initialExact(), Map.of(),
+                        GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL, budget.nodes());
+                verification = new PlanVerification<>(funded, budget); phase = Phase.VERIFY;
+            }
+            case DONE -> { return true; }
+            default -> throw new IllegalStateException("Child continuation must use its own slice");
         }
-        if (!verification.step()) return false;
-        result = candidate;
-        budget.note("missing_expansion", "backward_requirements; prefixes=" + prefix.size() + "; missing_keys=" + result.missingExact().size());
-        return true;
+        return false;
+    }
+    private void beginProposal(BigInteger runs) {
+        BigInteger nextDelta = targetDelta.add(gain(source, original.target()).multiply(runs));
+        BigInteger old = deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta);
+        if (deficit(expanding, before(source, expanding, runs), nextDelta).compareTo(old) >= 0) return;
+        proposal = new Proposal(source, runs, nextDelta);
+        long bytes = 192L + 128L * ((long) source.inputs().size() + source.outputs().size());
+        budget.reserve(bytes); proposal.bytes = bytes;
+        keys = source.inputs().keySet().iterator(); outputSupport = false; phase = Phase.SUPPORT;
+    }
+    private void inspectSupport() {
+        if (!keys.hasNext() && !outputSupport) {
+            keys = proposal.recipe.outputs().keySet().iterator(); outputSupport = true;
+        }
+        if (!keys.hasNext()) { finishSupport(); return; }
+        K input = keys.next();
+        // Scan the ordered union without allocating an unbounded temporary set.
+        if (!outputSupport || !proposal.recipe.inputs().containsKey(input)) {
+            BigInteger need = before(proposal.recipe, input, proposal.runs);
+            proposal.needs.put(input, need);
+            BigInteger previous = deficit(input, required.getOrDefault(input, BigInteger.ZERO), targetDelta);
+            BigInteger next = deficit(input, need, proposal.delta);
+            if (next.compareTo(previous) > 0) {
+                proposal.funded = false;
+                if (order.rank(input) >= order.rank(expanding)) { finishComparison(false); return; }
+            }
+        }
+        // Iterator handoffs need no extra arithmetic/work unit or scheduler turn.
+        if (!keys.hasNext() && !outputSupport) {
+            keys = proposal.recipe.outputs().keySet().iterator(); outputSupport = true;
+        }
+        if (!keys.hasNext()) finishSupport();
+    }
+    private void finishSupport() {
+        if (selected == null || proposal.funded && !selected.funded) finishComparison(true);
+        else if (forceCraft && proposal.delta.compareTo(selected.delta) < 0) finishComparison(false);
+        else {
+            strict = false; comparingSelected = false;
+            keys = proposal.needs.keySet().iterator(); phase = Phase.COMPARE;
+        }
+    }
+    private void compare() {
+        // Compare the full requirement vector and production credit, not a sum
+        // of unlike missing items. Incomparable supplies retain source priority.
+        if (!keys.hasNext() && !comparingSelected) {
+            keys = selected.needs.keySet().iterator(); comparingSelected = true;
+        }
+        if (!keys.hasNext()) { finishComparison(strict); return; }
+        K key = keys.next();
+        if (!comparingSelected || !proposal.needs.containsKey(key)) {
+            int comparison = proposal.need(key).compareTo(selected.need(key));
+            if (comparison > 0) { finishComparison(false); return; }
+            strict |= comparison < 0;
+        }
+        if (!keys.hasNext() && !comparingSelected) {
+            keys = selected.needs.keySet().iterator(); comparingSelected = true;
+        }
+        if (!keys.hasNext()) finishComparison(strict);
+    }
+    private void finishComparison(boolean accept) {
+        if (accept) {
+            if (selected != null) selected.close();
+            selected = proposal;
+        } else proposal.close();
+        proposal = null; keys = null; phase = Phase.SOURCE;
     }
     private void enqueue(K key) {
         var node = order.get(key);
@@ -138,9 +262,6 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
     private BigInteger gain(GraphRecipe<K> recipe, K key) {
         return BigInteger.valueOf(recipe.outputs().getOrDefault(key, 0L)).subtract(BigInteger.valueOf(recipe.inputs().getOrDefault(key, 0L)));
-    }
-    private Set<K> support(GraphRecipe<K> recipe) {
-        var keys = new LinkedHashSet<>(recipe.inputs().keySet()); keys.addAll(recipe.outputs().keySet()); return keys;
     }
     private BigInteger before(GraphRecipe<K> recipe, K key, BigInteger runs) {
         BigInteger delta = gain(recipe, key);
@@ -173,68 +294,12 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         @Override public void close() { budget.release(bytes); bytes = 0; }
     }
 
-    /** Evaluate all support before mutating the retained suffix requirements. */
-    private Proposal proposal(GraphRecipe<K> recipe, K key, BigInteger runs) {
-        BigInteger nextDelta = targetDelta.add(gain(recipe, original.target()).multiply(runs));
-        BigInteger old = deficit(key, required.getOrDefault(key, BigInteger.ZERO), targetDelta);
-        if (deficit(key, before(recipe, key, runs), nextDelta).compareTo(old) >= 0) return null;
-        var proposal = new Proposal(recipe, runs, nextDelta);
-        boolean accepted = false;
-        try {
-            long bytes = 192L + 128L * ((long) recipe.inputs().size() + recipe.outputs().size());
-            budget.reserve(bytes); proposal.bytes = bytes;
-            for (K input : support(recipe)) {
-                budget.check();
-                BigInteger need = before(recipe, input, runs);
-                proposal.needs.put(input, need);
-                BigInteger previous = deficit(input, required.getOrDefault(input, BigInteger.ZERO), targetDelta);
-                BigInteger next = deficit(input, need, nextDelta);
-                if (next.compareTo(previous) > 0) {
-                    proposal.funded = false;
-                    if (order.rank(input) >= order.rank(key)) return null;
-                }
-            }
-            accepted = true;
-            return proposal;
-        } finally { if (!accepted) proposal.close(); }
-    }
-
-    private Proposal prefer(Proposal selected, Proposal candidate) {
-        if (candidate == null) return selected;
-        try {
-            if (selected == null || candidate.funded && !selected.funded || dominates(candidate, selected)) {
-                if (selected != null) selected.close();
-                return candidate;
-            }
-        } catch (RuntimeException | Error failure) { candidate.close(); throw failure; }
-        candidate.close();
-        return selected;
-    }
-
-    private boolean dominates(Proposal candidate, Proposal selected) {
-        // Retain production credit as well as the full requirement vector;
-        // unchanged missing totals can otherwise hide spending extra stock or
-        // losing credit needed by a later prefix. No item/fluid scalar prices.
-        if (forceCraft && candidate.delta.compareTo(selected.delta) < 0) return false;
-        boolean strict = false;
-        for (K key : candidate.needs.keySet()) {
-            budget.check();
-            int comparison = candidate.need(key).compareTo(selected.need(key));
-            if (comparison > 0) return false;
-            strict |= comparison < 0;
-        }
-        for (K key : selected.needs.keySet()) {
-            budget.check();
-            if (candidate.needs.containsKey(key)) continue;
-            int comparison = candidate.need(key).compareTo(selected.need(key));
-            if (comparison > 0) return false;
-            strict |= comparison < 0;
-        }
-        return strict;
-    }
     GraphPlan<K> result() { return result; }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     @Override public void close() {
+        if (proposal != null) { proposal.close(); proposal = null; }
+        if (selected != null) { selected.close(); selected = null; }
+        keys = null; entries = null; bindings = null; sources = null; source = null;
         if (order != null) order.close();
         if (verification != null) verification.close();
         budget.release(memory); memory = 0;

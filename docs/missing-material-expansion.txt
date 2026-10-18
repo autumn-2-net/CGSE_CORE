@@ -70,6 +70,21 @@ a fully stock-funded producer remains. No item/fluid exchange rate or sum
 of unlike missing quantities is used. Candidate scratch memory is charged
 and released even when comparison or evaluation exhausts a budget.
 
+Refill preparation, source selection, input/output support evaluation, full-vector
+comparison, applying a selected prefix, reversing prefixes and building deficits
+also retain cursors. Each expansion step performs at most 64 operations, or calls
+one child rank/verification continuation on its own. A proposal remains private
+until its support and comparison are complete; no next source sees a partially
+applied requirement vector. Both retained proposals are released on interruption.
+Iterator handoffs share their last port's work unit rather than charging another
+arithmetic operation. Duplicate input/output support needs no temporary union set.
+
+Publication transfers the completed private maps and flat step list into immutable
+views, without copying the full vectors again for the funded verification plan.
+These builders must never be mutated after transfer, including on close or another
+step call. Public GraphPlan and PlanStep.Sequence constructors still defensively
+copy and validate caller-owned collections. Public signatures are unchanged.
+
 After expansion, PlanVerification checks the funded complete word again. A
 work/time/memory exit does not publish the partially expanded bill. Existing
 main and fallback budgets remain independent and unchanged. Feasible plans
@@ -108,6 +123,12 @@ external/excluded/raw-escape boundaries, self-input growth and returned tools,
 interruption during rank/SCC cursors, and a real one-worker scheduler where a
 small queued request must run within one bounded rank slice of a large order.
 
+RefillContinuationTest exercises 12000 sources, 4096-port comparisons, 4096-step
+prefix publication, primitive witness replay and public collection isolation.
+It cancels every observed continuation boundary, checks work/memory limit cleanup,
+and queues small requests on the actual one-worker scheduler during source scans,
+support evaluation, dominance comparison, application and publication preparation.
+
 Known boundaries after the refill review at 224e9172:
 
 - This pass prepends to a verified execution suffix. It does not remove
@@ -119,7 +140,10 @@ Known boundaries after the refill review at 224e9172:
 - Single-producer whole-deficit proposals do not cover all stock-funded
   source mixtures. Same-rank multi-step cycles can remain seed boundaries.
   A stopped expansion is not proof that a material has no useful producer.
-- MissingMaterialExpansion's proposal source/support scans and publication
-  still need finer continuation cursors. Bounded rank/SCC steps do not make
-  the entire refill pipeline's scheduler turn bounded.
+- The refill builder's enumeration and publication cursors are bounded, but
+  the general final verifier still has synchronous helpers (for example its
+  key-union construction and ordinary-batch disjointness inspection). Hash
+  operations, recipe equality, collection growth, big-integer arithmetic and
+  GC also have no hard wall-time guarantee. This is not a claim that every
+  operation in the entire planning pipeline has bounded latency.
 - Public per-material boundary reasons are not introduced by this change.
