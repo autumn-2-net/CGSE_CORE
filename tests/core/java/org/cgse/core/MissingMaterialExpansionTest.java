@@ -86,7 +86,7 @@ public final class MissingMaterialExpansionTest {
         var feed=recipe("feed",Map.of("raw",1L),Map.of("feed",1L));
         var demand=recipe("demand",Map.of("A",10L),Map.of("G",1L));
         var grown=expand(List.of(grow,feed,demand),partial(demand,Map.of()),Map.of());
-        check(grown.missing().equals(Map.of("A",1L,"raw",10L)),"seed growth failed to expand its feedstock: "+grown.missing());
+        check(grown.missing().equals(Map.of("A",1L,"raw",9L)),"seed growth failed to stop at its startup platform: "+grown.missing());
     }
     static void returnedToolsAndCoproducts() {
         var finish=recipe("finish",Map.of("plate",5L,"B",1L),Map.of("G",1L));

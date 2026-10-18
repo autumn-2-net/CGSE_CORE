@@ -396,14 +396,17 @@ public final class RequestPlanningWork<K> implements PlanningScheduler.Work<Grap
                     (selected == null || !selected.feasible() && selected.missingExact().isEmpty())) {
                 selected = retained;
                 selectedIncomplete = currentIncomplete;
-            } else if (capturedCatalog != null && retained.result() == GraphPlan.Result.INFEASIBLE && !currentIncomplete &&
+            } else if (retained.result() == GraphPlan.Result.INFEASIBLE && !currentIncomplete &&
                     (selected == null || !selected.feasible() && selected.missingExact().isEmpty())) {
-                // Catalog work has already certified that this is a complete
-                // original-domain proof, not a restricted allocation/prefix.
+                // Both complete ordinary catalogs and complete capture owners
+                // retain original-domain proofs; bounded alternatives do not.
                 selected = retained;
                 selectedIncomplete = false;
                 finish();
                 return selected;
+            } else if (retained.result() == GraphPlan.Result.INFEASIBLE && currentIncomplete &&
+                    budget.failureDetail().startsWith("PROVEN_INFEASIBLE:")) {
+                budget.failureDetail("RESTRICTED_PROOF_NOT_TRANSFERRED: preview stopped by " + limit.limit());
             }
         }
         if (selected == null || !selected.feasible() && !verifiedRefill(selected, selectedIncomplete) &&

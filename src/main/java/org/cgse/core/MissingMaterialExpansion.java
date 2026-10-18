@@ -62,32 +62,34 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             if (deficit(key, required.getOrDefault(key, BigInteger.ZERO), targetDelta).signum() == 0) return false;
             var node = order.get(key);
             if (node == null || node.sources.isEmpty()) return false;
-            GraphRecipe<K> selected = null;
-            BigInteger runs = null;
-            // Preserve stable source priority, preferring an entirely funded
-            // prefix. Every accepted source reduces the ranked deficit measure.
-            for (var source : node.sources) {
-                budget.check(); var recipe = source.recipe;
-                GraphRecipe<K> existing = recipes.get(recipe.id());
-                if (existing != null && !existing.equals(recipe)) continue;
-                BigInteger count = CheckedAmounts.ceilDiv(deficit(key, required.getOrDefault(key, BigInteger.ZERO), targetDelta), gain(recipe, key));
-                int proposal = acceptable(recipe, key, count);
-                if (proposal == 0) continue;
-                if (selected == null || proposal == 2) { selected = recipe; runs = count; }
-                if (proposal == 2) break;
-            }
-            if (selected == null) return false;
-            reserve(160L + 128L * (selected.inputs().size() + selected.outputs().size()));
-            targetDelta = targetDelta.add(gain(selected, original.target()).multiply(runs));
-            // Prepending changes requirements only on this recipe's support.
-            // Reverse prefix order at publication, without copying the old word.
-            for (K resource : support(selected)) {
-                budget.check();
-                BigInteger next = before(selected, resource, runs);
-                if (next.signum() == 0) required.remove(resource); else required.put(resource, next);
-                enqueue(resource);
-            }
-            recipes.put(selected.id(), selected); prefix.add(PlanStep.batch(selected.id(), runs));
+            Proposal selected = null;
+            try {
+                // Stable source priority remains the tie-break for incomparable
+                // supplies. A strict componentwise improvement may replace it.
+                for (var source : node.sources) {
+                    budget.check(); var recipe = source.recipe;
+                    GraphRecipe<K> existing = recipes.get(recipe.id());
+                    if (existing != null && !existing.equals(recipe)) continue;
+                    BigInteger count = CheckedAmounts.ceilDiv(deficit(key, required.getOrDefault(key, BigInteger.ZERO), targetDelta), gain(recipe, key));
+                    selected = prefer(selected, proposal(recipe, key, count));
+                    BigInteger plateau = plateau(recipe, key, count);
+                    if (!plateau.equals(count)) selected = prefer(selected, proposal(recipe, key, plateau));
+                    if (selected != null && selected.funded) break;
+                }
+                if (selected == null) return false;
+                reserve(160L + 128L * (selected.recipe.inputs().size() + selected.recipe.outputs().size()));
+                targetDelta = selected.delta;
+                // Prepending changes requirements only on this recipe's support.
+                // Reverse prefix order at publication, without copying the old word.
+                for (var entry : selected.needs.entrySet()) {
+                    budget.check();
+                    if (entry.getValue().signum() == 0) required.remove(entry.getKey());
+                    else required.put(entry.getKey(), entry.getValue());
+                    enqueue(entry.getKey());
+                }
+                recipes.put(selected.recipe.id(), selected.recipe);
+                prefix.add(PlanStep.batch(selected.recipe.id(), selected.runs));
+            } finally { if (selected != null) selected.close(); }
             return false;
         }
         if (phase == 3) {
@@ -122,8 +124,10 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
     private BigInteger missing(K key, BigInteger need) {
         if (external.contains(key)) return BigInteger.ZERO;
-        long have = ignoreTargetStock && original.target().equals(key) ? 0 : stock.getOrDefault(key, 0L);
-        return need.subtract(BigInteger.valueOf(have)).max(BigInteger.ZERO);
+        return need.subtract(BigInteger.valueOf(available(key))).max(BigInteger.ZERO);
+    }
+    private long available(K key) {
+        return ignoreTargetStock && original.target().equals(key) ? 0 : stock.getOrDefault(key, 0L);
     }
     private BigInteger deficit(K key, BigInteger need, BigInteger prefixDelta) {
         BigInteger value = missing(key, need);
@@ -144,22 +148,89 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                 .add(delta.negate().max(BigInteger.ZERO).multiply(runs.subtract(BigInteger.ONE)));
         return first.max(required.getOrDefault(key, BigInteger.ZERO).subtract(delta.multiply(runs)));
     }
-    /** 0 rejects, 1 is a rank-decreasing refill, 2 needs no extra initial supplies. */
-    private int acceptable(GraphRecipe<K> recipe, K key, BigInteger runs) {
+    /** Keep the old count too: its extra firings may supply a useful coproduct. */
+    private BigInteger plateau(GraphRecipe<K> recipe, K key, BigInteger old) {
+        long input = recipe.inputs().getOrDefault(key, 0L), have = available(key);
+        if (input <= have) return old;
+        BigInteger delta = gain(recipe, key);
+        BigInteger gap = required.getOrDefault(key, BigInteger.ZERO).subtract(BigInteger.valueOf(input)).max(BigInteger.ZERO);
+        BigInteger runs = CheckedAmounts.ceilDiv(gap, delta).max(BigInteger.ONE);
+        if (forceCraft && original.target().equals(key))
+            runs = runs.max(CheckedAmounts.ceilDiv(targetDelta.negate().max(BigInteger.ZERO), delta));
+        return runs;
+    }
+
+    private final class Proposal implements AutoCloseable {
+        final GraphRecipe<K> recipe;
+        final BigInteger runs, delta;
+        final Map<K, BigInteger> needs = new LinkedHashMap<>();
+        boolean funded = true;
+        long bytes;
+        Proposal(GraphRecipe<K> recipe, BigInteger runs, BigInteger delta) {
+            this.recipe = recipe; this.runs = runs; this.delta = delta;
+        }
+        BigInteger need(K key) { return needs.getOrDefault(key, required.getOrDefault(key, BigInteger.ZERO)); }
+        @Override public void close() { budget.release(bytes); bytes = 0; }
+    }
+
+    /** Evaluate all support before mutating the retained suffix requirements. */
+    private Proposal proposal(GraphRecipe<K> recipe, K key, BigInteger runs) {
         BigInteger nextDelta = targetDelta.add(gain(recipe, original.target()).multiply(runs));
         BigInteger old = deficit(key, required.getOrDefault(key, BigInteger.ZERO), targetDelta);
-        if (deficit(key, before(recipe, key, runs), nextDelta).compareTo(old) >= 0) return 0;
-        boolean funded = true;
-        for (K input : support(recipe)) {
-            budget.check();
-            BigInteger previous = deficit(input, required.getOrDefault(input, BigInteger.ZERO), targetDelta);
-            BigInteger next = deficit(input, before(recipe, input, runs), nextDelta);
-            if (next.compareTo(previous) > 0) {
-                funded = false;
-                if (order.rank(input) >= order.rank(key)) return 0;
+        if (deficit(key, before(recipe, key, runs), nextDelta).compareTo(old) >= 0) return null;
+        var proposal = new Proposal(recipe, runs, nextDelta);
+        boolean accepted = false;
+        try {
+            long bytes = 192L + 128L * ((long) recipe.inputs().size() + recipe.outputs().size());
+            budget.reserve(bytes); proposal.bytes = bytes;
+            for (K input : support(recipe)) {
+                budget.check();
+                BigInteger need = before(recipe, input, runs);
+                proposal.needs.put(input, need);
+                BigInteger previous = deficit(input, required.getOrDefault(input, BigInteger.ZERO), targetDelta);
+                BigInteger next = deficit(input, need, nextDelta);
+                if (next.compareTo(previous) > 0) {
+                    proposal.funded = false;
+                    if (order.rank(input) >= order.rank(key)) return null;
+                }
             }
+            accepted = true;
+            return proposal;
+        } finally { if (!accepted) proposal.close(); }
+    }
+
+    private Proposal prefer(Proposal selected, Proposal candidate) {
+        if (candidate == null) return selected;
+        try {
+            if (selected == null || candidate.funded && !selected.funded || dominates(candidate, selected)) {
+                if (selected != null) selected.close();
+                return candidate;
+            }
+        } catch (RuntimeException | Error failure) { candidate.close(); throw failure; }
+        candidate.close();
+        return selected;
+    }
+
+    private boolean dominates(Proposal candidate, Proposal selected) {
+        // Retain production credit as well as the full requirement vector;
+        // unchanged missing totals can otherwise hide spending extra stock or
+        // losing credit needed by a later prefix. No item/fluid scalar prices.
+        if (forceCraft && candidate.delta.compareTo(selected.delta) < 0) return false;
+        boolean strict = false;
+        for (K key : candidate.needs.keySet()) {
+            budget.check();
+            int comparison = candidate.need(key).compareTo(selected.need(key));
+            if (comparison > 0) return false;
+            strict |= comparison < 0;
         }
-        return funded ? 2 : 1;
+        for (K key : selected.needs.keySet()) {
+            budget.check();
+            if (candidate.needs.containsKey(key)) continue;
+            int comparison = candidate.need(key).compareTo(selected.need(key));
+            if (comparison > 0) return false;
+            strict |= comparison < 0;
+        }
+        return strict;
     }
     GraphPlan<K> result() { return result; }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }

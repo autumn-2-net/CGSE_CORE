@@ -30,6 +30,21 @@ an ordinary item downstream of that cycle is expanded to the actual seed.
 An available raw escape route is expanded even if another producer cycles.
 Productive cycles may reduce seed loans while expanding their feedstocks.
 
+For a growth producer with input a, available stock s, current requirement R
+and positive net output d, the old ceil(deficit/d) count can run past the
+startup requirement plateau. Expansion also evaluates the exact breakpoint
+
+  max(1, ceil(max(0, R - max(a, s)) / d)).
+
+The old count stays available: its extra coproducts or forced-target credit
+can matter. Candidates are compared by their entire before-requirement
+vectors, including unchanged resources, and by forced-target production
+credit. A strictly componentwise better candidate replaces the selected one;
+incomparable candidates keep catalog priority. The existing preference for
+a fully stock-funded producer remains. No item/fluid exchange rate or sum
+of unlike missing quantities is used. Candidate scratch memory is charged
+and released even when comparison or evaluation exhausts a budget.
+
 After expansion, PlanVerification checks the funded complete word again. A
 work/time/memory exit does not publish the partially expanded bill. Existing
 main and fallback budgets remain independent and unchanged. Feasible plans
@@ -37,9 +52,43 @@ skip this pass. Incomplete capture stays conditional: expansion does not prove
 missing recipe/state domains infeasible or claim globally minimal supplies.
 Changed plans drop stale seed-optimality and alternative-plan metadata.
 
+An interrupted preview must not erase an already completed original-domain
+infeasibility proof. GraphPlanningWork retains that proof with an unavailable
+preview diagnostic; otherwise the actual work/time/memory limit remains the
+result. A fully verified expansion completed before its parent's publication
+boundary is also retained. Capture and request owners still prevent a local
+proof from escaping an incomplete or restricted recipe domain, including in
+diagnostic text. Cancellation remains exceptional, not an infeasibility result.
+
 MissingMaterialExpansionTest independently replays primitive operations for
 shared prerequisites, returned tools, coproducts, finite escapes and cycles,
 5000-level chains, wide fan-in and randomized DAGs. It also checks forced-order
 credit, counts beyond long and interrupted-work cleanup. GraphFallbackTest
 retains exact stock, force-crafting, cycle, configuration and budget controls.
 The local player-world and historical-dump comparisons stay outside Git.
+
+RefillQualityTest covers growth plateaus with stock and final seeds, joint
+production under reversed input/source order, incomparable supplies, useful
+coproducts, target credit and temporary-workspace cleanup. Its arithmetic
+quantity oracle and primitive replay are independent of candidate selection.
+MissingExpansionLimitTest observes real production state-machine transitions
+to expansion, then interrupts work/time/memory or cancellation. It exercises
+both completed and absent root proofs, completed child publication, ordinary
+request ownership, and complete/incomplete captures without injecting proofs.
+
+Known boundaries after the refill review at 224e9172:
+
+- This pass prepends to a verified execution suffix. It does not remove
+  excessive firings already selected upstream. In particular, the complete
+  main-solver growth example can still retain 1001 firings although refining
+  the finish-only suffix now needs one. A separate verified suffix rewrite or
+  upstream count improvement is needed; local refill quality is not global
+  minimality.
+- Single-producer whole-deficit proposals do not cover all stock-funded
+  source mixtures. Same-rank multi-step cycles can remain seed boundaries.
+  A stopped expansion is not proof that a material has no useful producer.
+- RefillProducerOrder still repeats input dependencies across coproducts;
+  shared recipe AND nodes are a separate representation optimization.
+- Source/support scans and portions of SCC work still need finer continuation
+  cursors. Budget checks inside a loop do not bound one scheduler turn.
+- Public per-material boundary reasons are not introduced by this change.

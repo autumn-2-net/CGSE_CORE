@@ -791,6 +791,8 @@ public final class CapturedCatalog<K> {
         }
 
         private void finish(GraphPlan<K> plan, GraphPlan.Result reason) {
+            if ((!coverage.complete() || allocationView) && budget.failureDetail().startsWith("PROVEN_INFEASIBLE:"))
+                budget.failureDetail("RESTRICTED_PROOF_NOT_TRANSFERRED: result=" + reason);
             // A funded refill witness is useful even when omitted candidates
             // prevent an infeasibility proof. Keep that scope explicit and never
             // transfer seed optimality or negative conclusions from the view.

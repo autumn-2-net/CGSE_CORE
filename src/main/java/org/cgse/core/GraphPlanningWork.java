@@ -1318,11 +1318,12 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         // empty failure when the owner reaches its limit before harvesting it.
         if (result != null) return result;
         if (missingExpansion != null) {
+            GraphPlan<K> completed = missingExpansion.result();
             // The witness is funded, but its displayed supply boundary has not
             // completed expansion. Do not publish a truncated intermediate bill.
             missingExpansion.close(); missingExpansion = null;
-            budget.failureDetail("MISSING_EXPANSION_INCOMPLETE: " + limit.limit());
-            return failure(GraphPlan.Result.valueOf(limit.limit().name()));
+            if (completed != null) return result = completed;
+            return incompleteMissingExpansion(limit);
         }
         if (seedOptimization != null) {
             GraphPlan<K> retained = seedOptimization.result();
@@ -1330,8 +1331,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
             seedOptimization = null;
             discardQuantityAnalysis();
             if (missingPreview && MissingMaterialExpansion.needed(compiler, retained)) {
-                budget.failureDetail("MISSING_EXPANSION_INCOMPLETE: " + limit.limit());
-                return failure(GraphPlan.Result.valueOf(limit.limit().name()));
+                return incompleteMissingExpansion(limit);
             }
             return retained;
         }
@@ -1351,6 +1351,15 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 budget.nodes(), System.nanoTime() - started);
         if (Boolean.TRUE.equals(quantityBlocked)) return missingPreview ? withoutMissingPreview("preview stopped by " + limit.limit())
                 : failure(GraphPlan.Result.INFEASIBLE);
+        return failure(GraphPlan.Result.valueOf(limit.limit().name()));
+    }
+
+    private GraphPlan<K> incompleteMissingExpansion(PlanningBudget.Exhausted limit) {
+        String detail = "MISSING_EXPANSION_INCOMPLETE: " + limit.limit();
+        // Only this original-domain proof slot can establish infeasibility.
+        // A funded suffix, rank refusal or failed restricted view cannot.
+        if (Boolean.TRUE.equals(quantityBlocked)) return withoutMissingPreview(detail);
+        budget.failureDetail(detail);
         return failure(GraphPlan.Result.valueOf(limit.limit().name()));
     }
 
