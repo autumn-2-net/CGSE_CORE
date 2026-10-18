@@ -12,6 +12,7 @@ import java.util.*;
  */
 final class CountAffineLattice implements AutoCloseable {
 
+    private static final int MAX_ALTERNATIVES = 32;
     private static final ExactRational HALF = new ExactRational(BigInteger.ONE, BigInteger.TWO);
     private static final ExactRational LOVASZ = new ExactRational(BigInteger.valueOf(3), BigInteger.valueOf(4));
 
@@ -43,6 +44,7 @@ final class CountAffineLattice implements AutoCloseable {
     private CountLatticePotential potential;
     private CountLatticePotential.Workspace potentialWorkspace;
     private boolean deep, strengthened;
+    private int alternative;
     private int insertionFrom = -1, insertionTo;
 
     CountAffineLattice(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
@@ -119,6 +121,10 @@ final class CountAffineLattice implements AutoCloseable {
                 }
             } else if (phase == 7) {
                 potentialStep();
+            } else if (phase == 8) {
+                nearest();
+                alternative++; checkpoints++;
+                if (counts != null || alternative == MAX_ALTERNATIVES) return complete = true;
             } else if (phase == 5) {
                 gramStep();
             } else if (phase == 6) {
@@ -577,7 +583,7 @@ final class CountAffineLattice implements AutoCloseable {
             // The general arm keeps its midpoint/interior trials, then the
             // lower corner. A short conditional turn goes straight to that
             // corner and kernel repair. Targets never restrict feasible counts.
-            int fraction = lowerFirst ? 0 : attempt == 0 ? 8 : attempt == 8 ? 0 : 2 + Math.floorMod(i * 7 + attempt * 5, 13);
+            int fraction = phase == 8 ? alternativeFraction(i) : lowerFirst ? 0 : attempt == 0 ? 8 : attempt == 8 ? 0 : 2 + Math.floorMod(i * 7 + attempt * 5, 13);
             var target = ExactRational.of(lower[i]).add(new ExactRational(upper[i].subtract(lower[i]).multiply(BigInteger.valueOf(fraction)), BigInteger.valueOf(16)));
             residual[i] = target.subtract(ExactRational.of(point[i]));
         }
@@ -619,6 +625,29 @@ final class CountAffineLattice implements AutoCloseable {
             }
         }
         return candidate;
+    }
+
+    private int alternativeFraction(int coordinate) {
+        long mixed = 0x9e3779b97f4a7c15L * (coordinate + 1L) + 0xbf58476d1ce4e5b9L * (alternative + 1L);
+        mixed = (mixed ^ (mixed >>> 30)) * 0xbf58476d1ce4e5b9L;
+        mixed = (mixed ^ (mixed >>> 27)) * 0x94d049bb133111ebL;
+        return (int) Long.remainderUnsigned(mixed ^ (mixed >>> 31), 17);
+    }
+
+    /**
+     * Reuse the exact basis after a caller rejects a partial allocation. The
+     * rejection is not a constraint: these are additional checked witnesses of
+     * this same scope, and exhausting their target points proves nothing.
+     */
+    boolean nextCandidate() {
+        if (!retaining || counts == null || memory == 0 || basis.size() < 2 || mu == null || norms == null || alternative == MAX_ALTERNATIVES)
+            return false;
+        budget.checkpoint();
+        counts = null;
+        complete = paused = false;
+        phase = 8;
+        budget.note("count_affine_alternative", "basis_reused; next=" + alternative + "; variables=" + lower.length);
+        return true;
     }
 
     private void interval() {

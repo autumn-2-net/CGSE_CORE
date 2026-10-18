@@ -3143,6 +3143,62 @@
       "work": 4000000,
       "expected": "SAT",
       "evidence": "Short-budget positive boundary; original primitive prefixes, target and seeds independently verified."
+    },
+    {
+      "name": "vector-candidate-reuse/manual_fuel_n24_c3_d2_a2_s107_aliases",
+      "source": "cases/graph/93/936f8b11bb199d34725a0d661635b915e9379b7f944ee742f59d53bc61e6ea5a.json",
+      "sha256_lf": "561be763bc4b13b04ed2c5436363516a698977cf233fd38b2651cd9864b5350a",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 12000000,
+      "expected": "SAT",
+      "evidence": "d15bd4a9 exhausts 40M on the original order. Reusing a checked affine basis after a failed residual allocation yields independently verified original-recipe plans on all three orders below 10M observed work. No local conflict is a global impossibility proof."
+    },
+    {
+      "name": "vector-candidate-reuse/manual_fuel_n24_c3_d2_a2_s107_aliases/workers-4",
+      "source": "cases/graph/93/936f8b11bb199d34725a0d661635b915e9379b7f944ee742f59d53bc61e6ea5a.json",
+      "sha256_lf": "561be763bc4b13b04ed2c5436363516a698977cf233fd38b2651cd9864b5350a",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 12000000,
+      "expected": "SAT",
+      "evidence": "Four-worker fixed 40M request yields an independently verified original-recipe plan; retained alternative basis and residual frontiers survive worker handoffs.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "vector-candidate-reuse/manual_fuel_n24_c3_d2_a2_s107_shuffle",
+      "source": "cases/graph/ec/ec3c3823027c567c883d3cd868ecc08a3c2eff014d71d502f626db9e26225efd.json",
+      "sha256_lf": "44a9453eb2dce09e67e90d27d3d38bb19808a4658887ae8463788a20b776bbb2",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 12000000,
+      "expected": "SAT",
+      "evidence": "d15bd4a9 exhausts 40M on the original order. Reusing a checked affine basis after a failed residual allocation yields independently verified original-recipe plans on all three orders below 10M observed work. No local conflict is a global impossibility proof."
+    },
+    {
+      "name": "vector-candidate-reuse/manual_fuel_n24_c3_d2_a2_s107_shuffle/workers-4",
+      "source": "cases/graph/ec/ec3c3823027c567c883d3cd868ecc08a3c2eff014d71d502f626db9e26225efd.json",
+      "sha256_lf": "44a9453eb2dce09e67e90d27d3d38bb19808a4658887ae8463788a20b776bbb2",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 12000000,
+      "expected": "SAT",
+      "evidence": "Four-worker fixed 40M request yields an independently verified original-recipe plan; retained alternative basis and residual frontiers survive worker handoffs.",
+      "workers": 4,
+      "expanded_budget": false
     }
   ]
 }

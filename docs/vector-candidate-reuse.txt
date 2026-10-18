@@ -1,0 +1,71 @@
+Reusing integer allocation candidates (2026-10-18)
+================================================
+
+A valid first allocation need not have a feasible residual allocation. The
+vector partition strategy previously closed the first bin's exact affine basis
+as soon as it found one witness. An exhausted residual matcher then selected
+another decomposition order and repeated elimination. The six fixed order
+attempts could miss a feasible nearby first allocation. Expanding that order
+list alone did not improve the remaining 33 source/fuel cases.
+
+CountAffineLattice now supports a bounded candidate stream after a caller
+rejects a partial allocation. It keeps the exact affine point, reduced basis
+and Gram coefficients, and tries at most 32 deterministic interior/corner
+targets with nearest-plane reconstruction. Every returned vector still passes
+the original integer rows and domains. This is a candidate heuristic: target
+points, rejected candidates and exhausted trials never become cuts or an
+infeasibility certificate. Other callers keep their existing first-witness path.
+
+CountVectorPartition retains one completed first-bin basis while checking the
+residual. After that decomposition fails, it may ask the same basis for another
+candidate before the ordinary allocation-order retry. This uses the same rows,
+coordinate order and original multiplicities. No state is shared between
+requests or different domains. The retained child is closed on success, refusal,
+quota exhaustion, cancellation or request closure.
+
+The extra branch receives at most 32,768 local work units and at most half the
+work already spent when the opportunity is first priced. Candidate generation,
+new residual solving and original-row verification all spend this one allowance.
+It is checked at cooperative step boundaries, so a final atomic step may cross
+the local threshold. Handoffs and further candidates never renew it. The parent
+request's search and memory caps remain authoritative. A failed extra branch
+continues the pending ordinary order retry; it does not replace a viable
+ordinary frontier or export the residual failure as a global proof.
+
+Comparison against d15bd4a9
+---------------------------
+At the unchanged 40M search cap, the 33 historical source/fuel inputs improve
+from 18 verified plans / 15 UNKNOWN to 20 verified plans / 13 UNKNOWN. The two
+recovered inputs are alias/shuffle forms of one recipe family:
+
+  manual_fuel_n24_c3_d2_a2_s107_aliases  41,607,354 -> 9,377,075 work
+  manual_fuel_n24_c3_d2_a2_s107_shuffle  41,133,189 -> 8,977,017 work
+
+Reported totals include compilation; the old search itself exhausted 40M.
+Their six original/order variants and two four-worker fixed-budget runs all
+produce independently verified primitive-prefix/target witnesses below 10M
+observed work. The maintained boundary guard is 12M observed work at the
+original 40M request cap. UNKNOWN cases keep their constructive SAT labels.
+
+All 18 earlier successes remain solved. Their summed work is 143,048,074 ->
+141,959,816, with a worst individual increase of 1.96%. This is not a claim of
+monotonic speedup. An additional 48 planted direct allocation models retain
+all 35 old witnesses and recover seed 29 (4M local limit -> 61,337 work).
+Some cheap direct decompositions still pay bounded extra work; the worst
+observed increase is 31,405 work (27.38%) on the 114,717-work seed 25.
+The additional 32 historical controls all remain solved (413,616,246 ->
+410,169,708 summed work). All 17 orders of the earlier execution-regression
+case retain exactly the same result and observed work as d15bd4a9.
+
+An earlier unpriced 131,072-work prototype solved another synthetic seed but
+more than doubled one cheap case. Its failed cost behavior is kept as a
+negative control; it is not the default admission rule. Two variants that
+deferred reuse until after the fixed order list did not improve the 33 inputs.
+Their source snapshots and original logs remain in local case storage.
+
+The focused checks cover candidate streams, exact large/signed arithmetic,
+budget/worker continuation, memory refusal, cancellation, existing affine and
+portfolio paths, missing-material expansion, prior execution regressions and
+packaged engine/ABI checks. These are focused comparisons, not a complete
+historical corpus or live Forge/AE execution run. Private incident evidence
+and failed experimental runs remain outside the repository.

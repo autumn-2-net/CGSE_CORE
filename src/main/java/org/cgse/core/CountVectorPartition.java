@@ -36,6 +36,9 @@ final class CountVectorPartition implements CountContinuation {
     private BigInteger[] remaining, candidate, counts;
     private int[] order;
     private CountAffineLattice affine;
+    private CountAffineLattice alternatives;
+    private long alternativeRemaining = 32768;
+    private boolean repairing, alternativesPriced;
     private CountMeetInMiddle matching;
     private List<ExactLinearProgram.Constraint> projected;
     private BigInteger[] binLower, binUpper;
@@ -201,8 +204,18 @@ final class CountVectorPartition implements CountContinuation {
         if (work >= maximumWork) return finish("local_limit");
         if (work >= until) { paused = true; return true; }
         long before = budget.threadWork();
+        boolean repairVisit = repairing;
         try {
             budget.check();
+            if (repairing && alternativeRemaining <= 0) {
+                // This extra branch has no live ordinary frontier to replace:
+                // the previous residual already failed. Resume its pending
+                // allocation-order retry, without renewing the scout's quota.
+                clearChildren();
+                repairing = false;
+                retry();
+                return complete;
+            }
             if (verifying) {
                 if (verified == rows.size()) { counts = candidate.clone(); return finish("verified_candidate"); }
                 var row = rows.get(verified++); var total = BigInteger.ZERO;
@@ -241,7 +254,14 @@ final class CountVectorPartition implements CountContinuation {
                     if (matching != null) return false;
                 }
             }
-            completedProgress += affine.progress(); affine.close(); affine = null;
+            if (found != null && bin == 0 && alternativeRemaining > 0) {
+                // Keep the completed basis while validating the residual. A
+                // local failure can reuse it instead of eliminating again.
+                alternatives = affine;
+            } else {
+                completedProgress += affine.progress(); affine.close();
+            }
+            affine = null;
             projected = null; binLower = binUpper = null;
             if (found == null) { retry(); return complete; }
             var target = currentBin();
@@ -251,7 +271,11 @@ final class CountVectorPartition implements CountContinuation {
                 candidate[target.variables[g]] = lower[target.variables[g]].add(found[i]); remaining[g] = remaining[g].subtract(found[i]);
             }
             bin++; completedProgress++; return false;
-        } finally { work += budget.threadWork() - before; }
+        } finally {
+            long spent = budget.threadWork() - before;
+            work += spent;
+            if (repairVisit || repairing) alternativeRemaining -= spent;
+        }
     }
 
     private Bin currentBin() { return bins.get((bin + attempt) % bins.size()); }
@@ -291,6 +315,23 @@ final class CountVectorPartition implements CountContinuation {
         if (matching == null) affine.resume(quantum); else matching.resume(quantum);
     }
     private void retry() {
+        if (alternatives != null) {
+            if (!alternativesPriced) {
+                // A cheap failed decomposition must not buy a large extra
+                // search. Charge the whole branch, including residual checks,
+                // against one small request-owned opportunity.
+                alternativeRemaining = Math.min(alternativeRemaining, work / 2);
+                alternativesPriced = true;
+            }
+            if (alternativeRemaining > 0 && alternatives.nextCandidate()) {
+                restart();
+                repairing = true;
+                affine = alternatives; alternatives = null; matchingTried = true;
+                return;
+            }
+            completedProgress += alternatives.progress(); alternatives.close(); alternatives = null;
+        }
+        repairing = false;
         if (++attempt >= 2 * bins.size()) { finish("decompositions_unresolved"); return; }
         restart();
     }
@@ -325,15 +366,22 @@ final class CountVectorPartition implements CountContinuation {
     @Override public BigInteger[] counts() { return counts == null ? null : counts.clone(); }
     @Override public long work() { return work; }
     @Override public long progress() {
-        return completedProgress + (matching == null ? 0 : matching.progress()) + (affine == null ? 0 : affine.progress());
+        return completedProgress + (matching == null ? 0 : matching.progress()) + (affine == null ? 0 : affine.progress()) +
+                (alternatives == null ? 0 : alternatives.progress());
     }
     @Override public boolean matches(List<ExactLinearProgram.Constraint> other, BigInteger[] low, BigInteger[] high) {
         return rows.equals(other) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
     }
     @Override public void close() {
+        clearChildren();
+        budget.release(memory); memory = 0;
+    }
+    private void clearChildren() {
+        completedProgress += (matching == null ? 0 : matching.progress()) + (affine == null ? 0 : affine.progress()) +
+                (alternatives == null ? 0 : alternatives.progress());
         if (matching != null) matching.close(); matching = null;
         if (affine != null) affine.close(); affine = null;
+        if (alternatives != null) alternatives.close(); alternatives = null;
         projected = null; binLower = binUpper = null;
-        budget.release(memory); memory = 0;
     }
 }

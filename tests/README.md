@@ -1175,3 +1175,11 @@ activities, including retained handoffs, memory refusal and cancellation.
 exchange scout must leave the ordinary walk available. See
 `docs/count-group-transfers.txt` for admission, scope and the failed experiments
 that motivated these checks. Both tests are included through automatic discovery.
+
+`CountAffineCandidatesTest` checks bounded alternative witnesses from a retained
+exact basis, including signed 70-bit offsets, 80-bit coefficients, one-unit
+grants, worker handoffs and cancellation. `CountVectorPartitionTest` checks
+reuse after a partial allocation fails, original-row validation, a recovered
+constructive model and cost guards for cheap decompositions. The execution
+boundary manifest pins two historical inputs in three recipe orders and with
+four workers. See `docs/vector-candidate-reuse.txt` for scope and measured costs.

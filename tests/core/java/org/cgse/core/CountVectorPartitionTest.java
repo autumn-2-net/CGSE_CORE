@@ -35,6 +35,7 @@ public final class CountVectorPartitionTest {
         } finally { pool.shutdownNow(); }
         compiledAdmission();
         residualMatching();
+        reusedCandidates();
         boundaries();
         System.out.println("Vector partition: 12 whole/sliced pairs, 12 permutations, worker handoff and scope/limit controls; solved=" + solved);
     }
@@ -177,6 +178,37 @@ public final class CountVectorPartitionTest {
             rows.add(new ExactLinearProgram.Constraint(terms, row.upper()));
         }
         Collections.shuffle(rows, random); return new Model(rows, low, high, witness);
+    }
+
+    private static void reusedCandidates() throws Exception {
+        var model = model(29, false, 19, 3, 2, 997);
+        check(valid(model, model.witness), "Reused-candidate constructive oracle");
+        var whole = solve(model, 262144, null);
+        var sliced = solve(model, 1, null);
+        check(whole.counts != null && Arrays.equals(whole.counts, sliced.counts), "Partial allocation rejection lost a reusable basis");
+        check(whole.diagnostics.contains("count_affine_alternative"), "Alternate candidate path not exercised");
+        check(whole.work < 100000, "Rejected first allocation restarted elimination");
+        // A formerly cheap decomposition must not spend the whole 131K trial
+        // quota that the unpriced prototype used before its ordinary retry.
+        for (int seed : new int[] {0, 25}) {
+            var cheap = solve(model(seed, false, 18 + seed % 7, 3, 2, 997), 127, null);
+            check(cheap.counts != null && cheap.work < (seed == 0 ? 175000 : 150000), "Alternative scout displaced a cheap decomposition");
+        }
+        var cancel = new AtomicBoolean();
+        var budget = new PlanningBudget(0, 16_000_000, 64L << 20, cancel::get, System::nanoTime);
+        try (var search = CountVectorPartition.create(model.rows, model.low, model.high, budget, 4096)) {
+            check(search != null, "Alternative cancellation admission");
+            while (!budget.diagnostics().contains("count_affine_alternative")) {
+                if (!search.step()) continue;
+                check(search.paused(), "Reuse not reached before cancellation"); search.resume(4096);
+            }
+            cancel.set(true);
+            boolean stopped = false;
+            try { search.step(); } catch (CancellationException expected) { stopped = true; }
+            check(stopped, "Rejected allocation ignored cancellation");
+        }
+        check(budget.reservedBytes() == 0, "Rejected allocation retained child memory");
+        System.out.println("Reusable vector candidate: original-row witness, one-unit continuation, cheap controls and cancellation passed");
     }
 
     private static Result solve(Model model, long quantum, ExecutorService worker) throws Exception {
