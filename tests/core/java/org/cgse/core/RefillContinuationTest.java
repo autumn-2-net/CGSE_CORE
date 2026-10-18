@@ -51,11 +51,16 @@ public final class RefillContinuationTest {
         return new MissingMaterialExpansion<>(compiler, suffix, Map.of(), Set.of(), Set.of(), true, false, budget);
     }
     private static boolean step(MissingMaterialExpansion<String> expansion, PlanningBudget budget) {
-        long before = budget.nodes(); String phase = phase(expansion); boolean done = expansion.step();
+        long before = budget.nodes(); String phase = phase(expansion); var retained = expansion.result(); boolean done = expansion.step();
         // The general final verifier has its own continuations. This assertion
         // covers the refill builder and rank pass, not unrelated verifier loops.
         if (!phase.equals("VERIFY")) check(budget.nodes() - before <= 64, "Unbounded refill phase " + phase);
-        if (!done) check(expansion.result() == null, "Partial bill became observable");
+        if (!done && expansion.result() != null) {
+            check(phase(expansion).equals("DONE") || phase(expansion).equals("PRUNE"), "Partial bill became observable");
+            // Optional whole-word refinement retains the completed bill. Its
+            // visibility must not expose any partially rewritten requirements.
+            if (retained != expansion.result()) MissingMaterialExpansionTest.verify(expansion.result(), Map.of());
+        }
         return done;
     }
     private static GraphPlan<String> solve(List<GraphRecipe<String>> recipes) {
@@ -131,9 +136,10 @@ public final class RefillContinuationTest {
             var cancel = new AtomicBoolean(); b = budget(1_000_000, 4L << 20, cancel);
             try (var e = expansion(compiler, suffix, b)) {
                 for (int i = 0; i < stop; i++) check(!step(e, b), "Cancellation boundary passed completion");
+                var retained = e.result();
                 cancel.set(true);
                 try { e.step(); throw new AssertionError("Ignored cancellation"); }
-                catch (CancellationException expected) { check(e.result() == null, "Cancellation published a partial bill"); }
+                catch (CancellationException expected) { check(e.result() == retained, "Cancellation published a partial bill"); }
                 e.close();
             }
             check(b.reservedBytes() == 0, "Cancelled retained candidates leaked");

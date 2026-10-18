@@ -8,12 +8,13 @@ import java.util.*;
 /**
  * Refines a concrete refill witness by exact backward prefix requirements.
  * No forward inventory loans, depth cutoff, or recipe-count cutoff establish a leaf.
- * Existing execution words, physical bindings and seed obligations are retained.
+ * Prefix expansion retains physical bindings and seed obligations. An optional
+ * verified whole-word pass can subsequently remove surplus cycle firings.
  */
 final class MissingMaterialExpansion<K> implements AutoCloseable {
     private static final int OPERATIONS_PER_STEP = 64;
     private static final long MIX_WORK_LIMIT = 8192;
-    private enum Phase { START, REQUIREMENTS, RECIPES, RANK, QUEUE, SELECT, SOURCE, FUNDING, SUPPORT, COMPARE, APPLY, STEPS, DEFICITS, PUBLISH, VERIFY, DONE }
+    private enum Phase { START, REQUIREMENTS, RECIPES, RANK, QUEUE, SELECT, SOURCE, FUNDING, SUPPORT, COMPARE, APPLY, STEPS, DEFICITS, PUBLISH, VERIFY, PRUNE, DONE }
     private final GraphPlan<K> original;
     private final GraphCompiler<K> compiler;
     private final Map<K, Long> stock;
@@ -43,6 +44,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private boolean outputSupport, comparingSelected, strict, mayMix, mixing;
     private boolean partialOpportunity, mixtureOpportunity, comparingMixture;
     private MissingMaterialExpansion<K> improvement;
+    private RefillWordPruning<K> pruning;
     private long improvementStart, improvementWork;
     private String retainedFailure;
     private List<PlanStep> steps;
@@ -62,15 +64,34 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         this.excluded = excluded; this.forceCraft = forceCraft; this.ignoreTargetStock = ignoreTargetStock; this.budget = budget;
         this.allowMixed = allowMixed; startedWork = budget.nodes();
         order = completedOrder; borrowedOrder = completedOrder != null;
+        if (!allowMixed && !hasProducibleMissing(compiler, original)) {
+            // Terminal-only bills already satisfy expansion's boundary contract.
+            // Keep them available even if optional word refinement hits a limit.
+            result = original; phase = Phase.PRUNE;
+        }
     }
     static <K> boolean needed(GraphCompiler<K> compiler, GraphPlan<K> plan) {
-        if (plan.feasible()) return false;
+        if (plan.feasible() || plan.missingExact().isEmpty()) return false;
+        return !(plan.steps() instanceof PlanStep.Batch) || hasProducibleMissing(compiler, plan);
+    }
+    private static <K> boolean hasProducibleMissing(GraphCompiler<K> compiler, GraphPlan<K> plan) {
         // Only a cheap index lookup here. Source inspection belongs to the
         // budgeted continuation, including rejected/excluded alternatives.
         for (K key : plan.missingExact().keySet()) if (!compiler.producers(key).isEmpty()) return true;
         return false;
     }
     boolean step() {
+        if (phase == Phase.PRUNE) {
+            phase = Phase.DONE;
+            // This terminal bill was complete before entering this pass. Do
+            // not spend a mandatory work unit just to decline optional work.
+            pruning = new RefillWordPruning<>(result, stock, external, forceCraft, ignoreTargetStock, budget,
+                    budget.remainingWork() >= 512 ? pruningAllowance() : 0);
+        }
+        if (pruning != null) {
+            if (!pruning.step()) return false;
+            result = pruning.result(); pruning.close(); pruning = null; return true;
+        }
         if (improvement != null) return improve();
         // Do not put a complete child slice after this pass's own operations.
         if (phase == Phase.RANK) {
@@ -95,12 +116,12 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                 improvement = new MissingMaterialExpansion<>(compiler, original, stock, external, excluded, forceCraft, ignoreTargetStock, budget, true, order);
                 return false;
             }
-            return true;
+            return complete();
         }
         for (int i = 0; i < OPERATIONS_PER_STEP; i++) {
             budget.check();
             if (advance()) return true;
-            if (phase == Phase.RANK || phase == Phase.VERIFY) return false;
+            if (phase == Phase.RANK || phase == Phase.VERIFY || pruning != null) return false;
         }
         return false;
     }
@@ -130,7 +151,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             }
             case SELECT -> {
                 if (pending.isEmpty()) {
-                    if (prefix.isEmpty()) { result = original; phase = Phase.DONE; return true; }
+                    if (prefix.isEmpty()) { result = original; return complete(); }
                     if (forceCraft && targetDelta.signum() < 0) throw new IllegalStateException("Refill lost verified production credit");
                     steps = new ArrayList<>(); prefixIndex = prefix.size(); phase = Phase.STEPS;
                 } else {
@@ -229,6 +250,21 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         }
         return false;
     }
+    private boolean complete() {
+        phase = Phase.DONE;
+        if (!allowMixed && !result.feasible() && budget.remainingWork() >= 512) {
+            // Only the exact candidate just verified can lend its fold. This
+            // parent keeps its charged verifier alive through the child's work.
+            var known = verification != null && candidate == result ? verification.summary() : null;
+            pruning = new RefillWordPruning<>(result, stock, external, forceCraft, ignoreTargetStock, budget, pruningAllowance(), known);
+            return false;
+        }
+        return true;
+    }
+    private long pruningAllowance() {
+        return Math.min(budget.remainingWork() / 4,
+                Math.min(MIX_WORK_LIMIT, Math.max(512, Math.min(MIX_WORK_LIMIT, budget.nodes() - startedWork) * 4)));
+    }
     private void queueRequirements() {
         pending = new PriorityQueue<>(Comparator.<K>comparingInt(order::rank).reversed());
         keys = required.keySet().iterator(); phase = Phase.QUEUE;
@@ -265,7 +301,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         if (accept) result = candidate;
         improvement.close(); improvement = null; keys = null; candidate = result;
         budget.note("missing_mix", (accept ? "accepted" : "retained_original") + "; work=" + (budget.nodes() - improvementStart));
-        return true;
+        return complete();
     }
     private void beginProposal(BigInteger runs) {
         BigInteger nextDelta = targetDelta.add(gain(source, original.target()).multiply(runs));
@@ -412,6 +448,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     GraphPlan<K> result() { return result; }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     @Override public void close() {
+        if (pruning != null) { pruning.close(); pruning = null; }
         if (improvement != null) { improvement.close(); improvement = null; }
         if (proposal != null) { proposal.close(); proposal = null; }
         if (selected != null) { selected.close(); selected = null; }
