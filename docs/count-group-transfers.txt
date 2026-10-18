@@ -1,0 +1,79 @@
+Bounded allocation exchanges in count jumps (2026-10-18)
+======================================================
+
+A wide-domain feasibility walk can reach a point at which changing either
+coordinate increases weighted violation, while transferring one unit between
+two coordinates improves it. Two simultaneous transfers can cross a barrier
+that neither transfer crosses alone. These candidate directions were previously
+kept as a local experiment because they did not solve the remaining source/fuel
+cases. Lack of a new hard-case witness alone is not a reason to discard a correct
+algorithm with acceptable comparison results.
+
+CountJumpTransfers recognizes short positive equal-coefficient rows and records
+unique pairs of unfixed finite coordinates. The directions preserve the chosen
+row's total, but need not preserve other constraints. They are not variable
+identifications, symmetry proofs, cuts or infeasibility certificates. Equal
+columns or a failed neighborhood never exclude an original recipe/count.
+
+The scout scores both legal unit directions of each pair using merged incident
+rows and exact integer activity differences. If no improving single transfer
+exists, up to four promising directed transfers are combined with a second
+disjoint transfer. A shared row is scored once using the combined delta. Scores
+only order candidates; all domains and every original row are checked again
+before accepting a witness. Fixed coordinates, signed coefficients, nonzero
+lower bounds and large integer offsets retain their original meaning.
+
+Preserving the established search
+---------------------------------
+Simply inserting exchanges into every stalled ordinary walk changed its basin.
+On 96 planted allocation models at the same local allowance, that experiment
+gained three witnesses but lost nine old ones (34 solved -> 28). It is not the
+default implementation. All original inputs and failed runs remain local.
+
+The integrated version forks a bounded scout from the current point and row
+weights. The parent keeps its own point, caches, random stream and search
+progress. An unsuccessful scout is closed; the ordinary walk performs the same
+pending weight update/perturbation it would have performed without that scout.
+A successful scout contributes only an original-row-verified candidate.
+
+There is at most one scout per retained wide-domain walk. It receives up to 16,384
+local work units after the ordinary walk has spent at least sixteen times that
+amount (262,144). Structural admission, initialization and arithmetic are
+charged to the existing request; budgets are not increased. The child quota is
+checked at step boundaries, as for the existing count jump. Its point and
+compound cursor survive parent budget/worker handoffs. The small Boolean pair
+search and one-shot jump trajectory stay on their existing path.
+
+An earlier isolated scout at 32K preserved witnesses but displaced a cheap 36K
+walk by almost 50%. The later admission preserves that short path. It does not
+promise monotonic performance for every unseen model or finite work allowance.
+Both parent and scout retain their own accounted workspace; optional memory
+refusal resumes the parent and releases any prepared directions.
+
+Regression scope
+----------------
+CountJumpTransfersTest compares 2,859 single/compound deltas against full
+original-row evaluation, independently verifies eight single/compound witnesses,
+and exercises row order, 70-bit offsets, deduplication, memory refusal, one-unit
+handoffs, worker migration and cancellation. CountJumpAllocationTest preserves
+all 34 baseline witnesses among 96 planted models and pins the cheap 36K path.
+The other models are known feasible by their planted assignment, but lack of
+a bounded local-search witness remains UNKNOWN. Both tests are automatically
+discovered by the ordinary core/standard/full entry points.
+
+At 40M search work, all 32 historical successful controls keep their outcomes
+and exact work. The separate 33 source/fuel cases retain 18 successes and 15
+search limits; successful cases keep their work. Four unresolved requests have
+minor differences in charged total work. No new solution to those 15 limits is
+claimed. At a 1,048,576 local allowance the planted comparison remains 38 solved,
+with no lost baseline witness. This is capability retention with bounded
+admission, not a claimed general speedup or completion of the remaining audit.
+
+All 741 maintained fixture/order checks and the previous count/execution
+regression's 17 orders preserve their results and exact work. Twelve selected
+core programs and 61 count-model boundaries pass. Two archived implementation
+variants fail the new allocation test as intended: replacing the walk loses a
+witness, while the early isolated scout violates the short-path cost guard.
+Packaging and focused-program evidence is recorded with the local case registry.
+This change does not constitute a fresh complete corpus run or live
+Minecraft/host execution. Version remains 0.1.2.

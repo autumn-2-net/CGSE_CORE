@@ -1167,3 +1167,11 @@ arms exposed by fixed coordinates or newly tightened domains. The existing
 `hard_random_0201` execution boundaries retain their SAT oracle, 40M request cap
 and 33M observed-work guard; they detect admission cost displacing the ordinary
 search. See `docs/vector-allocation-admission.txt` for the isolated diagnosis.
+
+`CountJumpTransfersTest` checks combined exchanges against full original-row
+activities, including retained handoffs, memory refusal and cancellation.
+`CountJumpAllocationTest` preserves 34 previously solved allocation walks among
+96 planted models and guards a cheap path against premature scouting. A failed
+exchange scout must leave the ordinary walk available. See
+`docs/count-group-transfers.txt` for admission, scope and the failed experiments
+that motivated these checks. Both tests are included through automatic discovery.
