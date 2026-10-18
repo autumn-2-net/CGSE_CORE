@@ -88,8 +88,15 @@ indivisible-count production proof are left unchanged. Consumed configuration
 inputs also decline rewriting, preserving their per-push contract. Sequences
 use explicit cursors; composite repeat bodies stay opaque and their internal
 order is never flattened into independent batches. Nested exact counts larger
-than long remain compact. Self-returning recipes trigger this pass; a catalog
-with only multi-recipe cycles and no direct input returns is not yet selected.
+than long remain compact. Self-returning recipes trigger this pass directly.
+Otherwise an optional structural scan looks for an output of a previously
+consumed material in the actual execution word. This also selects multi-recipe
+feedback such as A -> B -> more A; catalog order is not an execution order.
+Positive repeats visit their body once, regardless of count, and zero-count
+branches are skipped. Saved word/input/output cursors use bounded slices and
+charged scratch memory. The scan stops after at most min(1024, max(128,
+allowance/4)) work units plus its exit check, retaining the old bill. It is an
+applicability hint, not a cycle proof or a claim that an unselected bill is best.
 
 Both initial withdrawal and missing supply must be componentwise no larger.
 A separate complete prefix/delivery/seed verification precedes publication.
@@ -104,7 +111,7 @@ single bounded continuation of overshoot), scaled down for small expansions.
 Plain cursor slices visit at most 64 entries; child folds/verifiers own their
 slices. Terminal-only missing bills can enter this optional pass too, without
 rebuilding the producer graph or losing the bill at an exhausted entry boundary.
-Ordinary recipes with no direct returns decline before folding the whole word.
+Words with no observed feedback decline before folding the whole word.
 
 Mixed-source stock allocation is an optional improvement of the completed bill.
 While inspecting ordinary candidates, expansion detects positive partial batches
@@ -223,6 +230,11 @@ Its 500 randomized words use independent literal prefix requirements and replay;
 every accepted initial/missing vector is compared componentwise with the original.
 Limits at continuation boundaries and a real one-worker handoff cover retention,
 cleanup, cancellation and cooperative scheduling.
+RefillCycleStructureTest adds two/three/five-recipe loops with independent
+arithmetic quantity bounds, actual primitive replay, stock variations, final
+seeds and required coproducts. Reversed catalogs, shared/zero/deep/huge words,
+ordinary chains, structural cutoffs and work/time/memory/cancellation exits
+exercise the applicability scan, including real one-worker scheduler handoffs.
 MissingExpansionLimitTest observes real production state-machine transitions
 to expansion, then interrupts work/time/memory or cancellation. It exercises
 both completed and absent root proofs, completed child publication, ordinary
@@ -255,12 +267,17 @@ Known boundaries after the refill review at 224e9172:
   firings becomes one when no final A seed is required). It remains bounded and
   conservative: it does not replace recipes, optimize inside opaque composite
   repeat bodies, rewrite consumed configuration pushes, or claim global minimum
-  supplies. It retains existing forced-production credit even if it is surplus.
+  supplies. Multi-recipe loops already present in the word are eligible too.
+  Flat batches are reduced individually: without discovering joint blocks they
+  can retain more firings than an equivalent composite repeat. Existing forced
+  production credit is retained even if it is surplus.
 - A bounded alternative pass covers stock-funded producer mixtures that the
   single-source proposals miss, with whole-bill dominance guarding acceptance.
   Its hints and greedy allocation are incomplete. Same-rank multi-step cycles
-  can remain seed boundaries. A stopped expansion is not proof that a material has no useful
-  producer, nor a certificate of minimum supply.
+  can remain seed boundaries when improving them requires synthesizing a new
+  route; pruning an existing word does not provide that route. A stopped
+  expansion is not proof that a material has no useful producer, nor a
+  certificate of minimum supply.
 - Refill enumeration/publication and final verifier key traversal use bounded
   continuations; verifier union construction and repeated recipe-disjointness
   scans are eliminated. Recipe construction remains linear. Host key/recipe

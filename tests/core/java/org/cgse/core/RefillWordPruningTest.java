@@ -249,7 +249,7 @@ public final class RefillWordPruningTest {
         }
         check(b.reservedBytes() == 0, "Pruning workspace"); return result;
     }
-    private static GraphPlan<String> literalPlan(List<GraphRecipe<String>> recipes, PlanStep word, Map<String, Long> seeds,
+    static GraphPlan<String> literalPlan(List<GraphRecipe<String>> recipes, PlanStep word, Map<String, Long> seeds,
                                                  Map<String, Long> stock, Set<String> external) {
         var bindings = new LinkedHashMap<String, GraphRecipe<String>>(); recipes.forEach(r -> bindings.put(r.id(), r));
         var balance = new HashMap<String, BigInteger>(); var need = new LinkedHashMap<String, BigInteger>();
@@ -284,7 +284,7 @@ public final class RefillWordPruningTest {
         }
         return result;
     }
-    private static void literalVerify(GraphPlan<String> p, Map<String, Long> stock, Set<String> external) {
+    static void literalVerify(GraphPlan<String> p, Map<String, Long> stock, Set<String> external) {
         var inventory = new HashMap<>(p.initialExact());
         p.initialExact().forEach((k, n) -> check(external.contains(k) || n.compareTo(BigInteger.valueOf(stock.getOrDefault(k, 0L)).add(p.missingExact().getOrDefault(k, ZERO))) <= 0, "Unfunded material " + k));
         for (String id : literalWord(p.steps())) {

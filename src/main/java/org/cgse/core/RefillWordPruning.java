@@ -15,7 +15,7 @@ import java.util.*;
  * preserves executability without requiring all unrequested final coproducts.
  */
 final class RefillWordPruning<K> implements AutoCloseable {
-    private enum Phase { RECIPES, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, DONE }
+    private enum Phase { RECIPES, STRUCTURE, CONSUMED, PRODUCED, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, DONE }
     private final GraphPlan<K> original;
     private final Map<K, Long> stock;
     private final Set<K> external;
@@ -29,6 +29,10 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private Iterator<GraphRecipe<K>> recipes;
     private Iterator<Map.Entry<K, BigInteger>> entries;
     private Iterator<Map.Entry<K, Long>> seeds;
+    private Deque<Iterator<PlanStep>> structure;
+    private Set<K> consumed;
+    private Iterator<K> ports;
+    private GraphRecipe<K> inspecting;
     private PlanVerification<K> verification;
     private SummaryComputation<K> computation;
     private SequenceSummary<K> summary, unitSummary;
@@ -38,7 +42,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private boolean feedback, changed, allocated;
     private Phase phase = Phase.RECIPES;
     private int reverseIndex;
-    private long memory, summaryBytes, unitBytes;
+    private long memory, summaryBytes, unitBytes, structureBytes, structureStarted;
 
     RefillWordPruning(GraphPlan<K> original, Map<K, Long> stock, Set<K> external, boolean forceCraft,
                       boolean ignoreTargetStock, PlanningBudget budget, long allowance) {
@@ -103,11 +107,39 @@ final class RefillWordPruning<K> implements AutoCloseable {
                     feedback |= recipe.hasInputReturns();
                 } else {
                     recipes = null;
-                    // Ordinary acyclic bills need no additional fold. This is
-                    // an applicability filter, not a claim that they are optimal.
-                    if (!feedback) return finish(false);
-                    if (summary != null) return beginOriginal();
-                    verification = verify(original); phase = Phase.ORIGINAL;
+                    if (feedback) return startOriginal();
+                    // A returned startup resource can cross several recipes.
+                    // Inspect the actual word, not arbitrary catalog ordering.
+                    // Like the flat flow pass, a later output of an already
+                    // consumed key is a hint; the exact verifier remains final.
+                    structure = new ArrayDeque<>(); consumed = new HashSet<>();
+                    structureStarted = budget.nodes(); pushStructure(List.of(original.steps())); phase = Phase.STRUCTURE;
+                }
+            }
+            case STRUCTURE, CONSUMED, PRODUCED -> {
+                if (budget.nodes() - structureStarted > Math.min(1024, Math.max(128, allowance / 4))) return finishStructure(false);
+                if (phase == Phase.CONSUMED) {
+                    if (ports.hasNext()) {
+                        K key = ports.next();
+                        if (!consumed.contains(key)) { reserveStructure(96); consumed.add(key); }
+                    } else { ports = inspecting.outputs().keySet().iterator(); phase = Phase.PRODUCED; }
+                } else if (phase == Phase.PRODUCED) {
+                    if (ports.hasNext()) {
+                        if (consumed.contains(ports.next())) return finishStructure(true);
+                    } else { ports = null; inspecting = null; phase = Phase.STRUCTURE; }
+                } else if (structure.isEmpty()) return finishStructure(false);
+                else if (!structure.peek().hasNext()) { structure.pop(); release(64); structureBytes -= 64; }
+                else {
+                    PlanStep step = structure.peek().next();
+                    if (step instanceof PlanStep.Sequence sequence) pushStructure(sequence.children());
+                    else if (step instanceof PlanStep.Repeat repeat) {
+                        // One structural body visit regardless of its count.
+                        // Never enumerate execution occurrences of a huge loop.
+                        if (repeat.times() > 0) pushStructure(List.of(repeat.body()));
+                    } else if (((PlanStep.Batch) step).runs() > 0) {
+                        inspecting = original.recipes().get(((PlanStep.Batch) step).recipe());
+                        ports = inspecting.inputs().keySet().iterator(); phase = Phase.CONSUMED;
+                    }
                 }
             }
             case INITIAL -> {
@@ -211,6 +243,20 @@ final class RefillWordPruning<K> implements AutoCloseable {
         return false;
     }
 
+    private boolean startOriginal() {
+        if (summary != null) return beginOriginal();
+        verification = verify(original); phase = Phase.ORIGINAL; return false;
+    }
+    private void reserveStructure(long bytes) { reserve(bytes); structureBytes += bytes; }
+    private void pushStructure(List<PlanStep> children) { reserveStructure(64); structure.push(children.iterator()); }
+    private boolean finishStructure(boolean found) {
+        // Drop private scratch without an unbounded clear loop. No published
+        // plan or borrowed summary can reference these traversal containers.
+        structure = null; consumed = null; ports = null; inspecting = null;
+        release(structureBytes); structureBytes = 0;
+        return found ? startOriginal() : finish(false);
+    }
+
     private boolean beginOriginal() {
         if (forceCraft) {
             targetCredit = summary.delta(original.target());
@@ -256,6 +302,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
         if (verification != null) { verification.close(); verification = null; }
         if (computation != null) { computation.close(); computation = null; }
         entries = null; seeds = null; recipes = null;
+        structure = null; consumed = null; ports = null; inspecting = null;
         budget.release(memory); memory = 0;
     }
 }
