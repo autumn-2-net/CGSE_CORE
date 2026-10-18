@@ -142,9 +142,12 @@ augmenting path can consume a protected free tool while a longer alternating pat
 would preserve it. During the existing qualitative/quantitative recovery, bounded
 joint optimization can improve that feasible allocation before its tools are used.
 It admits at least two slots and keys, at most 32 slots, 256 keys and 1024 candidate
-edges. Indivisible slots larger than one entity retain their original allocator;
-they are never relaxed into a split flow for this optimization. Existing ranking
-and result scans also record whether every chosen edge achieves its slot's exact
+edges. If every slot is indivisible and has the same amount q, optimization uses
+one integral cohort per slot and floor(stock/q) cohorts per key. Physical stock
+remainders stay untouched: the cohort view never combines different keys to fund
+one slot. Unequal whole-slot sizes or a mixture of whole and split slots retain
+their original allocator. Existing ranking and result scans also record whether
+every chosen edge achieves its slot's exact
 minimum price. A flow meeting that lower bound skips optimization without more
 score callbacks, edge visits or restoration retries.
 
@@ -154,6 +157,10 @@ accounts for unused supply. Each checked cycle changes all of its edges atomical
 and preserves every slot total and physical supply. Exact integer prices minimize
 total qualitative penalty before total one-step wear; the latter is retained when
 the earlier quantitative trial was admitted. Quantities never expand into entities.
+Whole-cohort prices use the original demand amounts; removing the common factor
+q preserves both objective priorities. Atomic cycle updates also change the
+original whole-slot choices and physical unused counts by q times the cohort
+exchange. Their extra workspace and normalization work share the same allowance.
 At most eight cycles and min(4096, remaining request work / 32) work are available
 per matching, including score callbacks. Memory/work refusal keeps the existing
 feasible flow. This is not a global temporal optimum or a negative proof.
@@ -499,7 +506,13 @@ The public tests are under tests/core/java/org/cgse/core:
     delayed runtime returns/save-load, worker handoff and bounded failures.
   StateEntityMinCostTest: 1200 independent finite objective oracles, exact
     long-sized quantities/prices, original-flow preservation on work/memory
-    refusal, whole-key exclusion and cancellation cleanup.
+    refusal, flow-only whole-key exclusion and cancellation cleanup.
+  CapturedStateWholeMatchingTest: 318 positive indivisible-cohort variants,
+    preserved/consumed/worn returns, source/physical checks, delayed runtime
+    returns/save-load, exact seeds, manufactured tools and wide quantities.
+  StateEntityWholeCostTest: 1600 literal whole-key assignment oracles, physical
+    remainders, fragmented stock, unequal/mixed-size exclusion, long-sized
+    cohorts/prices, optional memory/work limits and cancellation cleanup.
   CapturedStateExpansionTest: omitted cross-rule state cycles, source/slot/stock
     permutations, long-sized orders, multiple physical tools, mixed/indivisible
     slots, manufactured tools, exact seeds and forced/preserved requests. Source

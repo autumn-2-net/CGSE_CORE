@@ -45,7 +45,12 @@ final class StateEntityMatching<K> implements AutoCloseable {
     private ToIntBiFunction<StateEntityAllocation.Demand, K> repairPreference;
     private ToLongBiFunction<StateEntityAllocation.Demand, K> repairCost;
 
-    boolean canMinimizePreferences() { return fixed == 0 && demands.size() > 1 && demands.size() <= 32 && width > 1 && width <= 256 && allowed.length <= 1024; }
+    boolean canMinimizePreferences() {
+        // Whole demands are sorted by amount. Equal-size, entirely whole-key
+        // allocations have an exact unit-cohort representation; mixed sizes do not.
+        return demands.size() > 1 && demands.size() <= 32 && width > 1 && width <= 256 && allowed.length <= 1024 &&
+                (fixed == 0 || fixed == demands.size() && demands.get(0).amount() == demands.get(fixed - 1).amount());
+    }
 
     boolean hasPreferenceLoss() { return feasible() && preferenceLoss; }
 
@@ -204,7 +209,10 @@ final class StateEntityMatching<K> implements AutoCloseable {
             preferenceLoss = false;
             for (int d = 0; d < demands.size(); d++) {
                 budget.check(); var demand = demands.get(d);
-                if (d < fixed) result.add(new StateEntityAllocation.Pick<>(demand.slot(), supplies.get(chosen[d]).state(), demand.amount()));
+                if (d < fixed) {
+                    preferenceLoss |= nonMinimum != null && nonMinimum[d * width + chosen[d]];
+                    result.add(new StateEntityAllocation.Pick<>(demand.slot(), supplies.get(chosen[d]).state(), demand.amount()));
+                }
                 else for (int s = 0; s < width; s++) {
                     budget.check(); long use = flow[d * width + s];
                     if (use > 0) {
@@ -214,7 +222,9 @@ final class StateEntityMatching<K> implements AutoCloseable {
                 }
             }
             if (repairPreference != null) {
-                if (preferenceLoss || nonMinimum == null) costRepair = StateEntityMinCost.create(demands, supplies, allowed, flow, remaining, repairPreference, repairCost, budget);
+                if (preferenceLoss || nonMinimum == null) costRepair = fixed == 0 ?
+                        StateEntityMinCost.create(demands, supplies, allowed, flow, remaining, repairPreference, repairCost, budget) :
+                        StateEntityMinCost.createWhole(demands, supplies, allowed, chosen, remaining, repairPreference, repairCost, budget);
                 repairPreference = null; repairCost = null;
                 if (costRepair != null) { result.clear(); return false; }
             }

@@ -204,8 +204,18 @@ source transition and physical prefix is checked independently; delayed returns,
 save/load, worker handoff, cancellation and conflicting goals guard ownership.
 `StateEntityMinCostTest` compares 1200 small flows with exhaustive literal minimum
 objectives using separate exact penalty/wear totals. It also checks wide
-quantities/prices, whole-key exclusion and retention of the last feasible flow
+quantities/prices, flow-only whole-key exclusion and retention of the last feasible flow
 when optional memory or work is unavailable. No temporal optimum is claimed.
+
+`CapturedStateWholeMatchingTest` extends the same independent physical/source
+oracle to 318 equal-size, indivisible-cohort variants. Preserved/consumed returns
+and quantitative wear combine with source/slot/stock orders, manufactured tools,
+exact seeds, forced crafting, wide quantities and delayed runtime returns/save-load.
+`StateEntityWholeCostTest` enumerates 1600 original whole-slot assignments and
+compares exact penalty/wear totals without using the optimizer's cohort graph.
+Remainders cannot fund fractional cohorts. Unequal whole sizes and mixtures of
+whole and split slots stay on the original path; long-sized cohorts, declined
+workspace, bounded work, constructor failure and cancellation preserve ownership.
 
 `CapturedStateOrderFeedbackTest` retains 109 positive combinations with 2/3/5/8
 destructive rules and 2/7/31 light uses. It checks a constructive temporal order,

@@ -1,7 +1,7 @@
 State-model review follow-up (2026-10-18)
 =======================================
-Review baseline: 5fb82e52. Inventory checked through 267de751 and the
-joint matching extension described below. Earlier case reports retain
+Review baseline: 5fb82e52. Inventory checked through 7b124212 and the
+equal-size whole-cohort extension described below. Earlier case reports retain
 their original versions and results; they are not current full-suite verdicts.
 
 Implemented portions of the review
@@ -277,6 +277,69 @@ and public planning. Gradle assemble, all 1478 binary API entries, the Forge
 mod with AE dump, source archive and checksums pass. Only the two intended
 existing engine classes change; StateEntityMinCost and its cutoff class are
 added. These are serial, four-CPU targeted checks, not a full/live-host run.
+
+Follow-up F2 gap: equal-size indivisible cohorts
+----------------------------------------------
+The previous joint optimizer excluded every whole-key slot larger than one.
+The same u:b/c, v:a/b, later read:a family therefore still spends a protected
+tool despite a legal longer alternating path. With cohort sizes 2/3/16, n=1/2/7/31
+and twelve source/slot/stock orders, 7b124212 solves 72/144 inputs through both
+direct and public planning. The literal witness warms a:q,b:n*q,c:q, then uses
+c for u and b for v in every pair while retaining a for the reads.
+
+When every slot is whole-key and has equal amount q, the optimizer now uses an
+exact unit-cohort view: one unit per slot, floor(stock/q) units per key. All
+physical remainders remain intact, and no slot can draw from multiple keys.
+Cost callbacks retain the original demands. A common factor q preserves exact
+penalty/wear priorities; each atomic cycle updates both the cohort flow and its
+original physical choices/remainders. Unequal or mixed whole-slot sizes still
+use the ordinary allocator. Normalization and optional workspace share existing
+admission/work limits; there is no additional word trial or proof rule.
+
+All 144 inputs now solve. The original 72 positives have identical search work,
+compilation work and peak budget reservations in both entries. For q=3,n=7,
+order=0, public search changes from 122026 (UNKNOWN) to 31696 (feasible), with
+compilation work 4420 -> 3035 and peak reservation 6168181 unchanged. These are
+work-account observations, not process-memory or general timing guarantees.
+The repository keeps 318 integration variants and 1600 independent literal
+whole-slot objective comparisons; 124 of those comparisons improve on the old
+first-feasible assignment. Wide counts, remainders, fragmented supply, unsupported
+cohort shapes, cancellation and bounded-memory/work controls also pass.
+
+Forty-one existing state/matching/runtime/metrics programs pass against both the
+frozen baseline and current code. Forty print identical reports; the concurrent
+source-cache assertion count varies with each worker's observed snapshot. The
+four matching tests pass against freshly compiled classes and the packaged
+0.1.4 library. Assemble, all 1478 baseline ABI entries, the Forge mod with AE
+dump, sources and checksum verification pass. There are still 755 engine classes;
+the two intended implementation classes and their cutoff's debug line numbers
+change. The user explicitly authorized 0.1.3 -> 0.1.4. No host API change is needed.
+
+These are serial four-CPU targeted checks, not a full/live-host regression.
+Original inputs, comparisons and intermediate failed test runs remain local in
+state-whole-matching-20261018. The first extension exposed the unresolved case
+below; a subsequent oracle generator incorrectly constructed zero-count supplies
+and was corrected before the successful focused run. Neither partial run is
+counted as a completed regression.
+
+Newly reproduced, still open: omitted activation with stock remainders
+--------------------------------------------------------------------
+Increasing the q=3,n=2 stock to a:5,b:8,c:5 keeps the literal a:3,b:6,c:3 witness
+feasible. Nevertheless, both 7b124212 and this extension return UNKNOWN for all
+twelve order variants. The diagnostic trace activates a:5,b:7,c:0 for warm's
+twelve tools. Although c exists in original stock, restoration only owns a/b.
+The first pair leaves b:4; the second spends a:3, leaving a:2 for the later read
+that needs a:3. Improving assignment cannot introduce an omitted activated key.
+The subsequent local count refinement requests a:6, exceeding the five owned
+original a tools, and does not recover the alternate c activation.
+
+This is a count-proposal/support recovery gap, not a unit-cohort rounding error
+or a new regression. All twelve expected-feasible failures and the detailed
+baseline/current trace are archived separately. No global INFEASIBLE result or
+complete-coverage proof was emitted. These failures are not passing feasibility
+oracles and are not included among the 318 positives. Recovery should try funded
+alternate activation supports before strengthening the failed rule's entity
+count; replay must still verify the original physical/source constraints.
 
 Still open, with concrete implementation boundaries
 ---------------------------------------------------

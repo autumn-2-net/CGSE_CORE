@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class CapturedStateMatchingCostsTest {
     private static int checks, cases, optimizedCases, combinedCases;
     private static long maxWork, maxBytes;
-    private record Fixture(List<CapturedCatalog.Entry<String>> entries, Map<String, Long> stock,
+    record Fixture(List<CapturedCatalog.Entry<String>> entries, Map<String, Long> stock,
                            int n, int mode, long cohort, long amount, boolean manufactured) {}
     private record Rule(String id, int mode) implements StateFamily<String> {
         public boolean accepts(String key) {
@@ -64,7 +64,7 @@ public final class CapturedStateMatchingCostsTest {
                 "; combined_cases=" + combinedCases + "; max_work=" + maxWork + "; max_bytes=" + maxBytes);
     }
 
-    private static GraphPlan<String> solve(Fixture f, boolean publicEntry, Map<String, Long> seeds, boolean force) {
+    static GraphPlan<String> solve(Fixture f, boolean publicEntry, Map<String, Long> seeds, boolean force) {
         oracle(f); var budget = budget(40_000_000); budget.enableMetrics(); GraphPlan<String> plan;
         if (publicEntry) {
             try (var work = new CapturedCatalog<>(f.entries()).begin("product", f.amount(), f.stock(), Set.of(), seeds, false, force, budget)) {
@@ -83,7 +83,7 @@ public final class CapturedStateMatchingCostsTest {
         verify(plan, f, seeds); return plan;
     }
 
-    private static Fixture fixture(int n, int mode, long cohort, boolean mixed, int order, boolean manufacture) {
+    static Fixture fixture(int n, int mode, long cohort, boolean mixed, int order, boolean manufacture) {
         String a = mode == 2 ? "a:" + (n + 1L) * 10 : "a", b = mode == 2 ? "b:" + (n + 1L) : "b";
         long pairs = mode == 2 ? 1 : n, amount = mode == 2 ? (n + 1L) * 10 + 1 : n, cCount = mode == 1 ? n : 1;
         var slots = new ArrayList<>(List.of(tool("u", b, cohort, mixed, mode), tool("v", a, cohort, mixed, mode), ordinary("gate", 1)));
@@ -168,7 +168,7 @@ public final class CapturedStateMatchingCostsTest {
             check(budget.reservedBytes() == 0 && budget.searchWork() <= cap + 1, "Joint optimization renewed request allowance");
         }
     }
-    private static void runtime(GraphPlan<String> plan, long amount) {
+    static void runtime(GraphPlan<String> plan, long amount) {
         final class Host implements GraphJobRuntime.Adapter<String> {
             GraphJobRuntime<String> job = new GraphJobRuntime<>(plan, plan.initial(), Map.of()); final Map<String, Long> physical = new LinkedHashMap<>(plan.initial()); final List<Map<String, Long>> pending = new ArrayList<>(); long delivered;
             public long capacity(GraphRecipe<String> recipe, long requested) { return requested; }
