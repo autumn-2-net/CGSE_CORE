@@ -50,6 +50,7 @@ public final class StateEntitySingleChoiceTest {
                     key -> rank[key], key -> costs[key]);
         }
         boundaries();
+        lazyCosts();
         System.out.println("StateEntitySingleChoiceTest: cases=" + cases + "; assertions=" + checks);
     }
 
@@ -116,6 +117,29 @@ public final class StateEntitySingleChoiceTest {
             throw new AssertionError("Lost callback failure");
         } catch (IllegalStateException expected) { check(expected.getMessage().equals("callback"), "Unexpected callback failure"); }
         check(failed.reservedBytes() == 0 && limited.reservedBytes() == 0 && wide.size() == 128, "Interrupted selection leaked / mutated inventory");
+    }
+
+    private static void lazyCosts() {
+        var family = new Family(7, new long[]{3, 4, 5});
+        var demand = new StateEntityAllocation.Demand(0, 2, false);
+        var owned = new LinkedHashMap<Integer, BigInteger>();
+        owned.put(0, BigInteger.ONE); owned.put(1, BigInteger.TWO);
+        ToIntFunction<Integer> unusedRank = key -> { throw new AssertionError("Ranked the sole feasible cohort"); };
+        ToLongFunction<Integer> unusedCost = key -> { throw new AssertionError("Computed an irrelevant tie cost"); };
+        check(StateEntitySingleChoice.select(demand, owned, family, true, unusedRank, unusedCost, budget()).pick().state() == 1,
+                "Lost sole eligible cohort");
+        owned.put(2, BigInteger.TWO);
+        check(StateEntitySingleChoice.select(demand, owned, family, true, key -> key, unusedCost, budget()).pick().state() == 1,
+                "Cost overrode a better rank");
+        // Replace a best candidate by rank before a later tie needs its cost.
+        // A stale/uninitialized best cost would incorrectly keep state 1.
+        owned.put(0, BigInteger.TWO);
+        int[] costs = {0};
+        var selected = StateEntitySingleChoice.select(demand, owned, family, true, key -> key == 0 ? 9 : 1,
+                key -> { costs[0]++; return key == 1 ? Long.MAX_VALUE : 0; }, budget());
+        check(selected.pick().state() == 2 && costs[0] == 2, "Lost deferred best-candidate cost");
+        var single = new LinkedHashMap<Integer, BigInteger>(); single.put(0, BigInteger.TWO);
+        compare(single, 2, family, key -> -1, key -> Long.MAX_VALUE);
     }
 
     private static PlanningBudget budget() { return new PlanningBudget(0, 100_000, 4L << 20, () -> false, System::nanoTime); }

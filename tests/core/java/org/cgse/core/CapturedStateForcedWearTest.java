@@ -16,14 +16,15 @@ public final class CapturedStateForcedWearTest {
     private static long maxWork, maxBytes;
 
     public static void main(String[] args) throws Exception {
-        for (int n : new int[]{7, 15, 31}) for (long q : new long[]{2, 3, 16}) for (int order = 0; order < 12; order++) {
-            var f = fixture(n, q, order, true); CapturedStateMatchingCostsTest.oracle(f); var budget = budget(); GraphPlan<String> plan;
-            try (var work = new CapturedCatalog<>(f.entries()).begin("product", f.amount(), f.stock(), Set.of(), Map.of(), false, true, budget)) {
+        for (int n : new int[]{7, 15, 31, 47}) for (long q : new long[]{2, 3, 16}) for (int order = 0; order < 12; order++)
+            for (boolean force : n == 47 ? List.of(false, true) : List.of(true)) {
+            var f = fixture(n, q, order, force); CapturedStateMatchingCostsTest.oracle(f); var budget = budget(); GraphPlan<String> plan;
+            try (var work = new CapturedCatalog<>(f.entries()).begin("product", f.amount(), f.stock(), Set.of(), Map.of(), false, force, budget)) {
                 while (!work.step()) {} plan = work.result().plan();
                 check(plan.feasible() && !work.result().coverage().complete(), "Lost forced wear n=" + n + "; q=" + q + "; order=" + order + "; " + budget.diagnostics());
             }
             CapturedStateMatchingCostsTest.verify(plan, f, Map.of());
-            if (n == 31 && q == 3 && order == 0) CapturedStateMatchingCostsTest.runtime(plan, f.amount());
+            if ((n == 31 || n == 47) && q == 3 && order == 0 && force) CapturedStateMatchingCostsTest.runtime(plan, f.amount());
             PlanningCostTraceTest.conserved(budget);
             check(budget.reservedBytes() == 0 && budget.searchWork() < 600_000 && budget.peakBytes() < (48L << 20), "Forced proof leaked / inflated work");
             maxWork = Math.max(maxWork, budget.searchWork()); maxBytes = Math.max(maxBytes, budget.peakBytes()); positives++;
@@ -31,7 +32,7 @@ public final class CapturedStateForcedWearTest {
         cancelled();
         int pending = longerBoundary();
         System.out.println("CapturedStateForcedWearTest: positives=" + positives + "; assertions=" + checks + "; max_work=" + maxWork +
-                "; max_bytes=" + maxBytes + "; longer_known_feasible_pending=" + pending + "/48 (not positive passes)");
+                "; max_bytes=" + maxBytes + "; longer_known_feasible_pending=" + pending + "/72 (not positive passes)");
     }
 
     static CapturedStateMatchingCostsTest.Fixture fixture(int n, long q, int order, boolean force) {
@@ -44,8 +45,8 @@ public final class CapturedStateForcedWearTest {
      * restoration limitation separate from positive-regression counts. */
     private static int longerBoundary() {
         int pending = 0;
-        for (int n : new int[]{47, 63}) for (long q : new long[]{2, 3, 16}) for (int order : new int[]{0, 1, 6, 7}) for (boolean force : List.of(false, true)) {
-            var f = fixture(n, q, order, force); CapturedStateMatchingCostsTest.oracle(f); var budget = budget();
+        for (long q : new long[]{2, 3, 16}) for (int order = 0; order < 12; order++) for (boolean force : List.of(false, true)) {
+            var f = fixture(63, q, order, force); CapturedStateMatchingCostsTest.oracle(f); var budget = budget();
             try (var work = new CapturedCatalog<>(f.entries()).begin("product", f.amount(), f.stock(), Set.of(), Map.of(), false, force, budget)) {
                 while (!work.step()) {} var plan = work.result().plan();
                 if (plan.feasible()) CapturedStateMatchingCostsTest.verify(plan, f, Map.of());

@@ -32,11 +32,12 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         static <K> Key<K> support(String activation) { return new Key<>(null, activation, true, List.of()); }
     }
     private record Activation<K>(K state, List<String> families) {}
-    private record Returned<K>(K before, K state, StateFamily<K> family, long amount) {}
+    private record Returned<K>(K before, K state, StateFamily<K> family, long amount, boolean usable) {}
     // The auxiliary variant pins the source binding, candidate choices and
     // family contracts. Equal net columns alone never identify a transition.
     private record Transition<K>(String variant, List<GraphRecipe.Slot<K>> slots, Map<K, Long> outputs) {}
     private record ToolGroup(String family, List<StateEntityAllocation.Demand> demands) {}
+    private record RestoreLayout(List<ToolGroup> groups, int[] physicalSlots, boolean stateful) {}
 
     enum Status { RUNNING, VERIFIED, DECLINED, LIMITED }
     enum Reason {
@@ -65,7 +66,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private final Map<K, BigInteger> free = new LinkedHashMap<>();
     private final Map<String, GraphRecipe<K>> restored = new LinkedHashMap<>();
     private final Map<Transition<K>, String> transitions = new LinkedHashMap<>();
-    private final Map<String, List<ToolGroup>> toolGroups = new LinkedHashMap<>();
+    private final Map<String, RestoreLayout> toolLayouts = new LinkedHashMap<>();
     private final Map<Integer, List<StateEntityAllocation.Pick<K>>> toolChoices = new LinkedHashMap<>();
     private final Map<String, Long> capacityCaps = new LinkedHashMap<>();
     private final Map<String, Long> entityFloors = new LinkedHashMap<>();
@@ -438,7 +439,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         var source = sources.get(recipe.binding());
         if (source == null) { stop(Reason.UNKNOWN_AUXILIARY_BINDING); return; }
         if (!selectTools(recipe, source)) return;
-        boolean stateful = recipe.slots().stream().anyMatch(slot -> slot.key().family() != null);
+        var layout = toolLayouts.get(recipe.id());
+        boolean stateful = layout.stateful();
         long runs = stateful ? 1 : batch.runs();
         var slots = new ArrayList<GraphRecipe.Slot<K>>();
         var outputs = new LinkedHashMap<K, Long>();
@@ -448,11 +450,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (output.getKey().family() != null) { stop(Reason.UNEXPECTED_CAPACITY_OUTPUT); return; }
             outputs.merge(output.getKey().physical(), output.getValue(), Math::addExact);
         }
-        int ordinal = -1;
-        for (var slot : recipe.slots()) {
-            ordinal++;
+        for (int ordinal : layout.physicalSlots()) {
+            var slot = recipe.slots().get(ordinal);
             budget.check();
-            if (slot.key().entity()) continue;
             if (slot.key().family() == null) {
                 slots.add(new GraphRecipe.Slot<>(slot.key().physical(), slot.amount(), slot.inputSlot(), slot.configuration(), slot.reusable()));
             } else {
@@ -472,7 +472,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         var ordinaryNeeded = new LinkedHashMap<K, BigInteger>();
         var ordinarySpent = new LinkedHashMap<K, BigInteger>();
         var ordinaryProduced = new LinkedHashMap<K, BigInteger>();
-        for (var slot : recipe.slots()) {
+        for (int ordinal : layout.physicalSlots()) {
+            var slot = recipe.slots().get(ordinal);
             if (slot.key().family() != null) continue;
             BigInteger quantity = BigInteger.valueOf(slot.amount()).multiply(BigInteger.valueOf(slot.configuration() ? 1 : runs));
             ordinaryNeeded.merge(slot.key().physical(), quantity, BigInteger::add);
@@ -519,7 +520,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         for (var value : returns) {
             if (value.state() == null) { retainedEntities = false; continue; }
             outputs.merge(value.state(), value.amount(), Math::addExact);
-            if (usable(value.state(), value.family()))
+            // The exact transition already checked the used rule's returned
+            // capacity. Only a terminal state needs a search for another rule
+            // that can still use it (for example a discharged electric tool).
+            if (value.usable() || usable(value.state(), value.family()))
                 pool(value.family()).merge(value.state(), BigInteger.valueOf(value.amount()), BigInteger::add);
             else {
                 retainedEntities = false;
@@ -680,17 +684,26 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
 
     /** Allocate all simultaneous slots before mutating any owned inventory. */
     private boolean selectTools(GraphRecipe<Key<K>> recipe, CapturedCatalog.Entry<K> source) {
-        var groups = toolGroups.get(recipe.id());
-        if (groups == null) {
+        var layout = toolLayouts.get(recipe.id());
+        if (layout == null) {
+            // Compile the immutable auxiliary variant once per restoration.
+            // Entity/read markers only constrain the proposal; walking them
+            // again for every physical wear state does no execution work.
+            if (!reserve(128L + 8L * recipe.slots().size())) return false;
+            int[] physicalSlots = new int[recipe.slots().size()];
+            int physicalCount = 0;
+            boolean stateful = false;
             var grouped = new LinkedHashMap<String, List<StateEntityAllocation.Demand>>();
             for (int i = 0; i < recipe.slots().size(); i++) {
-                var slot = recipe.slots().get(i);
-                if (slot.key().family() == null || slot.key().entity()) continue;
                 budget.check();
+                var slot = recipe.slots().get(i);
+                stateful |= slot.key().family() != null;
+                if (!slot.key().entity()) physicalSlots[physicalCount++] = i;
+                if (slot.key().family() == null || slot.key().entity()) continue;
                 grouped.computeIfAbsent(slot.key().family(), ignored -> new ArrayList<>()).add(
                         new StateEntityAllocation.Demand(i, slot.amount(), source.recipe().mixed(source.recipe().inputs().get(slot.inputSlot()))));
             }
-            groups = new ArrayList<>();
+            var groups = new ArrayList<ToolGroup>();
             if (grouped.size() > 1) {
                 var demands = new ArrayList<StateEntityAllocation.Demand>();
                 grouped.values().forEach(demands::addAll);
@@ -702,9 +715,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 if (!reserve(160L + 64L * demands.size())) return false;
                 groups.add(new ToolGroup(group.getKey(), List.copyOf(demands)));
             }
-            if (!reserve(96)) return false;
-            toolGroups.put(recipe.id(), groups);
+            layout = new RestoreLayout(groups, java.util.Arrays.copyOf(physicalSlots, physicalCount), stateful);
+            toolLayouts.put(recipe.id(), layout);
         }
+        var groups = layout.groups();
         if (selectingGroup == groups.size()) return true;
         var group = groups.get(selectingGroup);
         if (group.family().isEmpty()) return selectMatching(recipe, group);
@@ -834,7 +848,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (afterCapacity < before - 1) { stop(Reason.INVALID_STATE_ALGEBRA); return false; }
             if (count.equals(use)) pool.remove(state); else pool.put(state, count.subtract(use));
             slots.add(new GraphRecipe.Slot<>(state, pick.amount(), slot.inputSlot()));
-            returns.add(new Returned<>(state, after, family, pick.amount()));
+            returns.add(new Returned<>(state, after, family, pick.amount(), afterCapacity > 0));
             left -= pick.amount();
         }
         return left == 0;
@@ -1635,7 +1649,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (assembly != null) assembly.close(); assembly = null;
         clearCycle(); cycleVariant = null; cycleDisabled = false;
         clearLoop(); declinedLoop = null;
-        toolGroups.clear(); pools.clear(); restored.clear(); transitions.clear(); program.clear(); free.clear(); unclaimed.clear(); advanced.clear();
+        toolLayouts.clear(); pools.clear(); restored.clear(); transitions.clear(); program.clear(); free.clear(); unclaimed.clear(); advanced.clear();
         budget.release(memory - proposalMemory); memory = proposalMemory;
         restoreInitialFree();
         restoredFirings = BigInteger.ZERO; programNodes = 1;
@@ -1702,7 +1716,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (remaining.signum() == 0) iterator.remove();
             else value.setValue(remaining);
             slots.add(new GraphRecipe.Slot<>(state, use, slot.inputSlot()));
-            returns.add(new Returned<>(state, after, family, use));
+            returns.add(new Returned<>(state, after, family, use, afterCapacity > 0));
             left -= use;
             if (left == 0) return true;
         }
@@ -1798,7 +1812,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         replayAdditional = null;
         captureStock = null; captureExternal = null;
         families.clear(); entityFamilies.clear(); known.clear(); activationStates = List.of(); auxiliary.clear(); sources.clear(); activations.clear(); pools.clear();
-        free.clear(); restored.clear(); transitions.clear(); program.clear(); toolGroups.clear(); capacityCaps.clear(); entityFloors.clear(); entityUnionFloors.clear(); unclaimed.clear(); advanced.clear();
+        free.clear(); restored.clear(); transitions.clear(); program.clear(); toolLayouts.clear(); capacityCaps.clear(); entityFloors.clear(); entityUnionFloors.clear(); unclaimed.clear(); advanced.clear();
         budget.release(memory); memory = 0; done = true;
     }
 }

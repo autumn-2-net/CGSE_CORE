@@ -579,6 +579,70 @@ no public API, snapshot, adapter or budget change is involved. Heavy validation
 was serial on four logical CPUs. The 48 longer boundaries remain registered
 and separately reported by the regression, for further restoration work.
 
+2026-10-18 bounded restoration and ordinary-summary continuations
+---------------------------------------------------------------
+The longer manufactured wear cases above expose successive costs, not a new
+negative theorem. Frozen beb29d22 stops restoration at 469 of 484/644 physical
+firings. Three exact local reductions let the larger words finish restoration:
+compile each auxiliary variant's physical slot positions once; defer preference
+and exact wear costs until a competing cohort/tie needs them; retain the used
+rule's already checked positive return capacity instead of scanning all families
+again. Terminal returns still search other rules before leaving the shared pool.
+Variant/source/slot order, simultaneous ownership and one-step transitions stay
+unchanged. The layout is private to the restoration and cleared with its budget.
+
+Finishing restoration exposed assembly cost. PlanFlowPruning previously built
+an identity DAG and copied flat runs it would immediately reject at its existing
+256-atom bound. A bounded flat-word admission avoids that work; nested words and
+eligible shorter runs retain the original reductions. The admission itself pays
+work within the original optional allowance. SummaryComputation now folds adjacent
+ordinary batches in continuations of at most 32 arithmetic ports, avoiding a
+separate call at every iterator/batch boundary. Inputs returned by the same batch
+still use the general exact fold. Every real port operation remains charged;
+dispatch boundaries, cancellation, wide arithmetic and prefix peaks are retained.
+
+The original 96-case probe improves from 48 to 72 feasible cases at unchanged
+request/repair/restoration budgets. Expanding the two longer lengths to all twelve
+source/slot/stock orders gives 72 newly positive n=47 cases and 72 pending n=63
+cases, all with literal original-source witnesses. The positive regression now
+requires all 180 old/new positives, including ordinary and already-stocked forced
+requests. Longer delayed-return execution and reload are included. The 72 pending
+cases retain explicit incomplete/limited outcomes, never positive-pass credit.
+
+SummaryBatchContinuationTest compares 622 programs with literal prefix replay,
+including zero/repeated/shared words, direct and returned inputs, wide amounts,
+yield bounds and cancellation. PlanFlowPruningFlatTest retains eligible nested
+reductions on either side of the flat-run bound. The existing 12000 whole-key
+allocator comparisons additionally cover deferred rank/cost evaluation. Frozen
+inputs, versions, intermediate attempts and follow-up traces are registered under
+state-restoration-hotpath-20261018. These changes do not provide arbitrary symbolic
+state composition or a complete temporal assignment search.
+
+Validation: 58 paired state/summary/history programs and six further count/archived
+flow programs pass against frozen beb29d22. All 432 ordinary and 108 forced prior
+positives remain feasible, with charged search reductions of 0.02-7.45% and
+2.01-7.69% respectively and no higher peak reservation in those two matrices.
+The expanded long-word matrix improves from 0/144 to 72/144. Four strengthened
+tests also pass from the packaged library; the archived flow oracle retains its
+43255 assertions and 1887 reductions. Offline assembly, Forge with AE dump,
+sources/checksums and all 1478 baseline ABI entries pass at unchanged 0.1.4.
+
+There is no universal speed/memory claim. Within one JVM, alternating warmed
+summary comparisons on 1024/32768 ordinary batches have median times 0.725/22.990
+ms before and 0.645/21.080 ms after, with identical summaries; measured thread
+allocation falls 2.0% for 1024 and is unchanged for 32768. This measures the
+summary kernel, not live-host latency or retained process heap. Four historical
+state programs reserve another 144-536 bytes for layouts. Eight finite cross-rule
+expansion cases still pass but charge 2.5-4.0% more whole-request work (largest
+152674 -> 158754); separate traces retain this scheduling interaction instead of
+claiming every historical cost improved. The lower-cost downstream verifier does
+not eliminate earlier failed restricted-view trials. Source-cache assertion totals
+also vary with concurrent publication; their invariant checks pass in both runs.
+The remaining 644-firing wear cases reach assembly but still exhaust their local
+trial. All evidence is retained in separate run directories. Validation was serial
+on four logical CPUs; this is a targeted comparison, not the complete corpus or
+a live-host run.
+
 Still open, with concrete implementation boundaries
 ---------------------------------------------------
 1. F1: Arbitrary unique one-way states still require explicit selected transitions.

@@ -581,11 +581,17 @@ The public tests are under tests/core/java/org/cgse/core:
     sufficient net-production proofs, full partial-gain production counts,
     target turnover/optional coproducts, returned-target exclusion, wide exact
     gains and cancellation.
-  CapturedStateForcedWearTest: 108 forced manufactured-tool/wear positives,
-    stocked order targets, twelve source/slot/stock orders, original-source
+  CapturedStateForcedWearTest: 180 manufactured-tool/wear positives, including
+    ordinary and stocked forced targets, twelve source/slot/stock orders, original-source
     counts and physical replay, delayed returns/reload and cancellation during
-    final verification. Another 48 longer literal-feasible cases remain open;
+    final verification. Another 72 longer literal-feasible cases remain open;
     their local-limit safety checks are not counted as positive passes.
+  SummaryBatchContinuationTest: 622 literal-prefix comparisons through adjacent
+    batches, overlapping returns, shared/nested words, zero repeats, wide amounts,
+    bounded 32-port continuations and cancellation. Batch folding does not change
+    physical execution boundaries or infer a symbolic tool transition.
+  PlanFlowPruningFlatTest: ineligible long flat runs avoid temporary DAGs while
+    nested and short turnover reductions retain exact prefix/net dominance.
   CapturedStateExpansionTest: omitted cross-rule state cycles, source/slot/stock
     permutations, long-sized orders, multiple physical tools, mixed/indivisible
     slots, manufactured tools, exact seeds and forced/preserved requests. Source

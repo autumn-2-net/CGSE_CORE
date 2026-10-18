@@ -28,6 +28,7 @@ final class StateEntitySingleChoice {
         K best = null;
         int bestRank = 0;
         long bestCost = 0, bestCapacity = 0;
+        boolean bestRanked = false, bestCosted = false;
         for (var entity : owned.entrySet()) {
             budget.check();
             if (entity.getKey() == null || entity.getValue() == null || entity.getValue().signum() <= 0) return null;
@@ -40,16 +41,37 @@ final class StateEntitySingleChoice {
             BigInteger count = entity.getValue();
             available = available.add(count);
             if (count.compareTo(required) < 0) continue;
-            int rank = preference == null ? 0 : preference.applyAsInt(state);
-            long loss = cost == null ? 0 : cost.applyAsLong(state);
-            int order = best == null ? -1 : Integer.compare(rank, bestRank);
-            if (order == 0) order = Long.compare(loss, bestCost);
+            // A sole feasible cohort needs no preference evaluation. Once
+            // there is a choice, compare lexicographically: exact wear costs
+            // are irrelevant when eligibility ranks already distinguish it.
+            int rank = 0, order = -1;
+            long loss = 0;
+            boolean ranked = best != null, costed = false;
+            if (ranked) {
+                if (!bestRanked) {
+                    bestRank = preference == null ? 0 : preference.applyAsInt(best);
+                    bestRanked = true;
+                }
+                rank = preference == null ? 0 : preference.applyAsInt(state);
+                order = Integer.compare(rank, bestRank);
+                if (order == 0) {
+                    if (!bestCosted) {
+                        bestCost = cost == null ? 0 : cost.applyAsLong(best);
+                        bestCosted = true;
+                    }
+                    loss = cost == null ? 0 : cost.applyAsLong(state);
+                    costed = true;
+                    order = Long.compare(loss, bestCost);
+                }
+            }
             if (order == 0) order = count.compareTo(bestCount);
             if (order == 0) order = Long.compare(bestCapacity, capacity);
             if (order < 0) {
                 best = state;
                 bestRank = rank;
                 bestCost = loss;
+                bestRanked = ranked;
+                bestCosted = costed;
                 bestCount = count;
                 bestCapacity = capacity;
             }

@@ -54,9 +54,10 @@ public final class SummaryComputation<K> implements AutoCloseable {
             return result != null;
         }
         if (frame.ordinary != null) {
-            for (int operation = 0; operation < 32; operation++) {
-                budget.check();
+            int operations = 0;
+            while (operations < 32) {
                 if (frame.ordinaryEntries.hasNext()) {
+                    budget.check(); operations++;
                     var entry = frame.ordinaryEntries.next();
                     K key = entry.getKey();
                     if (foldOrdinaryLong(frame, key, entry.getValue())) continue;
@@ -81,6 +82,14 @@ public final class SummaryComputation<K> implements AutoCloseable {
                     continue;
                 }
                 frame.ordinary = null;
+                // Fold adjacent ordinary batches in one bounded continuation.
+                // Their ports still pay for every arithmetic operation, but
+                // iterator hand-offs need no separate step/frame/fold maps.
+                var sequence = (PlanStep.Sequence) frame.step;
+                if (frame.child < sequence.children().size() && startOrdinary(frame, sequence.children().get(frame.child))) {
+                    frame.child++;
+                    continue;
+                }
                 break;
             }
             if (frame.ordinary != null) return false;
@@ -126,20 +135,7 @@ public final class SummaryComputation<K> implements AutoCloseable {
         } else if (frame.step instanceof PlanStep.Sequence sequence) {
             if (frame.child < sequence.children().size()) {
                 PlanStep child = sequence.children().get(frame.child++);
-                if (child instanceof PlanStep.Batch batch && batch.runs() > 0) {
-                    var recipe = recipes.get(batch.recipe());
-                    if (recipe == null) throw new IllegalArgumentException("Unknown recipe " + batch.recipe());
-                    if (Collections.disjoint(recipe.inputs().keySet(), recipe.outputs().keySet())) {
-                        // For an ordinary batch, exact prefix need and peak have
-                        // a closed form. Fold directly into the parent; allocating
-                        // and copying three tiny maps per recipe is unnecessary.
-                        frame.ordinary = recipe;
-                        frame.ordinaryRuns = BigInteger.valueOf(batch.runs());
-                        frame.ordinaryInputs = true;
-                        frame.ordinaryEntries = recipe.inputs().entrySet().iterator();
-                        return false;
-                    }
-                }
+                if (startOrdinary(frame, child)) return false;
                 stack.push(new Frame(child));
                 return false;
             }
@@ -177,6 +173,20 @@ public final class SummaryComputation<K> implements AutoCloseable {
         SequenceSummary<K> complete = SequenceSummary.owned(frame.need, frame.change, frame.peak);
         complete(complete);
         return result != null;
+    }
+
+    private boolean startOrdinary(Frame frame, PlanStep child) {
+        if (!(child instanceof PlanStep.Batch batch) || batch.runs() == 0) return false;
+        var recipe = recipes.get(batch.recipe());
+        if (recipe == null) throw new IllegalArgumentException("Unknown recipe " + batch.recipe());
+        if (!Collections.disjoint(recipe.inputs().keySet(), recipe.outputs().keySet())) return false;
+        // For an ordinary batch, exact prefix need and peak have a closed
+        // form. No input may also be returned by this same batch.
+        frame.ordinary = recipe;
+        frame.ordinaryRuns = BigInteger.valueOf(batch.runs());
+        frame.ordinaryInputs = true;
+        frame.ordinaryEntries = recipe.inputs().entrySet().iterator();
+        return true;
     }
 
     private void complete(SequenceSummary<K> complete) {
