@@ -143,14 +143,14 @@ public final class RefillTradeoffTest {
         var f = fixture(3, 0, false, false, false, Map.of());
         var suffix = new PlanStep.Sequence(List.of(new PlanStep.Batch("return", 5), new PlanStep.Batch("finish", 1)));
         var original = RefillWordPruningTest.literalPlan(f.recipes, suffix, Map.of(), Map.of(), Set.of());
-        // This valid rotated cycle is intentionally kept as evidence of the
-        // remaining hint-coverage boundary. Passing replay is not a claim that
-        // the bounded two-component shortcut archive enumerates this word.
+        // Retain the independently verified word from the former two-component
+        // coverage gap, and require the bounded completion to find this bill.
         var body = new PlanStep.Sequence(List.of(new PlanStep.Batch("return", 1), new PlanStep.Batch("make", 2), new PlanStep.Batch("bridge1", 2)));
         var known = RefillWordPruningTest.literalPlan(f.recipes, new PlanStep.Sequence(List.of(new PlanStep.Repeat(body, 4), suffix)), Map.of(), Map.of(), Set.of());
         check(known.missing().equals(Map.of("m1", 1L, "feed", 8L)), "Rotated-cycle oracle");
         RefillWordPruningTest.literalVerify(known, Map.of(), Set.of());
-        solve(new Fixture(f.recipes, original), Map.of(), Set.of(), Set.of(), true, false);
+        var answer = solve(new Fixture(f.recipes, original), Map.of(), Set.of(), Set.of(), true, false);
+        check(answer.alternatives().stream().anyMatch(p -> p.missing().equals(known.missing())), "Missed retained rotated-cycle witness");
     }
     private static GraphPlan<String> vector(Map<String, ? extends Number> initial, Map<String, ? extends Number> missing, Map<String, Long> seeds) {
         return new GraphPlan<>("G", 1, false, new PlanStep.Batch("unused", 1), Map.of(), initial, seeds, missing,

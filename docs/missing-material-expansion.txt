@@ -399,19 +399,36 @@ A strictly smaller componentwise missing bill, a newly feasible plan, or a full
 dominance improvement can become primary. Incomparable candidates only become
 alternatives. Duplicate or dominated bills are discarded; a full archive retains
 earlier incomparable entries. This is neither a complete Pareto front nor a
-minimum-supply certificate. Coverage is limited to the existing bounded action
-support: an internal material of a multi-edge loop can lack its useful rotation,
-even when a separately constructed word proves a better supply bill executable.
-No missing-path or infeasibility proof follows from failing to find that word.
+minimum-supply certificate. If the pairwise shortcuts have no growth word for an
+entry, a bounded completion follows the old candidates. It balances one cyclic
+transfer at a time using exact integer throughput ratios and composes the actual
+execution words. Existing immutable component summaries are reused. Thus an
+entry hidden inside a linear contraction can gain a three-or-more-component
+route, such as return -> make -> bridge, without a new antichain search.
+
+Completion shares the same remaining pass allowance and offer/archive limits.
+Its new words also reuse the exact stock-funded repeat breakpoint after their
+one-run and startup-plateau candidates. The earlier sizing pass could not see
+these words; this interior candidate avoids leaving usable feed stock idle.
+It visits at most 1024 cursor positions, forms at most 32 compositions, retains
+at most 32 partial paths of depth below 12, and returns at most four growth words.
+A path uses each component at most once; integer multiplicities stay in its word.
+Existing round trips and startup requirements already at one skip completion.
+Only the completed cyclic support supplies transfer keys. This covers selected
+rotations, not all interleavings or arbitrary integer circulations. No missing-path
+or infeasibility proof follows from exhausting this restricted search.
 
 RefillTradeoffTest independently replays primitive firings for mixed supplies,
 craftable feeds, seeds, returned tools and coproducts, including catalog reversal.
 It checks exact totals beyond long, exclusions and binding/configuration guards,
 incomplete scope, archive limits, 600 randomized comparisons against the existing
 dominance relation, interruption before/after publication, and a real one-worker
-scheduler handoff. A manually verified missed rotation is retained as a coverage
-boundary rather than assigned a false success oracle. This adds engine options;
-host selection/display of these options is separate.
+scheduler handoff. Its formerly missed rotation now requires the independently
+verified supply bill. RefillCycleCompletionTest extends this to 3..8-edge loops
+at every entry, 300 independent integer-ratio oracles, returned tools/coproducts,
+craftable feed, exact counts beyond long, deep known-summary reuse, restrictions,
+conditional previews and completion/publication interruptions. This adds engine
+options; host selection/display of these options is separate.
 
 Per-material boundary diagnostics
 --------------------------------

@@ -76,6 +76,8 @@ final class RefillCycleActions<K> implements AutoCloseable {
     }
 
     List<BackwardCoverability.Action<K>> actions() { return actions; }
+    List<BackwardCoverability.Action<K>> components() { return components; }
+    boolean hasRoundTrip() { return added != 0; }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     @Override public void close() {
         if (summarizing != null) { summarizing.close(); summarizing = null; }

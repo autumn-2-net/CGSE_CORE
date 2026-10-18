@@ -7,7 +7,7 @@ import java.util.*;
 
 /** Optional main-planner prefix witnesses, followed by bounded verified supply tradeoffs. */
 final class RefillSupplySearch<K> implements AutoCloseable {
-    private enum Phase { ROOT, DISCOVER, INPUTS, OUTPUTS, COMPILE, MACROS, MACRO_SUMMARY, CYCLES, OPTIONS, REFINE, FRONTIER, TRIAL, SUPPLY, SEARCH, PREFIXES, WORDS, SIZE_SUMMARY, SIZE, SUMMARY, COPY, NEEDS, BINDINGS, MISSING, VERIFY, DONE }
+    private enum Phase { ROOT, DISCOVER, INPUTS, OUTPUTS, COMPILE, MACROS, MACRO_SUMMARY, CYCLES, COMPLETION, OPTION_SIZE, OPTIONS, REFINE, FRONTIER, TRIAL, SUPPLY, SEARCH, PREFIXES, WORDS, SIZE_SUMMARY, SIZE, SUMMARY, COPY, NEEDS, BINDINGS, MISSING, VERIFY, DONE }
     private static final class WordFrame {
         final PlanStep step;
         int child;
@@ -41,6 +41,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     private BackwardCoverability<K> searching;
     private LinearMacroCompilation<K> compiling;
     private RefillCycleActions<K> cycling;
+    private RefillCycleCompletion<K> completing;
     private List<BackwardCoverability.Action<K>> macros;
     private Iterator<GraphRecipe<K>> compiledRecipes;
     private PlanStep macro;
@@ -61,7 +62,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     private MissingMaterialExpansion<K> refining;
     private Iterator<BackwardCoverability.Action<K>> optionActions;
     private BackwardCoverability.Action<K> optionAction;
-    private BigInteger optionRuns;
+    private BigInteger optionRuns, optionFundedRuns;
     private int optionTrial, offered;
     private long memory;
 
@@ -96,10 +97,20 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             if (phase == Phase.CYCLES) {
                 if (!cycling.step()) return false;
                 macros = cycling.actions();
-                if (macros.isEmpty()) endRoot();
-                else if (trading) { optionActions = macros.iterator(); phase = Phase.OPTIONS; }
+                if (trading) { optionActions = macros.iterator(); phase = Phase.OPTIONS; }
+                else if (macros.isEmpty()) endRoot();
                 else phase = Phase.TRIAL;
                 return false;
+            }
+            if (phase == Phase.COMPLETION) {
+                if (!completing.step()) return false;
+                optionActions = completing.actions().iterator(); phase = Phase.OPTIONS; return false;
+            }
+            if (phase == Phase.OPTION_SIZE) {
+                if (!sizing.step()) return false;
+                var runs = sizing.result(); sizing = null;
+                if (runs.compareTo(BigInteger.ONE) > 0 && !runs.equals(optionRuns)) optionFundedRuns = runs;
+                phase = Phase.OPTIONS; return false;
             }
             if (phase == Phase.REFINE) {
                 if (!refining.step()) return false;
@@ -156,7 +167,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             for (int i = 0; i < 64; i++) {
                 budget.check();
                 if (advance()) return true;
-                if (phase == Phase.COMPILE || phase == Phase.MACRO_SUMMARY || phase == Phase.CYCLES || phase == Phase.SEARCH || phase == Phase.SIZE_SUMMARY || phase == Phase.SIZE || phase == Phase.SUMMARY || phase == Phase.VERIFY || phase == Phase.REFINE || phase == Phase.FRONTIER) return false;
+                if (phase == Phase.COMPILE || phase == Phase.MACRO_SUMMARY || phase == Phase.CYCLES || phase == Phase.COMPLETION || phase == Phase.OPTION_SIZE || phase == Phase.SEARCH || phase == Phase.SIZE_SUMMARY || phase == Phase.SIZE || phase == Phase.SUMMARY || phase == Phase.VERIFY || phase == Phase.REFINE || phase == Phase.FRONTIER) return false;
             }
             return false;
         } catch (PlanningBudget.Exhausted limit) {
@@ -169,7 +180,19 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             case OPTIONS -> {
                 if (offered == 8) return complete();
                 if (optionAction == null) {
-                    if (!optionActions.hasNext()) { endRoot(); break; }
+                    if (!optionActions.hasNext()) {
+                        // Preserve all old candidates and their publication
+                        // order before spending the same remaining allowance
+                        // on entries hidden inside a contracted linear chain.
+                        // Every completion starts by spending this root, so
+                        // it cannot lower an initial requirement already at one.
+                        if (completing == null && !cycling.hasRoundTrip() && result.missingExact().containsKey(root) &&
+                                base.initialExact().getOrDefault(root, BigInteger.ZERO).compareTo(BigInteger.ONE) > 0) {
+                            completing = new RefillCycleCompletion<>(recipes, cycling.components(), visited, root, budget);
+                            phase = Phase.COMPLETION; return false;
+                        }
+                        endRoot(); break;
+                    }
                     optionAction = optionActions.next();
                     var summary = optionAction.summary(); BigInteger gain = summary.delta(root);
                     BigInteger gap = base.initialExact().getOrDefault(root, BigInteger.ZERO)
@@ -177,13 +200,26 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                     if (gain.signum() <= 0 || gap.signum() <= 0 || force && summary.delta(base.target()).signum() < 0) {
                         optionAction = null; break;
                     }
-                    optionRuns = CheckedAmounts.ceilDiv(gap, gain); optionTrial = 0;
+                    optionRuns = CheckedAmounts.ceilDiv(gap, gain); optionTrial = 0; optionFundedRuns = null;
+                    if (completing != null) {
+                        // This word was not present during the earlier sizing
+                        // pass. Reuse its exact stock breakpoint without new
+                        // route enumeration or a larger offer allowance.
+                        sizing = new RefillRepeatSizing<>(summary, base, stock, external, force, ignoreTargetStock, budget);
+                        phase = Phase.OPTION_SIZE; return false;
+                    }
                 }
                 // Keep two fixed-word endpoints. No price is assigned to
                 // extra feedstocks in exchange for fewer cyclic startup units.
-                BigInteger runs = optionTrial++ == 0 ? BigInteger.ONE : optionRuns;
+                // New completion words may add their funded interior point.
+                BigInteger runs = switch (optionTrial++) {
+                    case 0 -> BigInteger.ONE;
+                    case 1 -> optionRuns;
+                    default -> optionFundedRuns;
+                };
                 prefix = PlanStep.repeat(optionAction.program(), runs);
-                if (optionTrial == 2 || optionRuns.equals(BigInteger.ONE)) optionAction = null;
+                if (optionTrial == 1 && optionRuns.equals(BigInteger.ONE)) optionTrial = 2;
+                if (optionTrial == 3 || optionTrial == 2 && optionFundedRuns == null) optionAction = null;
                 offered++; summarizing = new SummaryComputation<>(prefix, recipes, budget); phase = Phase.SUMMARY;
             }
             case PREFIXES -> {
@@ -369,9 +405,10 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     private void endRoot() {
         endTrial(); sources = null; recipe = null; pending = null; visited = null; domain = null;
         if (compiling != null) { compiling.close(); compiling = null; }
+        if (completing != null) { completing.close(); completing = null; }
         if (cycling != null) { cycling.close(); cycling = null; }
         macros = null; compiledRecipes = null; macro = null;
-        optionActions = null; optionAction = null; optionRuns = null;
+        optionActions = null; optionAction = null; optionRuns = optionFundedRuns = null;
         recipes = null; bindings = null; initial = null; deficits = null; supplied = null; goals = null; trialExternal = null; tried = null;
         phase = Phase.ROOT;
     }
