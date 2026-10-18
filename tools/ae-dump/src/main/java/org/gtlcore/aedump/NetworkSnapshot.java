@@ -16,7 +16,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import org.gtlcore.gtlcore.integration.ae2.graph.GraphRequestTracker;
 import java.util.*;
 
 /** Entire connected grid, before either solver starts. All world callbacks run on the server thread. */
@@ -59,7 +58,7 @@ public final class NetworkSnapshot {
         network.addProperty("server_tick", level.getServer().getTickCount());
         network.addProperty("game_time", Long.toString(level.getGameTime()));
         network.addProperty("grid_size", grid.size());
-        network.addProperty("provider_generation", Long.toString(((GraphRequestTracker) service).gtlcore$graphProviderGeneration()));
+        network.addProperty("provider_generation", Long.toString(HostAccess.call(service, "gtlcore$graphProviderGeneration")));
         network.add("provider_state", Data.JSON.toJsonTree(Reflect.scalars(providers, "lastModifiedOnTick")));
         network.addProperty("scope", "ALL registered patterns, all providers/nodes, all advertised inventory; not target reachability");
         var actual = new KeyCounter();
@@ -75,7 +74,7 @@ public final class NetworkSnapshot {
         });
         section("registered_patterns", () -> {
             var registered = new JsonArray();
-            for (var p : ((GraphRequestTracker) service).gtlcore$registeredGraphPatterns()) registered.add(pattern(p));
+            for (var p : HostAccess.<Iterable<IPatternDetails>>call(service, "gtlcore$registeredGraphPatterns")) registered.add(pattern(p));
             network.add("registered_pattern_order", registered);
             for (var key : service.getCraftables(k -> true)) { addKey(key); for (var p : service.getCraftingFor(key)) pattern(p); }
         });

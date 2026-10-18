@@ -41,7 +41,7 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build release artifacts
+      - name: Build Forge mod with integrated AE dump and release libraries
         run: bash gradlew --no-daemon --max-workers=4 clean assemble
       - name: Verify and prepare release assets
         run: |
@@ -87,7 +87,9 @@ jobs:
           Minecraft 1.20.1 / Forge 47
 
           玩家只需将 **cgse-$RELEASE_VERSION-forge-1.20.1.jar** 放入 mods，然后重启游戏或服务端。
-          GTLCore 需要先更新至支持独立引擎的版本（1.2.3.2-fix7 起）。
+          Forge 模组已内置 AE dump，重新计算订单后执行 **/ae dump** 即可导出诊断 ZIP。
+          不需要另装 ae-dump.jar；升级时请移除旧的独立 AE dump 模组。
+          GTLCore 需要先更新至支持独立引擎的版本（当前上游 1.2.3.2-fix6）。
           cgse-core-*.jar 是开发用 Java 库，源码包也是开发资料，均不要放入 mods。
           EOF
           gh release create "v$RELEASE_VERSION" ./* --verify-tag --draft \

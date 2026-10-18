@@ -37,10 +37,30 @@ def verify(directory, version, compatibility):
                    for name in lib.namelist() if name.endswith('.class')), 'Engine must target Java 17'
         properties = dict(line.split('=', 1) for line in lib.read('META-INF/cgse/engine.properties').decode().splitlines())
         assert properties['version'] == version and properties['compatibility'] == compatibility
-        assert not any(name.endswith('.class') for name in wrapper.namelist())
+        required_diagnostics = {
+            'org/cgse/forge/CgseMod.class',
+            'org/gtlcore/aedump/AeDump.class',
+            'org/gtlcore/aedump/DumpManager.class',
+            'org/gtlcore/aedump/DumpArchive.class',
+            'org/gtlcore/aedump/DumpMixinPlugin.class',
+            'org/gtlcore/aedump/HostAccess.class',
+        }
+        assert required_diagnostics <= set(wrapper.namelist()), 'Forge mod is missing integrated AE dump'
+        assert 'org/gtlcore/aedump/AeDumpMod.class' not in wrapper.namelist(), 'Do not ship the standalone AE dump entry point'
+        assert not any(name.startswith('org/cgse/core/') for name in wrapper.namelist()), 'Engine classes belong in the selectable library'
+        assert all(name.startswith(('org/gtlcore/aedump/', 'org/cgse/forge/'))
+                   for name in wrapper.namelist() if name.endswith('.class')), 'Unexpected bundled game/host class'
+        assert manifest(wrapper)['MixinConfigs'] == 'aedump.mixins.json'
+        mixins = json.loads(wrapper.read('aedump.mixins.json'))
+        assert mixins['required'] and mixins['injectors']['defaultRequire'] == 1
+        assert mixins['plugin'] == 'org.gtlcore.aedump.DumpMixinPlugin'
+        assert set(mixins['mixins']) == {'RouterMixin', 'LegacyMixin', 'RequestWorkMixin', 'BudgetMixin', 'PlanningWorkMixin'}
+        for name in mixins['mixins']:
+            assert mixins['package'].replace('.', '/') + '/' + name + '.class' in wrapper.namelist()
+        assert not any(name.startswith(('org/gtlcore/aedump/', 'org/cgse/forge/')) for name in lib.namelist())
         config = tomllib.loads(wrapper.read('META-INF/mods.toml').decode('utf-8'))
-        assert config['modLoader'] == 'lowcodefml'
-        assert config['mods'][0]['modId'] == 'cgse' and config['mods'][0]['version'] == version
+        assert config['modLoader'] == 'javafml'
+        assert len(config['mods']) == 1 and config['mods'][0]['modId'] == 'cgse' and config['mods'][0]['version'] == version
         entries = json.loads(wrapper.read('META-INF/jarjar/metadata.json'))['jars']
         assert len(entries) == 1
         entry = entries[0]
@@ -69,7 +89,7 @@ def main():
         shutil.copy2(asset, args.output / asset.name)
         sums.append(hashlib.sha256(asset.read_bytes()).hexdigest() + '  ' + asset.name)
     (args.output / 'SHA256SUMS.txt').write_text('\n'.join(sums) + '\n', encoding='utf-8')
-    print(f'PASS CGSE {args.version}: library, Forge container, sources and checksums')
+    print(f'PASS CGSE {args.version}: library, Forge mod with AE dump, sources and checksums')
 
 
 if __name__ == '__main__':

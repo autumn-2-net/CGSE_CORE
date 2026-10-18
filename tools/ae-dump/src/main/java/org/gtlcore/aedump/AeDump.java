@@ -20,14 +20,12 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.*;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import java.util.*;
 
-@Mod("aedump")
 public final class AeDump {
     public AeDump() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, DumpConfig.SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, DumpConfig.SPEC, "aedump-common.toml");
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, IExtensionPoint.DisplayTest.IGNORE_ALL_VERSION);
         MinecraftForge.EVENT_BUS.register(this);
         DumpManager.LOG.info("AE Network Dump installed. /ae dump exports the full network of your last preview; archives: logs/ae-dump");

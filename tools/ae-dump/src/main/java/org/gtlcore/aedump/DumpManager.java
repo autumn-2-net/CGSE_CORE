@@ -12,7 +12,6 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.server.ServerLifecycleHooks;
-import org.gtlcore.gtlcore.config.ConfigHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.nio.file.*;
@@ -150,8 +149,8 @@ public final class DumpManager {
     }
     public static JsonObject configuration() {
         var o = new JsonObject();
-        try { for (var f : ConfigHolder.class.getFields()) if (f.getName().startsWith("ae2")) o.add(f.getName(), Data.JSON.toJsonTree(f.get(ConfigHolder.INSTANCE))); }
-        catch (ReflectiveOperationException e) { o.addProperty("error", e.toString()); }
+        try { return Data.JSON.toJsonTree(HostAccess.configurationValues()).getAsJsonObject(); }
+        catch (RuntimeException | LinkageError e) { o.addProperty("error", e.toString()); }
         return o;
     }
     public static JsonObject environment() {

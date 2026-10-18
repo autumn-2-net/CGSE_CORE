@@ -3,6 +3,8 @@ group = 'org.gtlcore.diagnostics'
 version = '1.0.0'
 base { archivesName = 'ae-dump' }
 java { sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17 }
+def bundled = providers.gradleProperty('cgseBundle').getOrElse('false').toBoolean()
+sourceSets.main.java.srcDir(bundled ? 'src/forge/java' : 'src/standalone/java')
 loom {
     silentMojangMappingsLicense()
     forge { mixinConfigs = ['aedump.mixins.json'] }
@@ -13,10 +15,15 @@ dependencies {
     mappings loom.officialMojangMappings()
     forge 'net.minecraftforge:forge:1.20.1-47.3.7'
     modCompileOnly 'curse.maven:applied-energistics-2-223794:7148487'
-    // The host JAR must include the extracted org.cgse.core classes and GTL adapter.
-    // Keep this location explicit: CGSE_CORE does not assume a neighboring host checkout.
-    modCompileOnly files(providers.gradleProperty('gtlcoreJar'))
+    // Host diagnostics use a small, checked reflection bridge. No GTL binary or
+    // neighboring checkout is needed to build the independently released mod.
+    compileOnly files(providers.gradleProperty('cgseCoreJar'))
     compileOnly 'io.github.llamalad7:mixinextras-common:0.5.0'
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-proc:none'] }
 jar { manifest.attributes('MixinConfigs': 'aedump.mixins.json', 'FMLModType': 'MOD', 'Implementation-Version': project.version) }
+if (bundled) tasks.named('remapJar') { archiveClassifier = 'bundled' }
+tasks.withType(Jar).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}

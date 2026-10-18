@@ -6,7 +6,6 @@ package org.gtlcore.aedump;
 import appeng.api.networking.crafting.*;
 import appeng.api.stacks.AEKey;
 import com.google.gson.*;
-import org.gtlcore.gtlcore.integration.ae2.graph.*;
 import org.cgse.core.*;
 import java.time.Instant;
 import java.util.*;
@@ -51,16 +50,18 @@ public final class CaptureRecord {
         PlanningBudget b = Reflect.get(work, "budget"); if (b != null) budget = Data.JSON.toJsonTree(Trace.budget(b)).getAsJsonObject();
         GraphCompiler<AEKey> compiler = Reflect.get(work, "compiler");
         Map<AEKey, Long> available = Reflect.get(solver, "available");
-        GtlPatternCatalog.Snapshot snapshot = Reflect.get(work, "snapshot");
+        Object snapshot = Reflect.get(work, "snapshot");
         var in = Data.object("schema", "cgse-solver-input-v2", "complete", compiler != null && available != null && snapshot != null,
                 "target", request.get("target"), "amount", request.get("amount"), "strategy", request.get("strategy"),
                 "preserve_seeds", Reflect.get(work, "preserve"), "force_craft", Reflect.get(work, "checkpoint") == null && !Boolean.TRUE.equals(Reflect.get(solver, "directEmission")),
                 "catalysts", Reflect.get(work, "catalysts"));
         in.add("available", keys.amounts(available == null ? Map.of() : available));
         if (snapshot != null) {
-            in.add("stock", keys.amounts(snapshot.stock())); in.add("external", keys.keys(snapshot.emitable()));
-            in.addProperty("cache_hit", snapshot.cacheHit()); in.addProperty("epoch", Long.toString(snapshot.epoch()));
-            in.addProperty("bounded_alternatives", snapshot.structure().boundedAlternatives());
+            in.add("stock", keys.amounts(HostAccess.<Map<AEKey, Long>>call(snapshot, "stock")));
+            in.add("external", keys.keys(HostAccess.call(snapshot, "emitable")));
+            in.addProperty("cache_hit", HostAccess.<Boolean>call(snapshot, "cacheHit"));
+            in.addProperty("epoch", Long.toString(HostAccess.call(snapshot, "epoch")));
+            in.addProperty("bounded_alternatives", HostAccess.<Boolean>call(HostAccess.call(snapshot, "structure"), "boundedAlternatives"));
         }
         GraphJobRuntime.ReplanCheckpoint<AEKey> checkpoint = Reflect.get(work, "checkpoint");
         if (checkpoint != null) {
@@ -93,8 +94,9 @@ public final class CaptureRecord {
         error = Trace.stack(e);
         if (e != null) result = e instanceof CancellationException ? "CANCELLED" : "ERROR";
         else if (p != null) {
-            result = p instanceof AeGraphPlan g ? g.graph().result().name() : p.simulation() ? "MISSING_INPUT" : "FEASIBLE";
-            if (p instanceof AeGraphPlan g) { graphPlan = plan(g.graph()); fallback |= g.fallback(); }
+            GraphPlan<AEKey> graph = HostAccess.isGraphPlan(p) ? HostAccess.call(p, "graph") : null;
+            result = graph != null ? graph.result().name() : p.simulation() ? "MISSING_INPUT" : "FEASIBLE";
+            if (graph != null) { graphPlan = plan(graph); fallback |= HostAccess.<Boolean>call(p, "fallback"); }
             aePlan = Data.object("simulation", p.simulation(), "multiple_paths", p.multiplePaths(), "bytes", Long.toString(p.bytes()),
                     "output", keys.stack(p.finalOutput()), "used", keys.amounts(p.usedItems()), "missing", keys.amounts(p.missingItems()),
                     "emitted", keys.amounts(p.emittedItems()));

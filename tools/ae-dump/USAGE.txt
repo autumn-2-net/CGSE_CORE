@@ -1,9 +1,11 @@
 AE Network Dump 1.0.0
 Minecraft 1.20.1 / Forge 47 / AE2 / CGSE-enabled GTLCore
 
-安装：把 dist/ae-dump-1.0.0.jar 放到 mods，与普通 GTLCore 一起加载。
+安装：CGSE 的 cgse-VERSION-forge-1.20.1.jar 已直接包含本工具。
+把这一个 CGSE Forge 模组放到 mods，与支持独立引擎的 GTLCore 一起加载。
+升级时移除旧的独立 ae-dump 模组，避免重复加载相同的诊断代码。
 单机装到客户端；联机装在服务器即可，客户端不强制安装。
-这是独立诊断模组，不替换 GTLCore，不修改求解策略。
+诊断功能不修改求解策略；通用 cgse-core Java 库不包含游戏诊断代码。
 
 玩家反馈缺料：
 1. 安装模组并重启后，重新计算那笔有问题的订单。
@@ -37,7 +39,7 @@ CGSE 实际编译输入、最终计划和有限长度的求解轨迹。MaxFast �
 后台自动请求：默认保留 CGSE 实际输入，失败或手动导出时再采集整网，以免请求器反复复制整网。
 request.json 的 full_network_capture_timing 明确标注时点，cgse-input.json 保留实际求解用量。
 若需要后台请求也在求解前采集整网，可开启 captureEveryMachinePreview。
-全量采集需要额外时间；大型网络可能出现一次明显停顿，适合复现诊断时安装。
+全量采集需要额外时间；大型网络可能出现一次明显停顿，可用 enabled 开关控制。
 
 配置：config/aedump-common.toml
 enabled                         总开关
@@ -57,9 +59,14 @@ maxArchiveDirectoryMiB          目录容量上限；达到后请移走旧包，
 模组不自动上传任何内容，不启动合成，不实际抽取或插入物品。
 
 源码构建：
-源码位于 CGSE_CORE/tools/ae-dump。该工具使用 Java 17，独立于通用核心构建。
-从该目录运行：
-gradlew build -PgtlcoreJar=<包含org.cgse.core和GTL适配层的GTLCore.jar>
+源码位于 CGSE_CORE/tools/ae-dump，使用 Java 17。
+在 CGSE_CORE 根目录运行 gradlew assemble，会编译、重映射诊断代码并直接合入
+build/libs/cgse-VERSION-forge-1.20.1.jar。CI 使用同一个构建入口。
+该过程不需要 GTLCore 源码或 JAR；宿主诊断通过具名反射读取现有接口，
+Mixin 方法描述符仍严格匹配宿主入口。通用引擎仍独立编译为可选择的嵌套库。
+
+仅供开发者需要旧的独立诊断模组时，从 tools/ae-dump 目录运行：
+gradlew build -PcgseCoreJar=<cgse-core-VERSION.jar>
 直接构建的发布 JAR 位于 build/libs/；不要安装带 -dev 后缀的开发 JAR。
 
 已有 GTLCore 源码工作区时，可以从宿主目录复用其 Loom 工具链与缓存：
@@ -76,7 +83,7 @@ RouterMixin 仍观察 GTL 的订单入口，其重规划参数描述符使用 or
 RequestWorkMixin 观察宿主请求；CaptureRecord 从 planning 委托读取实际库存、
 直接发射标志、部分订单搜索、回退标志和最终计划，从宿主读取快照与目录准备耗时。
 JSON schema 和已有字段保持不变；目录准备的墙钟与并行耗时是新增诊断字段。
-安装的 GTLCore 必须是使用此包名的迁移版本；旧 graph.core 包名版本不兼容。
+安装的 GTLCore 必须是支持独立引擎的迁移版本；旧 graph.core 包名版本不兼容。
 
 开发验证：
 在 CGSE_CORE 根目录运行 python tests/ae-dump/check_migration.py，检查 Mixin 描述符、

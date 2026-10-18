@@ -14,7 +14,8 @@ gradle.projectsEvaluated {
     def out = new File(addon, 'build')
     def compile = p.tasks.register('compileAeDump', JavaCompile) {
         dependsOn p.tasks.named('compileJava')
-        source = p.fileTree(new File(addon, 'src/main/java')) { include '**/*.java' }
+        source = p.files(p.fileTree(new File(addon, 'src/main/java')) { include '**/*.java' },
+                p.fileTree(new File(addon, 'src/standalone/java')) { include '**/*.java' })
         classpath = p.sourceSets.main.compileClasspath + p.files(p.sourceSets.main.output.classesDirs)
         destinationDirectory = new File(out, 'classes')
         javaCompiler.set(p.tasks.named('compileJava', JavaCompile).flatMap { it.javaCompiler })

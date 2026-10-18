@@ -1,4 +1,4 @@
-modLoader="lowcodefml"
+modLoader="javafml"
 loaderVersion="[47,)"
 license="MPL-2.0"
 
@@ -8,7 +8,7 @@ version="${version}"
 displayName="CGSE"
 displayURL="https://github.com/autumn-2-net/CGSE_CORE"
 authors="autumn-2-net"
-description="Compiled Graph Solving Engine / 编译图求解引擎"
+description="Compiled Graph Solving Engine with integrated AE network dump / 编译图求解引擎，内置 AE 网络诊断导出"
 # No packets or registries: the optional engine can be installed on the server alone.
 displayTest="IGNORE_ALL_VERSION"
 
@@ -30,6 +30,13 @@ side="BOTH"
 [[dependencies.cgse]]
 modId="gtlcore"
 mandatory=false
-versionRange="[1.2.3.2-fix7,)"
-ordering="NONE"
+versionRange="[1.2.3.2-fix6,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.cgse]]
+modId="ae2"
+mandatory=false
+versionRange="[15,)"
+ordering="AFTER"
 side="BOTH"

@@ -1,5 +1,27 @@
 import groovy.json.JsonOutput
 
+// Keep the portable engine build independent of Minecraft's Loom toolchain.
+// The separate build compiles diagnostics against this engine, never a local GTL checkout.
+def diagnosticsJar = file('tools/ae-dump/build/libs/ae-dump-1.0.0-bundled.jar')
+def engineJar = tasks.named('jar', Jar)
+def diagnostics = tasks.register('buildForgeDiagnostics', GradleBuild) {
+    group = 'build'
+    description = 'Compiles and remaps the diagnostics embedded in the CGSE Forge mod.'
+    dependsOn engineJar
+    dir = file('tools/ae-dump')
+    tasks = ['remapJar']
+    startParameter.projectProperties = [
+            cgseCoreJar: engineJar.get().archiveFile.get().asFile.absolutePath,
+            cgseBundle: 'true'
+    ]
+    startParameter.maxWorkerCount = Math.min(4, gradle.startParameter.maxWorkerCount)
+    startParameter.offline = gradle.startParameter.offline
+    inputs.files(fileTree('tools/ae-dump/src'), file('tools/ae-dump/build.gradle'),
+            file('tools/ae-dump/settings.gradle'), file('tools/ae-dump/gradle.properties'))
+    inputs.file(engineJar.flatMap { it.archiveFile })
+    outputs.file(diagnosticsJar)
+}
+
 def metadata = tasks.register('generateForgeMetadata') {
     inputs.property('version', version)
     inputs.property('range', cgseVersionRange)
@@ -18,16 +40,21 @@ def metadata = tasks.register('generateForgeMetadata') {
 
 tasks.register('forgeJar', Jar) {
     group = 'build'
-    description = 'Builds the optional Forge 1.20.1 engine update mod.'
+    description = 'Builds the Forge 1.20.1 engine update mod with integrated AE dump.'
+    dependsOn diagnostics
     archiveBaseName = 'cgse'
     archiveClassifier = 'forge-1.20.1'
     filteringCharset = 'UTF-8'
     from('packaging/forge') { expand(version: project.version) }
     from(metadata)
+    from({ zipTree(diagnosticsJar) }) {
+        include 'org/gtlcore/aedump/**', 'org/cgse/forge/**', 'aedump.mixins.json'
+    }
     from(tasks.named('jar')) {
         into 'META-INF/jarjar'
         rename { "cgse-engine-${project.version}.jar" }
     }
-    manifest.attributes('Automatic-Module-Name': 'org.cgse.forge', 'FMLModType': 'MOD')
+    manifest.attributes('Automatic-Module-Name': 'org.cgse.forge', 'FMLModType': 'MOD',
+            'MixinConfigs': 'aedump.mixins.json')
 }
 assemble.dependsOn tasks.named('forgeJar')

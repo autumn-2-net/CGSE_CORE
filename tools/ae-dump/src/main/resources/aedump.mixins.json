@@ -2,6 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "org.gtlcore.aedump.mixin",
+  "plugin": "org.gtlcore.aedump.DumpMixinPlugin",
   "compatibilityLevel": "JAVA_17",
   "mixins": ["RouterMixin", "LegacyMixin", "RequestWorkMixin", "BudgetMixin", "PlanningWorkMixin"],
   "injectors": {"defaultRequire": 1}

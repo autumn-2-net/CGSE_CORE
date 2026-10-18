@@ -5,7 +5,8 @@ plugins {
 ext.cgseConfigFile = file('gradle/cgse.properties')
 ext.cgseIdentityPaths = ['src/main', 'tools/view/src/main', 'build.gradle', 'settings.gradle',
                          'gradle/engine.gradle', 'gradle/forge.gradle', 'gradle/cgse.properties',
-                         'packaging/forge', 'LICENSE', 'NOTICE']
+                         'packaging/forge', 'tools/ae-dump/src', 'tools/ae-dump/build.gradle',
+                         'tools/ae-dump/settings.gradle', 'tools/ae-dump/gradle.properties', 'LICENSE', 'NOTICE']
 ext.cgseLicenseFiles = files('LICENSE', 'NOTICE')
 apply from: 'gradle/engine.gradle'
 apply from: 'gradle/forge.gradle'

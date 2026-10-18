@@ -1,10 +1,20 @@
 # AEDUMP migration coverage
 
-The optional Forge diagnostic mod lives entirely in `tools/ae-dump`. Its source,
+The Forge diagnostic code lives entirely in `tools/ae-dump`. Its source,
 resources, Gradle wrapper and build entry points were copied from the local
 `ae-dump` project on 2026-10-07. Generated `build`, `dist` and `.local` content was
-excluded. The mod keeps its `org.gtlcore.aedump` namespace and existing mod ID;
-it is a GTL/AE adapter, not part of the portable engine.
+excluded. The code keeps its `org.gtlcore.aedump` namespace. The CGSE Forge
+distribution now includes these classes and mixins directly under its single
+`cgse` mod ID; the old `aedump` entry point is compiled only for diagnostic-only
+developer builds. This remains a GTL/AE adapter, outside the portable engine.
+
+The bundle compiles against the portable engine, Minecraft/Forge and AE2, with
+no GTL build dependency. `HostAccess` reads named public host diagnostic methods;
+absent methods fail capture explicitly rather than returning invented values.
+The router wrapper retains its exact JVM descriptor and uses MixinExtras 0.5
+coercion for host-only types. The optional mixin plugin skips diagnostics when
+the GTL/AE host is absent. Native checks must cover these paths and the bundled
+entry point; compilation alone does not verify injection or command registration.
 
 | Capture surface | Migrated owner | Preserved output |
 | --- | --- | --- |

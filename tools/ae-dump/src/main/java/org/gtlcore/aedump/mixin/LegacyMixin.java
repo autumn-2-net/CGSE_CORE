@@ -11,7 +11,6 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.world.level.Level;
 import org.gtlcore.aedump.*;
-import org.gtlcore.gtlcore.integration.ae2.graph.CraftingEngineRouter;
 import org.spongepowered.asm.mixin.*;
 import java.util.concurrent.Future;
 
@@ -22,10 +21,15 @@ public abstract class LegacyMixin {
     private Future<ICraftingPlan> aedump$legacy(Level level, ICraftingSimulationRequester requester, AEKey target, long amount,
                                               CalculationStrategy strategy, Operation<Future<ICraftingPlan>> original) {
         // CGSE and execution replans are recorded by RouterMixin, exactly once.
-        if (CraftingEngineRouter.useGraph()) return original.call(level, requester, target, amount, strategy);
+        boolean graph = true;
+        try { graph = HostAccess.useGraph(); }
+        catch (RuntimeException | LinkageError e) { DumpManager.LOG.error("Could not read diagnostic engine mode", e); }
+        if (graph) return original.call(level, requester, target, amount, strategy);
         CaptureRecord record = null;
-        try { record = DumpManager.begin(grid, level, requester.getActionSource(), target, amount, strategy,
-                org.gtlcore.gtlcore.config.ConfigHolder.INSTANCE.ae2CalculationMode.name(), false); }
+        try {
+            record = DumpManager.begin(grid, level, requester.getActionSource(), target, amount, strategy,
+                    HostAccess.mode(), false);
+        }
         catch (RuntimeException | LinkageError e) { DumpManager.LOG.error("Could not start legacy diagnostic capture", e); }
         return DumpManager.observe(record, () -> original.call(level, requester, target, amount, strategy));
     }
