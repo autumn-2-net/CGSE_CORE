@@ -368,6 +368,51 @@ classification, shared/zero-count words, cancellation/time limits and real
 one-worker scheduler handoffs. SummaryBatchContinuationTest additionally checks
 that every literal prefix deficit remains in the verification key domain.
 
+Bounded supply alternatives
+---------------------------
+
+After the existing main-planner prefix and quantity passes, a fourth optional
+pass can retain seed/feed tradeoffs in GraphPlan.alternatives(). For example,
+with A + feed -> B, B -> 2 A and 10 A -> goal, the primary bill B=5 can coexist
+with verified bills B=4, feed=2 and B=1, feed=8. No resource price chooses between
+these incomparable bills. Ordinary fallback keeps its existing cheaper path.
+
+The pass reuses completed support ranks, exact linear-chain/round-trip actions,
+backward material expansion and full funded plan verification. It does not build
+another antichain solver. For each selected growth word it tries one repetition
+and the exact quantity reaching that root's startup plateau. New feed deficits
+use the captured catalog and exclusions to expand toward terminal materials or
+cycle boundaries; that child cannot recursively search more tradeoffs. Physical
+bindings, returned tools, target production credit and final seeds are preserved.
+
+Only eight proposed words and four alternatives are retained. This pass starts
+after the older passes have used their own allowances, requires at least 4096
+remaining work units, and receives min(8192, remaining/8) plus at most one bounded
+continuation. Existing seed alternatives are preserved by declining this pass.
+The per-key missing/initial/seed order matches SeedPortfolio's dominance rule;
+comparison scans yield after at most 64 charged visits. Publication shares
+immutable maps and execution words, and all new builder memory stays charged
+while candidates are retained. Work/time/memory cutoffs keep the last completed
+primary and archive; cancellation propagates.
+
+A strictly smaller componentwise missing bill, a newly feasible plan, or a full
+dominance improvement can become primary. Incomparable candidates only become
+alternatives. Duplicate or dominated bills are discarded; a full archive retains
+earlier incomparable entries. This is neither a complete Pareto front nor a
+minimum-supply certificate. Coverage is limited to the existing bounded action
+support: an internal material of a multi-edge loop can lack its useful rotation,
+even when a separately constructed word proves a better supply bill executable.
+No missing-path or infeasibility proof follows from failing to find that word.
+
+RefillTradeoffTest independently replays primitive firings for mixed supplies,
+craftable feeds, seeds, returned tools and coproducts, including catalog reversal.
+It checks exact totals beyond long, exclusions and binding/configuration guards,
+incomplete scope, archive limits, 600 randomized comparisons against the existing
+dominance relation, interruption before/after publication, and a real one-worker
+scheduler handoff. A manually verified missed rotation is retained as a coverage
+boundary rather than assigned a false success oracle. This adds engine options;
+host selection/display of these options is separate.
+
 Per-material boundary diagnostics
 --------------------------------
 
@@ -434,6 +479,9 @@ Known boundaries after the refill review at 224e9172:
   Exact quantity breakpoints now refine observed prefix words; unrelated words,
   interleavings and the bounded hint scan remain incomplete. Ordinary fallback
   retains its cheaper expansion.
+  Main planning can also retain a small verified frontier of incomparable
+  seed/feed bills after those passes. It does not replace the primary by pricing
+  materials, exhaust cyclic rotations or certify a complete frontier.
   A stopped expansion is not proof that a material has no useful producer, nor
   a certificate of minimum supply.
 - Refill enumeration/publication and final verifier key traversal use bounded

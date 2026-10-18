@@ -85,6 +85,12 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     /** The main planner may search a small cyclic prefix; ordinary fallback
      * keeps its existing expansion/word-reduction responsibilities. */
     MissingMaterialExpansion<K> refineCycles(boolean enabled) { cycleSearchEnabled = enabled; return this; }
+    /** A bounded alternative reuses complete support, without recursively
+     * searching more cyclic prefixes or publishing a nested frontier. */
+    static <K> MissingMaterialExpansion<K> alternative(GraphCompiler<K> compiler, GraphPlan<K> plan, Map<K, Long> stock,
+            Set<K> external, Set<String> excluded, boolean force, boolean ignoreTargetStock, PlanningBudget budget, RefillProducerOrder<K> order) {
+        return new MissingMaterialExpansion<>(compiler, plan, stock, external, excluded, force, ignoreTargetStock, budget, true, order);
+    }
     private static <K> boolean hasProducibleMissing(GraphCompiler<K> compiler, GraphPlan<K> plan) {
         // Only a cheap index lookup here. Source inspection belongs to the
         // budgeted continuation, including rejected/excluded alternatives.
@@ -283,7 +289,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private boolean searchCycles() {
         if (!cycleSearchEnabled || cycleSearchTried || order == null || result.feasible() || budget.remainingWork() < 4096) return explainBoundary();
         cycleSearchTried = true;
-        cycleSearch = new RefillSupplySearch<>(result, order, stock, external, forceCraft, ignoreTargetStock, budget);
+        cycleSearch = new RefillSupplySearch<>(result, order, stock, external, forceCraft, ignoreTargetStock, budget).tradeoffs(compiler, excluded);
         return false;
     }
     private boolean explainBoundary() {
@@ -477,6 +483,12 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
 
     GraphPlan<K> result() { return cycleSearch == null ? result : cycleSearch.result(); }
+    /** A parent retaining this completed alternative takes its conservative
+     * builder charge; close still releases verifier/child scratch separately. */
+    long takeResultCharge() {
+        if (result == null) throw new IllegalStateException("No completed refill to retain");
+        long charge = memory; memory = 0; return charge;
+    }
     boolean diagnosing() { return diagnostics != null; }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     @Override public void close() {

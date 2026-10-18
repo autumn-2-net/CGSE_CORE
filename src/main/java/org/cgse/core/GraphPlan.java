@@ -167,10 +167,9 @@ public final class GraphPlan<K> {
     }
 
     GraphPlan<K> withAlternatives(java.util.List<GraphPlan<K>> options) {
-        GraphPlan<K> copy = new GraphPlan<>(target, amount, preserveSeeds, steps, recipes, initial, seeds, missing, result,
-                searchNodes, planningNanos, seedOptimality);
+        GraphPlan<K> copy = new GraphPlan<>(this);
         copy.alternatives = java.util.List.copyOf(options);
-        return copy.withMissingSourcesFrom(this);
+        return copy;
     }
 
     public long searchNodes() {

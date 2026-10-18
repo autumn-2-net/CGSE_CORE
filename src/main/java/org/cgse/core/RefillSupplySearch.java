@@ -5,9 +5,9 @@ package org.cgse.core;
 import java.math.BigInteger;
 import java.util.*;
 
-/** Optional main-planner prefix witnesses inside a completed refill's supply ceiling. */
+/** Optional main-planner prefix witnesses, followed by bounded verified supply tradeoffs. */
 final class RefillSupplySearch<K> implements AutoCloseable {
-    private enum Phase { ROOT, DISCOVER, INPUTS, OUTPUTS, COMPILE, MACROS, MACRO_SUMMARY, CYCLES, TRIAL, SUPPLY, SEARCH, PREFIXES, WORDS, SIZE_SUMMARY, SIZE, SUMMARY, COPY, NEEDS, BINDINGS, MISSING, VERIFY, DONE }
+    private enum Phase { ROOT, DISCOVER, INPUTS, OUTPUTS, COMPILE, MACROS, MACRO_SUMMARY, CYCLES, OPTIONS, REFINE, FRONTIER, TRIAL, SUPPLY, SEARCH, PREFIXES, WORDS, SIZE_SUMMARY, SIZE, SUMMARY, COPY, NEEDS, BINDINGS, MISSING, VERIFY, DONE }
     private static final class WordFrame {
         final PlanStep step;
         int child;
@@ -54,6 +54,15 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     private Set<PlanStep> seenWords;
     private int wordVisits, sizedWords;
     private RefillRepeatSizing<K> sizing;
+    private GraphCompiler<K> tradeoffCompiler;
+    private Set<String> tradeoffExcluded;
+    private boolean trading;
+    private RefillFrontier<K> frontier;
+    private MissingMaterialExpansion<K> refining;
+    private Iterator<BackwardCoverability.Action<K>> optionActions;
+    private BackwardCoverability.Action<K> optionAction;
+    private BigInteger optionRuns;
+    private int optionTrial, offered;
     private long memory;
 
     RefillSupplySearch(GraphPlan<K> original, RefillProducerOrder<K> order, Map<K, Long> stock,
@@ -63,6 +72,11 @@ final class RefillSupplySearch<K> implements AutoCloseable {
         roots = original.missingExact().keySet().iterator(); started = budget.nodes();
         passStarted = started;
         allowance = Math.min(8192, budget.remainingWork() / 4); retainedFailure = budget.failureDetail();
+    }
+
+    /** Main planning opts in only after its existing supply refinements. */
+    RefillSupplySearch<K> tradeoffs(GraphCompiler<K> compiler, Set<String> excluded) {
+        tradeoffCompiler = compiler; tradeoffExcluded = excluded; return this;
     }
 
     boolean step() {
@@ -82,8 +96,20 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             if (phase == Phase.CYCLES) {
                 if (!cycling.step()) return false;
                 macros = cycling.actions();
-                if (macros.isEmpty()) endRoot(); else phase = Phase.TRIAL;
+                if (macros.isEmpty()) endRoot();
+                else if (trading) { optionActions = macros.iterator(); phase = Phase.OPTIONS; }
+                else phase = Phase.TRIAL;
                 return false;
+            }
+            if (phase == Phase.REFINE) {
+                if (!refining.step()) return false;
+                if (refining.result() != candidate) memory += refining.takeResultCharge();
+                candidate = refining.result(); refining.close(); refining = null;
+                frontier.offer(candidate); phase = Phase.FRONTIER; return false;
+            }
+            if (phase == Phase.FRONTIER) {
+                if (!frontier.step()) return false;
+                result = frontier.result(); endTrial(); return false;
             }
             if (phase == Phase.SEARCH) {
                 if (!searching.step()) return false;
@@ -116,23 +142,50 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             }
             if (phase == Phase.VERIFY) {
                 if (!verifying.step()) return false;
-                result = candidate;
-                if (resizing) endTrial(); else endRoot();
+                if (trading) {
+                    verifying.close(); verifying = null;
+                    if (candidate.feasible()) { frontier.offer(candidate); phase = Phase.FRONTIER; }
+                    else {
+                        refining = MissingMaterialExpansion.alternative(tradeoffCompiler, candidate, stock, external,
+                                tradeoffExcluded, force, ignoreTargetStock, budget, order);
+                        phase = Phase.REFINE;
+                    }
+                } else { result = candidate; if (resizing) endTrial(); else endRoot(); }
                 return false;
             }
             for (int i = 0; i < 64; i++) {
                 budget.check();
                 if (advance()) return true;
-                if (phase == Phase.COMPILE || phase == Phase.MACRO_SUMMARY || phase == Phase.CYCLES || phase == Phase.SEARCH || phase == Phase.SIZE_SUMMARY || phase == Phase.SIZE || phase == Phase.SUMMARY || phase == Phase.VERIFY) return false;
+                if (phase == Phase.COMPILE || phase == Phase.MACRO_SUMMARY || phase == Phase.CYCLES || phase == Phase.SEARCH || phase == Phase.SIZE_SUMMARY || phase == Phase.SIZE || phase == Phase.SUMMARY || phase == Phase.VERIFY || phase == Phase.REFINE || phase == Phase.FRONTIER) return false;
             }
             return false;
         } catch (PlanningBudget.Exhausted limit) {
-            budget.failureDetail(retainedFailure); return stop();
+            budget.failureDetail(retainedFailure); return complete();
         }
     }
 
     private boolean advance() {
         switch (phase) {
+            case OPTIONS -> {
+                if (offered == 8) return complete();
+                if (optionAction == null) {
+                    if (!optionActions.hasNext()) { endRoot(); break; }
+                    optionAction = optionActions.next();
+                    var summary = optionAction.summary(); BigInteger gain = summary.delta(root);
+                    BigInteger gap = base.initialExact().getOrDefault(root, BigInteger.ZERO)
+                            .subtract(summary.required(root).max(BigInteger.valueOf(available(root))));
+                    if (gain.signum() <= 0 || gap.signum() <= 0 || force && summary.delta(base.target()).signum() < 0) {
+                        optionAction = null; break;
+                    }
+                    optionRuns = CheckedAmounts.ceilDiv(gap, gain); optionTrial = 0;
+                }
+                // Keep two fixed-word endpoints. No price is assigned to
+                // extra feedstocks in exchange for fewer cyclic startup units.
+                BigInteger runs = optionTrial++ == 0 ? BigInteger.ONE : optionRuns;
+                prefix = PlanStep.repeat(optionAction.program(), runs);
+                if (optionTrial == 2 || optionRuns.equals(BigInteger.ONE)) optionAction = null;
+                offered++; summarizing = new SummaryComputation<>(prefix, recipes, budget); phase = Phase.SUMMARY;
+            }
             case PREFIXES -> {
                 // Only inspect prefixes accepted by THIS search. The original
                 // suffix can be huge or contain per-push configurations; it is
@@ -167,7 +220,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                 root = roots.next(); var node = order.get(root);
                 missing = result.missingExact().getOrDefault(root, BigInteger.ZERO);
                 if (missing.signum() == 0 || node == null || !node.cycle) break;
-                reserve(768); base = result; rank = node.rank; trial = incidences = 0;
+                reserve(768); base = trading ? frontier.primary() : result; rank = node.rank; trial = incidences = 0;
                 recipes = new LinkedHashMap<>(); pending = new ArrayDeque<>(); visited = new HashSet<>();
                 domain = new LinkedHashSet<>(); tried = new HashSet<>(); sources = null;
                 pending.add(node); visited.add(root); phase = Phase.DISCOVER;
@@ -283,11 +336,13 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                     var e = entries.next();
                     BigInteger gap = external.contains(e.getKey()) ? BigInteger.ZERO : e.getValue().subtract(BigInteger.valueOf(available(e.getKey()))).max(BigInteger.ZERO);
                     int comparison = gap.compareTo(base.missingExact().getOrDefault(e.getKey(), BigInteger.ZERO));
-                    if (comparison > 0) { rejectCandidate(); break; }
+                    if (comparison > 0 && !trading) { rejectCandidate(); break; }
                     strict |= comparison < 0;
                     if (gap.signum() > 0) { reserve(128); deficits.put(e.getKey(), gap); }
                 } else {
                     entries = null; strict |= deficits.size() < base.missingExact().size();
+                    if (trading) strict |= deficits.getOrDefault(root, BigInteger.ZERO)
+                            .compareTo(base.missingExact().getOrDefault(root, BigInteger.ZERO)) < 0;
                     if (!strict) { rejectCandidate(); break; }
                     candidate = GraphPlan.ownedRefill(base, new PlanStep.Sequence(List.of(prefix, base.steps())), bindings, initial, deficits,
                             deficits.isEmpty() ? GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL : base.result(), budget.nodes());
@@ -302,24 +357,26 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     }
 
     private long available(K key) { return ignoreTargetStock && original.target().equals(key) ? 0 : stock.getOrDefault(key, 0L); }
-    private void rejectCandidate() { if (resizing) endTrial(); else endRoot(); }
+    private void rejectCandidate() { if (resizing || trading) endTrial(); else endRoot(); }
     private void endTrial() {
         if (searching != null) { searching.close(); searching = null; }
         if (summarizing != null) { summarizing.close(); summarizing = null; }
         if (verifying != null) { verifying.close(); verifying = null; }
+        if (refining != null) { refining.close(); refining = null; }
         summary = null; prefix = null; candidate = null; entries = null; bindingEntries = null; ports = null;
-        sizing = null; phase = resizing ? Phase.WORDS : Phase.TRIAL;
+        sizing = null; phase = trading ? Phase.OPTIONS : resizing ? Phase.WORDS : Phase.TRIAL;
     }
     private void endRoot() {
         endTrial(); sources = null; recipe = null; pending = null; visited = null; domain = null;
         if (compiling != null) { compiling.close(); compiling = null; }
         if (cycling != null) { cycling.close(); cycling = null; }
         macros = null; compiledRecipes = null; macro = null;
+        optionActions = null; optionAction = null; optionRuns = null;
         recipes = null; bindings = null; initial = null; deficits = null; supplied = null; goals = null; trialExternal = null; tried = null;
         phase = Phase.ROOT;
     }
     private boolean finish() {
-        if (!accelerated && !resizing && shortcutsRelevant && !result.missingExact().isEmpty() && budget.remainingWork() >= 4096) {
+        if (!trading && !accelerated && !resizing && shortcutsRelevant && !result.missingExact().isEmpty() && budget.remainingWork() >= 4096) {
             // Keep the old bounded search's completed incumbent. A faster
             // shortcut can otherwise choose an incomparable bill early and
             // prevent a later root from retaining its previous improvement.
@@ -327,7 +384,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             passStarted = budget.nodes(); allowance = Math.min(8192, budget.remainingWork() / 4);
             return false;
         }
-        if (!resizing && result != original && !result.missingExact().isEmpty() && budget.remainingWork() >= 1024) {
+        if (!trading && !resizing && result != original && !result.missingExact().isEmpty() && budget.remainingWork() >= 1024) {
             // Completed primitive and shortcut searches keep their existing
             // quotas and incumbent. Exact sizing adds no route enumeration.
             endRoot(); resizing = true; retainedWord = result.steps();
@@ -338,6 +395,20 @@ final class RefillSupplySearch<K> implements AutoCloseable {
         return stop();
     }
     private boolean stop() {
+        if (!trading && tradeoffCompiler != null && shortcutsRelevant && !result.missingExact().isEmpty() &&
+                result.alternatives().isEmpty() && budget.remainingWork() >= 4096) {
+            // Previous primitive, macro and quantity passes keep their entire
+            // quota and completed primary. Extra bills are refined and verified
+            // separately; an incomparable one can only enter the small archive.
+            endRoot(); trading = true; accelerated = true; resizing = false;
+            reserve(512); frontier = new RefillFrontier<>(result, budget);
+            roots = result.missingExact().keySet().iterator();
+            passStarted = budget.nodes(); allowance = Math.min(8192, budget.remainingWork() / 8);
+            phase = Phase.ROOT; return false;
+        }
+        return complete();
+    }
+    private boolean complete() {
         phase = Phase.DONE;
         budget.note("refill_supply", (result == original ? "retained_original" : "improved") + "; work=" + (budget.nodes() - started));
         return true;
