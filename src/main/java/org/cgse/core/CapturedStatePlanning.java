@@ -941,9 +941,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (!refineCapacity(family) && !done && !refineEntityCount(family) && !done) stop(Reason.INSUFFICIENT_DISTINCT_ENTITIES);
     }
 
-    /** A changed physical key can disable another rule without exhausting the
-     * first rule's marginal capacity. Prefer the blocked rule in another exact
-     * schedule of these same counts before asking for additional entities. */
+    /** A changed physical key can disable another rule or spend its remaining
+     * uses without exhausting the first rule's marginal capacity. Prefer the
+     * blocked rule in another exact schedule of these same counts before
+     * asking for additional entities. */
     private boolean repairOrder(StateFamily<K> family, GraphRecipe<Key<K>> blocked) {
         if (orderRepair != null) {
             orderFailure = family;
@@ -957,7 +958,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             ports += recipe.inputs().size() + recipe.outputs().size();
             if (ports > 2048) return false;
         }
-        if (!lostStateResource(family, false)) return false;
+        boolean capacityFeedback = !lostStateResource(family, false);
+        if (capacityFeedback && !lostStateResource(family, true)) return false;
         orderTried = true;
         long transientBytes = 128L + 128L * ports;
         if (!budget.tryReserve(transientBytes)) return false;
@@ -977,7 +979,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (orderRepair == null) return false;
         orderFailure = family; searchingOrder = true;
         finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
-        budget.note("candidate_state", "retry_same_counts; blocked=" + blocked.binding() + "; family=" + family.id() + "; negative_proofs=false");
+        budget.note("candidate_state", "retry_same_counts; blocked=" + blocked.binding() + "; family=" + family.id() +
+                "; feedback=" + (capacityFeedback ? "guaranteed_uses" : "eligibility") + "; negative_proofs=false");
         return true;
     }
 

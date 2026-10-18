@@ -120,9 +120,12 @@ does not restart this scout. A changed proposal clears all feedback and scores;
 the enclosing arm's fixed allowance still covers every attempt. Order recovery
 and entity refinement remain available if the chosen physical assignment fails.
 
-When an already restored transition disables another rule's physical eligibility,
-the restorer can retain the proposal's exact counts and try other execution words
-before requesting more entities. The blocked variant guides a bounded preferred
+When an already restored transition disables another rule's physical eligibility
+or reduces its guaranteed uses, the restorer can retain the proposal's exact
+counts and try other execution words before requesting more entities. A single
+tool may need its light uses before a heavier operation even when that operation
+leaves the tool eligible for one more light use. Entity-choice recovery cannot
+repair this one-key case. The blocked variant guides a bounded preferred
 scan: newly enabled rules are reconsidered after activation or production. Later
 failures can promote another blocked variant while retaining earlier ordering
 hints. The ordinary count scheduler remains a separate resumable continuation.
@@ -138,8 +141,10 @@ at 32768 work units and one sixteenth of remaining request work, including faile
 downstream restoration. It neither renews the enclosing arm nor spends cache
 preparation budget. On allocation failure, memory refusal or exhausted alternatives
 retain the existing entity-refinement path. Scheduler failure is inconclusive for state families.
-Admission examines witnessed cross-rule eligibility loss, not arbitrary temporal
-constraints; this is not complete temporal matching or state-domain exploration.
+Admission first checks witnessed cross-rule eligibility loss, then remaining-use
+loss with exact quantity-weighted arithmetic. Both are ordering hints only;
+ordinary material gates still constrain every candidate word. This is not
+complete temporal matching or state-domain exploration.
 
 If entities are still insufficient, a local repair can re-propose with each
 activation's capacity capped by the selected number of firings using that family.
@@ -401,6 +406,12 @@ The public tests are under tests/core/java/org/cgse/core:
     source/slot/stock permutations, simultaneous mixed/indivisible tools and wide
     physical cohorts. Exact seeds, forced production, delayed returns/save-load,
     worker handoff, cancellation and local limits retain the existing contracts.
+  CapturedStateCapacityOrderTest: one-key tool cohorts require light uses before
+    a heavier transition which still leaves the light rule eligible. Source/slot/
+    stock permutations, mixed/indivisible and wide cohorts, forced production,
+    exact seeds, unavailable material gates and replacement tools are checked
+    with source-level physical replay. Delayed returns/save-load, worker handoff,
+    cancellation and work limits cover the extended order-recovery admission.
   StateChoiceRepairTest: independent literal assignment oracles under arbitrary
     per-key/per-edge preferences, whole-key backtracking and augmenting paths,
     wide counts, cached feedback revisions, work/memory limits and cancellation.

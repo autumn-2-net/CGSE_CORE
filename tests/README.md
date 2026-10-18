@@ -174,6 +174,16 @@ returns/save-load, worker handoff, cancellation, missing resources and work caps
 guard runtime ownership and positive-only recovery. Eligibility scores retain
 priority over wear preferences. See `docs/state-review-followup.txt`.
 
+`CapturedStateCapacityOrderTest` adds 69 positive combinations where one initial
+tool key has enough lifetime only if light uses precede a heavier transition.
+The heavier return still matches the light rule, so eligibility-only order
+feedback misses the required retry. Tests vary 1/2/7/31/127 light uses, source,
+slot and stock order, whole/mixed and wide physical cohorts, exact final seeds,
+forced production and public entry. A real material gate makes reordering
+impossible; additional stocked or manufactured tools must still recover that
+case. Source checks, literal inventory replay, delayed returns/save-load,
+worker handoff, cancellation and work caps guard the same-count recovery.
+
 `CapturedStateSupportTest` compares retained source selection with 1,200
 independent full-scan finite closures. It checks borrowed-index ownership,
 original entry order, retained work, cancellation and memory/source limits.

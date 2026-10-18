@@ -1,7 +1,7 @@
 State-model review follow-up (2026-10-18)
 =======================================
-Review baseline: 5fb82e52. Inventory checked against dc635259 and the local
-guaranteed-use feedback change described below. Earlier case reports retain
+Review baseline: 5fb82e52. Inventory checked through a945e37f and the
+guaranteed-use ordering extension described below. Earlier case reports retain
 their original versions and results; they are not current full-suite verdicts.
 
 Implemented portions of the review
@@ -55,8 +55,8 @@ does not simulate unused durability states, exclude any eligible edge, reserve
 tools, change counts or learn a mathematical cut. Every candidate still needs
 original source restoration, exact funding/production checks and verification.
 The existing eight-rule/512-score cache and 32768/one-sixteenth lifetime allowance
-remain unchanged. The broader execution-order scout retains its old eligibility
-admission; capacity loss alone does not start a new ordering search.
+remain unchanged. In a945e37f, the broader execution-order scout still retained
+its old eligibility-only admission; the next increment addresses that boundary.
 
 The four original n=2,3,7,31 requests now all solve. The old n=2 positive keeps
 exact search/compilation work and peak reservation. Current public search work
@@ -75,6 +75,47 @@ checks pass, and all 1478 baseline binary API entries are preserved. Only the tw
 modified production classes differ among 753 engine classes. The packaged JAR
 also passes the new capacity test. These checks are not a full corpus or live-host
 regression, and aggregate equality is not a per-request timing guarantee.
+
+Follow-up F2 gap: same tools, different temporal order
+----------------------------------------------------
+One tool starts with n+2 uses. A light rule removes one use, while a heavy rule
+requires at least two and returns the tool with one use. The order needs n light
+parts and one heavy part. Light n times followed by heavy once is a constructive
+witness. Heavy first leaves the tool eligible for light, but unable to complete
+the remaining n uses. There is no second initial tool key to choose instead.
+
+On a945e37f, requesting heavyPart before lightPart in the finishing recipe and
+listing [heavy, light, finish] gives UNKNOWN for n=2,3,7,31,127. Reversing the source
+list recovers those same requests through another count proposal. This ordering
+dependence is a local recovery gap, not missing material or a global UNSAT proof.
+The original lightPart-first inputs also solve; both orders are retained locally.
+
+Execution-order admission now consumes the same witnessed guaranteed-use loss as
+entity-choice recovery. The existing scheduler promotes the blocked variant and
+replays identical counts from original stock. All ordinary gates, exact state
+transitions, entity ownership and final checks remain mandatory. This extends
+only admission and its diagnostic reason; the eight-word limit, lifetime work
+allowance and existing fallback/refinement paths stay unchanged.
+
+The five old UNKNOWN cases now solve. At n=7, public search work changes from
+1801 (UNKNOWN) to 1019 (feasible); the already-positive reversed-source case goes
+from 1671 to 1017. The n=1 controls keep identical work and peak reservations.
+Retaining an order continuation can add temporary memory to an old positive:
+at n=31 in reverse order, peak reservation grows from 97328 to 106420 bytes while
+search work falls from 2898 to 2244. These are counters, not wall-time promises.
+CapturedStateCapacityOrderTest retains 69 positive combinations plus blocked
+ordinary gates, insufficient raw material, work caps and cancellation controls.
+Local original inputs, source orders, hashes and runs are registered under
+state-capacity-order-20261018. The general temporal search boundary remains open.
+
+Validation of this ordering increment: all 69 combinations pass with independent
+source/physical checks, including delayed runtime returns and save/load. The
+18 paired existing state/allocation/scheduler/metrics programs pass on both
+engines, with identical reported output. Assemble, integrated Forge/AE-dump
+packaging and the 1478-entry ABI check pass. Of 753 engine classes, only
+CapturedStatePlanning changes; the packaged engine also passes the new test.
+Tests stay within four logical CPUs. This remains focused, not full-suite or
+live-host validation.
 
 Still open, with concrete implementation boundaries
 ---------------------------------------------------
@@ -111,4 +152,4 @@ Next improvements should target measured restoration or captured-domain failures
 For related-slot tables, first preserve actual legal tuples through every
 allocation/recovery/proof path; an independent-marginal flag alone is unsafe.
 No new public API, host adapter, version bump or solver budget is needed for
-the guaranteed-use feedback correction above.
+the guaranteed-use feedback corrections above.
