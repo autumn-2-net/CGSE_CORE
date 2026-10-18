@@ -20,7 +20,7 @@ public final class SummaryComputation<K> implements AutoCloseable {
     private final Map<PlanStep, SequenceSummary<K>> known;
     private Map<PlanStep, SequenceSummary<K>> shared;
     private long sharedBytes;
-    private final Deque<Frame> stack = new ArrayDeque<>();
+    private Deque<Frame> stack = new ArrayDeque<>();
     private SequenceSummary<K> result;
 
     public SummaryComputation(PlanStep step, Map<String, GraphRecipe<K>> recipes, PlanningBudget budget) {
@@ -179,7 +179,7 @@ public final class SummaryComputation<K> implements AutoCloseable {
         if (!(child instanceof PlanStep.Batch batch) || batch.runs() == 0) return false;
         var recipe = recipes.get(batch.recipe());
         if (recipe == null) throw new IllegalArgumentException("Unknown recipe " + batch.recipe());
-        if (!Collections.disjoint(recipe.inputs().keySet(), recipe.outputs().keySet())) return false;
+        if (recipe.hasInputReturns()) return false;
         // For an ordinary batch, exact prefix need and peak have a closed
         // form. No input may also be returned by this same batch.
         frame.ordinary = recipe;
@@ -193,7 +193,7 @@ public final class SummaryComputation<K> implements AutoCloseable {
         Frame finished = stack.pop();
         if (stack.isEmpty()) {
             result = complete;
-            if (shared != null) shared.clear();
+            shared = null;
             budget.release(sharedBytes);
             sharedBytes = 0;
         } else {
@@ -255,8 +255,8 @@ public final class SummaryComputation<K> implements AutoCloseable {
     /** Release a suspended fold when its owning strategy is abandoned. */
     @Override
     public void close() {
-        if (shared != null) shared.clear();
-        stack.clear();
+        shared = null;
+        if (!stack.isEmpty()) stack = new ArrayDeque<>();
         budget.release(sharedBytes);
         sharedBytes = 0;
     }

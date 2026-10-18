@@ -62,6 +62,8 @@ public final class SummaryBatchContinuationTest {
         for (String key : keys) {
             check(summary.delta(key).equals(state.getOrDefault(key, BigInteger.ZERO)), "Changed final inventory");
             check(summary.required(key).equals(low.getOrDefault(key, BigInteger.ZERO).negate().max(BigInteger.ZERO)), "Changed prefix need");
+            if (low.getOrDefault(key, BigInteger.ZERO).signum() < 0)
+                check(summary.delta().containsKey(key), "Prefix input disappeared from verification keys, including zero-net tools");
             check(summary.peak(key).equals(high.getOrDefault(key, BigInteger.ZERO).max(BigInteger.ZERO)), "Changed prefix peak");
         }
         check(budget.reservedBytes() == 0, "Summary workspace leaked"); cases++;

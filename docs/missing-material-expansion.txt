@@ -92,6 +92,27 @@ skip this pass. Incomplete capture stays conditional: expansion does not prove
 missing recipe/state domains infeasible or claim globally minimal supplies.
 Changed plans drop stale seed-optimality and alternative-plan metadata.
 
+Final verification streams material keys from the completed exact summary, then
+the target and independent seeds, in the same order as before. It no longer copies
+a large union or rescans irrelevant initial inventory. The exact fold retains a
+delta entry for every prefix requirement, including zero-net returned tools;
+initial keys outside that set and outside the goals have zero need/change/goal
+and their quantities were already validated as nonnegative. Up to 32 key visits
+share one continuation, without an extra arithmetic charge for a yield boundary.
+
+GraphRecipe records input/output overlap once at construction on the smaller port
+side, combining the old input/configuration/reusable aggregation loops. Ordinary
+batch folding reads this immutable fact instead of scanning recipe ports at every
+batch boundary. Logical reusable returns still take the general fold, even when
+they do not represent physical outputs. Construction remains linear in recipe
+size; this does not introduce an inventory-dependent or cross-request cache.
+
+Completed summary/count traversals relinquish their temporary indices without a
+bulk clear loop. Only positive batches under positive repeat edges enter counting,
+so every indexed recipe gets a positive propagated count and needs no final zero
+filter. Zero batches/repeats, shared words and exact counts beyond long remain
+covered by independent literal-count tests.
+
 An interrupted preview must not erase an already completed original-domain
 infeasibility proof. GraphPlanningWork retains that proof with an unavailable
 preview diagnostic; otherwise the actual work/time/memory limit remains the
@@ -129,6 +150,13 @@ It cancels every observed continuation boundary, checks work/memory limit cleanu
 and queues small requests on the actual one-worker scheduler during source scans,
 support evaluation, dominance comparison, application and publication preparation.
 
+VerificationContinuationTest measures actual material hash/equality visits as well
+as charged work, including the summary-to-verifier handoff. It exercises wide
+outputs, independent seeds, unused initial inventory, late missing seeds, recipe
+classification, shared/zero-count words, cancellation/time limits and real
+one-worker scheduler handoffs. SummaryBatchContinuationTest additionally checks
+that every literal prefix deficit remains in the verification key domain.
+
 Known boundaries after the refill review at 224e9172:
 
 - This pass prepends to a verified execution suffix. It does not remove
@@ -140,10 +168,10 @@ Known boundaries after the refill review at 224e9172:
 - Single-producer whole-deficit proposals do not cover all stock-funded
   source mixtures. Same-rank multi-step cycles can remain seed boundaries.
   A stopped expansion is not proof that a material has no useful producer.
-- The refill builder's enumeration and publication cursors are bounded, but
-  the general final verifier still has synchronous helpers (for example its
-  key-union construction and ordinary-batch disjointness inspection). Hash
-  operations, recipe equality, collection growth, big-integer arithmetic and
-  GC also have no hard wall-time guarantee. This is not a claim that every
+- Refill enumeration/publication and final verifier key traversal use bounded
+  continuations; verifier union construction and repeated recipe-disjointness
+  scans are eliminated. Recipe construction remains linear. Host key/recipe
+  operations, collection growth, big-integer arithmetic, composite known-summary
+  lookups and GC have no hard wall-time guarantee. This is not a claim that every
   operation in the entire planning pipeline has bounded latency.
 - Public per-material boundary reasons are not introduced by this change.

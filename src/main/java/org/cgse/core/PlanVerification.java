@@ -6,7 +6,6 @@ package org.cgse.core;
 import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 
 /** Resumable final witness verification, including every prefix with exact totals. */
@@ -23,6 +22,7 @@ public final class PlanVerification<K> implements AutoCloseable {
     private BigInteger runs;
     private final Map<K, BigInteger> totals = new LinkedHashMap<>();
     private int phase;
+    private boolean checkingSeeds;
 
     public PlanVerification(GraphPlan<K> plan, PlanningBudget budget) {
         this(plan, budget, null);
@@ -36,7 +36,7 @@ public final class PlanVerification<K> implements AutoCloseable {
      * the remaining forced orders retain the full production bookkeeping. */
     PlanVerification(GraphPlan<K> plan, PlanningBudget budget, AllocationSearch.Candidate<K> assembled) {
         try (var costs = budget.trace(PlanningCostTrace.Stage.VERIFY)) {
-            if (!plan.feasible() || !plan.missing().isEmpty()) throw new IllegalArgumentException("Unverified plan");
+            if (!plan.feasible() || !plan.missingExact().isEmpty()) throw new IllegalArgumentException("Unverified plan");
             this.plan = plan;
             this.budget = budget;
             boolean sameAssembly = assembled != null && assembled.proposed == plan && assembled.summary != null &&
@@ -56,31 +56,18 @@ public final class PlanVerification<K> implements AutoCloseable {
     }
 
     private boolean stepMeasured() {
-        budget.check();
+        // The batched key loop charges each visit itself. Yield boundaries do
+        // not add another arithmetic unit on top of those material checks.
+        if (phase != 1) budget.check();
         budget.phase(PlanningBudget.Phase.VERIFY);
         switch (phase) {
             case 0 -> {
                 if (!computation.step()) return false;
                 summary = computation.result();
-                var all = new LinkedHashSet<>(summary.delta().keySet());
-                all.add(plan.target());
-                all.addAll(plan.seeds().keySet());
-                all.addAll(plan.initialExact().keySet());
-                keys = all.iterator();
+                keys = summary.delta().keySet().iterator();
                 phase = 1;
             }
-            case 1 -> {
-                if (!keys.hasNext()) {
-                    phase = counts == null ? 4 : 2;
-                    return false;
-                }
-                K key = keys.next();
-                BigInteger goal = BigInteger.valueOf(plan.seeds().getOrDefault(key, 0L));
-                if (key.equals(plan.target())) goal = goal.add(BigInteger.valueOf(plan.amount()));
-                BigInteger required = summary.required(key).max(goal.subtract(summary.delta(key)));
-                BigInteger initial = plan.initialExact().getOrDefault(key, BigInteger.ZERO);
-                if (initial.compareTo(required) < 0) throw new IllegalArgumentException("Unfunded prefix: " + key);
-            }
+            case 1 -> verifyKeys();
             case 2 -> {
                 if (counts.step(budget)) {
                     patterns = counts.result().entrySet().iterator();
@@ -104,6 +91,32 @@ public final class PlanVerification<K> implements AutoCloseable {
         return phase == 4;
     }
 
+    private void verifyKeys() {
+        // Visit delta, target and seeds in their original order without copying
+        // a union. Every prefix requirement from the trusted fold has a delta
+        // entry (including zero changes for returned tools). Remaining initial
+        // keys have zero need/change/goal and are already nonnegative in GraphPlan,
+        // so checking unused inventory again cannot reject another plan.
+        for (int operation = 0; operation < 32; operation++) {
+            budget.check();
+            K key;
+            if (keys.hasNext()) {
+                key = keys.next();
+                if (checkingSeeds && (summary.delta().containsKey(key) || key.equals(plan.target()))) continue;
+            } else if (!checkingSeeds) {
+                checkingSeeds = true; keys = plan.seeds().keySet().iterator(); key = plan.target();
+                if (summary.delta().containsKey(key)) continue;
+            } else {
+                keys = null; phase = counts == null ? 4 : 2; return;
+            }
+            BigInteger goal = BigInteger.valueOf(plan.seeds().getOrDefault(key, 0L));
+            if (key.equals(plan.target())) goal = goal.add(BigInteger.valueOf(plan.amount()));
+            BigInteger required = summary.required(key).max(goal.subtract(summary.delta(key)));
+            BigInteger initial = plan.initialExact().getOrDefault(key, BigInteger.ZERO);
+            if (initial.compareTo(required) < 0) throw new IllegalArgumentException("Unfunded prefix: " + key);
+        }
+    }
+
     SequenceSummary<K> summary() {
         if (phase != 4) throw new IllegalStateException("Verification incomplete");
         return summary;
@@ -123,6 +136,7 @@ public final class PlanVerification<K> implements AutoCloseable {
 
     @Override
     public void close() {
+        keys = null;
         computation.close();
     }
 }
