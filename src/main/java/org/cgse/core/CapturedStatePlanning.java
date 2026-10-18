@@ -901,7 +901,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     }
 
     /** Replaying the same word can choose another already owned entity at an
-     * earlier firing. The failed rule is a preference, never a reserved quota. */
+     * earlier firing. Preserve eligibility first, then still-needed lifetime.
+     * The failed rule is a preference, never a reserved quota. */
     private boolean repairChoices(StateFamily<K> family) {
         if (!shared() || proposed.patternTimesExact().size() > 128) return false;
         if (choiceRepair == null) {
@@ -919,14 +920,19 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                     else if (!first.equals(activating.state())) alternatives = true;
                 }
             }
-            if (!alternatives || !lostEligibility(family)) return false;
+            if (!alternatives) return false;
+        } else if (!choiceRepair.active()) return false;
+        boolean capacityFeedback = !lostStateResource(family, false);
+        if (capacityFeedback && !lostStateResource(family, true)) return false;
+        if (choiceRepair == null) {
             choiceRepair = StateChoiceRepair.create(budget);
             if (choiceRepair == null) return false;
-        } else if (!choiceRepair.active() || !lostEligibility(family)) return false;
+        }
         if (!choiceRepair.protect(family)) return false;
         finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
         resetRestoration(); startRestoration(restorationWord); choiceCandidates++;
         budget.note("candidate_state", "retry_entity_choices; family=" + family.id() + "; candidate=" + choiceCandidates +
+                "; feedback=" + (capacityFeedback ? "guaranteed_uses" : "eligibility") +
                 "; same_counts=true; same_order=true; negative_proofs=false");
         return true;
     }
@@ -951,7 +957,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             ports += recipe.inputs().size() + recipe.outputs().size();
             if (ports > 2048) return false;
         }
-        if (!lostEligibility(family)) return false;
+        if (!lostStateResource(family, false)) return false;
         orderTried = true;
         long transientBytes = 128L + 128L * ports;
         if (!budget.tryReserve(transientBytes)) return false;
@@ -975,7 +981,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         return true;
     }
 
-    private boolean lostEligibility(StateFamily<K> family) {
+    private boolean lostStateResource(StateFamily<K> family, boolean uses) {
         // Inspect already witnessed transitions only, on failure. This is an
         // admission hint, not a learned precedence or a necessary entity bound.
         if (transitions.size() > 512) return false;
@@ -989,11 +995,19 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             BigInteger before = BigInteger.ZERO, after = BigInteger.ZERO;
             for (var slot : transition.slots()) {
                 budget.check();
-                if (family.accepts(slot.key()) && family.capacity(slot.key()) > 0) before = before.add(BigInteger.valueOf(slot.amount()));
+                long capacity = family.accepts(slot.key()) ? family.capacity(slot.key()) : 0;
+                if (capacity > 0) {
+                    var amount = BigInteger.valueOf(slot.amount());
+                    before = before.add(uses ? amount.multiply(BigInteger.valueOf(capacity)) : amount);
+                }
             }
             for (var output : transition.outputs().entrySet()) {
                 budget.check();
-                if (family.accepts(output.getKey()) && family.capacity(output.getKey()) > 0) after = after.add(BigInteger.valueOf(output.getValue()));
+                long capacity = family.accepts(output.getKey()) ? family.capacity(output.getKey()) : 0;
+                if (capacity > 0) {
+                    var amount = BigInteger.valueOf(output.getValue());
+                    after = after.add(uses ? amount.multiply(BigInteger.valueOf(capacity)) : amount);
+                }
             }
             if (before.compareTo(after) > 0) return true;
         }

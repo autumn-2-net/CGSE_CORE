@@ -93,9 +93,14 @@ borrow a future manufacturing output. Shared-rule slots may reassign eligible
 owned entities; different rules never create another copy of the physical tool.
 
 When several distinct initial keys were activated and a witnessed transition
-disabled a later rule, restoration can first retry the same counts AND execution
-word with different entity choices. Failed rules guide a preference for exact
-transitions that retain their eligibility. Single-rule allocation orders supplies
+disabled a later rule or reduced its guaranteed uses, restoration can first retry
+the same counts AND execution word with different entity choices. A still-eligible
+state may no longer fund all later uses. Failure admission checks the witnessed
+cross-rule transition's entity totals first, then its quantity-weighted guaranteed
+capacity using exact integers. These observations do not prove a necessary bound.
+Failed rules guide a preference for exact transitions that retain eligibility,
+then preserve guaranteed uses among otherwise equally ranked choices. The original
+eligibility priorities dominate every capacity tie-break. Single-rule allocation orders supplies
 and its best-fit alternatives; multi-rule matching orders each slot's allowed
 edges. Every supply and eligible edge remains searchable. These preferences
 neither reserve tools nor prove that a tool must be saved for a later operation.
@@ -391,6 +396,11 @@ The public tests are under tests/core/java/org/cgse/core:
     long-sized requests, exact seeds, repeated conflicting feedback and limits.
     Every source transition and count is checked; small plans get primitive
     replay and delayed runtime returns/save-load. Private failure is inconclusive.
+  CapturedStateCapacityChoiceTest: delayed exhaustion while an earlier cross-rule
+    use leaves the specialized tool eligible; literal blue-use/red-finish witnesses,
+    source/slot/stock permutations, simultaneous mixed/indivisible tools and wide
+    physical cohorts. Exact seeds, forced production, delayed returns/save-load,
+    worker handoff, cancellation and local limits retain the existing contracts.
   StateChoiceRepairTest: independent literal assignment oracles under arbitrary
     per-key/per-edge preferences, whole-key backtracking and augmenting paths,
     wide counts, cached feedback revisions, work/memory limits and cancellation.

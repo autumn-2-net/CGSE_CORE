@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Candidate-local feedback about a later rule that lost eligible entities.
+/** Candidate-local feedback about a later rule that lost eligible entities or uses.
  * Scores only order choices: no entity is reserved, excluded or manufactured,
  * and no precedence, count cut or negative theorem leaves this helper. */
 final class StateChoiceRepair<K> implements AutoCloseable {
@@ -53,13 +53,18 @@ final class StateChoiceRepair<K> implements AutoCloseable {
         Integer old = scores.get(choice);
         if (old != null) return old;
         K after = used.nominalAfterOne(state);
-        int score = 0;
+        int lost = 0, worn = 0;
         for (var rule : protectedRules) {
-            budget.check(); score <<= 1;
-            boolean before = rule.accepts(state) && rule.capacity(state) > 0;
-            boolean retained = after != null && rule.accepts(after) && rule.capacity(after) > 0;
-            if (before && !retained) score++;
+            budget.check(); lost <<= 1; worn <<= 1;
+            long before = rule.accepts(state) ? rule.capacity(state) : 0;
+            long retained = after != null && rule.accepts(after) ? rule.capacity(after) : 0;
+            if (before > 0 && retained <= 0) lost++;
+            else if (retained > 0 && retained < before) worn++;
         }
+        // Preserve the old eligibility ordering before breaking its ties with
+        // guaranteed-use loss. This is one exact transition, not a forecast of
+        // arbitrary state trajectories or a reservation of future capacity.
+        int score = (lost << 8) | worn;
         if (scores.size() < 512 && budget.tryReserve(160)) {
             scores.put(choice, score); memory += 160;
         }

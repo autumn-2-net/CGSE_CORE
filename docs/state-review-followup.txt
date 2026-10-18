@@ -1,0 +1,114 @@
+State-model review follow-up (2026-10-18)
+=======================================
+Review baseline: 5fb82e52. Inventory checked against dc635259 and the local
+guaranteed-use feedback change described below. Earlier case reports retain
+their original versions and results; they are not current full-suite verdicts.
+
+Implemented portions of the review
+----------------------------------
+F1: CapturedStatePlanning interns exact transitions within the same source
+variant. Fixed points, observed state cycles and heterogeneous Repeat boundaries
+retain executable words instead of assigning one identity to every firing.
+StateRestorationCycle and exact prefix summaries preserve the physical tool
+return dependency and per-dispatch consumption. DagScheduler also removes
+already-notified/completed operations from resource subscriptions, covering
+distinct host bindings that cannot share a recipe identity.
+
+F2: Typed local outcomes, simultaneous entity read arcs, whole-key allocation,
+cross-rule matching, cohort/Hall failure explanations, selected activation
+advancement, same-count order repair and alternative entity choices exist.
+Entity-count/union refinements are positive proposal restrictions. Exact state
+boundaries and selected source support can recover omitted candidates. These
+paths retain the original count/model scope and work limits; local failures do
+not prove global infeasibility.
+
+Cost: RESTORE, SCHEDULE, ASSEMBLE and VERIFY have separate pipeline attribution.
+Candidate diagnostics include restored firing/transition/node counts, observed
+cycles, order/choice attempts and typed failure reasons. These are aggregate
+observations, not complete persistent per-candidate histories.
+
+The report's missing full-current validation cannot be closed by combining all
+historical PASS counts. This increment uses focused current comparisons. Existing
+state runtime tests are portable adapter simulations; previous native Forge/AE
+results remain separately dated evidence.
+
+New reproduced F2 gap: lost uses without lost eligibility
+--------------------------------------------------------
+Take one blue tool with n uses and one specialized red tool with n+1 uses.
+Warm both unchanged, spend n general uses to produce parts, then spend n red-only
+uses to turn those parts into products. The general rule can use either color.
+All ordinary inputs are present. A literal witness uses blue for the first stage
+and red for the second, retaining the red tool with one use at completion.
+
+Before this change, longer-lived-tool ordering spends some red capacity in the
+general stage. The resulting red states still satisfy the specialized rule at
+each such transition, so eligibility-loss feedback never starts. Subsequent
+failure asks for additional entities even though another assignment of the same
+owned tools, counts and execution word succeeds. The public captured entry on
+dc635259 returns UNKNOWN for n=3,7,31; this is a search gap, not a false global
+UNSAT proof or attribution to a specific player report.
+
+Choice recovery now also admits an observed cross-rule reduction in guaranteed
+uses. It first preserves the existing eligibility-loss ordering, then prefers
+transitions which do not reduce protected rules' positive capacity. The feedback
+does not simulate unused durability states, exclude any eligible edge, reserve
+tools, change counts or learn a mathematical cut. Every candidate still needs
+original source restoration, exact funding/production checks and verification.
+The existing eight-rule/512-score cache and 32768/one-sixteenth lifetime allowance
+remain unchanged. The broader execution-order scout retains its old eligibility
+admission; capacity loss alone does not start a new ordering search.
+
+The four original n=2,3,7,31 requests now all solve. The old n=2 positive keeps
+exact search/compilation work and peak reservation. Current public search work
+for n=3,7,31 is 24933,25680,30282, with 3739 compilation work each; the old failures
+used 27260,27578,29570 search work. A newly solved request need not use less work
+than an earlier incomplete failure. These are work counters, not speedup claims.
+CapturedStateCapacityChoiceTest retains 77 positive variants plus negative and
+limit controls. Local original inputs, source/JAR hashes, comparison commands,
+failed results and new runs are registered under state-capacity-feedback-20261018.
+
+Validation for this increment: the new capacity test, the allocation-choice unit
+test and 16 existing state/runtime/metrics programs pass. Each of those 16 old
+programs also passes against the frozen baseline, with identical reported output
+including its recorded work/memory maxima. Assemble and Forge/AE-dump packaging
+checks pass, and all 1478 baseline binary API entries are preserved. Only the two
+modified production classes differ among 753 engine classes. The packaged JAR
+also passes the new capacity test. These checks are not a full corpus or live-host
+regression, and aggregate equality is not a per-request timing guarantee.
+
+Still open, with concrete implementation boundaries
+---------------------------------------------------
+1. F1: Arbitrary unique one-way states still require explicit selected transitions.
+   StateFamily has one-step algebra only. General symbolic/after-many operations
+   would also need execution, verification and persistence contracts. Observed
+   repetition is not a complete symbolic-state solver.
+2. F2: General temporal entity assignment remains incomplete. Feedback changes
+   preferences and bounded proposals; it is not an exhaustive search over every
+   entity choice, tool-manufacturing history or execution order. Repeated failure
+   of the same protected rule does not renew the optional allowance.
+3. Sections 5.2/5.3 and 8A: RecipeCountModel still relaxes per-push configuration
+   consumption. Stable provider batch bounds are not a captured global contract.
+   CapturedRecipeDomain remains Cartesian; correlated legal tuples must still
+   arrive as concrete valid variants. A table/MDD relation API and restoration
+   support are not implemented by this patch.
+4. Sections 6/7/8D/E: Coverage revisions and CountModelViews semantics/mappings
+   exist. Changed captured coverage starts a fresh compiler, preventing stale
+   restricted proofs from escaping. CountRowTemplates verifies original material
+   derivations against current rows. General incremental semantic metadata,
+   proof reinstantiation across added columns, transformed symmetry metadata,
+   and pricing over ungenerated symbolic candidate domains remain open. Existing
+   finite-matrix ExactColumnProgram is not that domain oracle.
+5. Sections 5.4/8B/C/F: Nominal execution plus actual return/replan is not a robust
+   AND/OR policy for every random outcome. General integer cut-conflict chains,
+   native relation/domain-hole explanations and state automata are research
+   extensions. Existing PB/MIR/LCG tools do not establish their completion, and
+   the review did not establish that every extension is required for this engine.
+6. Section 10: Whole-request candidate lineage, source-preparation/host-install
+   attribution, and process-wide retained heap/RSS remain separate from the
+   existing work-account and pipeline metrics.
+
+Next improvements should target measured restoration or captured-domain failures.
+For related-slot tables, first preserve actual legal tuples through every
+allocation/recovery/proof path; an independent-marginal flag alone is unsafe.
+No new public API, host adapter, version bump or solver budget is needed for
+the guaranteed-use feedback correction above.

@@ -162,6 +162,18 @@ preferences and low budgets cannot invent tools or export an infeasibility proof
 literal assignments; preference scores must never remove feasible choices. It
 also exercises wide quantities, score-cache revisions and lifetime work limits.
 
+`CapturedStateCapacityChoiceTest` adds 77 positive combinations for tools that
+remain eligible after an earlier use but lose capacity needed by a later rule.
+An independent constructive witness spends the general-purpose tool first and
+preserves specialized tools for their required material-chain stages. Tests vary
+one/two specialized rules, 3/7/31 products, recipe/slot/stock order, mixed and
+indivisible cohorts, exact final seeds, forced production and public entry.
+One cohort approaches the long limit without expanding physical entities.
+Source-level checks and primitive replay validate every returned plan; delayed
+returns/save-load, worker handoff, cancellation, missing resources and work caps
+guard runtime ownership and positive-only recovery. Eligibility scores retain
+priority over wear preferences. See `docs/state-review-followup.txt`.
+
 `CapturedStateSupportTest` compares retained source selection with 1,200
 independent full-scan finite closures. It checks borrowed-index ownership,
 original entry order, retained work, cancellation and memory/source limits.

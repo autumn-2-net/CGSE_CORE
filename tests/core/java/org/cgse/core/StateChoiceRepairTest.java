@@ -23,7 +23,7 @@ public final class StateChoiceRepairTest {
             int modes = random.nextInt(8), edges = sample % 2 == 0 ? 511 : random.nextInt(512);
             compare(stock, need, modes, edges, rank);
         }
-        wide(); feedback(); failures();
+        wide(); feedback(); capacityFeedback(); failures();
         System.out.println("StateChoiceRepairTest: allocations=" + cases + "; assertions=" + checks);
     }
 
@@ -122,7 +122,7 @@ public final class StateChoiceRepairTest {
                 check(policy.protect(rule), "Lost a distinct failed rule");
                 check(!policy.protect(rule), "Repeated failure renewed a hint");
                 for (int key = 0; key < 256; key++) {
-                    int expected = key & ((1 << (bit + 1)) - 1);
+                    int expected = (key & ((1 << (bit + 1)) - 1)) << 8;
                     check(policy.score(use, key) == expected, "Incorrect eligibility-loss score");
                     check(policy.score(use, key) == expected, "Cached score changed");
                 }
@@ -139,6 +139,33 @@ public final class StateChoiceRepairTest {
             check(!policy.active() && !policy.protect(new Rule(1, false)), "Downstream work renewed feedback allowance");
         }
         check(budget.reservedBytes() == 0, "Expired policy leaked");
+    }
+
+    private static void capacityFeedback() {
+        StateFamily<Long> needed = new StateFamily<>() {
+            public String id() { return "positive-tool"; }
+            public boolean accepts(Long state) { return state > 0; }
+            public long capacity(Long state) { return Math.max(0, state); }
+            public Long nominalAfterOne(Long state) { return state == 1 ? null : state - 1; }
+        };
+        StateFamily<Long> use = new StateFamily<>() {
+            public String id() { return "either-tool"; }
+            public boolean accepts(Long state) { return state != 0; }
+            public long capacity(Long state) { return Math.abs(state); }
+            public Long nominalAfterOne(Long state) { return Math.abs(state) == 1 ? null : state > 0 ? state - 1 : state + 1; }
+        };
+        var budget = budget();
+        try (var policy = StateChoiceRepair.<Long>create(budget)) {
+            check(policy.protect(needed), "Capacity feedback rejected");
+            check(policy.score(use, -31L) == 0, "Unrelated tool was penalized");
+            check(policy.score(use, 31L) > policy.score(use, -31L), "Lost uses were invisible while still eligible");
+            check(policy.score(use, 1L) > policy.score(use, 31L), "Wear preference replaced old eligibility priority");
+            check(policy.score(use, Long.MAX_VALUE) == policy.score(use, 31L), "Wide capacities overflowed or became entity counts");
+            int cached = policy.score(use, Long.MAX_VALUE);
+            check(cached == policy.score(use, Long.MAX_VALUE), "Cached capacity preference changed");
+            check(!policy.protect(needed), "Capacity feedback renewed the same failed rule");
+        }
+        check(budget.reservedBytes() == 0, "Capacity feedback leaked");
     }
 
     private static void failures() {
