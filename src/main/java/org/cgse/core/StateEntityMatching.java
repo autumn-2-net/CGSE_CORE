@@ -31,14 +31,28 @@ final class StateEntityMatching<K> implements AutoCloseable {
     private final BigInteger[] remaining;
     private final int[] chosen, next, parentDemand, parentSupply, queue;
     private final int[] priority;
+    private final boolean[] nonMinimum;
     private final int fixed, width;
     private int depth, unmet, failedSlot;
     private long memory;
     private boolean done, feasible, flowing, totalShortage, hallDeficit;
     private boolean partialEligibility, relaxationTried, relaxing, failedFlow;
     private boolean packingTried, wholeKeyFailure;
+    private boolean preferenceLoss;
     private StateEntityPacking<K> packing;
     private StateEntityCohorts<K> cohorts;
+    private StateEntityMinCost<K> costRepair;
+    private ToIntBiFunction<StateEntityAllocation.Demand, K> repairPreference;
+    private ToLongBiFunction<StateEntityAllocation.Demand, K> repairCost;
+
+    boolean canMinimizePreferences() { return fixed == 0 && demands.size() > 1 && demands.size() <= 32 && width > 1 && width <= 256 && allowed.length <= 1024; }
+
+    boolean hasPreferenceLoss() { return feasible() && preferenceLoss; }
+
+    void minimizePreferences(ToIntBiFunction<StateEntityAllocation.Demand, K> preference,
+            ToLongBiFunction<StateEntityAllocation.Demand, K> cost) {
+        if (canMinimizePreferences()) { repairPreference = preference; repairCost = cost; }
+    }
 
     static <K> StateEntityMatching<K> create(List<StateEntityAllocation.Demand> demands,
             List<StateEntityAllocation.Supply<K>> supplies,
@@ -58,7 +72,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
             ToLongBiFunction<StateEntityAllocation.Demand, K> cost, PlanningBudget budget) {
         long edges = (long) demands.size() * supplies.size();
         if (edges > Integer.MAX_VALUE - 8) return null;
-        // Includes the eligibility/flow matrix and worst-case materialized picks.
+        // Includes eligibility/flow, picks and ranked priority/lower-bound flags.
         boolean ranked = preference != null || cost != null;
         long bytes = 768L + 192L * demands.size() + (ranked ? 256L : 224L) * supplies.size() +
                 (ranked ? 104L : 96L) * edges + (cost == null ? 0 : 32L + 8L * supplies.size());
@@ -84,6 +98,7 @@ final class StateEntityMatching<K> implements AutoCloseable {
         width = supplies.size(); int count = demands.size(), indivisible = 0;
         allowed = new boolean[count * width]; flow = new long[allowed.length];
         priority = preference == null && cost == null ? null : new int[allowed.length];
+        nonMinimum = priority != null && count > 1 && count <= 32 && width > 1 && width <= 256 && allowed.length <= 1024 ? new boolean[allowed.length] : null;
         int[] scores = priority == null ? null : new int[width];
         long[] costs = cost == null ? null : new long[width];
         Integer[] order = priority == null ? null : new Integer[width];
@@ -113,7 +128,13 @@ final class StateEntityMatching<K> implements AutoCloseable {
                     budget.check(); int comparison = Integer.compare(scores[a], scores[b]);
                     return comparison != 0 || costs == null ? comparison : Long.compare(costs[a], costs[b]);
                 });
-                for (int s = 0; s < width; s++) { budget.check(); priority[d * width + s] = order[s]; }
+                int firstAllowed = -1;
+                for (int s = 0; s < width; s++) {
+                    budget.check(); int key = order[s]; priority[d * width + s] = key;
+                    if (!allowed[d * width + key]) continue;
+                    if (firstAllowed < 0) firstAllowed = key;
+                    else if (nonMinimum != null) nonMinimum[d * width + key] = scores[key] != scores[firstAllowed] || costs != null && costs[key] != costs[firstAllowed];
+                }
             }
         }
         fixed = indivisible; unmet = fixed;
@@ -130,6 +151,10 @@ final class StateEntityMatching<K> implements AutoCloseable {
         budget.checkpoint();
         if (done) return true;
         budget.check();
+        if (costRepair != null) {
+            if (!costRepair.step()) return false;
+            costRepair.close(); costRepair = null;
+        }
         if (cohorts != null) {
             if (!cohorts.step()) return false;
             if (!cohorts.possible()) {
@@ -176,13 +201,22 @@ final class StateEntityMatching<K> implements AutoCloseable {
                 startPacking();
                 return false;
             }
+            preferenceLoss = false;
             for (int d = 0; d < demands.size(); d++) {
                 budget.check(); var demand = demands.get(d);
                 if (d < fixed) result.add(new StateEntityAllocation.Pick<>(demand.slot(), supplies.get(chosen[d]).state(), demand.amount()));
                 else for (int s = 0; s < width; s++) {
                     budget.check(); long use = flow[d * width + s];
-                    if (use > 0) result.add(new StateEntityAllocation.Pick<>(demand.slot(), supplies.get(s).state(), use));
+                    if (use > 0) {
+                        preferenceLoss |= nonMinimum != null && nonMinimum[d * width + s];
+                        result.add(new StateEntityAllocation.Pick<>(demand.slot(), supplies.get(s).state(), use));
+                    }
                 }
+            }
+            if (repairPreference != null) {
+                if (preferenceLoss || nonMinimum == null) costRepair = StateEntityMinCost.create(demands, supplies, allowed, flow, remaining, repairPreference, repairCost, budget);
+                repairPreference = null; repairCost = null;
+                if (costRepair != null) { result.clear(); return false; }
             }
             feasible = done = true; return true;
         }
@@ -318,6 +352,8 @@ final class StateEntityMatching<K> implements AutoCloseable {
     List<StateEntityAllocation.Pick<K>> result() { if (!feasible()) throw new IllegalStateException("No matching witness"); return result; }
 
     @Override public void close() {
+        if (costRepair != null) costRepair.close(); costRepair = null;
+        repairPreference = null; repairCost = null;
         if (packing != null) packing.close(); packing = null;
         if (cohorts != null) cohorts.close(); cohorts = null;
         demands.clear(); supplies.clear(); result.clear(); Arrays.fill(remaining, null);

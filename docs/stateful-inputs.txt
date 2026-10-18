@@ -137,6 +137,32 @@ allowance, including downstream restoration. A failed trial clears its cost bias
 before ordinary choice/order recovery continues. It is a positive heuristic for
 one repeatedly blocked rule, not a minimum-cost matching or temporal proof.
 
+Per-edge ranks do not minimize a whole firing's assignment cost. A breadth-first
+augmenting path can consume a protected free tool while a longer alternating path
+would preserve it. During the existing qualitative/quantitative recovery, bounded
+joint optimization can improve that feasible allocation before its tools are used.
+It admits at least two slots and keys, at most 32 slots, 256 keys and 1024 candidate
+edges. Indivisible slots larger than one entity retain their original allocator;
+they are never relaxed into a split flow for this optimization. Existing ranking
+and result scans also record whether every chosen edge achieves its slot's exact
+minimum price. A flow meeting that lower bound skips optimization without more
+score callbacks, edge visits or restoration retries.
+
+The optimizer uses bounded negative-cycle cancellation, as in the existing
+count-network optimizer, directly on the owned allocation residuals. A reservoir
+accounts for unused supply. Each checked cycle changes all of its edges atomically
+and preserves every slot total and physical supply. Exact integer prices minimize
+total qualitative penalty before total one-step wear; the latter is retained when
+the earlier quantitative trial was admitted. Quantities never expand into entities.
+At most eight cycles and min(4096, remaining request work / 32) work are available
+per matching, including score callbacks. Memory/work refusal keeps the existing
+feasible flow. This is not a global temporal optimum or a negative proof.
+
+It does not add another whole-word trial. Its work remains inside the existing
+choice recovery, covered by the original 32768/one-sixteenth lifetime and the
+enclosing arm's allowance; it never renews or borrows cache budget. Ordinary
+choice/order recovery and the existing quantitative-bias cleanup remain intact.
+
 When an already restored transition disables another rule's physical eligibility
 or reduces its guaranteed uses, the restorer can retain the proposal's exact
 counts and try other execution words before requesting more entities. A single
@@ -467,6 +493,13 @@ The public tests are under tests/core/java/org/cgse/core:
   StateChoiceCostsTest: 1501 exhaustive-oracle allocation comparisons with exact
     long-sized costs, primary rank preservation, optional-workspace fallback,
     single-trial lifetime and failure cleanup.
+  CapturedStateMatchingCostsTest: 115 positive variants requiring joint tool
+    rerouting or combining it with quantitative wear feedback, plus whole-key
+    controls, large cohorts, replacement tools, seeds, physical replay,
+    delayed runtime returns/save-load, worker handoff and bounded failures.
+  StateEntityMinCostTest: 1200 independent finite objective oracles, exact
+    long-sized quantities/prices, original-flow preservation on work/memory
+    refusal, whole-key exclusion and cancellation cleanup.
   CapturedStateExpansionTest: omitted cross-rule state cycles, source/slot/stock
     permutations, long-sized orders, multiple physical tools, mixed/indivisible
     slots, manufactured tools, exact seeds and forced/preserved requests. Source

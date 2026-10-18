@@ -196,6 +196,17 @@ exact long-sized costs may only break qualitative ties, never remove an eligible
 edge or split a whole-key demand. It checks denied workspace, constructor failure,
 single-trial lifetime, unchanged ordinary scores and cancellation cleanup.
 
+`CapturedStateMatchingCostsTest` adds 115 positive variants where per-slot ranks
+can still consume a later-needed tool. It checks preserved and consumed returns,
+source/slot/stock orders, wide mixed cohorts, whole-key controls, manufactured
+tools, seeds, forced crafting and compound quantitative/joint recovery. Every
+source transition and physical prefix is checked independently; delayed returns,
+save/load, worker handoff, cancellation and conflicting goals guard ownership.
+`StateEntityMinCostTest` compares 1200 small flows with exhaustive literal minimum
+objectives using separate exact penalty/wear totals. It also checks wide
+quantities/prices, whole-key exclusion and retention of the last feasible flow
+when optional memory or work is unavailable. No temporal optimum is claimed.
+
 `CapturedStateOrderFeedbackTest` retains 109 positive combinations with 2/3/5/8
 destructive rules and 2/7/31 light uses. It checks a constructive temporal order,
 recipe/slot/stock permutations, whole/mixed and wide cohorts, exact seeds,

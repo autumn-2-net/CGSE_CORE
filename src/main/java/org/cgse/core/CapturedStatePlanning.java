@@ -753,6 +753,11 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                         preferences.score(families.get(recipe.slots().get(demand.slot()).key().family()), key),
                         preferences == null || !preferences.costsEnabled() ? null : (demand, key) ->
                         preferences.cost(families.get(recipe.slots().get(demand.slot()).key().family()), key), budget);
+                if (matching != null && preferences != null && matching.canMinimizePreferences()) {
+                    matching.minimizePreferences(
+                            (demand, key) -> preferences.score(families.get(recipe.slots().get(demand.slot()).key().family()), key),
+                            preferences.costsEnabled() ? (demand, key) -> preferences.cost(families.get(recipe.slots().get(demand.slot()).key().family()), key) : null);
+                }
             } finally { budget.release(transientBytes); }
             if (matching == null) stop(Reason.WORKSPACE_DECLINED);
             return false;

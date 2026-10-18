@@ -1,7 +1,7 @@
 State-model review follow-up (2026-10-18)
 =======================================
-Review baseline: 5fb82e52. Inventory checked through 8b6d15e3 and the
-quantitative choice extension described below. Earlier case reports retain
+Review baseline: 5fb82e52. Inventory checked through 267de751 and the
+joint matching extension described below. Earlier case reports retain
 their original versions and results; they are not current full-suite verdicts.
 
 Implemented portions of the review
@@ -212,6 +212,71 @@ The initial local class-delta script incorrectly expected only four changed
 class files; that failed check and its subsequent inspection are retained.
 All jobs use four logical CPUs, serial heavy processes. This remains focused
 state-subsystem validation, not a full corpus or live-host regression.
+
+Follow-up F2 gap: edge preferences versus a whole matching
+--------------------------------------------------------
+A legal one-firing flow need not preserve the tools needed later. Consider
+u accepting b/c, v accepting a/b, and a later read requiring a. The breadth-first
+matcher can assign b to u, then a to v because a is free. The alternating path
+which moves u to c and gives b to v is longer, but avoids losing a. Sorting the
+edges does not make ordinary breadth-first augmentation minimize total penalty.
+
+An initial 48-case consumed-return family already solved on 267de751 by changing
+activation/order choices. Its original positive controls remain archived. In a
+second family, u returns its tool unchanged and b has higher declared guaranteed
+capacity than c, fixing that preference across inventory orders. Warm a:1,b:n,c:1,
+then use c in u and b in v for each pair, then read a for every part: this is a
+literal witness. With n=1/2/7/31 and 12 source/slot/stock orders, the old public
+entry solves 24/48; the other 24 are UNKNOWN despite the physical witness.
+
+Existing qualitative/quantitative recovery now optionally improves the complete
+matching before consuming its tools. It reuses the negative-cycle cancellation
+approach already present in CountNetwork on the feasible entity flow itself,
+with unused supply represented by a reservoir.
+Every atomic exchange preserves all demand totals, eligibility and supply counts.
+An exact integer objective ranks total qualitative penalty before total marginal
+wear, including the previous quantitative feedback when present. It is a bounded
+positive candidate improvement, not a new count cut or temporal infeasibility proof.
+
+Admission is restricted to mixed or unit slots, 32 demands, 256 supply keys and
+1024 edges. Larger whole-key demands retain their exact ordinary allocator.
+This adds no whole-word replay and shares the original choice lifetime. Existing
+ranking/output scans record a per-slot exact minimum-price lower bound; a flow
+meeting every slot's minimum skips the optimizer without extra work. This avoids
+retrying a complete word merely because its recipe has several tool choices.
+Each matching permits at most eight cycles and 4096 work (also bounded by one
+thirty-second of remaining request work), including cost callbacks. Declined
+workspace or incomplete optimization returns the original or improved feasible
+flow. Existing quantitative-bias cleanup and ordinary order recovery remain intact.
+
+The revised 48-case family now all solves. The new integration regression keeps
+115 positive combinations, including the easier consumed-return controls and
+quantitative wear cases that require both feedback stages. The 1200 small flow
+oracles independently enumerate minimum exact penalty/wear totals; all agree,
+and 128 improve on the old per-edge flow. Physical/source checks, runtime delayed
+returns/save-load, seeds, manufactured tools, wide quantities, cancellation and
+worker handoff remain covered. Local originals and runs are registered under
+state-matching-cost-20261018. No public API, host adapter or version is changed.
+
+The revised family's 24 already-positive inputs retain identical search work,
+compilation work and peak reservations. In the original 48-case control family,
+total public search work changes from 4696910 to 4694104; four individual controls
+add 349-369 work (at most 0.65%). All retain feasibility, compilation work and
+peak reservations. This is a measured small tradeoff, not a claim that every
+allocation becomes faster or that whole-process retained memory is unchanged.
+
+Validation: both new tests pass from freshly compiled sources and the packaged
+0.1.3 engine. Thirty-nine historical state/matching/runtime/cost-trace programs
+pass against both the frozen baseline and current engine (78 runs); 38 print
+identical reports. Source-cache assertion counts depend on concurrent snapshot
+observations. An earlier pair's seven-work entity difference also occurs between
+baseline JVM runs (8155/8162), and is absent from the final pair. Neither is a
+changed pass/fail conclusion.
+The final 48 revised and 48 original control inputs pass through both direct
+and public planning. Gradle assemble, all 1478 binary API entries, the Forge
+mod with AE dump, source archive and checksums pass. Only the two intended
+existing engine classes change; StateEntityMinCost and its cutoff class are
+added. These are serial, four-CPU targeted checks, not a full/live-host run.
 
 Still open, with concrete implementation boundaries
 ---------------------------------------------------
