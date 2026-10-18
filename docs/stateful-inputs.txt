@@ -136,7 +136,7 @@ entity allocation, source restoration, seed/production checks and verification.
 An unavailable ordinary input or rejected final assembly may resume order search.
 
 This optional repair admits at most 128 active variants and 2048 input/output
-ports. It tests at most eight candidate words within a lifetime allowance capped
+ports. It tests at most eight ordinary candidate words within a lifetime allowance capped
 at 32768 work units and one sixteenth of remaining request work, including failed
 downstream restoration. It neither renews the enclosing arm nor spends cache
 preparation budget. On allocation failure, memory refusal or exhausted alternatives
@@ -145,6 +145,25 @@ Admission first checks witnessed cross-rule eligibility loss, then remaining-use
 loss with exact quantity-weighted arithmetic. Both are ordering hints only;
 ordinary material gates still constrain every candidate word. This is not
 complete temporal matching or state-domain exploration.
+
+Repeated multi-rule failures can also request one structural ordering attempt.
+After two plain candidates fail (three for a three-rule family), it compares
+one-step effects on exact keys of the proposal's selected activations. Those keys
+can be stocked or manufactured; this analysis never makes them available early.
+A rule that reduces another rule's eligibility or guaranteed uses suggests
+trying the latter first. Only selected variants enter the preference graph;
+no unused trajectory is unfolded and no precedence becomes a necessary cut.
+
+This pass admits at most 64 active variants and consumes at most 4096 work units
+and one quarter of the order scout's remaining lifetime, with a 256-unit minimum.
+The graph and ranking workspace are reserved before allocation. A stable
+topological rank preserves the ordinary promotion order among unconstrained
+variants. Cyclic hints are ignored, retaining the plain order; even acyclic ranks
+must obey all ordinary material gates and exact physical restoration.
+At most one extra structural word is tried inside the same original lifetime
+allowance. Its rejection restores the interrupted plain preferred word, so it
+does not remove one of the eight ordinary attempts. Exhaustion still leaves
+entity refinement/canonical recovery inconclusive; no budget is renewed.
 
 If entities are still insufficient, a local repair can re-propose with each
 activation's capacity capped by the selected number of firings using that family.
@@ -412,6 +431,15 @@ The public tests are under tests/core/java/org/cgse/core:
     exact seeds, unavailable material gates and replacement tools are checked
     with source-level physical replay. Delayed returns/save-load, worker handoff,
     cancellation and work limits cover the extended order-recovery admission.
+  CapturedStateOrderFeedbackTest: several destructive rules require compatible
+    temporal order. Constructive light-first/descending-heavy witnesses, source/
+    slot/stock permutations, wide physical cohorts, manufactured replacements,
+    exact seeds and forced production get source-level and primitive replay.
+    Gates, missing material, cancellation, worker handoff and delayed runtime
+    returns/save-load guard the structural attempt's positive-only scope.
+  StateOrderHintsTest: 60 independent acyclic preference graphs, cyclic/backward
+    hints, literal material prefixes, restoration of the deferred ordinary word,
+    64/65-variant bounds, memory denial and nonrenewable work/cancellation limits.
   StateChoiceRepairTest: independent literal assignment oracles under arbitrary
     per-key/per-edge preferences, whole-key backtracking and augmenting paths,
     wide counts, cached feedback revisions, work/memory limits and cancellation.

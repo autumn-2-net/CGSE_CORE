@@ -184,6 +184,17 @@ impossible; additional stocked or manufactured tools must still recover that
 case. Source checks, literal inventory replay, delayed returns/save-load,
 worker handoff, cancellation and work caps guard the same-count recovery.
 
+`CapturedStateOrderFeedbackTest` retains 109 positive combinations with 2/3/5/8
+destructive rules and 2/7/31 light uses. It checks a constructive temporal order,
+recipe/slot/stock permutations, whole/mixed and wide cohorts, exact seeds,
+forced production, manufactured tools, real material gates, worker handoff,
+cancellation and delayed physical returns/save-load. Every source transition,
+count and physical prefix is independently checked.
+`StateOrderHintsTest` validates 60 acyclic preference graphs and 212 material
+words, including cyclic and backward hints. Rejecting the single structural
+word must resume its deferred ordinary alternative. The eight ordinary attempts,
+64-variant hint bound, work allowance, memory denial and cancellation are guarded.
+
 `CapturedStateSupportTest` compares retained source selection with 1,200
 independent full-scan finite closures. It checks borrowed-index ownership,
 original entry order, retained work, cancellation and memory/source limits.

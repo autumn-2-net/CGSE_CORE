@@ -1,7 +1,7 @@
 State-model review follow-up (2026-10-18)
 =======================================
-Review baseline: 5fb82e52. Inventory checked through a945e37f and the
-guaranteed-use ordering extension described below. Earlier case reports retain
+Review baseline: 5fb82e52. Inventory checked through 8ef89118 and the
+structural ordering extension described below. Earlier case reports retain
 their original versions and results; they are not current full-suite verdicts.
 
 Implemented portions of the review
@@ -116,6 +116,50 @@ packaging and the 1478-entry ABI check pass. Of 753 engine classes, only
 CapturedStatePlanning changes; the packaged engine also passes the new test.
 Tests stay within four logical CPUs. This remains focused, not full-suite or
 live-host validation.
+
+Follow-up F2 gap: incompatible repeated promotions
+-------------------------------------------------
+With several destructive rules on one physical tool, moving only the newly
+blocked variant to the front can undo a previously useful order. A constructive
+family starts at tool:n+levels+1: light uses subtract one, while heavy rule k
+requires at least k+1 and returns tool:k. Light n times, then heavy levels..1,
+then ordinary finishing is executable. On 8ef89118, 76 of 96 source/slot-order
+variants solve; 20 remain UNKNOWN despite that literal witness.
+
+Recording every local failure as a permanent order preference was insufficient:
+damage accumulated earlier can make a later harmless use appear responsible,
+creating contradictory hints. The retained approach instead compares one-step
+effects on the proposal's selected activation keys after repeated plain failures.
+It builds a bounded preference graph over selected variants and tries one stable
+topological rank. Cycles do not establish a deadlock; they leave the plain order.
+Ordinary dependencies can override a rank, and exact restoration remains required.
+
+The analysis is capped at 64 variants and min(4096, one quarter of the order
+continuation's remaining work), with a 256-work minimum. Simple three-rule cases
+get a third ordinary attempt before analysis; longer interactions start after
+two failures. Only one structural word can be added. Its rejection restores the
+interrupted plain candidate, retaining all eight ordinary attempts inside the
+same original 32768/one-sixteenth lifetime allowance. This is a scheduling hint,
+not a learned precedence, an expanded state domain or a global negative proof.
+
+All 96 variants now solve. Among the original 76 positives, search work decreases
+on 32 and is identical on 44. Peak reservations decrease on 20, stay identical on
+52 and increase on four because of the small hint workspace. At levels=8,n=31,
+order=0, public search work falls from 15492 to 5983, compilation work from 2208
+to 1919, and peak reservation from 299820 to 182395 bytes. These are recorded
+counters; no universal timing or complete temporal-assignment claim is implied.
+
+The maintained integration test covers 109 positive combinations plus negative
+gates/material and limit controls. The hint unit test independently checks 60
+acyclic graphs and 212 physical words, fallback preservation, cyclic hints and
+64/65-variant/memory/cancellation boundaries. Nineteen existing state, allocator,
+scheduler and runtime programs pass against the frozen baseline and final code,
+with identical reported output. Local original inputs, failed approaches, source
+hashes and commands are kept under state-order-feedback-20261018. This is focused
+validation, not a full corpus or live-host run.
+Assemble, integrated Forge/AE-dump packaging and all 1478 baseline ABI entries
+pass. Both new tests also pass against the packaged engine; only
+CapturedStatePlanning and StateScheduleRepair differ among 753 engine classes.
 
 Still open, with concrete implementation boundaries
 ---------------------------------------------------

@@ -948,6 +948,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private boolean repairOrder(StateFamily<K> family, GraphRecipe<Key<K>> blocked) {
         if (orderRepair != null) {
             orderFailure = family;
+            recordOrderFeedback();
             return continueOrder(blocked.id());
         }
         if (orderTried || !shared() || proposed.patternTimesExact().size() > 128) return false;
@@ -982,6 +983,53 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         budget.note("candidate_state", "retry_same_counts; blocked=" + blocked.binding() + "; family=" + family.id() +
                 "; feedback=" + (capacityFeedback ? "guaranteed_uses" : "eligibility") + "; negative_proofs=false");
         return true;
+    }
+
+    private void recordOrderFeedback() {
+        // A failure at an already damaged key can blame a harmless earlier
+        // light use. Compare one-step effects on selected initial entity keys
+        // instead; no unobserved durability trajectory is expanded.
+        if (families.size() < 3) return;
+        // A three-rule chain often finishes with one more cheap promotion.
+        // Longer interactions justify structural ranking after two failures.
+        long limit = orderRepair.beginFeedback(families.size() == 3 ? 3 : 2);
+        if (limit == 0) return;
+        long started = budget.nodes();
+        int hints = 0;
+        outer: for (String id : proposed.patternTimesExact().keySet()) {
+            var recipe = proposed.recipes().get(id);
+            for (var slot : recipe.slots()) {
+                if (budget.nodes() - started >= limit) break outer;
+                budget.check();
+                if (slot.key().family() == null || slot.key().entity()) continue;
+                var used = families.get(slot.key().family());
+                for (String source : proposed.patternTimesExact().keySet()) {
+                    if (budget.nodes() - started >= limit) break outer;
+                    budget.check();
+                    var activation = activations.get(proposed.recipes().get(source).binding());
+                    if (activation == null || !used.accepts(activation.state()) || used.capacity(activation.state()) <= 0) continue;
+                    K state = activation.state(), after = used.nominalAfterOne(state);
+                    for (String other : proposed.patternTimesExact().keySet()) {
+                        if (other.equals(id)) continue;
+                        for (var input : proposed.recipes().get(other).slots()) {
+                            if (budget.nodes() - started >= limit) break outer;
+                            budget.check();
+                            if (input.key().family() == null || input.key().entity() || input.key().family().equals(used.id())) continue;
+                            var protectedRule = families.get(input.key().family());
+                            long before = protectedRule.accepts(state) ? protectedRule.capacity(state) : 0;
+                            if (before <= 0) continue;
+                            long retained = after != null && protectedRule.accepts(after) ? protectedRule.capacity(after) : 0;
+                            if (retained < before) {
+                                if (limit - (budget.nodes() - started) < proposed.patternTimesExact().size()) break outer;
+                                if (orderRepair.preferBefore(other, id)) hints++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (hints > 0) budget.note("candidate_state", "order_interference; hints=" + hints +
+                "; work=" + (budget.nodes() - started) + "; initial_states=true; preference_only=true; negative_proofs=false");
     }
 
     private boolean lostStateResource(StateFamily<K> family, boolean uses) {
