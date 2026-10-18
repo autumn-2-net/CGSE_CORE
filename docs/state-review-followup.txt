@@ -464,6 +464,63 @@ library. Gradle assemble, the Forge mod with AE dump, sources/checksums and all
 0.1.4 and no host adapter changes are required. Runs were serial on four logical
 CPUs; this is targeted regression, not a full corpus or live-host run.
 
+2026-10-18 single-cohort restoration and completed assembly reuse
+----------------------------------------------------------------
+The 36 long wear boundaries above have two measured costs. Each changing state
+rebuilds the general allocator despite needing only one indivisible slot, then
+the completed physical program's summary is folded again during verification.
+The final verifier also computes source counts and gross production even when
+an ordinary state request never asks for a force-craft proof.
+
+One whole-key demand over at most 128 owned keys now uses a bounded linear
+choice. It preserves preference, exact wear cost, best-fit entity count,
+descending capacity and original-pool tie order. It does not split a cohort,
+mutate inventory or replace one-step transition/source validation. Mixed or
+multi-slot matching and larger pools retain their existing continuations.
+Shortage and fragmentation still describe only the current physical slot;
+neither becomes a count constraint or a global infeasibility certificate.
+
+The state verifier may borrow the completed assembly summary only for that
+exact immutable GraphPlan object and its witness. Changed plans and the public
+verification constructor recompute normally. Every initial prefix, target and
+seed is checked against the plan inventory. Gross production/count bookkeeping
+is omitted only for ordinary state requests; forced requests retain it and the
+force-craft proof. Asking an ordinary-only verifier for uncomputed production
+now fails explicitly. No cross-request summary cache or public ABI is added.
+
+The direct 321-use trace now restores all 324 source firings in 5697 restoration
+work, versus the previous 155-firing prefix at 8175 work. The 8192 restoration
+cap and the shared manufacturing trial allowance are unchanged. Allocation-only
+and allocation-plus-summary-reuse trials still exhausted end-to-end work;
+removing the unused ordinary production bookkeeping completed the witness.
+These unsuccessful intermediate runs are preserved separately.
+
+All 36 source/slot/stock-order boundaries now require FEASIBLE, with literal
+original-source and physical-prefix validation. The manufactured-tool test has
+438 positive variants, including the existing force, two-step manufacture and
+wide-cohort guards. StateEntitySingleChoiceTest adds 12000 exact comparisons;
+PlanVerificationReuseTest checks independent summary recomputation, changed
+recipes/inventory/program/target/seeds, forced totals and cancellation.
+Local baseline f2efe060, inputs, oracles, traces, costs and commands are kept
+under state-single-cohort-20261018. This improves this bounded family; arbitrary
+longer unique-state chains and general temporal entity search remain incomplete.
+
+Validation: all 52 related historical programs pass against frozen f2efe060
+and the new engine. Forty-two reports are identical; nine report lower charged
+work and the concurrent source-cache assertion total remains scheduling-dependent.
+The paired manufacturing matrix improves from 396/432 to 432/432. All 396 prior
+positives retain feasibility with 0.03-10.48% less search work and no higher peak
+budget reservation. These are work/reservation measurements, not elapsed-time
+or process-memory claims. The formerly failing cases now retain complete
+physical witnesses, so their memory usage is not compared as a cost-equivalent
+failed prefix.
+
+All three new/promoted tests pass from the packaged library. Offline assembly,
+the Forge mod with AE dump, sources/checksums and all 1478 baseline ABI entries
+pass; the engine now contains 757 classes. Version remains 0.1.4. Testing was
+serial on four logical CPUs, targeted to these paths rather than a full corpus
+or a new live-host run. No GTL adapter changes are required by this increment.
+
 Still open, with concrete implementation boundaries
 ---------------------------------------------------
 1. F1: Arbitrary unique one-way states still require explicit selected transitions.

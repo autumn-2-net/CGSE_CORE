@@ -18,7 +18,6 @@ public final class CapturedStateManufacturingSupportTest {
 
     public static void main(String[] args) throws Exception {
         for (int mode : new int[]{0, 1, 2}) for (long q : new long[]{2, 3, 16}) for (int n : new int[]{1, 2, 7, 31}) {
-            if (mode == 2 && n == 31) continue; // Recorded below as unresolved, never counted as a positive pass.
             for (int order = 0; order < 12; order++) {
                 var f = fixture(n, mode, q, order);
                 solve(f, true, mode == 0 ? Map.of("a", q) : Map.of(), false);
@@ -39,10 +38,10 @@ public final class CapturedStateManufacturingSupportTest {
         solve(with(f, entries, f.stock()), true, Map.of("a", 3L), false);
         long wide = Long.MAX_VALUE / 8;
         solve(fixture(2, 0, wide, 0), false, Map.of("a", wide), false);
-        failures(); limits(); workspaceRefusal(); cancelled(); handoff(); int pending = pendingLongWear();
+        failures(); limits(); workspaceRefusal(); cancelled(); handoff();
         check(manufactured > 0, "Manufacturing support was not exercised");
         System.out.println("CapturedStateManufacturingSupportTest: cases=" + cases + "; assertions=" + checks + "; manufactured=" + manufactured +
-                "; max_work=" + maxWork + "; max_bytes=" + maxBytes + "; known_feasible_long_wear_unresolved=" + pending + "/36 (not positive passes)");
+                "; max_work=" + maxWork + "; max_bytes=" + maxBytes);
     }
 
     static CapturedStateMatchingCostsTest.Fixture fixture(int n, int mode, long q, int order) {
@@ -151,22 +150,6 @@ public final class CapturedStateManufacturingSupportTest {
             CapturedStateMatchingCostsTest.verify(work.result(), f, Map.of("a", 3L));
         } finally { a.shutdownNow(); b.shutdownNow(); }
         check(budget.reservedBytes() == 0, "Worker handoff leaked");
-    }
-
-    /** Literal feasible long wear chains still exceed the optional restoration
-     * share. Preserve the boundary without counting UNKNOWN as a positive pass. */
-    private static int pendingLongWear() {
-        int pending = 0;
-        for (long q : new long[]{2, 3, 16}) for (int order = 0; order < 12; order++) {
-            var f = fixture(31, 2, q, order); CapturedStateMatchingCostsTest.oracle(f); var budget = budget(40_000_000, 64L << 20);
-            try (var work = new CapturedCatalog<>(f.entries()).begin("product", f.amount(), f.stock(), false, false, budget)) {
-                while (!work.step()) {} var plan = work.result().plan();
-                if (plan.feasible()) CapturedStateMatchingCostsTest.verify(plan, f, Map.of());
-                else { check((plan.result() == GraphPlan.Result.UNKNOWN || plan.result() == GraphPlan.Result.SEARCH_LIMIT) && !work.result().coverage().complete(), "Local restoration limit became an infeasibility proof"); pending++; }
-            }
-            check(budget.reservedBytes() == 0, "Long wear boundary leaked");
-        }
-        return pending;
     }
 
     private static CapturedRecipe.Input<String> input(String key, long count) {

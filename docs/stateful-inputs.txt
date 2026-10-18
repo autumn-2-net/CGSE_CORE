@@ -566,14 +566,19 @@ The public tests are under tests/core/java/org/cgse/core:
     original-source/physical replay, compound qualitative/quantitative choices,
     ordinary input exclusion, final-seed failure, continuation retention,
     bounded work/memory, cancellation, worker handoff and delayed returns.
-  CapturedStateManufacturingSupportTest: 402 positive manufactured-tool variants,
+  CapturedStateManufacturingSupportTest: 438 positive manufactured-tool variants,
     including all twelve former pending cases, two-step manufacturing, original
     physical/source verification, seeds, force crafting, delayed returns/reload,
     unfunded/cyclic manufacturing, ordinary-input ownership, local limits,
     long-sized cohorts, retained-workspace refusal, failed-continuation retention,
-    cancellation and worker handoff. Another 36
-    known-feasible long wear chains remain explicitly unresolved; their safety
-    assertions are separate from the positive feasibility pass count.
+    cancellation and worker handoff. The 36 formerly unresolved long wear
+    chains now require successful physical/source verification at the same cap.
+  StateEntitySingleChoiceTest: 12000 one-slot physical/retained-allocator
+    comparisons, preferences/costs, exact wide counts, stable ties, mixed and
+    wide-pool exclusion, invalid algebra, bounded work and cancellation.
+  PlanVerificationReuseTest: exact assembly summary reuse against independent
+    recomputation, modified-plan isolation, required prefixes/goals/seeds,
+    full forced-production counts, returned-tool exclusion and cancellation.
   CapturedStateExpansionTest: omitted cross-rule state cycles, source/slot/stock
     permutations, long-sized orders, multiple physical tools, mixed/indivisible
     slots, manufactured tools, exact seeds and forced/preserved requests. Source

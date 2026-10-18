@@ -185,7 +185,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                         if (expandStateBoundary(Reason.UNFUNDED_EXACT_RESTORATION)) return false;
                         return stop(Reason.UNFUNDED_EXACT_RESTORATION);
                     }
-                    verification = new PlanVerification<>(assembly.plan, budget);
+                    verification = new PlanVerification<>(assembly.plan, budget, assembly);
                 }
             } else if (proposed != null) restore();
             else if (planning.step()) {
@@ -709,6 +709,27 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         var group = groups.get(selectingGroup);
         if (group.family().isEmpty()) return selectMatching(recipe, group);
         var family = families.get(group.family());
+        // One whole-key slot has no simultaneous packing search. Scan the
+        // small owned pool with exactly the general allocator's ranking.
+        // Mixed or multi-slot groups retain their existing continuation.
+        if (allocation == null && group.demands().size() == 1 && !group.demands().get(0).mixed() && pool(family).size() <= 128) {
+            var preferences = choiceRepair != null && choiceRepair.active() ? choiceRepair : null;
+            var single = StateEntitySingleChoice.select(group.demands().get(0), pool(family), family, shared(),
+                    preferences == null ? null : state -> preferences.score(family, state),
+                    preferences == null || !preferences.costsEnabled() ? null : state -> preferences.cost(family, state), budget);
+            if (single != null) {
+                if (single.pick() == null) {
+                    allocationFailed(family, recipe, single.failure() == StateEntityAllocation.Failure.WHOLE_KEY_FRAGMENTATION);
+                    return false;
+                }
+                long bytes = 320;
+                if (!reserve(bytes)) return false;
+                choiceMemory += bytes;
+                toolChoices.put(single.pick().slot(), List.of(single.pick()));
+                selectingGroup++;
+                return selectingGroup == groups.size();
+            }
+        }
         if (allocation == null) {
             long transientBytes = 64L + 80L * pool(family).size();
             if (!budget.tryReserve(transientBytes)) { stop(Reason.WORKSPACE_DECLINED); return false; }
@@ -828,6 +849,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
 
     private void allocationFailed(StateFamily<K> family, GraphRecipe<Key<K>> intactRecipe) {
         boolean fragmented = allocation != null && allocation.failure() == StateEntityAllocation.Failure.WHOLE_KEY_FRAGMENTATION;
+        allocationFailed(family, intactRecipe, fragmented);
+    }
+
+    private void allocationFailed(StateFamily<K> family, GraphRecipe<Key<K>> intactRecipe, boolean fragmented) {
         // Retain the failed residual graph while trying the cheaper repairs.
         // Its certificate storage remains owned until feedback has been used.
         var failed = matching; matching = null;

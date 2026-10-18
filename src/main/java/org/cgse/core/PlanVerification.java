@@ -25,12 +25,24 @@ public final class PlanVerification<K> implements AutoCloseable {
     private int phase;
 
     public PlanVerification(GraphPlan<K> plan, PlanningBudget budget) {
+        this(plan, budget, null);
+    }
+
+    /** Only the exact immutable plan produced by this assembly can reuse its
+     * completed fold. Other plans, including copies with changed inventory or
+     * recipes, take the ordinary verification path. No cross-request cache.
+     * Ordinary state orders only need prefix feasibility; their unused gross
+     * production bookkeeping is omitted. Forced orders retain the full totals. */
+    PlanVerification(GraphPlan<K> plan, PlanningBudget budget, AllocationSearch.Candidate<K> assembled) {
         try (var costs = budget.trace(PlanningCostTrace.Stage.VERIFY)) {
             if (!plan.feasible() || !plan.missing().isEmpty()) throw new IllegalArgumentException("Unverified plan");
             this.plan = plan;
             this.budget = budget;
-            computation = new SummaryComputation<>(plan.steps(), plan.recipes(), budget);
-            counts = new PlanCountComputation(plan.steps());
+            boolean sameAssembly = assembled != null && assembled.proposed == plan && assembled.summary != null &&
+                    assembled.witness == plan.steps();
+            var known = sameAssembly ? Map.of(plan.steps(), assembled.summary) : Map.<PlanStep, SequenceSummary<K>>of();
+            computation = new SummaryComputation<>(plan.steps(), plan.recipes(), budget, known);
+            counts = sameAssembly && !assembled.force ? null : new PlanCountComputation(plan.steps());
         }
     }
 
@@ -56,7 +68,7 @@ public final class PlanVerification<K> implements AutoCloseable {
             }
             case 1 -> {
                 if (!keys.hasNext()) {
-                    phase = 2;
+                    phase = counts == null ? 4 : 2;
                     return false;
                 }
                 K key = keys.next();
@@ -96,11 +108,13 @@ public final class PlanVerification<K> implements AutoCloseable {
 
     BigInteger physicalProduced(K key) {
         if (phase != 4) throw new IllegalStateException("Verification incomplete");
+        if (counts == null) throw new IllegalStateException("Production totals were not requested");
         return totals.getOrDefault(key, BigInteger.ZERO);
     }
 
     Map<String, BigInteger> patternCounts() {
         if (phase != 4) throw new IllegalStateException("Verification incomplete");
+        if (counts == null) throw new IllegalStateException("Production totals were not requested");
         return counts.result();
     }
 
