@@ -95,7 +95,11 @@ public final class RefillContinuationTest {
         var original = MissingMaterialExpansionTest.partial(finish, Map.of());
         var b = budget(100_000, 1L << 20, new AtomicBoolean());
         try (var e = expansion(new GraphCompiler<>(List.of(finish)), original, b)) {
-            while (!step(e, b)) {} check(e.result() == original, "No-prefix result was rebuilt");
+            while (!step(e, b)) {}
+            check(e.result().steps() == original.steps() && e.result().initialExact() == original.initialExact() &&
+                    e.result().missingExact() == original.missingExact(), "Annotation rebuilt a no-prefix witness");
+            check(e.result().missingBoundary("A").source() == GraphPlan.MissingSource.TERMINAL_UNDER_CURRENT_COVERAGE,
+                    "No-prefix terminal boundary was not explained");
         }
         check(b.reservedBytes() == 0, "No-prefix exit leaked");
     }

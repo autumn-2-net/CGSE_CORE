@@ -31,7 +31,7 @@ public final class GraphFallback {
             while (!work.step()) { /* All traversal, arithmetic and verification share the fallback budget. */ }
             candidate = work.result;
         }
-        if (!MissingMaterialExpansion.needed(compiler, candidate)) return candidate;
+        if (!MissingMaterialExpansion.needed(compiler, candidate)) return MissingMaterialExpansion.terminalResult(candidate);
         try (var expansion = new MissingMaterialExpansion<>(compiler, candidate, stock, external, Set.of(), forceCraft, forceCraft, budget)) {
             while (!expansion.step()) { /* A cutoff is a budget exit, never a terminal material. */ }
             return expansion.result();

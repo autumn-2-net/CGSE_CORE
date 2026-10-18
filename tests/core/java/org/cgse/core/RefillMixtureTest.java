@@ -191,7 +191,10 @@ public final class RefillMixtureTest {
                 }
                 try {
                     while (!expansion.step()) {}
-                    check(!mode.equals("cancel") && expansion.result() == retained, "Optional failure lost the exact incumbent");
+                    var actual = expansion.result();
+                    check(!mode.equals("cancel") && actual.steps() == retained.steps() && actual.initialExact() == retained.initialExact() &&
+                            actual.missingExact() == retained.missingExact() && actual.recipes() == retained.recipes() &&
+                            actual.result() == retained.result(), "Optional failure lost the exact incumbent");
                 } catch (CancellationException expected) { check(mode.equals("cancel"), "Unexpected cancellation"); }
                 finally { b.release(held); }
             }

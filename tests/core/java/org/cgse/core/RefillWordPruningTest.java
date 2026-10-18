@@ -177,7 +177,8 @@ public final class RefillWordPruningTest {
         var terminal = literalPlan(growthRecipes(), word(1001), Map.of(), stock, Set.of());
         var b = MissingMaterialExpansionTest.budget(1); b.charge(1);
         try (var expansion = new MissingMaterialExpansion<>(compiler, terminal, stock, Set.of(), Set.of(), true, false, b)) {
-            check(expansion.step() && expansion.result() == terminal, "Terminal bill lost at an exhausted entry boundary");
+            check(expansion.step() && expansion.result().steps() == terminal.steps() &&
+                    expansion.result().missingExact() == terminal.missingExact(), "Terminal bill lost at an exhausted entry boundary");
         }
         check(b.reservedBytes() == 0, "Terminal entry workspace");
     }

@@ -199,8 +199,12 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         long validationSearch = validationOwner == null ? 0 : budget.threadSearchWork();
         String failureBeforeStep = budget.failureDetail();
         try {
-            if (compilationActive()) budget.compilationCheck();
-            else budget.check();
+            // The optional annotation owns its cancellation/time check and
+            // preserves the completed refill's failure detail on timeout.
+            if (!(phase == 21 && missingExpansion.diagnosing())) {
+                if (compilationActive()) budget.compilationCheck();
+                else budget.check();
+            }
             if (reuseVerification != null) {
                 if (!reuseVerification.step()) return false;
                 GraphPlan<K> reused = reuseVerification.result();
@@ -598,7 +602,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     if (!verifying.step()) return false;
                     if (optimizeSeeds(best)) return false;
                     if (expandMissing(best)) return false;
-                    result = best;
+                    result = missingPreview ? MissingMaterialExpansion.terminalResult(best) : best;
                     discardQuantityAnalysis();
                     phase = 8;
                 }
@@ -721,6 +725,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     seedOptimization.close();
                     seedOptimization = null;
                     if (expandMissing(result)) { result = null; return false; }
+                    if (missingPreview) result = MissingMaterialExpansion.terminalResult(result);
                     if (result.feasible()) verified = result;
                     discardQuantityAnalysis();
                     budget.phase(PlanningBudget.Phase.COMPLETE);
@@ -1333,7 +1338,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
             if (missingPreview && MissingMaterialExpansion.needed(compiler, retained)) {
                 return incompleteMissingExpansion(limit);
             }
-            return retained;
+            return missingPreview ? MissingMaterialExpansion.terminalResult(retained) : retained;
         }
         if (countSearch != null) {
             GraphPlan<K> counted = countSearch.result();

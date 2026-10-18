@@ -368,6 +368,52 @@ classification, shared/zero-count words, cancellation/time limits and real
 one-worker scheduler handoffs. SummaryBatchContinuationTest additionally checks
 that every literal prefix deficit remains in the verification key domain.
 
+Per-material boundary diagnostics
+--------------------------------
+
+GraphPlan.missingBoundary(key) explains a displayed deficit without reclassifying
+the order's feasibility. A nonmissing key returns null. Its source field is one of:
+
+- TERMINAL_UNDER_CURRENT_COVERAGE: no producer is indexed in this planning view.
+- CYCLE_BOUNDARY: completed support analysis places the material in a cycle.
+- EXCLUDED_SOURCES: all captured producers were excluded from this view.
+- UNEXPANDED_SOURCE: captured producers exist, without a stronger established
+  explanation. Returned-only outputs, conflicting physical bindings, strategy
+  restrictions and finite escapes can fall here; no missing-path proof follows.
+- UNASSESSED: optional diagnostics did not complete for this material.
+
+The independent explicitFinalSeed flag reports a final obligation recorded in
+plan.seeds(), even if preserveSeeds is false. It can coexist with any source
+boundary. It does not assert that the whole deficit is seed stock, that the
+player explicitly requested that seed, or that its amount is globally necessary.
+Cycles are support facts, not minimum startup quantities or complete cycle
+coverage. Finite-ranked alternatives need not receive cycle analysis.
+
+Terminal is scoped to the supplied catalog, including in a conditional preview.
+It never asserts complete host capture, absence of omitted variants, or necessity
+across alternative bills. Captured publication and metadata-only copies retain
+these facts without changing coverage or seed optimality. Rebuilt execution/bill
+builders clear old facts; unannotated results, including some recovered stateful
+refills, remain UNASSESSED. Consumers must handle that value.
+
+Annotation follows all refill quality passes and borrows the completed rank
+analysis. It only checks existing source-index/rank facts, without scanning all
+producers or retaining the compiler/graph in the published plan. No-prefix
+terminal bills share a constant default. Other bills use at most 2048 diagnostic
+visits per request, across views/workers, in slices of 64. This allowance is
+separate from solving, compilation and cache retention, but advances the worker
+clock for fairness. PlanningBudget.refillDiagnosticWork() exposes its usage.
+Optional memory refusal/time limits keep the completed bill and proof; unvisited
+keys stay UNASSESSED. Cancellation still propagates. Annotation shares the plan's
+immutable execution/maps instead of copying a large witness.
+
+RefillBoundaryTest covers source/input permutations, actual main/fallback and
+complete/incomplete captured publication, returned tools, binding conflicts,
+final seeds, copy isolation, memory/time/cancellation, a request-wide concurrent
+cap, independent budget accounts, and real one-worker scheduler handoffs. Existing
+continuation tests check that annotation retains the unchanged witness/maps.
+This is additive engine diagnostic metadata; host UI display is separate.
+
 Known boundaries after the refill review at 224e9172:
 
 - Optional verified whole-word reduction now removes dominated firings already
@@ -396,4 +442,5 @@ Known boundaries after the refill review at 224e9172:
   operations, collection growth, big-integer arithmetic, composite known-summary
   lookups and GC have no hard wall-time guarantee. This is not a claim that every
   operation in the entire planning pipeline has bounded latency.
-- Public per-material boundary reasons are not introduced by this change.
+- Per-material reasons are optional scoped facts, not per-item necessity proofs.
+  Unvisited/rebuilt bills may remain UNASSESSED; host display is not changed here.

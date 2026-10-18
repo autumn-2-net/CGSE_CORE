@@ -802,6 +802,7 @@ public final class CapturedCatalog<K> {
                     preview ? plan.steps() : new PlanStep.Sequence(List.of()), preview ? plan.recipes() : Map.of(),
                     preview ? plan.initialExact() : Map.of(), preview ? plan.seeds() : Map.of(),
                     preview ? plan.missingExact() : Map.of(), reason, budget.nodes(), System.nanoTime() - started);
+            if (preview) answer.withMissingSourcesFrom(plan);
             if (coverage.complete() && !allocationView) answer = answer.withSeedOptimality(plan.seedOptimality()).withAlternatives(plan.alternatives());
             if (conditional) {
                 budget.failureDetail("CONDITIONAL_REFILL: verified when supplied; omitted alternatives may need less or no refill");

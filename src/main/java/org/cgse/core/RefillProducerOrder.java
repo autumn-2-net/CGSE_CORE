@@ -19,7 +19,7 @@ final class RefillProducerOrder<K> implements AutoCloseable {
     final class Node extends Vertex {
         final K key;
         final List<Source> sources = new ArrayList<>(), consumers = new ArrayList<>();
-        boolean free;
+        boolean free, excludedSource, allowedSource;
         Node(K key) { super(1); this.key = key; }
         @Override List<? extends Vertex> dependencies() {
             // A private one-output producer has no sharing to preserve. Borrow
@@ -135,7 +135,9 @@ final class RefillProducerOrder<K> implements AutoCloseable {
         } else if (producers != null) {
             if (!producers.hasNext()) { producers = null; building = null; return; }
             var recipe = producers.next();
-            if (excluded.contains(recipe.id()) || recipe.outputs().getOrDefault(building.key, 0L) <=
+            if (excluded.contains(recipe.id())) { building.excludedSource = true; return; }
+            building.allowedSource = true;
+            if (recipe.outputs().getOrDefault(building.key, 0L) <=
                     recipe.inputs().getOrDefault(building.key, 0L)) return;
             Source source = shared.get(recipe);
             if (source == null) {
