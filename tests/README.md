@@ -1195,12 +1195,14 @@ see `docs/lattice-box-enumeration.txt` for admission and validation scope.
 
 First-bin box enumeration is also guarded by nine formerly unresolved planted
 allocations in `CountVectorPartitionTest`: original and signed 70-bit shifted
-domains, eight successful additional permutations, one-unit grants, worker
-handoff and cancellation. Seed 5's shuffled variant has a constructive SAT
-oracle but is still unresolved by the bounded specialist on both versions;
-it is checked for witness validity without asserting infeasibility or a solved
-result. The 26 positive variants also run through `main-counts`, with independent
+domains, nine additional permutations, one-unit grants, worker handoff and
+cancellation. Seed 5's shuffled variant now requires a checked witness after
+exact matching rejects a bad partial allocation; its old unresolved exception
+has been removed. All 27 variants also run through `main-counts`, with independent
 primitive recipe-prefix/target checks and a 3M observed-work guard under the
 unchanged 40M request cap. `CountLatticeEnumerationTest` adds 96 exhaustive original-coordinate
 oracles for the joint distance to the quantity box in three through six
 dimensions, with closed-form Gram factors and original side constraints.
+The bounded matching follow-up also guards the recovered seed-27 allocation,
+one-unit grants and cancellation with both the matcher and ordinary kernel
+owned. A numerical miss is only a scheduling hint, never an infeasibility proof.

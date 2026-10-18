@@ -37,6 +37,7 @@ public final class CountVectorPartitionTest {
         residualMatching();
         reusedCandidates();
         firstBinEnumeration();
+        boundedMatchingRecovery();
         boundaries();
         System.out.println("Vector partition: 12 whole/sliced pairs, 12 permutations, worker handoff and scope/limit controls; solved=" + solved);
     }
@@ -248,13 +249,8 @@ public final class CountVectorPartitionTest {
             mainAllocation(shifted);
             var changed = permute(model, 71877 + seed);
             var reordered = solve(changed, 127, null);
-            // Seed 5 in this order remains a constructive SAT case whose
-            // bounded specialist is unresolved, both before and after this
-            // change. Validate any returned witness without asserting UNSAT.
-            if (seed != 5) {
-                check(reordered.counts != null, "First-bin ordering lost witness: " + seed);
-                mainAllocation(changed);
-            }
+            check(reordered.counts != null, "First-bin ordering lost witness: " + seed);
+            mainAllocation(changed);
         }
         var model = model(2, false, 20, 3, 2, 997);
         var worker = Executors.newSingleThreadExecutor();
@@ -274,7 +270,40 @@ public final class CountVectorPartitionTest {
             check(stopped, "First-bin scout ignored cancellation");
         }
         check(budget.reservedBytes() == 0, "First-bin cancellation leaked memory");
-        System.out.println("First-bin enumeration: 26 original/shifted/permuted witnesses through direct and main-count searches, 1 unresolved permutation, tiny grants, worker handoff and cancellation controls passed");
+        System.out.println("First-bin enumeration: 27 original/shifted/permuted witnesses through direct and main-count searches, tiny grants, worker handoff and cancellation controls passed");
+    }
+
+    private static void boundedMatchingRecovery() throws Exception {
+        var rejected = permute(model(5, false, 23, 3, 2, 997), 71882);
+        var whole = solve(rejected, 262144, null);
+        var sliced = solve(rejected, 1, null);
+        check(whole.counts != null && Arrays.equals(whole.counts, sliced.counts), "Bounded matcher lost its retained handoff");
+        check(whole.work < 2_000_000 && whole.diagnostics.contains("count_vector_matching"), "Bounded matcher recovery route regressed");
+        check(whole.diagnostics.contains("proven_infeasible=true"), "Rejected residual was not checked exactly");
+        // A second formerly unresolved allocation exercises a positive exact
+        // match. Neither an estimate nor failed numeric search is a proof.
+        var other = model(27, false, 24, 3, 2, 997);
+        var result = solve(other, 113, null);
+        check(result.counts != null && result.work < 2_000_000, "Positive bounded match lost");
+        mainAllocation(other);
+        var worker = Executors.newSingleThreadExecutor();
+        try {
+            check(Arrays.equals(solve(rejected, 127, null).counts, solve(rejected, 127, worker).counts), "Matching handoff lost a frontier");
+        } finally { worker.shutdownNow(); }
+        var cancel = new AtomicBoolean();
+        var budget = new PlanningBudget(0, 16_000_000, 64L << 20, cancel::get, System::nanoTime);
+        try (var search = CountVectorPartition.create(rejected.rows, rejected.low, rejected.high, budget, 4096)) {
+            check(search != null, "Bounded matching cancellation admission");
+            while (!budget.diagnostics().contains("count_vector_matching")) {
+                if (!search.step()) continue;
+                check(search.paused(), "Bounded matching not reached"); search.resume(4096);
+            }
+            cancel.set(true); boolean stopped = false;
+            try { search.step(); } catch (CancellationException expected) { stopped = true; }
+            check(stopped, "Bounded matching ignored cancellation");
+        }
+        check(budget.reservedBytes() == 0, "Bounded matching or ordinary frontier leaked");
+        System.out.println("Bounded exact matcher: rejected residual, positive repair, one-unit grants, worker handoff and cancellation passed");
     }
 
     private static void mainAllocation(Model model) {

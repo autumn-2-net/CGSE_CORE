@@ -53,7 +53,7 @@ against its owner, and retains projection and tree state across handoffs.
 Cancellation, quota exhaustion and close release its workspace. Reset closes
 it before changing the borrowed basis. After a verified candidate, the now
 unneeded ordinary kernel is released too. No native library or public host
-interface is added; CGSE remains version 0.1.2.
+interface is added; version 0.1.3 keeps the 0.1 compatibility line.
 
 Evidence and limits
 -------------------
@@ -97,15 +97,16 @@ All previous direct successes retain or reduce their observed work.
 
 The nine recovered models have constructive exact integer oracles. They also
 pass signed 70-bit offsets and tiny-grant handoffs; eight of nine additional
-shuffled models are solved. Seed 5's shuffled model remains unresolved on both
-versions, despite its constructive SAT oracle. It must not be described as
+shuffled models are solved at this first-bin-only stage. Seed 5's shuffled
+model was unresolved on both versions, despite its constructive SAT oracle.
+It must not be described as
 infeasible or silently counted as a successful bounded search.
 
 Embedding the same 27 variants in primitive recipes and running the main
 integer-count portfolio improves 3 -> 26 independently checked executable
 witnesses at the unchanged 40M request cap. All 26 are below 1.73M observed
-work; the maintained test guards them below 3M, including original, shifted
-and solved shuffled variants. The remaining permutation stays UNKNOWN.
+work. The residual follow-up below also recovers the remaining permutation;
+the maintained test guards all 27 below 3M at the same 40M request cap.
 
 The 33 source/fuel graph cases retain 21 verified executable plans and 12
 limits. One existing fuel plan drops from 1,739,968 to 1,483,817 observed work;
@@ -119,6 +120,43 @@ in three through six dimensions. These use a complete integer zero-sum
 lattice with closed-form Gram factors, original side constraints and both
 feasible and empty boxes. They do not assume that numerical pruning can
 certify infeasibility of a caller's original model.
+
+Exact matching after a missed box search (version 0.1.3)
+------------------------------------------------------
+The remaining permutation stalls after a checked first allocation. Its next
+bin has no completion, but the unpruned Cartesian table estimate rejects exact
+matching. The numerical box search returns no candidate and the ordinary
+kernel keeps consuming the local allowance. Independent CP-SAT and SCIP runs
+prove this specific residual infeasible; that says nothing negative about
+the original model, which has a constructive witness.
+
+An unsuccessful box search now supplies an advisory scheduling flag. If exact
+matching has not entered this bin, the parent grants one nonretained attempt
+of at most 262144 work within its existing local/request limits. The matcher's
+existing target ranges and suffix reachability can prune far more states than
+the pessimistic Cartesian estimate. It still reserves its actual workspace;
+its own expensive-table scout cap can reduce the opportunity further.
+
+On the historical failed residual, this exact check uses about 29K work to
+refute only that partial allocation. The next allocation order also benefits:
+a first-bin table estimated at over a million combined Cartesian states finds
+a checked witness in about 38K matching work. The complete direct allocation
+uses about 1.485M work instead of the 4M local limit. Seed 27 in the direct
+48-model batch also changes from UNKNOWN to a checked witness.
+
+If exact matching refuses, reaches its limit or finds no conclusive result,
+the original affine/kernel state resumes. Grants and worker handoffs cannot
+renew this matching opportunity. Numeric absence never triggers a retry by
+itself: only a complete exact local exhaustion can reject this partial
+allocation. The original integer rows and primitive execution checks remain
+the authority for every published candidate. Retained alternative targets
+with no active projected model do not start a mismatched matching scout.
+
+The previous exception for seed 5's permutation is removed from the maintained
+test. All 27 direct/main-count variants must now solve, and an extra seed-27
+recovery exercises positive matching. One-unit continuation, worker handoff,
+partial-infeasibility scope and cancellation of the live matching frontier
+are covered explicitly.
 
 Reference
 ---------

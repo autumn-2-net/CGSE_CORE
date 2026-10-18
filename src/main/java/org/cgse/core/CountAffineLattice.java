@@ -46,7 +46,7 @@ final class CountAffineLattice implements AutoCloseable {
     private CountLatticePotential.Workspace potentialWorkspace;
     private boolean deep, strengthened;
     private int alternative;
-    private boolean enumerating;
+    private boolean enumerating, boxSearchMissed;
     private long enumerationAt, enumerationWork;
     private CountLatticeEnumeration enumeration;
     private int insertionFrom = -1, insertionTo;
@@ -152,6 +152,7 @@ final class CountAffineLattice implements AutoCloseable {
                         boolean done = enumeration.step();
                         if (done) {
                             counts = enumeration.counts();
+                            boxSearchMissed = counts == null;
                             budget.note("count_affine_enum", "done; witness=" + (counts != null) + "; work=" + enumeration.work() + "; nodes=" + enumeration.progress());
                             checkpoints += enumeration.progress(); enumeration.close(); enumeration = null;
                             enumerating = false;
@@ -166,6 +167,7 @@ final class CountAffineLattice implements AutoCloseable {
                     return false;
                 }
                 if (enumeration != null) {
+                    boxSearchMissed = true;
                     budget.note("count_affine_enum", "limit; work=" + enumeration.work() + "; nodes=" + enumeration.progress());
                     checkpoints += enumeration.progress(); enumeration.close(); enumeration = null;
                     enumerating = false;
@@ -778,6 +780,8 @@ final class CountAffineLattice implements AutoCloseable {
     }
 
     CountAffineLattice retained() { retaining = true; return this; }
+    /** Scheduling hint only: numeric absence or a local limit is never a proof. */
+    boolean boxSearchMissed() { return boxSearchMissed; }
     boolean paused() { return paused; }
     /** Scheduling evidence from two actual exact dimension reductions, not row count alone. */
     boolean hasCoupledElimination() {

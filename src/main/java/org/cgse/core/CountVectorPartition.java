@@ -44,7 +44,7 @@ final class CountVectorPartition implements CountContinuation {
     private List<ExactLinearProgram.Constraint> projected;
     private BigInteger[] binLower, binUpper;
     private long matchingAt;
-    private boolean matchingTried;
+    private boolean matchingTried, matchingEntered;
     private long memory, work, until, maximumWork, completedProgress, prepareStarted;
     private int bin, attempt, verified;
     private boolean complete, paused, verifying;
@@ -234,6 +234,17 @@ final class CountVectorPartition implements CountContinuation {
             }
             if (affine == null) { beginBin(); return false; }
             if (matching == null && !matchingTried && work >= matchingAt) beginMatching();
+            if (matching == null && !matchingEntered && projected != null && affine.boxSearchMissed()) {
+                // The unpruned Cartesian estimate can reject a small reachable
+                // table. After a failed box scout, let exact matching prune the
+                // actual targets once. Its nonretained cap cannot be renewed;
+                // failure leaves the ordinary affine/kernel frontier intact.
+                matchingEntered = true;
+                long grant = Math.min(262144, maximumWork - work);
+                budget.note("count_vector_matching", "after_box_miss; bin=" + bin + "; allowance=" + grant);
+                matching = new CountMeetInMiddle(projected, binLower, binUpper, budget,
+                        grant);
+            }
             if (!(matching == null ? affine.step() : matching.step())) return false;
             if (childPaused()) {
                 long available = Math.min(maximumWork, until) - work - (budget.threadWork() - before);
@@ -300,6 +311,7 @@ final class CountVectorPartition implements CountContinuation {
         if (bin > 0 || order.length <= FIRST_BIN_ENUMERATION_GROUPS) affine.enumerateBox();
         long estimate = bin == 0 ? 0 : CountMeetInMiddle.scoutWork(projected, lo, hi, budget);
         matchingTried = estimate <= 0 || estimate > maximumWork - work;
+        matchingEntered = false;
         // Preserve cheap rounding/kernel successes before paying for a table.
         // Price that scout against the residual matcher, with bounded headroom:
         // an expensive table gives the lattice longer to avoid building it.
@@ -312,8 +324,10 @@ final class CountVectorPartition implements CountContinuation {
         // Re-estimate the residual instead of blindly running another lattice
         // walk. The existing matcher owns its table across all handoffs.
         long estimate = CountMeetInMiddle.scoutWork(projected, binLower, binUpper, budget);
-        if (estimate > 0 && estimate <= maximumWork - work)
+        if (estimate > 0 && estimate <= maximumWork - work) {
+            matchingEntered = true;
             matching = new CountMeetInMiddle(projected, binLower, binUpper, budget, 32768).retained();
+        }
     }
     private boolean childPaused() { return matching == null ? affine.paused() : matching.paused(); }
     private void resumeChild(long quantum) {
