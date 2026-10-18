@@ -1,0 +1,79 @@
+Compiled admission for vector allocation (2026-10-18)
+===================================================
+
+The maintained hard_random_0201 execution case exposed a search regression at
+the unchanged 40M work cap. It remained SAT, but b009f702 exhausted the request
+after repeatedly finding count vectors with no legal execution order. This
+already happened before the missing-material expansion change. The historical
+2086ff14 engine returned a primitive-verified plan at 30,249,809 total work;
+the later pre-vector engine 1e4ec568 used 16,974,670. Replays use the same original
+recipe/stock order and no wall deadline, not different shuffled inputs.
+
+The optional vector-allocation admission copied and reduced ordinary mixed-sign
+material rows before discovering that they could not form its allocation bins.
+It never admitted a vector arm on this case. Those unsuccessful scans still
+consume shared work and alter branch handoffs. Adding vector allocation at
+358786c7 increased this request to 30,285,092; subsequent scheduling changes
+eventually pushed it past 40M. This is not evidence that the vector solver's
+arithmetic is incorrect, nor that removing it would be the right repair.
+
+CountModelViews now records whether every row has one sign among its unfixed
+coefficients and whether at least four possible capacity-group rows remain,
+using the existing charged shape scan. CountVectorPartition
+requires this property: capacity-group rows are positive and uniform, while
+every remaining bin row must have coefficients of one sign. A row mixing signs
+therefore rules out this particular decomposition without copying the matrix.
+Fewer than four positive equal-coefficient groups, each with two to eight free
+terms, also rules it out. These groups must ultimately be disjoint, so fewer
+than eight unfixed coordinates cannot qualify. The metadata only rejects
+impossible shapes; overlap, capacities and bin consistency still require the
+specialist's ordinary checks.
+The portfolio skips only that inapplicable admission; its ordinary search,
+scalar partition attempts, shared cap and verification stay intact.
+
+This is a domain-scoped scheduling hint, never an infeasibility certificate.
+Zero coefficients do not contribute a sign. Fixed terms belong in the RHS,
+including nonzero and large signed offsets. Each compiled view computes its own
+hint in its own coordinates. If shared root bounds change the domain before
+the view's first admission, the old hint cannot refuse it: fixing a coordinate
+may expose an allocation that was absent in the original domains. Manually supplied cost estimates have
+no negative structural evidence and retain the conservative admission path.
+The existing one-attempt-per-view policy is unchanged; a later bound-only
+change does not itself schedule a second allocation admission.
+
+Skipping admission alone returned the original order at 25,009,979 total work,
+but lost the formerly passing order 3. The combined repair also restores the
+bounded count continuation's credit during an active stock view from one half
+of that view's work to one quarter. The doubled share changed interleaving of
+the competing frontiers; more count work was not consistently more useful work.
+The count branch remains retained and receives its earned bounded turns; no
+solver, learned clause, recipe source or proof path is deleted.
+
+The final original-order request returns a primitive-verified executable plan
+at 16,974,670 total work. All seventeen original/shuffled orders complete under
+the unchanged 40M request cap, as do the tight stock/count handoff controls.
+The number includes compilation and is not a wall-time speed claim.
+The existing 33M cost guard and SAT oracle remain unchanged. New algorithms are
+retained for applicable structures; no solver is removed for failing this case.
+
+CountVectorPartitionTest adds 36 shuffled integrated portfolio checks with planted
+allocations, mixed-sign rows, fixed auxiliary coordinates and independently
+justified shared singleton bounds. All witnesses are checked against original
+rows and domains. Existing direct, sliced, residual-matching and cancellation
+checks continue to exercise the vector algorithm itself. Local incident traces,
+historical engine builds and player replay evidence are kept outside Git.
+
+Focused validation passes twelve selected core programs, 61 count-model
+boundaries, one candidate boundary and all 568 execution boundaries (including
+fixed and expanded four-worker budgets). All 741 maintained recipe/order checks
+still pass: 176 use less work, two use slightly more (+560 and +36), and the
+aggregate falls from 511,530,637 to 511,002,564. No general wall-time improvement
+or per-order cost monotonicity is claimed.
+
+Thirty-two historical captured requests preserve their result and work: seven
+feasible, 23 verified missing-input previews, and two existing search limits.
+All returned plans/previews receive independent primitive-stock verification.
+Packaged vector admission, stock/count handoff and missing-material expansion
+checks pass; all 1,478 baseline API entries and Forge/AE-dump packaging checks
+are preserved. Version remains 0.1.2. This is focused validation, not a complete
+regression-suite run or live Minecraft machine execution.

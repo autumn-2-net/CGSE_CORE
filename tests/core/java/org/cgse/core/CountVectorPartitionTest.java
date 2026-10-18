@@ -33,9 +33,62 @@ public final class CountVectorPartitionTest {
             var model = model(1, false);
             check(Arrays.equals(solve(model, 127, null).counts, solve(model, 127, pool).counts), "Worker handoff changed the candidate");
         } finally { pool.shutdownNow(); }
+        compiledAdmission();
         residualMatching();
         boundaries();
         System.out.println("Vector partition: 12 whole/sliced pairs, 12 permutations, worker handoff and scope/limit controls; solved=" + solved);
+    }
+
+    private static void compiledAdmission() {
+        for (int seed = 0; seed < 12; seed++) {
+            var original = model(seed, seed % 3 == 0);
+            for (int scope = 0; scope < 3; scope++) {
+                int extra = original.low.length;
+                var low = Arrays.copyOf(original.low, extra + 1);
+                var high = Arrays.copyOf(original.high, extra + 1);
+                var witness = Arrays.copyOf(original.witness, extra + 1);
+                low[extra] = witness[extra] = BigInteger.valueOf(3);
+                high[extra] = BigInteger.valueOf(scope == 0 ? 3 : 4);
+                var rows = new ArrayList<ExactLinearProgram.Constraint>();
+                for (var row : original.rows) {
+                    var terms = new TreeMap<>(row.terms());
+                    // The raw row mixes signs, but a fixed coordinate belongs
+                    // in its RHS and cannot disqualify the allocation kernel.
+                    var a = BigInteger.valueOf(-7L * terms.firstEntry().getValue().signum());
+                    terms.put(extra, a);
+                    rows.add(new ExactLinearProgram.Constraint(terms, row.upper().add(a.multiply(low[extra]))));
+                }
+                if (scope == 2) rows.add(new ExactLinearProgram.Constraint(Map.of(extra, BigInteger.ONE), low[extra]));
+                var changed = permute(new Model(rows, low, high, witness), 9103 + seed);
+                var budget = new PlanningBudget(0, 16_000_000, 64L << 20, () -> false, System::nanoTime);
+                try (var views = CountModelViews.create(changed.rows, changed.low, changed.high, budget);
+                     var search = new CountViewSearch(views, budget)) {
+                    var view = views.available().get(0);
+                    if (scope == 2) {
+                        // The compiler's old-domain shape is deliberately stale.
+                        // Feed independently valid singleton consequences before
+                        // the portfolio's first admission, as another engine can.
+                        var fixed = changed.high.clone();
+                        int id = changed.rows.stream().filter(row -> row.terms().size() == 1)
+                                .findFirst().orElseThrow().terms().keySet().iterator().next();
+                        fixed[id] = changed.low[id];
+                        views.publishBounds(view, changed.low, fixed);
+                    }
+                    search.resume(16384);
+                    check(search.hasGroupedPartition() == (scope != 1), "Allocation admission ignored fixed/shared domains");
+                    if (scope != 1) check(budget.diagnostics().contains("count_vector_partition"), "Vector arm was replaced or omitted");
+                    while (true) {
+                        if (!search.step()) continue;
+                        if (search.counts() != null || !search.retained()) break;
+                        search.resume(16384);
+                    }
+                    check(search.counts() != null && valid(changed, search.counts()), "Original-domain witness lost");
+                    check(!search.infeasible(), "Admission refusal became an impossibility proof");
+                }
+                check(budget.reservedBytes() == 0, "Compiled admission retained workspace");
+            }
+        }
+        System.out.println("Compiled vector admission: 36 shuffled fixed, mixed-sign and shared-domain requests passed");
     }
 
     private static Model model(int seed, boolean shifted) {

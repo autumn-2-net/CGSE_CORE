@@ -1159,3 +1159,11 @@ refill previews, preserving complete capture previews and positive witnesses.
 `CapturedHandoffTest` injects limits after the real child's proof/witness is ready
 and before parent publication; it also covers children that finish in the same
 step as their local proof because no discarded preview is needed.
+
+`CountVectorPartitionTest` also checks 36 shuffled portfolio admissions with
+fixed and unfixed auxiliary coordinates and shared singleton bounds. Compiler
+shape hints may skip inapplicable allocation work, but must preserve allocation
+arms exposed by fixed coordinates or newly tightened domains. The existing
+`hard_random_0201` execution boundaries retain their SAT oracle, 40M request cap
+and 33M observed-work guard; they detect admission cost displacing the ordinary
+search. See `docs/vector-allocation-admission.txt` for the isolated diagnosis.
