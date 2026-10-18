@@ -193,9 +193,31 @@ the remaining choice/arm allowance, capped at 16384; speculative restoration
 stops at 8192, while an assembled physical word can finish verification within
 that reserved share. Secondary feedback is capped at 1024 or one eighth of
 remaining choice work. No allowance is renewed and cache budgets are unchanged.
-This covers initial-stock support only. Choosing an omitted tool-manufacturing
-source still requires a different count/support proposal; a local failure is
-never evidence of global infeasibility.
+If initial-stock recovery fails, one separate count proposal may request a
+manufacturable tool cohort omitted by the current support. Declared ordinary
+outputs identify possible tool keys; the minimum simultaneous/lifetime cohort
+for a used rule supplies a positive search hint. It does not supply inventory.
+Old source/activation counts remain lower bounds, while the count solver must
+fund additional manufacturing through actual captured recipes and stock.
+
+This private proposal adds a read coordinate from the requested activation to
+selected consumers of its rules. It prevents the auxiliary scheduler from
+placing a multi-step manufacturing chain after the consumers that need it.
+The coordinate has no physical counterpart, does not enter the canonical graph,
+and is removed by exact source restoration. Original material funding, source
+slots/outputs, simultaneous tool ownership, final seeds and force crafting are
+verified again before publishing any plan. A failed trial retains the original
+failed prefix and matching explanation, then resumes ordinary order/count work.
+
+Manufacturing support is admitted for at most 128 auxiliary entries, 128 selected
+counts, 128 seed keys, 32 families and 2048 ports. Its entire discovery/count/
+restoration/verification trial gets at most half the remaining choice/arm work,
+capped at 16384. Discovery gets one eighth of that share, capped at 2048; count
+repair gets at most half the remainder. Exact restoration keeps its existing
+8192 speculative cap and may finish assembly within the same total share.
+The original choice lifetime is not renewed, and this trial runs at most once
+per outer continuation. It explores one proposed cohort, not every possible
+manufacturing history; failures never establish global infeasibility.
 
 When an already restored transition disables another rule's physical eligibility
 or reduces its guaranteed uses, the restorer can retain the proposal's exact
@@ -544,8 +566,14 @@ The public tests are under tests/core/java/org/cgse/core:
     original-source/physical replay, compound qualitative/quantitative choices,
     ordinary input exclusion, final-seed failure, continuation retention,
     bounded work/memory, cancellation, worker handoff and delayed returns.
-    Twelve separately reported known-feasible manufacturing cases remain open;
-    their assertions guard proof scope and are not passing feasibility oracles.
+  CapturedStateManufacturingSupportTest: 402 positive manufactured-tool variants,
+    including all twelve former pending cases, two-step manufacturing, original
+    physical/source verification, seeds, force crafting, delayed returns/reload,
+    unfunded/cyclic manufacturing, ordinary-input ownership, local limits,
+    long-sized cohorts, retained-workspace refusal, failed-continuation retention,
+    cancellation and worker handoff. Another 36
+    known-feasible long wear chains remain explicitly unresolved; their safety
+    assertions are separate from the positive feasibility pass count.
   CapturedStateExpansionTest: omitted cross-rule state cycles, source/slot/stock
     permutations, long-sized orders, multiple physical tools, mixed/indivisible
     slots, manufactured tools, exact seeds and forced/preserved requests. Source

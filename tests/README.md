@@ -224,9 +224,19 @@ different orders, long quantities, seeds, forced crafting and manufactured-tool
 controls. Ordinary input stock cannot be claimed twice. Failed isolated replays,
 bounded work, optional memory, preference-copy isolation, cancellation, worker
 handoff and delayed runtime returns/save-load guard the continuation.
-Twelve additional cases have a constructive witness but require an omitted
-manufacturing source. They are reported as known feasible/unresolved separately
-from the 296 positives; only false negative proofs and leaks are asserted there.
+
+`CapturedStateManufacturingSupportTest` promotes those twelve omitted-manufacture
+cases to strict feasibility assertions and extends them to 402 positive variants.
+It checks consumed/unchanged/worn tools, 2/3/16-entity cohorts, 1/2/7/31 repetitions,
+twelve source/slot/stock orders, forced production, exact final seeds and a
+two-step manufacturing chain. Original-source counts, every physical prefix,
+simultaneous whole-key assignments and actual returns are checked independently.
+Unfunded/cyclic manufacturing, spent ordinary inputs, invalid final seeds,
+bounded work/memory, failure continuation, cancellation and worker handoff guard
+the optional proposal, including long-sized cohorts and workspace refusal with
+the count proposal retained. Thirty-six separately reported long wear cases have a
+literal feasible witness but still exceed the local restoration share; UNKNOWN
+is not counted as a positive pass. The test is included by automatic discovery.
 
 `CapturedStateOrderFeedbackTest` retains 109 positive combinations with 2/3/5/8
 destructive rules and 2/7/31 light uses. It checks a constructive temporal order,

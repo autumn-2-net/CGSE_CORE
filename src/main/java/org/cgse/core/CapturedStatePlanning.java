@@ -27,6 +27,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         static <K> Key<K> capacity(String family) { return new Key<>(null, family, false, null); }
         static <K> Key<K> entities(String family) { return new Key<>(null, family, true, null); }
         static <K> Key<K> entities(List<String> group) { return new Key<>(null, "", true, group); }
+        // Empty groups never occur in family-union coordinates. This private
+        // read token orders a speculative tool-manufacturing prefix only.
+        static <K> Key<K> support(String activation) { return new Key<>(null, activation, true, List.of()); }
     }
     private record Activation<K>(K state, List<String> families) {}
     private record Returned<K>(K before, K state, StateFamily<K> family, long amount) {}
@@ -84,6 +87,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private StateEntityMatching<K> matching;
     private StateChoiceRepair<K> choiceRepair;
     private CapturedStatePlanning<K> activationReplay;
+    private CapturedProposalRepair<Key<K>> supportRepair;
+    private long supportMemory, supportDeadline;
+    private boolean supportTried, manufacturingReplay;
     private StateEntityMatching<K> replayFailure;
     private StateFamily<K> replayFamily;
     private GraphRecipe<Key<K>> replayBlocked;
@@ -168,6 +174,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                     else { proposalMemory = memory; startRestoration(proposed.steps()); }
                 }
             }
+            else if (supportRepair != null) restoreManufacturingProposal();
             else if (activationReplay != null) restoreActivationReplay();
             else if (searchingOrder) reschedule();
             else if (verification != null) verify();
@@ -833,7 +840,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                 return;
             }
             if (repairChoices(family)) return;
-            if (repairActivations()) {
+            if (repairActivations() || repairManufacture()) {
                 replayFamily = family; replayBlocked = intactRecipe; replayFragmented = fragmented;
                 replayFailure = failed; failed = null; return;
             }
@@ -901,41 +908,221 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             // steal a selected initial input; final seeds still need verification.
             long remaining = Math.min(choiceRepair.remainingWork(), allowance - (budget.nodes() - workStarted));
             if (remaining < 2048) return false;
-            var replay = new CapturedStatePlanning<>(entries, target, amount, stock, external, seeds, preserve, force, budget,
-                    Math.min(16_384, remaining / 2));
-            boolean retained = false;
-            try {
-                if (replay.done || !replay.reserve(1024L + 192L * families.size() + 224L * (sources.size() + activations.size()) + 160L * ports)) return false;
-                replay.replayOnly = true; replay.choiceRepair = choiceRepair.fork();
-                if (replay.choiceRepair == null) return false;
-                replay.captured = true; replay.prepared = true; replay.captureStock = null; replay.captureExternal = null;
-                replay.families.putAll(families); replay.sources.putAll(sources); replay.activations.putAll(activations);
-                replay.proposed = proposed; replay.replayAdditional = new LinkedHashMap<>(additional);
-                replay.restoreInitialFree();
-                replay.proposalMemory = replay.memory;
-                replay.startRestoration(restorationWord);
-                if (replay.done) return false;
-                finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
-                activationReplay = replay; retained = true;
-                budget.note("candidate_state_stock", "replay; keys=" + additional.size() + "; same_source_counts=true; negative_proofs=false");
-                return true;
-            } finally { if (!retained) replay.close(); }
+            if (!startSupportReplay(proposed, restorationWord, additional, ports, Math.min(16_384, remaining / 2))) return false;
+            budget.note("candidate_state_stock", "replay; keys=" + additional.size() + "; same_source_counts=true; negative_proofs=false");
+            return true;
         } finally { budget.release(bytes); }
+    }
+
+    private boolean startSupportReplay(GraphPlan<Key<K>> candidate, PlanStep word, Map<String, BigInteger> additional,
+                                       int ports, long maximumWork) {
+        var replay = new CapturedStatePlanning<>(entries, target, amount, stock, external, seeds, preserve, force, budget, maximumWork);
+        boolean retained = false;
+        try {
+            if (replay.done || !replay.reserve(1024L + 192L * families.size() + 224L * (sources.size() + activations.size()) + 160L * ports)) return false;
+            replay.replayOnly = true; replay.choiceRepair = choiceRepair.fork();
+            if (replay.choiceRepair == null) return false;
+            replay.captured = true; replay.prepared = true; replay.captureStock = null; replay.captureExternal = null;
+            replay.families.putAll(families); replay.sources.putAll(sources); replay.activations.putAll(activations);
+            replay.proposed = candidate; replay.replayAdditional = new LinkedHashMap<>(additional);
+            replay.restoreInitialFree();
+            replay.proposalMemory = replay.memory;
+            replay.startRestoration(word);
+            if (replay.done) return false;
+            finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+            activationReplay = replay; retained = true; return true;
+        } finally { if (!retained) replay.close(); }
+    }
+
+    /** One independent count proposal can manufacture an omitted tool cohort.
+     * Keep the old source/activation counts as lower-bound hints and ask the
+     * count solver to fund the missing cohort through captured source recipes.
+     * The original failed prefix remains intact throughout this trial. */
+    private boolean repairManufacture() {
+        if (supportTried || choiceRepair == null || !choiceRepair.active() || !shared() ||
+                auxiliary.size() > 128 || families.size() > 32 || seeds.size() > 128 || proposed.patternTimesExact().size() > 128) return false;
+        supportTried = true;
+        long remaining = Math.min(choiceRepair.remainingWork(), allowance - (budget.nodes() - workStarted));
+        long share = Math.min(16_384, remaining / 2), start = budget.nodes(), limit = Math.min(2048, share / 8);
+        if (share < 4096) return false;
+        long bytes = 1024L + 512L * auxiliary.size() + 256L * (families.size() + seeds.size());
+        if (!budget.tryReserve(bytes)) return false;
+        boolean retained = false;
+        try {
+            var uses = new LinkedHashMap<String, BigInteger>();
+            var simultaneous = new LinkedHashMap<String, Long>();
+            var selected = new LinkedHashMap<String, BigInteger>();
+            var selectedSources = new LinkedHashSet<String>();
+            var lower = new LinkedHashMap<String, BigInteger>();
+            for (var count : proposed.patternTimesExact().entrySet()) {
+                if (budget.nodes() - start >= limit) return false;
+                budget.check();
+                if (count.getValue().signum() <= 0) continue;
+                var recipe = proposed.recipes().get(count.getKey());
+                lower.put(count.getKey(), count.getValue());
+                if (activations.containsKey(recipe.binding())) { selected.merge(recipe.binding(), count.getValue(), BigInteger::add); continue; }
+                selectedSources.add(recipe.binding());
+                var firing = new LinkedHashMap<String, Long>();
+                for (var slot : recipe.slots()) {
+                    if (budget.nodes() - start >= limit) return false;
+                    budget.check();
+                    if (slot.key().family() != null && !slot.key().entity()) firing.merge(slot.key().family(), slot.amount(), Math::addExact);
+                }
+                for (var need : firing.entrySet()) {
+                    budget.check();
+                    uses.merge(need.getKey(), count.getValue().multiply(BigInteger.valueOf(need.getValue())), BigInteger::add);
+                    simultaneous.merge(need.getKey(), need.getValue(), Math::max);
+                }
+            }
+            var produced = new LinkedHashSet<K>();
+            var physical = new LinkedHashSet<Key<K>>(); physical.add(Key.physical(target));
+            int ports = 0;
+            for (var source : auxiliary) {
+                for (var input : source.recipe().inputs()) for (var candidate : input.candidates()) {
+                    if (++ports > 2048 || budget.nodes() - start >= limit) return false;
+                    budget.check();
+                    var key = candidate.stack().what();
+                    if (key.family() == null && !physical.contains(key)) {
+                        if (!budget.tryReserve(160)) return false;
+                        bytes += 160; physical.add(key);
+                    }
+                }
+                for (var output : source.recipe().outputs()) {
+                    if (++ports > 2048 || budget.nodes() - start >= limit) return false;
+                    budget.check();
+                    if (output.what().family() == null && sources.containsKey(source.binding()) && !produced.contains(output.what().physical())) {
+                        if (!budget.tryReserve(160)) return false;
+                        bytes += 160; produced.add(output.what().physical());
+                    }
+                }
+            }
+            String binding = null; BigInteger cohort = null;
+            for (var candidate : activations.entrySet()) {
+                if (budget.nodes() - start >= limit) return false;
+                budget.check();
+                K state = candidate.getValue().state();
+                if (!produced.contains(state) || external.contains(state)) continue;
+                BigInteger needed = null;
+                for (String id : candidate.getValue().families()) {
+                    if (budget.nodes() - start >= limit) return false;
+                    budget.check();
+                    if (!uses.containsKey(id)) continue;
+                    long capacity = families.get(id).capacity(state);
+                    if (capacity <= 0) continue;
+                    var perEntity = BigInteger.valueOf(capacity);
+                    var count = uses.get(id).add(perEntity).subtract(BigInteger.ONE).divide(perEntity)
+                            .max(BigInteger.valueOf(simultaneous.get(id)));
+                    if (needed == null || count.compareTo(needed) < 0) needed = count;
+                }
+                if (needed == null || needed.compareTo(selected.getOrDefault(candidate.getKey(), BigInteger.ZERO)) <= 0) continue;
+                // A small complete cohort is an admission/ranking hint only.
+                // The exact count model must fund its manufacturing sources.
+                if (cohort == null || needed.compareTo(cohort) < 0) { binding = candidate.getKey(); cohort = needed; }
+            }
+            if (binding == null) return false;
+            if (cohort.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0) return false;
+            lower.put(binding + "#0", cohort); // Activation domains have exactly one concrete variant.
+            // An added tool is useless when the auxiliary scheduler leaves its
+            // manufacturing chain after the blocked consumers. Require this
+            // cohort before selected consumers of its rules in this private
+            // proposal only. Exact restoration ignores the synthetic read arc
+            // and verifies the original physical manufacturing/consumer sources.
+            var marker = Key.<K>support(binding);
+            var view = new ArrayList<CapturedCatalog.Entry<Key<K>>>();
+            var offered = activations.get(binding).families();
+            for (var source : auxiliary) {
+                if (budget.nodes() - start >= limit) return false;
+                budget.check();
+                boolean consumer = false;
+                if (selectedSources.contains(source.binding())) for (var input : source.recipe().inputs()) for (var candidate : input.candidates()) {
+                    if (budget.nodes() - start >= limit) return false;
+                    budget.check(); var key = candidate.stack().what();
+                    if (!key.entity() && key.family() != null && offered.contains(key.family())) consumer = true;
+                }
+                if (!consumer && !binding.equals(source.binding())) { view.add(source); continue; }
+                long extra = 384L + 128L * (source.recipe().inputs().size() + source.recipe().outputs().size());
+                if (!budget.tryReserve(extra)) return false;
+                bytes += extra;
+                var inputs = new ArrayList<>(source.recipe().inputs()); var outputs = new ArrayList<>(source.recipe().outputs());
+                if (consumer) inputs.add(new CapturedRecipe.Input<>(1, List.of(new CapturedRecipe.Candidate<>(
+                        new CapturedRecipe.Amount<>(marker, cohort.longValueExact()), null, true, true)), CapturedRecipe.InputMode.INDIVISIBLE));
+                else outputs.add(new CapturedRecipe.Amount<>(marker, 1));
+                view.add(new CapturedCatalog.Entry<>(source.id(), source.binding(), new CapturedRecipe<>(
+                        inputs, outputs, source.recipe().external(), source.recipe().captureBounded())));
+            }
+            var required = new LinkedHashMap<Key<K>, Long>();
+            required.put(marker, cohort.longValueExact());
+            for (var seed : seeds.entrySet()) {
+                boolean state = false;
+                for (var family : families.values()) {
+                    if (budget.nodes() - start >= limit) return false;
+                    budget.check(); if (family.accepts(seed.getKey())) { state = true; break; }
+                }
+                if (!state) { var key = Key.physical(seed.getKey()); required.put(key, seed.getValue()); physical.add(key); }
+            }
+            entityFloors.forEach((id, count) -> required.put(Key.entities(id), count));
+            entityUnionFloors.forEach((group, count) -> required.put(Key.entities(group), count));
+            var available = new LinkedHashMap<Key<K>, Long>(); var emitted = new LinkedHashSet<Key<K>>();
+            for (var key : physical) {
+                if (budget.nodes() - start >= limit) return false;
+                budget.check(); long count = stock.getOrDefault(key.physical(), 0L);
+                if (count > 0) available.put(key, count);
+                if (external.contains(key.physical())) emitted.add(key);
+            }
+            supportDeadline = Math.addExact(start, share);
+            supportRepair = CapturedProposalRepair.create(view, lower, Key.physical(target), amount, available, emitted,
+                    required, preserve, force, budget, (supportDeadline - budget.nodes()) / 2);
+            if (supportRepair == null) return false;
+            supportMemory = bytes; retained = true;
+            finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+            budget.note("candidate_state_manufacture", "propose; activation=" + binding + "; cohort=" + cohort +
+                    "; previous_count_lower_bounds=true; negative_proofs=false");
+            return true;
+        } catch (ArithmeticException unrepresentable) {
+            // Speculative cohorts must not abandon the original restoration.
+            return false;
+        } finally { if (!retained) budget.release(bytes); }
+    }
+
+    private void restoreManufacturingProposal() {
+        if (budget.nodes() < supportDeadline && !supportRepair.step()) return;
+        var candidate = supportRepair.result();
+        supportRepair.close(); supportRepair = null;
+        budget.release(supportMemory); supportMemory = 0;
+        long remaining = Math.min(choiceRepair.remainingWork(), supportDeadline - budget.nodes());
+        if (candidate != null && remaining >= 1024) {
+            int ports = 0;
+            for (var recipe : candidate.recipes().values()) { budget.check(); ports += recipe.slots().size(); }
+            remaining = Math.min(choiceRepair.remainingWork(), supportDeadline - budget.nodes());
+            if (ports <= 2048 && remaining >= 1024 && startSupportReplay(candidate, candidate.steps(), Map.of(), ports, remaining)) {
+                manufacturingReplay = true;
+                budget.note("candidate_state_manufacture", "restore; original_sources=true; negative_proofs=false");
+                return;
+            }
+        }
+        finishSupportReplay(null, true);
     }
 
     private void restoreActivationReplay() {
         if (!activationReplay.step()) return;
         var plan = activationReplay.result();
         activationReplay.close(); activationReplay = null;
+        boolean manufactured = manufacturingReplay; manufacturingReplay = false;
+        if (plan == null && !manufactured && repairManufacture()) return;
+        finishSupportReplay(plan, manufactured);
+    }
+
+    private void finishSupportReplay(GraphPlan<K> plan, boolean manufactured) {
+        String note = manufactured ? "candidate_state_manufacture" : "candidate_state_stock";
         var failed = replayFailure; replayFailure = null;
         var family = replayFamily; var blocked = replayBlocked;
         replayFamily = null; replayBlocked = null;
         try {
             if (plan != null) {
                 result = plan; done = true; outcome = new Outcome(Status.VERIFIED, Reason.NONE);
-                budget.note("candidate_state_stock", "verified; negative_proofs=false");
+                budget.note(note, "verified; negative_proofs=false");
             } else {
-                budget.note("candidate_state_stock", "declined; original_prefix_retained=true; negative_proofs=false");
+                budget.note(note, "declined; original_prefix_retained=true; negative_proofs=false");
                 finishAllocationFailure(family, blocked, failed, replayFragmented);
             }
         } finally { if (failed != null) failed.close(); }
@@ -1567,6 +1754,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     @Override public void close() {
         finishObservation(PlanningBudget.CandidateOutcome.ABANDONED);
         if (activationReplay != null) activationReplay.close(); activationReplay = null;
+        if (supportRepair != null) supportRepair.close(); supportRepair = null;
+        budget.release(supportMemory); supportMemory = 0;
         if (replayFailure != null) replayFailure.close(); replayFailure = null;
         replayFamily = null; replayBlocked = null;
         clearSelection();

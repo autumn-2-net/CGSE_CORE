@@ -120,7 +120,12 @@ public final class CapturedStateMatchingCostsTest {
         PlanVerifier.verify(plan); PlanVerifier.verifyRuntimeInventory(plan); var inventory = new LinkedHashMap<String, BigInteger>();
         plan.initialExact().forEach((key, amount) -> { check(amount.signum() >= 0 && amount.compareTo(BigInteger.valueOf(f.stock().getOrDefault(key, 0L))) <= 0, "Invented initial tool"); inventory.put(key, amount); });
         var counts = new LinkedHashMap<String, BigInteger>(); plan.patternTimesExact().forEach((id, count) -> counts.merge(plan.recipes().get(id).binding(), count, BigInteger::add));
-        for (var source : f.entries()) check(BigInteger.valueOf(source.binding().equals("pair") ? f.mode() == 2 ? 1 : f.n() : source.binding().equals("read") ? f.amount() : 1).equals(counts.get(source.binding())), "Changed same-count source semantics");
+        long expectedFirings = 0;
+        for (var source : f.entries()) {
+            long expected = source.binding().equals("pair") ? f.mode() == 2 ? 1 : f.n() : source.binding().equals("read") ? f.amount() : 1;
+            check(BigInteger.valueOf(expected).equals(counts.get(source.binding())), "Changed same-count source semantics");
+            expectedFirings = Math.addExact(expectedFirings, expected);
+        }
         for (var recipe : plan.recipes().values()) {
             var source = f.entries().stream().filter(e -> e.binding().equals(recipe.binding())).findFirst().orElseThrow();
             var filled = new LinkedHashMap<Integer, BigInteger>(); var whole = new LinkedHashMap<Integer, String>(); var outputs = new LinkedHashMap<String, BigInteger>();
@@ -143,9 +148,10 @@ public final class CapturedStateMatchingCostsTest {
         var cursor = new PlanCursor(plan.steps()); long fired = 0;
         while (cursor.current() != null) {
             var batch = cursor.current(); var recipe = plan.recipes().get(batch.recipe());
-            for (long run = 0; run < batch.runs(); run++) { for (var slot : recipe.slots()) take(inventory, slot.key(), slot.amount()); recipe.executionOutputs().forEach((key, amount) -> add(inventory, key, amount)); check(++fired <= 2 + (f.mode() == 2 ? 1 : f.n()) + f.amount(), "Unexpected firing expansion"); }
+            for (long run = 0; run < batch.runs(); run++) { for (var slot : recipe.slots()) take(inventory, slot.key(), slot.amount()); recipe.executionOutputs().forEach((key, amount) -> add(inventory, key, amount)); check(++fired <= expectedFirings, "Unexpected firing expansion"); }
             cursor.dispatched(batch.runs());
         }
+        check(fired == expectedFirings, "Omitted literal source firing");
         check(inventory.getOrDefault("product", BigInteger.ZERO).compareTo(BigInteger.valueOf(f.amount())) >= 0, "Unfunded delivery");
         seeds.forEach((key, amount) -> check(inventory.getOrDefault(key, BigInteger.ZERO).compareTo(BigInteger.valueOf(amount)) >= 0, "Lost exact seed"));
     }

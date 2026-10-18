@@ -395,20 +395,74 @@ or cache-budget change is needed. These are serial four-CPU targeted checks,
 not a full corpus or live-host run. Intermediate failures and corrected test
 diagnostic observation remain archived separately.
 
-New open boundary: omission of a manufacturing source
-----------------------------------------------------
+Omitted manufacturing support: diagnosed, then repaired
+------------------------------------------------------
 The q=3,n=2 stock a:5,b:8,metal:1 still has a literal witness: build c:3 from
 metal, warm a:3,b:6,c:3, then use c for u, b for v and a for the final reads.
-Extra a/b stock can let the capacity proposal skip building c. The new replay
-cannot activate a c that does not exist in initial stock. The twelve source/
-slot/stock permutations are kept as expected-feasible pending cases, separate
-from positive pass counts. All twelve remain UNKNOWN on both 02ba4119 and the
-new engine; the new optional attempt adds 594-786 search work (at most 0.217%)
-on these failures. Their safety checks reject global infeasibility or
-complete-coverage claims, but do not claim to solve them. A subsequent repair
-needs to choose another funded manufacturing/count support, not just enlarge
-the initial physical pool. Local original inputs and partial runs are registered
-under state-activation-stock-20261018.
+Extra a/b stock can let the capacity proposal skip building c. The initial-stock
+replay cannot activate a c that does not exist. These twelve source/slot/stock
+orders were preserved as expected-feasible pending cases: all were UNKNOWN on
+02ba4119 and 3e84a21f, with 594-786 extra search work (at most 0.217%) from the
+initial-stock attempt. Their original evidence remains unchanged under
+state-activation-stock-20261018.
+
+The next repair requests a manufacturable cohort through CapturedProposalRepair
+with the previous counts as lower bounds. Discovery considers captured ordinary
+outputs accepted by used state rules, using simultaneous demand and guaranteed
+uses to suggest one missing cohort. The count solver must fund its manufacture
+from the original stock and sources; a declared output is never free inventory.
+An initial experiment freed old activation counts, but net count rows omitted
+simultaneous read availability and produced an unexecutable proposal. Retaining
+the old counts instead preserves that part of the original candidate.
+
+A second failure appeared with metal -> refined -> c manufacturing: the added
+source counts were correct, but the auxiliary schedule could leave this chain
+after the blocked consumers. The private proposal now adds a read coordinate
+from the requested activation to selected consumers of its rules. It guides
+only this speculative schedule and cannot enter the canonical graph or a proof.
+The original exact restorer, assembly, verification and force-craft proof still
+check all physical operations. Failure resumes the parent's retained prefix and
+matching explanation. No selected physical input, seed or returned entity is
+invented, and auxiliary markers do not escape into the final plan.
+
+Admission allows 128 auxiliary entries/selected counts/seed keys, 32 families
+and 2048 ports. The entire trial gets min(16384, remaining choice/arm work / 2),
+including discovery, count search, restoration and verification. Discovery uses
+min(2048, share / 8), count search at most half the remainder; restoration keeps
+its 8192 speculative cap. There is one trial per outer continuation, within the
+original choice lifetime. Restrictive lower bounds and ordering hints can miss
+other feasible manufacturing histories; their failure is not a negative proof.
+
+All twelve former pending cases now require a verified feasible plan. Across
+q=2/3/16, n=1/2/7/31, unchanged/consumed/worn tools and twelve source/slot/stock
+orders, the expanded manufactured-tool family improves from 36/432 to 396/432.
+The regression adds six positive runtime/force-crafting/two-step manufacturing/
+long-sized cohort variants, for 402 positives, with original-source/physical checks.
+It also checks unfunded/cyclic manufacturing, spent ordinary inputs, invalid
+seeds, failed continuation, work/memory limits, cancellation and worker handoff.
+
+Thirty-six known-feasible n=31 wear cases remain open, separately reported from
+positive pass counts. During diagnosis, a trace restored 155 firings before the 8192
+limit; the 321-use one-way state chain does not become a repeated physical word.
+The request budget is unchanged. This is now an exact-restoration cost boundary,
+not evidence that the added manufacturing source is absent or globally useless.
+Local versions, original witnesses, failed experiments and separate runs are
+registered under state-manufacturing-support-20261018.
+
+Validation: all 45 related historical programs pass on frozen 3e84a21f and the
+new engine. Forty-three reports are identical; the entity case's seven-work
+variation and concurrent source-cache assertion count reproduce the previously
+documented variability. All 36 prior manufacturing positives remain feasible,
+with 74.9-87.2% less search work and lower peak budget reservations in this matrix.
+The 36 still-unresolved long wear cases add 9416-10661 search work (1.15-16.95%),
+with unchanged peak reservations; this bounded failed attempt is not a speedup.
+These are work-account/reservation measures, not process-memory or latency claims.
+
+The final 402-positive program and its failure guards pass from the packaged
+library. Gradle assemble, the Forge mod with AE dump, sources/checksums and all
+1478 baseline ABI entries pass. The engine still has 755 classes. Version stays
+0.1.4 and no host adapter changes are required. Runs were serial on four logical
+CPUs; this is targeted regression, not a full corpus or live-host run.
 
 Still open, with concrete implementation boundaries
 ---------------------------------------------------

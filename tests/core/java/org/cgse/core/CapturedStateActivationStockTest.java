@@ -38,11 +38,10 @@ public final class CapturedStateActivationStockTest {
                     true, Map.of("a", 3L), true);
         }
         solve(fixture(2, 0, Long.MAX_VALUE / 8, false, 0, false, Long.MAX_VALUE / 8 - 1), false, Map.of(), false);
-        boundaries(); cancelled(); handoff(); forkIsolation(); int pending = pendingManufacture();
+        boundaries(); cancelled(); handoff(); forkIsolation();
         check(replays > 0 && compounded > 0, "Stock replay / additional choice feedback was not exercised");
         System.out.println("CapturedStateActivationStockTest: cases=" + cases + "; assertions=" + checks + "; replays=" + replays +
-                "; compounded=" + compounded + "; max_work=" + maxWork + "; max_bytes=" + maxBytes +
-                "; known_feasible_manufacture_unresolved=" + pending + "/12 (not positive passes)");
+                "; compounded=" + compounded + "; max_work=" + maxWork + "; max_bytes=" + maxBytes);
     }
 
     private static CapturedStateMatchingCostsTest.Fixture fixture(int n, int mode, long q, boolean mixed, int order, boolean made, long tail) {
@@ -158,28 +157,6 @@ public final class CapturedStateActivationStockTest {
             check(parent != null && parent.fork() == null && parent.active(), "Optional fork memory refusal corrupted its parent");
         }
         check(budget.reservedBytes() == 0, "Declined fork leaked");
-    }
-
-    /** Open search gap: the extra stock hides a necessary manufacturing source.
-     * Preserve the independently feasible inputs without calling UNKNOWN a
-     * solved case. These checks only guard against false negative proofs. */
-    static int pendingManufacture() {
-        int unresolved = 0;
-        for (int order = 0; order < 12; order++) {
-            var f = fixture(2, 0, 3, false, order, true, 2);
-            CapturedStateMatchingCostsTest.oracle(f); var budget = budget(40_000_000);
-            try (var work = new CapturedCatalog<>(f.entries()).begin("product", 2, f.stock(), Set.of(), Map.of("a", 3L), false, false, budget)) {
-                while (!work.step()) {} var plan = work.result().plan();
-                if (plan.feasible()) CapturedStateMatchingCostsTest.verify(plan, f, Map.of("a", 3L));
-                else {
-                    check((plan.result() == GraphPlan.Result.UNKNOWN || plan.result() == GraphPlan.Result.SEARCH_LIMIT) && !work.result().coverage().complete(),
-                            "Omitted manufacture was promoted to global infeasibility"); unresolved++;
-                }
-                System.out.println("Known manufacture order=" + order + "; expected=FEASIBLE; actual=" + plan.result() + "; work=" + budget.searchWork());
-            }
-            check(budget.reservedBytes() == 0, "Pending manufacture case leaked");
-        }
-        return unresolved;
     }
 
     private static StateFamily<String> rule(String id, boolean returned) { return new StateFamily<>() {
