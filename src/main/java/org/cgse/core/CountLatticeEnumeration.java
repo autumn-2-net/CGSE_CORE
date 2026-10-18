@@ -141,6 +141,7 @@ final class CountLatticeEnumeration implements AutoCloseable {
             boolean boxPossible = true;
             double coefficient = values[level].longValue() - centerValues[level];
             double available = Math.max(0, radiusValue - total);
+            double boxDistance = 0;
             // The remaining orthogonal span can change coordinate i by at
             // most sqrt(remaining radius * its squared projection length).
             // Include the fixed component outside the lattice span. This
@@ -150,10 +151,14 @@ final class CountLatticeEnumeration implements AutoCloseable {
                 budget.check();
                 offsets[level][i] = offsets[level + 1][i] + coefficient * orthogonal[level][i];
                 double deficit = Math.max(0, Math.abs(offsets[level][i]) - halfWidths[i]);
+                boxDistance += deficit * deficit;
                 double allowance = level == 0 ? 0 : available * reach[level - 1][i];
                 if (deficit * deficit > allowance + 1e-7 * Math.max(1, radiusValue)) boxPossible = false;
             }
-            if (!boxPossible) return false;
+            // Satisfying every interval also requires enough total movement:
+            // separate coordinate bounds can all pass while their squared
+            // distances together exceed the remaining orthogonal radius.
+            if (!boxPossible || boxDistance > available + 1e-7 * Math.max(1, radiusValue)) return false;
             if (level > 0) { level--; entered = false; return false; }
             var candidate = point.clone();
             for (int i = 0; i < point.length; i++) {

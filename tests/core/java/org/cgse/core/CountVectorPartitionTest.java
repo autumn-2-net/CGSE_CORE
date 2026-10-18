@@ -36,6 +36,7 @@ public final class CountVectorPartitionTest {
         compiledAdmission();
         residualMatching();
         reusedCandidates();
+        firstBinEnumeration();
         boundaries();
         System.out.println("Vector partition: 12 whole/sliced pairs, 12 permutations, worker handoff and scope/limit controls; solved=" + solved);
     }
@@ -230,6 +231,62 @@ public final class CountVectorPartitionTest {
         }
         check(budget.reservedBytes() == 0, "Leaked vector/affine memory");
         return new Result(counts, budget.nodes(), pauses, budget.diagnostics());
+    }
+
+    private static void firstBinEnumeration() throws Exception {
+        for (int seed : new int[] {2, 5, 12, 17, 24, 36, 42, 43, 44}) {
+            var model = model(seed, false, 18 + seed % 7, 3, 2, 997);
+            check(valid(model, model.witness), "First-bin constructive oracle");
+            var whole = solve(model, 262144, null);
+            var sliced = solve(model, seed == 2 ? 1 : 113, null);
+            check(whole.counts != null && Arrays.equals(whole.counts, sliced.counts), "First-bin witness lost: " + seed);
+            check(whole.work < 1_500_000, "First-bin search lost bounded improvement: " + seed);
+            check(whole.diagnostics.contains("count_affine_enum"), "First-bin scout not exercised");
+            mainAllocation(model);
+            var shifted = model(seed, true, 18 + seed % 7, 3, 2, 997);
+            check(solve(shifted, 127, null).counts != null, "Large signed offsets changed the allocation");
+            mainAllocation(shifted);
+            var changed = permute(model, 71877 + seed);
+            var reordered = solve(changed, 127, null);
+            // Seed 5 in this order remains a constructive SAT case whose
+            // bounded specialist is unresolved, both before and after this
+            // change. Validate any returned witness without asserting UNSAT.
+            if (seed != 5) {
+                check(reordered.counts != null, "First-bin ordering lost witness: " + seed);
+                mainAllocation(changed);
+            }
+        }
+        var model = model(2, false, 20, 3, 2, 997);
+        var worker = Executors.newSingleThreadExecutor();
+        try {
+            check(Arrays.equals(solve(model, 127, null).counts, solve(model, 127, worker).counts), "First-bin worker handoff changed witness");
+        } finally { worker.shutdownNow(); }
+        var cancel = new AtomicBoolean();
+        var budget = new PlanningBudget(0, 16_000_000, 64L << 20, cancel::get, System::nanoTime);
+        try (var search = CountVectorPartition.create(model.rows, model.low, model.high, budget, 4096)) {
+            check(search != null, "First-bin cancellation admission");
+            while (!budget.diagnostics().contains("count_affine_enum")) {
+                if (!search.step()) continue;
+                check(search.paused(), "First-bin scout not reached"); search.resume(4096);
+            }
+            cancel.set(true); boolean stopped = false;
+            try { search.step(); } catch (CancellationException expected) { stopped = true; }
+            check(stopped, "First-bin scout ignored cancellation");
+        }
+        check(budget.reservedBytes() == 0, "First-bin cancellation leaked memory");
+        System.out.println("First-bin enumeration: 26 original/shifted/permuted witnesses through direct and main-count searches, 1 unresolved permutation, tiny grants, worker handoff and cancellation controls passed");
+    }
+
+    private static void mainAllocation(Model model) {
+        var budget = new PlanningBudget(0, 40_000_000, 256L << 20, () -> false, System::nanoTime);
+        try {
+            // This entry embeds the exact model in recipes, runs the actual
+            // integer-count portfolio and independently checks primitive
+            // execution prefixes before restoring the original coordinates.
+            var result = CountModelReplay.solve("main-counts", model.rows, model.low, model.high, budget, 40_000_000);
+            check(result.counts() != null && !result.infeasible() && valid(model, result.counts()), "Main count portfolio missed first-bin witness");
+            check(budget.nodes() < 3_000_000, "First-bin main count work regressed");
+        } finally { check(budget.reservedBytes() == 0, "Main first-bin search leaked workspace"); }
     }
 
     private static void boundaries() throws Exception {

@@ -15,6 +15,7 @@ public final class CountLatticeEnumerationTest {
 
     public static void main(String[] args) throws Exception {
         smallOracles();
+        jointBoxOracles();
         var original = residual(false);
         var whole = solve(original, 262144, null);
         var sliced = solve(original, 1, null);
@@ -84,6 +85,55 @@ public final class CountLatticeEnumerationTest {
             check(budget.diagnostics().contains("count_affine_enum"), "New enumeration route not exercised");
             return new Result(List.of(search.counts().clone()), budget.nodes(), peak);
         } finally { check(budget.reservedBytes() == 0, "Residual enumeration or kernel leaked memory"); }
+    }
+
+    private static void jointBoxOracles() {
+        int feasible = 0, empty = 0;
+        for (int seed = 0; seed < 96; seed++) {
+            int d = 2 + seed % 4, n = d + 1;
+            var basis = new ArrayList<BigInteger[]>();
+            var mu = new ExactRational[d][d]; var norms = new ExactRational[d];
+            // b_j = e_j - e_last spans every integer vector with zero sum.
+            // Its closed-form Gram factors do not use the production reducer.
+            for (int j = 0; j < d; j++) {
+                var vector = new BigInteger[n]; Arrays.fill(vector, BigInteger.ZERO);
+                vector[j] = BigInteger.ONE; vector[n - 1] = BigInteger.ONE.negate(); basis.add(vector);
+                Arrays.fill(mu[j], ExactRational.ZERO); mu[j][j] = ExactRational.ONE;
+                for (int k = 0; k < j; k++) mu[j][k] = q(1, k + 2);
+                norms[j] = q(j + 2, j + 1);
+            }
+            var random = new Random(3417781 + seed);
+            var low = new BigInteger[n]; var high = new BigInteger[n]; var point = new BigInteger[n];
+            var terms = new TreeMap<Integer, BigInteger>(); var reverse = new TreeMap<Integer, BigInteger>();
+            for (int i = 0; i < n; i++) {
+                point[i] = seed % 3 == 0 ? BigInteger.ONE.shiftLeft(70).multiply(bi(i % 2 == 0 ? 1 : -1)) : bi(0);
+                low[i] = point[i].add(bi(random.nextInt(7) - 3)); high[i] = low[i].add(bi(random.nextInt(4)));
+                terms.put(i, bi(1)); reverse.put(i, bi(-1));
+            }
+            var rhs = activity(terms, point);
+            var model = new Model(List.of(new ExactLinearProgram.Constraint(terms, rhs),
+                    new ExactLinearProgram.Constraint(reverse, rhs.negate()),
+                    new ExactLinearProgram.Constraint(Map.of(0, bi(1), n - 1, bi(-2)), point[0].subtract(point[n - 1].multiply(bi(2))))), low, high);
+            boolean expected = exhaustive(model, low.clone(), 0);
+            var budget = budget(() -> false);
+            try (var search = new CountLatticeEnumeration(model.rows, low, high, point, basis, mu, norms, budget)) {
+                while (!search.step()) {}
+                check((search.counts() != null) == expected, "Joint box oracle mismatch " + seed);
+                if (search.counts() == null) empty++;
+                else { feasible++; check(valid(model, search.counts()), "Joint box invalid witness"); }
+            }
+            check(budget.reservedBytes() == 0, "Joint box workspace leaked");
+        }
+        check(feasible > 10 && empty > 10, "Joint boxes lack feasible or empty scopes");
+        System.out.println("Joint box distance: 96 original-coordinate exhaustive oracles in 3 through 6 dimensions passed");
+    }
+
+    private static boolean exhaustive(Model model, BigInteger[] values, int index) {
+        if (index == values.length) return valid(model, values);
+        for (var v = model.low[index]; v.compareTo(model.high[index]) <= 0; v = v.add(BigInteger.ONE)) {
+            values[index] = v; if (exhaustive(model, values, index + 1)) return true;
+        }
+        return false;
     }
 
     private static void limits(Model model) {

@@ -13,6 +13,7 @@ import java.util.*;
  * nothing about another decomposition.
  */
 final class CountVectorPartition implements CountContinuation {
+    private static final int FIRST_BIN_ENUMERATION_GROUPS = 32;
     private record Group(int[] variables, BigInteger capacity) {}
     private static final class Interval {
         BigInteger low = BigInteger.ZERO, high;
@@ -293,10 +294,10 @@ final class CountVectorPartition implements CountContinuation {
         }
         binLower = lo; binUpper = hi;
         affine = new CountAffineLattice(projected, lo, hi, budget, 32768).retained();
-        // The first allocation and inexpensive residual matching keep their
-        // original route. A stalled residual can reuse its reduced basis for
-        // a bounded box search, without discarding its ordinary kernel.
-        if (bin > 0) affine.enumerateBox();
+        // Broad first allocations make the sphere tree too expensive. Smaller
+        // first bins and stalled residuals may reuse their reduced basis;
+        // inexpensive matching and the ordinary kernel keep their frontiers.
+        if (bin > 0 || order.length <= FIRST_BIN_ENUMERATION_GROUPS) affine.enumerateBox();
         long estimate = bin == 0 ? 0 : CountMeetInMiddle.scoutWork(projected, lo, hi, budget);
         matchingTried = estimate <= 0 || estimate > maximumWork - work;
         // Preserve cheap rounding/kernel successes before paying for a table.

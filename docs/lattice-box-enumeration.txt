@@ -1,5 +1,5 @@
-Retained box enumeration for residual allocations
-================================================
+Retained box enumeration for vector allocations
+==============================================
 
 Problem and scope
 -----------------
@@ -9,9 +9,11 @@ Residual finite matching declines that domain. Repeating ordinary integer
 kernel moves exhausts the unchanged 40M search cap. This is a count-search
 failure, not a durability-model or executable-order regression.
 
-CountVectorPartition now enables one complementary enumeration opportunity
-on residual bins. The first bin and cheap residual matching retain their
-previous route. CountAffineLattice admits the scout after its ordinary kernel
+CountVectorPartition enables one complementary enumeration opportunity on
+residual bins and first bins with at most 32 capacity groups. Larger first
+bins and cheap residual matching retain their previous route. The bound on
+first bins limits the cost of a broad sphere tree before any allocation has
+shrunk the quantity box. CountAffineLattice admits the scout after its ordinary kernel
 has spent 262,144 work; the scout has at most 262,144 additional work, charged
 to the same original request and parent local cap. Cooperative atomic steps
 can cross that local threshold. Grants, worker handoffs and later face trials
@@ -31,6 +33,10 @@ the coordinate's projection into the remaining orthogonal span bounds its
 possible squared movement. If this cannot reach a quantity interval, that
 private branch is skipped before reconstructing every leaf. The fixed
 component outside the lattice span is included in this calculation.
+The sum of squared distances from the fixed vector to all quantity intervals
+must also fit within the remaining radius. This joint distance check skips
+branches that pass each individual-coordinate test but cannot meet them
+together. It shares the existing coordinate loop and adds no workspace.
 
 Correctness and resource boundary
 ---------------------------------
@@ -79,6 +85,40 @@ toward the box made no hard-case gain and substantially slowed one cheap
 decomposition. Pure rational sphere search spent its opportunity on too few
 nodes; numerical sphere search without quantity-box pruning also failed this
 input. The retained implementation combines enumeration with box pruning.
+
+First-bin follow-up (baseline 7df9bf67)
+-------------------------------------
+Allowing this search only after a completed first bin missed otherwise useful
+reduced bases. With the bounded first-bin admission above, 48 planted direct
+allocation models improve from 36 to 45 verified witnesses; the same three
+models remain unresolved. Each newly solved original uses less than 1.32M
+observed work instead of exhausting the specialist's 4M local allowance.
+All previous direct successes retain or reduce their observed work.
+
+The nine recovered models have constructive exact integer oracles. They also
+pass signed 70-bit offsets and tiny-grant handoffs; eight of nine additional
+shuffled models are solved. Seed 5's shuffled model remains unresolved on both
+versions, despite its constructive SAT oracle. It must not be described as
+infeasible or silently counted as a successful bounded search.
+
+Embedding the same 27 variants in primitive recipes and running the main
+integer-count portfolio improves 3 -> 26 independently checked executable
+witnesses at the unchanged 40M request cap. All 26 are below 1.73M observed
+work; the maintained test guards them below 3M, including original, shifted
+and solved shuffled variants. The remaining permutation stays UNKNOWN.
+
+The 33 source/fuel graph cases retain 21 verified executable plans and 12
+limits. One existing fuel plan drops from 1,739,968 to 1,483,817 observed work;
+the earlier 40-group recovery stays below 4.72M. Broad first-bin admission
+without the size guard made that recovery about 6% more expensive, so the
+larger first bins keep their old route. The separate remaining 40-group first
+allocation and larger structures still need other improvements.
+
+The joint box check has 96 additional original-coordinate exhaustive oracles
+in three through six dimensions. These use a complete integer zero-sum
+lattice with closed-form Gram factors, original side constraints and both
+feasible and empty boxes. They do not assume that numerical pruning can
+certify infeasibility of a caller's original model.
 
 Reference
 ---------

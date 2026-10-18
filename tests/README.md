@@ -1192,3 +1192,15 @@ all original integer rows; a declined numerical search has no proof authority.
 The execution manifest includes the recovered 40-group allocation in three
 orders and a four-worker fixed-budget run. Both are automatically discovered;
 see `docs/lattice-box-enumeration.txt` for admission and validation scope.
+
+First-bin box enumeration is also guarded by nine formerly unresolved planted
+allocations in `CountVectorPartitionTest`: original and signed 70-bit shifted
+domains, eight successful additional permutations, one-unit grants, worker
+handoff and cancellation. Seed 5's shuffled variant has a constructive SAT
+oracle but is still unresolved by the bounded specialist on both versions;
+it is checked for witness validity without asserting infeasibility or a solved
+result. The 26 positive variants also run through `main-counts`, with independent
+primitive recipe-prefix/target checks and a 3M observed-work guard under the
+unchanged 40M request cap. `CountLatticeEnumerationTest` adds 96 exhaustive original-coordinate
+oracles for the joint distance to the quantity box in three through six
+dimensions, with closed-form Gram factors and original side constraints.
