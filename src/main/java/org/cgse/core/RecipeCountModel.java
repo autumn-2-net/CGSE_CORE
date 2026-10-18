@@ -176,7 +176,7 @@ final class RecipeCountModel<K> implements AutoCloseable {
      * would incorrectly prove valid recycling orders impossible. Every count
      * witness still passes the independent scheduling and candidate checks.
      */
-    private void requireProduction(K target, long amount) {
+    void requireProduction(K target, long amount) {
         boolean positiveGain = BigInteger.valueOf(stock.getOrDefault(target, 0L)).compareTo(goal(target)) >= 0;
         // Unit flows decompose into paths and cycles. Omit cycles, paths that
         // export existing target stock into optional products, and matching

@@ -598,6 +598,12 @@ The public tests are under tests/core/java/org/cgse/core:
     replay and delayed returns/save-load validate the resulting physical plans.
     Unfunded stock, unbounded state domains, same-rule wear/charge, cancellation
     and tight budgets guard positive-only coverage and bounded workspace.
+  GraphViewBoundsTest: selected output-credit proposals reuse necessary material
+    bounds before local ordering. Whole selected graphs retain upstream coproduct
+    supply, external inputs, final seeds, batched configurations and forced
+    startup. Independent forward execution checks 745 feasible final markings;
+    stock changes, exact long-sized amounts, cancellation, memory refusal and
+    cross-worker continuation cutoffs cannot publish a global negative proof.
   CapturedStateSupportTest: 1200 independently scanned finite source closures,
     original entry identity/order, borrowed producer-index ownership, retained
     scanning, cancellation and tight work/memory/source limits.

@@ -643,6 +643,45 @@ trial. All evidence is retained in separate run directories. Validation was seri
 on four logical CPUs; this is a targeted comparison, not the complete corpus or
 a live-host run.
 
+2026-10-18 follow-up: necessary bounds before restricted output-view ordering
+----------------------------------------------------------------------------
+The eight expansion cost increases above contain two different paths. Four
+long-sized orders enter several restricted coproduct-credit proposals before
+the full count solver finds their original-source witness. Four mixed-tool
+orders spend their extra work in the primary small-region ordering; this change
+does not alter that path or claim to solve it.
+
+GraphOutputView now checks necessary integer material bounds on the entire
+compiled selected graph before ordering its regions. RecipeCountModel supplies
+the existing configuration relaxation and forced-production conditions; a
+propagation-only CountBounds mode omits optional row-combination searches.
+Checking one region in isolation would be unsafe because another selected
+region may produce its required coproduct. A contradiction skips only this
+restricted proposal, not canonical sources, missing previews or global proofs.
+Original outputs and physical prefixes still require independent restoration.
+
+Admission is limited to 64 recipes, 256 input/output ports and 64 seed keys.
+The continuation has at most 4096 local search-work units, including setup,
+and retains its consumed allowance when resumed on another worker. A bounded
+row/setup operation can cross the local boundary; cancellation and the parent
+request limits still apply. Refused memory or unfinished propagation proceeds
+to the existing graph solve. Workspace is released before ordering; no new
+cross-request cache, public API, host adaptation or version change is involved.
+
+Validation against frozen 4c50336d: 16 paired historical programs pass. All 44
+finite-expansion positives remain; four long-sized cases fall from 158750-158754
+to 151433-151516 search work, also below their pre-4c50336d costs. Their peak
+reservation is unchanged. The 432 ordinary and 108 forced manufacture positives
+and the 144-case longer-wear matrix have identical outcomes, work and peak
+reservation; the latter remains 72 feasible / 72 unresolved. The other four
+mixed-tool cost increases recorded above remain open. Eight focused tests,
+including 745 independent literal final markings and migrated continuations,
+pass. Offline assembly, packaged regressions, all 1478 baseline ABI entries and
+Forge-with-AE-dump artifact checks pass at 0.1.4. Local inputs, frozen baseline,
+failed early test attempt and separate comparisons are retained in the case
+registry. This is bounded relevant regression sampling, not a full corpus run
+or a live-host latency claim.
+
 Still open, with concrete implementation boundaries
 ---------------------------------------------------
 1. F1: Arbitrary unique one-way states still require explicit selected transitions.
