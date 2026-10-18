@@ -30,6 +30,31 @@ an ordinary item downstream of that cycle is expanded to the actual seed.
 An available raw escape route is expanded even if another producer cycles.
 Productive cycles may reduce seed loans while expanding their feedstocks.
 
+The rank index factors each reached recipe's input support once. Material
+nodes keep their original producer lists, while a shared recipe AND node
+owns readiness and reached positive-net outputs. A p-output/q-input recipe
+therefore retains O(p+q) incidence instead of copying q inputs p times. It
+does not discover unrelated coproducts or erase a returned tool/self-input
+enablement requirement. External supplies and excluded sources keep their
+existing boundaries.
+
+Completed sources merge later coproduct outputs by original incidence order.
+This preserves material ranks even when first-ready finite derivations depend
+on queue order. Single-output sources emit directly without a merge queue.
+An unshared sole producer lends its input list directly to material SCC
+traversal, avoiding an extra vertex on ordinary chains and simple cycles.
+SCC analysis traverses the factored graph: recipe-only components add zero
+material depth, and a component containing materials adds one. Cyclic members
+share a rank above outside feedstocks, as in the projected material graph.
+
+Discovery, readiness propagation, DFS, component extraction, outside-depth
+inspection and rank publication use saved cursors. A rank step visits at most
+64 operations before returning to its caller. This is a cooperative work
+bound, not a wall-time guarantee against GC, host key operations or scheduling.
+The extra recipe-vertex state has a cost for narrow single-output catalogs;
+wide joint producers are the intended memory/work improvement. A completed
+rank index keeps no inventory-dependent or cross-request mutable state.
+
 For a growth producer with input a, available stock s, current requirement R
 and positive net output d, the old ceil(deficit/d) count can run past the
 startup requirement plateau. Expansion also evaluates the exact breakpoint
@@ -76,6 +101,13 @@ to expansion, then interrupts work/time/memory or cancellation. It exercises
 both completed and absent root proofs, completed child publication, ordinary
 request ownership, and complete/incomplete captures without injecting proofs.
 
+RefillProducerOrderTest checks material SCCs using independent boolean
+derivability and transitive closure, preserves incidence-sensitive finite
+ranks, and enforces a linear budget on wide joint producers. It also covers
+external/excluded/raw-escape boundaries, self-input growth and returned tools,
+interruption during rank/SCC cursors, and a real one-worker scheduler where a
+small queued request must run within one bounded rank slice of a large order.
+
 Known boundaries after the refill review at 224e9172:
 
 - This pass prepends to a verified execution suffix. It does not remove
@@ -87,8 +119,7 @@ Known boundaries after the refill review at 224e9172:
 - Single-producer whole-deficit proposals do not cover all stock-funded
   source mixtures. Same-rank multi-step cycles can remain seed boundaries.
   A stopped expansion is not proof that a material has no useful producer.
-- RefillProducerOrder still repeats input dependencies across coproducts;
-  shared recipe AND nodes are a separate representation optimization.
-- Source/support scans and portions of SCC work still need finer continuation
-  cursors. Budget checks inside a loop do not bound one scheduler turn.
+- MissingMaterialExpansion's proposal source/support scans and publication
+  still need finer continuation cursors. Bounded rank/SCC steps do not make
+  the entire refill pipeline's scheduler turn bounded.
 - Public per-material boundary reasons are not introduced by this change.
