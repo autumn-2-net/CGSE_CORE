@@ -49,7 +49,7 @@ public final class GraphFallbackTest {
         check(p.patternTimes().equals(Map.of("restore",2L)),"fallback ran lossy cycle");check(p.missing().equals(Map.of("dust",8L)),p.missing());check(p.seeds().isEmpty(),"invented seed proof");verify(p);
         var grow=r("grow",Map.of("a",1L,"raw",1L),Map.of("a",2L));
         p=plan(List.of(grow),"a",10,Map.of("a",100L,"raw",100L));
-        check(p.patternTimes().isEmpty()&&p.missing().equals(Map.of("a",10L)),"cycle solver used or existing goal stock counted");verify(p);
+        check(p.patternTimes().equals(Map.of("grow",10L))&&p.missing().equals(Map.of("a",1L)),"refill must retain an unfunded cycle seed and manufacture the requested output");verify(p);
         p=plan(List.of(grow,r("linear",Map.of("raw",1L),Map.of("a",1L))),"a",10,Map.of("raw",10L));
         check(p.feasible()&&p.patternTimes().equals(Map.of("linear",10L)),"did not skip self-cycle source");verify(p);
         var tool=r("tool",Map.of("hammer",1L,"ore",1L),Map.of("hammer",1L,"p",1L));
@@ -74,7 +74,9 @@ public final class GraphFallbackTest {
         }
         List<GraphRecipe<String>> deep=new ArrayList<>();
         for(int i=0;i<5000;i++)deep.add(r("r"+i,Map.of("k"+(i+1),1L),Map.of("k"+i,1L)));
-        p=plan(deep,"k0",1,Map.of("k5000",1L));check(p.patternTimes().size()<=1024&&!p.missing().isEmpty(),"unbounded depth");verify(p);
+        var deepBudget=new PlanningBudget(0,1_000_000,16L<<20,()->false,System::nanoTime);
+        p=GraphFallback.plan(new GraphCompiler<>(deep),"k0",1,Map.of("k5000",1L),Set.of(),Map.of(),true,true,deepBudget);
+        check(p.patternTimes().size()==5000&&p.feasible(),"depth cutoff became a false missing intermediate");verify(p);check(deepBudget.reservedBytes()==0,"deep refill workspace");
         Random random=new Random(2992026);
         for(int trial=0;trial<500;trial++) {
             List<GraphRecipe<String>> recipes=new ArrayList<>();Map<String,Long> stock=new HashMap<>();

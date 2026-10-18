@@ -1,0 +1,45 @@
+Missing material expansion from verified execution requirements
+==============================================================
+
+A valid refill witness proves that its listed supplies fund an execution. It
+does not prove that every listed supply is a terminal material. The former
+forward preview could stop at a depth/alternative limit, or borrow an earlier
+input after a later sibling consumed it. Verification accepted those loans
+because they funded the word, leaving craftable intermediates in the UI.
+
+MissingMaterialExpansion refines the selected, verified witness in both main
+planning and ordinary fallback. It preserves the original execution suffix,
+recipe bindings, initial prefix requirements and final seed obligations. For a
+prepended batch of n firings, each resource's new requirement is exactly
+
+  max(input + max(0, input - output) * (n - 1), old_need - net_output * n).
+
+This sparse update retains coproduct credits, returned tools and ordering. It
+does not recursively copy the whole suffix. Counts remain BigInteger values;
+large batches use the existing compact PlanStep representation. A forced-order
+prefix must also replace any finished-target units it consumes, so existing
+target stock cannot replace the suffix's verified production credit.
+
+RefillProducerOrder indexes only the deficit's reachable producer support.
+Finite derivations from terminal supplies receive increasing ranks. Iterative
+SCC analysis ranks a remaining component above its outside feedstocks, with
+the same rank for all members of a cycle. An accepted prefix must reduce the
+selected deficit and can increase only strictly lower-ranked deficits. This
+prevents alternating loans around a cycle. A real startup seed can remain;
+an ordinary item downstream of that cycle is expanded to the actual seed.
+An available raw escape route is expanded even if another producer cycles.
+Productive cycles may reduce seed loans while expanding their feedstocks.
+
+After expansion, PlanVerification checks the funded complete word again. A
+work/time/memory exit does not publish the partially expanded bill. Existing
+main and fallback budgets remain independent and unchanged. Feasible plans
+skip this pass. Incomplete capture stays conditional: expansion does not prove
+missing recipe/state domains infeasible or claim globally minimal supplies.
+Changed plans drop stale seed-optimality and alternative-plan metadata.
+
+MissingMaterialExpansionTest independently replays primitive operations for
+shared prerequisites, returned tools, coproducts, finite escapes and cycles,
+5000-level chains, wide fan-in and randomized DAGs. It also checks forced-order
+credit, counts beyond long and interrupted-work cleanup. GraphFallbackTest
+retains exact stock, force-crafting, cycle, configuration and budget controls.
+The local player-world and historical-dump comparisons stay outside Git.

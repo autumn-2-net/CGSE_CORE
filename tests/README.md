@@ -72,6 +72,13 @@ substantially longer than `standard`. Use `--case <regex>`, `--shard 0/4`, `--mi
 
 ## Maintained historical tests
 
+`MissingMaterialExpansionTest` guards the displayed refill boundary independently
+of the original search. Primitive replay covers shared prerequisites, 5000-level
+chains, wide fan-in, cyclic seeds and finite escape routes, returned tools,
+coproducts, forced production and randomized DAGs. Exact large counts and budget
+cleanup are checked separately. Main and fallback previews use the same verified
+backward expansion; a work limit is not a terminal material.
+
 `RequestCoverageTest` keeps incomplete candidate/state domains distinct from
 complete infeasibility, including retained smaller requests and direct emission.
 `CapturedReachableTest` checks sparse executable witnesses beyond the initial
