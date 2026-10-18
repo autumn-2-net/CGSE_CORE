@@ -31,8 +31,9 @@ public final class PlanVerification<K> implements AutoCloseable {
     /** Only the exact immutable plan produced by this assembly can reuse its
      * completed fold. Other plans, including copies with changed inventory or
      * recipes, take the ordinary verification path. No cross-request cache.
-     * Ordinary state orders only need prefix feasibility; their unused gross
-     * production bookkeeping is omitted. Forced orders retain the full totals. */
+     * Ordinary state orders only need prefix feasibility. Forced orders whose
+     * verified net target gain covers the order also need no gross totals;
+     * the remaining forced orders retain the full production bookkeeping. */
     PlanVerification(GraphPlan<K> plan, PlanningBudget budget, AllocationSearch.Candidate<K> assembled) {
         try (var costs = budget.trace(PlanningCostTrace.Stage.VERIFY)) {
             if (!plan.feasible() || !plan.missing().isEmpty()) throw new IllegalArgumentException("Unverified plan");
@@ -42,7 +43,9 @@ public final class PlanVerification<K> implements AutoCloseable {
                     assembled.witness == plan.steps();
             var known = sameAssembly ? Map.of(plan.steps(), assembled.summary) : Map.<PlanStep, SequenceSummary<K>>of();
             computation = new SummaryComputation<>(plan.steps(), plan.recipes(), budget, known);
-            counts = sameAssembly && !assembled.force ? null : new PlanCountComputation(plan.steps());
+            boolean needProduction = !sameAssembly || assembled.force &&
+                    assembled.summary.delta(plan.target()).compareTo(BigInteger.valueOf(plan.amount())) < 0;
+            counts = needProduction ? new PlanCountComputation(plan.steps()) : null;
         }
     }
 

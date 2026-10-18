@@ -35,20 +35,17 @@ public final class PlanVerificationReuseTest {
                     same(reused.summary(), SequenceSummary.of(plan.steps(), plan.recipes()));
                     same(reused.summary(), independent.summary());
                     if (force) {
-                        check(reused.patternCounts().equals(independent.patternCounts()), "Lost forced counts");
-                        for (String key : reused.summary().keys())
-                            check(reused.physicalProduced(key).equals(independent.physicalProduced(key)), "Changed physical output total");
-                        check(reused.physicalProduced("catalyst").signum() == 0, "Counted returned tool as physical production");
+                        check(independent.physicalProduced("product").equals(BigInteger.valueOf(96)), "Changed standalone physical output total");
+                        check(independent.physicalProduced("catalyst").signum() == 0, "Counted returned tool as physical production");
                         try (var proof = new ForceCraftProof<>(plan, reused, Map.of("tool96", 1L), budget)) {
                             while (!proof.step()) {}
                             check(proof.proved(), "Lost forced-production proof");
                         }
-                    } else {
-                        try { reused.patternCounts(); throw new AssertionError("Invented uncomputed counts"); }
-                        catch (IllegalStateException expected) { checks++; }
-                        try { reused.physicalProduced("product"); throw new AssertionError("Invented uncomputed production"); }
-                        catch (IllegalStateException expected) { checks++; }
                     }
+                    try { reused.patternCounts(); throw new AssertionError("Computed unused counts / invented uncomputed counts"); }
+                    catch (IllegalStateException expected) { checks++; }
+                    try { reused.physicalProduced("product"); throw new AssertionError("Invented uncomputed production"); }
+                    catch (IllegalStateException expected) { checks++; }
                     check(budget.nodes() - start < standalone.nodes(), "Assembly repeated the completed fold");
                 }
                 if (!force) isolation(assembly);
@@ -56,8 +53,93 @@ public final class PlanVerificationReuseTest {
             }
             check(budget.reservedBytes() == 0, "Assembly verifier leaked");
         }
-        interrupted();
+        partialGain(); returnedGain(); wideGain(); interrupted();
         System.out.println("PlanVerificationReuseTest: assertions=" + checks);
+    }
+
+    /** A startup target can be consumed and remade. Net gain below the order
+     * must retain the original gross-production and submultiset proof. */
+    private static void partialGain() {
+        for (int kind = 0; kind < 4; kind++) {
+            var recipes = new LinkedHashMap<String, GraphRecipe<String>>(); var program = new ArrayList<PlanStep>();
+            if (kind == 0) {
+                recipes.put("start", new GraphRecipe<>("start", "start", List.of(new GraphRecipe.Slot<>("target", 1), new GraphRecipe.Slot<>("raw", 1)), Map.of("mid", 1L)));
+                recipes.put("finish", new GraphRecipe<>("finish", "finish", List.of(new GraphRecipe.Slot<>("mid", 1)), Map.of("target", 2L)));
+            } else if (kind == 3) {
+                recipes.put("gain", new GraphRecipe<>("gain", "gain", List.of(new GraphRecipe.Slot<>("target", 1, 0, true, true),
+                        new GraphRecipe.Slot<>("raw", 1)), Map.of("target", 2L)));
+            } else {
+                recipes.put("gain", new GraphRecipe<>("gain", "gain", List.of(new GraphRecipe.Slot<>("raw", 1)), Map.of("target", 1L)));
+                // The optional bonus keeps this firing through flow pruning,
+                // but cannot justify an otherwise needless target turnover.
+                if (kind == 1) recipes.put("turnover", new GraphRecipe<>("turnover", "turnover", List.of(new GraphRecipe.Slot<>("target", 1)), Map.of("target", 1L, "bonus", 1L)));
+            }
+            recipes.keySet().forEach(id -> program.add(new PlanStep.Batch(id, 1)));
+            var budget = budget();
+            try (var assembly = new AllocationSearch.Candidate<>(new PlanStep.Sequence(program), recipes, "target", 2,
+                    Map.of("target", 1L, "raw", 1L), Map.of(), Set.of(), false, true, false, budget, System.nanoTime())) {
+                while (!assembly.step()) {}
+                check(assembly.proposed != null, "Partial-gain fixture did not reach production proof");
+                check((assembly.plan != null) == (kind == 0), "Changed productive startup / needless turnover decision");
+                var plan = assembly.proposed; PlanVerifier.verify(plan);
+                try (var reused = new PlanVerification<>(plan, budget, assembly); var standalone = new PlanVerification<>(plan, budget)) {
+                    while (!reused.step()) {} while (!standalone.step()) {}
+                    check(reused.summary().delta("target").equals(BigInteger.ONE), "Partial gain was hidden");
+                    check(reused.patternCounts().equals(standalone.patternCounts()), "Skipped necessary source counts");
+                    check(reused.physicalProduced("target").equals(standalone.physicalProduced("target")), "Skipped necessary physical production");
+                    if (kind == 1) check(reused.physicalProduced("target").equals(BigInteger.TWO) && reused.patternCounts().containsKey("turnover"),
+                            "Pruning hid the gross-output / optional-coproduct counterexample");
+                    try (var proof = new ForceCraftProof<>(plan, reused, Map.of(), budget)) {
+                        while (!proof.step()) {}
+                        check(proof.proved() == (kind == 0), "Returned stock or needless turnover discharged force crafting");
+                    }
+                }
+            }
+            check(budget.reservedBytes() == 0, "Partial-gain proof leaked");
+        }
+    }
+
+    private static void returnedGain() {
+        var recipe = new GraphRecipe<>("grow", "grow", List.of(new GraphRecipe.Slot<>("raw", 1),
+                new GraphRecipe.Slot<>("target", 1, 1, true, true)), Map.of("target", 3L));
+        var budget = budget();
+        try (var assembly = new AllocationSearch.Candidate<>(new PlanStep.Batch("grow", 1), Map.of("grow", recipe),
+                "target", 2, Map.of("raw", 1L, "target", 1L), Map.of(), Set.of(), false, true, false, budget, System.nanoTime())) {
+            while (!assembly.step()) {}
+            check(assembly.plan != null, "Returned target hid two fresh outputs");
+            try (var verified = new PlanVerification<>(assembly.plan, budget, assembly);
+                 var standalone = new PlanVerification<>(assembly.plan, budget)) {
+                while (!verified.step()) {} while (!standalone.step()) {}
+                check(verified.summary().delta("target").equals(BigInteger.TWO) && standalone.physicalProduced("target").equals(BigInteger.TWO),
+                        "Returned target entered the net-production certificate");
+                try (var proof = new ForceCraftProof<>(assembly.plan, verified, Map.of(), budget)) {
+                    while (!proof.step()) {}
+                    check(proof.proved(), "Exact net production unnecessarily required gross metadata");
+                }
+            }
+        }
+        check(budget.reservedBytes() == 0, "Returned-target proof leaked");
+    }
+
+    /** Net gain can exceed long even while the requested quantity and initial
+     * physical stock fit. The proof must neither clip nor require counting. */
+    private static void wideGain() {
+        var recipe = new GraphRecipe<>("wide", "wide", List.of(new GraphRecipe.Slot<>("raw", 1)), Map.of("target", 2L));
+        var budget = budget();
+        try (var assembly = new AllocationSearch.Candidate<>(new PlanStep.Batch("wide", Long.MAX_VALUE), Map.of("wide", recipe),
+                "target", Long.MAX_VALUE, Map.of("raw", Long.MAX_VALUE), Map.of(), Set.of(), false, true, false, budget, System.nanoTime())) {
+            while (!assembly.step()) {}
+            check(assembly.plan != null, "Wide net gain was clipped");
+            try (var verified = new PlanVerification<>(assembly.plan, budget, assembly)) {
+                while (!verified.step()) {}
+                check(verified.summary().delta("target").equals(BigInteger.valueOf(Long.MAX_VALUE).multiply(BigInteger.TWO)), "Wrong exact wide gain");
+                try (var proof = new ForceCraftProof<>(assembly.plan, verified, Map.of(), budget)) {
+                    while (!proof.step()) {}
+                    check(proof.proved(), "Wide exact gain required gross counts");
+                }
+            }
+        }
+        check(budget.reservedBytes() == 0, "Wide net proof leaked");
     }
 
     private static void isolation(AllocationSearch.Candidate<String> assembly) {

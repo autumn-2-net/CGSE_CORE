@@ -578,7 +578,14 @@ The public tests are under tests/core/java/org/cgse/core:
     wide-pool exclusion, invalid algebra, bounded work and cancellation.
   PlanVerificationReuseTest: exact assembly summary reuse against independent
     recomputation, modified-plan isolation, required prefixes/goals/seeds,
-    full forced-production counts, returned-tool exclusion and cancellation.
+    sufficient net-production proofs, full partial-gain production counts,
+    target turnover/optional coproducts, returned-target exclusion, wide exact
+    gains and cancellation.
+  CapturedStateForcedWearTest: 108 forced manufactured-tool/wear positives,
+    stocked order targets, twelve source/slot/stock orders, original-source
+    counts and physical replay, delayed returns/reload and cancellation during
+    final verification. Another 48 longer literal-feasible cases remain open;
+    their local-limit safety checks are not counted as positive passes.
   CapturedStateExpansionTest: omitted cross-rule state cycles, source/slot/stock
     permutations, long-sized orders, multiple physical tools, mixed/indivisible
     slots, manufactured tools, exact seeds and forced/preserved requests. Source

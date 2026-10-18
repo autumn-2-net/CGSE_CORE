@@ -521,6 +521,64 @@ pass; the engine now contains 757 classes. Version remains 0.1.4. Testing was
 serial on four logical CPUs, targeted to these paths rather than a full corpus
 or a new live-host run. No GTL adapter changes are required by this increment.
 
+2026-10-18 sufficient net-production proof before gross bookkeeping
+-------------------------------------------------------------------
+The ordinary 321-use wear chain above still failed when forced fresh production
+was requested, even though every physical firing and prefix was already restored
+and funded. A frozen 4f3d3957 trace exhausted the trial while counting its final
+program. The completed exact summary already had enough net target gain to prove
+the production obligation; only the preparation order prevented using that fact.
+
+For a target, let I be a recipe's total input, R its reusable returned input,
+and O its declared output. GraphRecipe enforces 0 <= R <= I and physical output
+P = O - R, so net gain O - I = P - (I - R) <= P. Nonnegative execution counts
+and repetitions preserve this inequality. A verified net gain at least equal
+to the order proves enough fresh production without counting gross outputs.
+This is the existing sufficient branch of ForceCraftProof, now checked before
+the gross-output accessor. It does not strengthen the necessary net-gain bound.
+
+Only the exact completed assembly can omit that bookkeeping in the state path.
+Its target, seeds and every initial prefix still pass final verification before
+the production proof or publication. Public verification and changed/copied
+plans retain their full behavior. Forced candidates with smaller positive net
+gain still compute all source counts and gross outputs, then run the original
+startup/submultiset proof. This preserves valid target-seed consumption while
+rejecting mere target turnover, reusable returns or optional coproduct excuses.
+
+CapturedStateForcedWearTest preserves 108 positives over n=7/15/31, cohorts
+2/3/16 and twelve source/slot/stock orders. Every forced request already has
+its whole goal in stock, so literal original-source counts and physical replay
+must establish fresh manufacture. A long witness also executes with delayed
+returns and persistence. Cancellation during its retained final verifier cannot
+publish the plan. PlanVerificationReuseTest checks partial-gain startup, needless
+turnover with an optional coproduct, reusable target returns, independent full
+verification, and gain exceeding long while the requested amount still fits.
+
+The broader 96-case ordinary/forced probe improves from 36/96 to 48/96 without
+changing the request, manufacturing-trial or restoration allowances. Its 48
+longer n=47/63 cases remain explicitly unresolved, with literal feasible source
+witnesses preserved separately. Two forced traces restore 469 physical firings
+at 8167 restoration work before the 8192 local limit, versus the required 484
+or 644 firings. They never reach the final production test. This distinguishes
+remaining restoration cost from the production-bookkeeping issue fixed here.
+Original inputs, baseline binaries, traces, unsuccessful test-harness runs and
+separate results are registered under state-forced-wear-20261018.
+
+Validation against frozen 4f3d3957: all sixteen selected historical programs
+pass with identical reports. The full twelve-order forced matrix improves from
+72/108 to 108/108, retaining all prior positives with 0.96-2.39% less charged
+search work and no higher peak budget reservation. The 432 ordinary manufacture
+records have identical results, work and reservations. The strengthened final
+verification test passes 467 assertions from the packaged library, including
+the optional-coproduct turnover that survives flow pruning. These are targeted
+comparisons, not a full corpus, process-memory or live-host performance result.
+
+Offline assembly, the Forge mod with AE dump, sources/checksums and all 1478
+baseline ABI entries pass. The engine still has 757 classes and version 0.1.4;
+no public API, snapshot, adapter or budget change is involved. Heavy validation
+was serial on four logical CPUs. The 48 longer boundaries remain registered
+and separately reported by the regression, for further restoration work.
+
 Still open, with concrete implementation boundaries
 ---------------------------------------------------
 1. F1: Arbitrary unique one-way states still require explicit selected transitions.
