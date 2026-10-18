@@ -1,7 +1,7 @@
 State-model review follow-up (2026-10-18)
 =======================================
-Review baseline: 5fb82e52. Inventory checked through 7b124212 and the
-equal-size whole-cohort extension described below. Earlier case reports retain
+Review baseline: 5fb82e52. Inventory checked through 02ba4119 and the
+funded stock-support extension described below. Earlier case reports retain
 their original versions and results; they are not current full-suite verdicts.
 
 Implemented portions of the review
@@ -322,10 +322,10 @@ below; a subsequent oracle generator incorrectly constructed zero-count supplies
 and was corrected before the successful focused run. Neither partial run is
 counted as a completed regression.
 
-Newly reproduced, still open: omitted activation with stock remainders
---------------------------------------------------------------------
+Prior F2 gap: omitted activation with stock remainders
+----------------------------------------------------
 Increasing the q=3,n=2 stock to a:5,b:8,c:5 keeps the literal a:3,b:6,c:3 witness
-feasible. Nevertheless, both 7b124212 and this extension return UNKNOWN for all
+feasible. Nevertheless, both 7b124212 and 02ba4119 return UNKNOWN for all
 twelve order variants. The diagnostic trace activates a:5,b:7,c:0 for warm's
 twelve tools. Although c exists in original stock, restoration only owns a/b.
 The first pair leaves b:4; the second spends a:3, leaving a:2 for the later read
@@ -340,6 +340,75 @@ complete-coverage proof was emitted. These failures are not passing feasibility
 oracles and are not included among the 318 positives. Recovery should try funded
 alternate activation supports before strengthening the failed rule's entity
 count; replay must still verify the original physical/source constraints.
+
+Follow-up F2: funded stock support and retained choice feedback
+-------------------------------------------------------------
+The restorer can now try a larger funded initial tool support once after its
+ordinary choice feedback fails. For each already captured activation key, it
+subtracts every selected activation and all gross ordinary input consumption
+from actual initial stock. Only a positive remainder can join the isolated
+physical pool. This deliberately conservative rule also excludes external-only
+and merely manufacturable candidates. Counts for original sources do not change.
+
+The parent's original failed prefix and matching explanation remain retained.
+A separate replay owns its physical inventory, assembled program and verifier;
+failure returns to the parent's ordinary order/count recovery. Its copied choice
+preferences use the original lifetime, and do not mutate or close the parent.
+Adding stock can expose a different later failure, so the replay can compose
+existing choice feedback with the new support. Quantitative wear preferences
+already witnessed on the old support are retained for this new attempt even
+after ordinary recovery has cleared its active cost bias.
+
+Consumed-return tests expose another tie: using b in both u and v is locally
+cheap but leaves too little b for a later v. One secondary pass uses witnessed
+cross-rule resource loss to break such ties below already failed-rule edge
+priorities. It neither reserves entities nor learns an infeasibility condition.
+Every success still passes original source/physical execution and final-goal
+verification, including force crafting and exact final seeds.
+
+This is bounded by 128 activation keys, 128 sources/selected recipes, 32 families
+and 2048 selected input ports. Discovery uses at most 2048 work or one eighth of
+remaining choice work. The replay uses at most half the remaining choice/arm
+allowance, capped at 16384; speculative restoration has an 8192 cap, with the
+rest reserved for finishing assembly/verification of a restored physical word.
+Its single secondary pass uses at most 1024 or one eighth of remaining choice
+work. The original 32768/one-sixteenth choice lifetime is never renewed.
+
+For q=2/3/16, n=1/2/7/31 and twelve source/slot/stock orders, the extended stock
+family improves from 54/144 to 144/144 in both direct and public planning. The
+original 54 positives keep identical search work, compilation work and peak
+budget reservations. These counters are not process-memory or timing guarantees.
+The new regression includes 296 positive variants and independent source/physical
+checks, plus ordinary-material exclusion, invalid final seeds, isolated failure,
+budget/memory limits, cancellation, worker handoff and delayed returns/save-load.
+
+Validation: all 43 historical state/allocation/runtime/metrics programs pass on
+both the frozen 02ba4119 library and the new code. Forty-one print identical
+reports. The concurrent source-cache assertion count varies with observed
+snapshots; eight additional JVM runs per version reproduce both 8155 and 8162
+work for the low-budget entity case, confirming that its seven-work variation
+already exists. All four focused tests also pass from the packaged library.
+Gradle assemble, the Forge mod with AE dump, sources/checksums and all 1478
+baseline ABI entries pass. Only CapturedStatePlanning and StateChoiceRepair
+change among the same 755 engine classes. Version remains 0.1.4; no host adapter
+or cache-budget change is needed. These are serial four-CPU targeted checks,
+not a full corpus or live-host run. Intermediate failures and corrected test
+diagnostic observation remain archived separately.
+
+New open boundary: omission of a manufacturing source
+----------------------------------------------------
+The q=3,n=2 stock a:5,b:8,metal:1 still has a literal witness: build c:3 from
+metal, warm a:3,b:6,c:3, then use c for u, b for v and a for the final reads.
+Extra a/b stock can let the capacity proposal skip building c. The new replay
+cannot activate a c that does not exist in initial stock. The twelve source/
+slot/stock permutations are kept as expected-feasible pending cases, separate
+from positive pass counts. All twelve remain UNKNOWN on both 02ba4119 and the
+new engine; the new optional attempt adds 594-786 search work (at most 0.217%)
+on these failures. Their safety checks reject global infeasibility or
+complete-coverage claims, but do not claim to solve them. A subsequent repair
+needs to choose another funded manufacturing/count support, not just enlarge
+the initial physical pool. Local original inputs and partial runs are registered
+under state-activation-stock-20261018.
 
 Still open, with concrete implementation boundaries
 ---------------------------------------------------

@@ -170,6 +170,33 @@ choice recovery, covered by the original 32768/one-sixteenth lifetime and the
 enclosing arm's allowance; it never renews or borrows cache budget. Ordinary
 choice/order recovery and the existing quantitative-bias cleanup remain intact.
 
+An auxiliary proposal can omit a useful initial tool key even when more stock
+exists. After ordinary choice feedback fails, one isolated stock-support replay
+may add funded surplus tools. It subtracts all selected activations and gross
+ordinary inputs from captured initial stock before claiming any surplus. It never
+creates stock from a declared state, an external supply or a possible producer.
+The original source counts and execution word remain fixed; exact assembly and
+verification still enforce actual input funding, final seeds and force crafting.
+
+The replay owns separate physical pools, choices and verification state while
+retaining the parent's failed prefix and matching explanation. Failure resumes
+that original continuation. Choice feedback is copied with its original lifetime,
+including previously witnessed quantitative wear preferences. New failures may
+adjust the isolated choices; one bounded secondary pass also considers observed
+cross-rule resource loss, below existing failed-rule edge priorities. This can
+avoid spending a tool through one slot when another slot will need it later.
+
+Admission allows at most 128 activation keys, 128 sources/selected recipes,
+32 families and 2048 selected input ports. Surplus discovery has at most 2048
+work or one eighth of remaining choice work. The replay receives at most half
+the remaining choice/arm allowance, capped at 16384; speculative restoration
+stops at 8192, while an assembled physical word can finish verification within
+that reserved share. Secondary feedback is capped at 1024 or one eighth of
+remaining choice work. No allowance is renewed and cache budgets are unchanged.
+This covers initial-stock support only. Choosing an omitted tool-manufacturing
+source still requires a different count/support proposal; a local failure is
+never evidence of global infeasibility.
+
 When an already restored transition disables another rule's physical eligibility
 or reduces its guaranteed uses, the restorer can retain the proposal's exact
 counts and try other execution words before requesting more entities. A single
@@ -513,6 +540,12 @@ The public tests are under tests/core/java/org/cgse/core:
   StateEntityWholeCostTest: 1600 literal whole-key assignment oracles, physical
     remainders, fragmented stock, unequal/mixed-size exclusion, long-sized
     cohorts/prices, optional memory/work limits and cancellation cleanup.
+  CapturedStateActivationStockTest: 296 positive stock-surplus variants,
+    original-source/physical replay, compound qualitative/quantitative choices,
+    ordinary input exclusion, final-seed failure, continuation retention,
+    bounded work/memory, cancellation, worker handoff and delayed returns.
+    Twelve separately reported known-feasible manufacturing cases remain open;
+    their assertions guard proof scope and are not passing feasibility oracles.
   CapturedStateExpansionTest: omitted cross-rule state cycles, source/slot/stock
     permutations, long-sized orders, multiple physical tools, mixed/indivisible
     slots, manufactured tools, exact seeds and forced/preserved requests. Source

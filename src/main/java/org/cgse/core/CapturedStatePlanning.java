@@ -83,6 +83,12 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private StateEntityAllocation<K> allocation;
     private StateEntityMatching<K> matching;
     private StateChoiceRepair<K> choiceRepair;
+    private CapturedStatePlanning<K> activationReplay;
+    private StateEntityMatching<K> replayFailure;
+    private StateFamily<K> replayFamily;
+    private GraphRecipe<Key<K>> replayBlocked;
+    private Map<String, BigInteger> replayAdditional;
+    private boolean activationTried, replayFragmented, replayOnly, supportFeedbackTried;
     private int choiceCandidates;
     private StateScheduleRepair<Key<K>> orderRepair;
     private StateFamily<K> orderFailure;
@@ -141,6 +147,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             budget.checkpoint();
             budget.phase(!prepared ? PlanningBudget.Phase.BUILD : assembly == null ? PlanningBudget.Phase.SOLVE : PlanningBudget.Phase.VERIFY);
             if (budget.nodes() - workStarted >= allowance) return stop(Reason.LOCAL_WORK_LIMIT);
+            // A restored physical word may finish assembly/verification within
+            // its reserved share, while speculative restoration keeps a short cap.
+            if (replayOnly && assembly == null && budget.nodes() - workStarted >= 8192) return stop(Reason.LOCAL_WORK_LIMIT);
             if (!captured) capture();
             else if (!prepared) prepare();
             else if (expansion != null) {
@@ -159,6 +168,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                     else { proposalMemory = memory; startRestoration(proposed.steps()); }
                 }
             }
+            else if (activationReplay != null) restoreActivationReplay();
             else if (searchingOrder) reschedule();
             else if (verification != null) verify();
             else if (assembly != null) {
@@ -192,6 +202,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     }
 
     private boolean expandStateBoundary(Reason reason) {
+        if (replayOnly) return false;
         // Capacity activation omits exact returned states as ordinary material,
         // final seeds and newly eligible rules. Retry a fresh finite capture;
         // its negative results cannot prove anything about the original domain.
@@ -817,15 +828,157 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             clearSelection();
             if (intactRecipe != null && advanceActivations(family, intactRecipe)) return;
             if (done) return;
+            if (replayOnly) {
+                if (!repairChoices(family) && !repairSupportChoices()) stop(Reason.INSUFFICIENT_DISTINCT_ENTITIES);
+                return;
+            }
             if (repairChoices(family)) return;
-            if (repairOrder(family, intactRecipe == null ? proposed.recipes().get(cursor.current().recipe()) : intactRecipe)) return;
-            if (failed != null && intactRecipe != null && refineEntityUnion(failed, intactRecipe)) return;
-            // The owned entity total already fits. Reducing per-entity lifetime
-            // cannot repair this firing's whole-key partition; try another
-            // activation first, retaining the actual wear capacities.
-            if (!done && fragmented && refineEntityCount(family)) return;
-            if (!done) refineEntities(family);
+            if (repairActivations()) {
+                replayFamily = family; replayBlocked = intactRecipe; replayFragmented = fragmented;
+                replayFailure = failed; failed = null; return;
+            }
+            finishAllocationFailure(family, intactRecipe, failed, fragmented);
         } finally { if (failed != null) failed.close(); }
+    }
+
+    private void finishAllocationFailure(StateFamily<K> family, GraphRecipe<Key<K>> intactRecipe,
+                                         StateEntityMatching<K> failed, boolean fragmented) {
+        if (repairOrder(family, intactRecipe == null ? proposed.recipes().get(cursor.current().recipe()) : intactRecipe)) return;
+        if (failed != null && intactRecipe != null && refineEntityUnion(failed, intactRecipe)) return;
+        // The owned entity total already fits. Reducing per-entity lifetime
+        // cannot repair this firing's whole-key partition; try another
+        // activation first, retaining the actual wear capacities.
+        if (!done && fragmented && refineEntityCount(family)) return;
+        if (!done) refineEntities(family);
+    }
+
+    /** One positive replay with unused, physically funded initial tools. The
+     * parent's failed prefix stays intact so refusal/failure resumes its exact
+     * choice/order/count path. No auxiliary count or negative proof is changed. */
+    private boolean repairActivations() {
+        if (activationTried || choiceRepair == null || !choiceRepair.active() || !shared() ||
+                activations.size() > 128 || families.size() > 32 || sources.size() > 128 || proposed.patternTimesExact().size() > 128) return false;
+        activationTried = true;
+        long limit = Math.min(2048, choiceRepair.remainingWork() / 8), start = budget.nodes();
+        if (limit < 128) return false;
+        long bytes = 512L + 256L * activations.size() + 128L * proposed.patternTimesExact().size();
+        if (!budget.tryReserve(bytes)) return false;
+        try {
+            var spare = new LinkedHashMap<K, BigInteger>();
+            var used = new LinkedHashSet<String>();
+            for (var activating : activations.values()) {
+                if (budget.nodes() - start >= limit) return false;
+                budget.check(); long count = stock.getOrDefault(activating.state(), 0L);
+                if (count > 0 && !external.contains(activating.state())) spare.put(activating.state(), BigInteger.valueOf(count));
+            }
+            int ports = 0;
+            for (var count : proposed.patternTimesExact().entrySet()) {
+                if (count.getValue().signum() <= 0) continue;
+                var recipe = proposed.recipes().get(count.getKey());
+                for (var slot : recipe.slots()) {
+                    if (++ports > 2048 || budget.nodes() - start >= limit) return false;
+                    budget.check();
+                    if (slot.key().family() != null) { if (!slot.key().entity()) used.add(slot.key().family()); }
+                    else if (spare.containsKey(slot.key().physical())) spare.compute(slot.key().physical(), (key, value) ->
+                            value.subtract(count.getValue().multiply(BigInteger.valueOf(slot.amount()))));
+                }
+            }
+            var additional = new LinkedHashMap<String, BigInteger>();
+            for (var activating : activations.entrySet()) {
+                if (budget.nodes() - start >= limit) return false;
+                budget.check();
+                var count = spare.getOrDefault(activating.getValue().state(), BigInteger.ZERO);
+                if (count.signum() <= 0) continue;
+                for (String rule : activating.getValue().families()) {
+                    if (budget.nodes() - start >= limit) return false;
+                    budget.check();
+                    if (used.contains(rule)) { additional.put(activating.getKey(), count); break; }
+                }
+            }
+            if (additional.isEmpty()) return false;
+            // Gross ordinary inputs and all selected activations were deducted
+            // above, even when later returned. This conservative surplus cannot
+            // steal a selected initial input; final seeds still need verification.
+            long remaining = Math.min(choiceRepair.remainingWork(), allowance - (budget.nodes() - workStarted));
+            if (remaining < 2048) return false;
+            var replay = new CapturedStatePlanning<>(entries, target, amount, stock, external, seeds, preserve, force, budget,
+                    Math.min(16_384, remaining / 2));
+            boolean retained = false;
+            try {
+                if (replay.done || !replay.reserve(1024L + 192L * families.size() + 224L * (sources.size() + activations.size()) + 160L * ports)) return false;
+                replay.replayOnly = true; replay.choiceRepair = choiceRepair.fork();
+                if (replay.choiceRepair == null) return false;
+                replay.captured = true; replay.prepared = true; replay.captureStock = null; replay.captureExternal = null;
+                replay.families.putAll(families); replay.sources.putAll(sources); replay.activations.putAll(activations);
+                replay.proposed = proposed; replay.replayAdditional = new LinkedHashMap<>(additional);
+                replay.restoreInitialFree();
+                replay.proposalMemory = replay.memory;
+                replay.startRestoration(restorationWord);
+                if (replay.done) return false;
+                finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+                activationReplay = replay; retained = true;
+                budget.note("candidate_state_stock", "replay; keys=" + additional.size() + "; same_source_counts=true; negative_proofs=false");
+                return true;
+            } finally { if (!retained) replay.close(); }
+        } finally { budget.release(bytes); }
+    }
+
+    private void restoreActivationReplay() {
+        if (!activationReplay.step()) return;
+        var plan = activationReplay.result();
+        activationReplay.close(); activationReplay = null;
+        var failed = replayFailure; replayFailure = null;
+        var family = replayFamily; var blocked = replayBlocked;
+        replayFamily = null; replayBlocked = null;
+        try {
+            if (plan != null) {
+                result = plan; done = true; outcome = new Outcome(Status.VERIFIED, Reason.NONE);
+                budget.note("candidate_state_stock", "verified; negative_proofs=false");
+            } else {
+                budget.note("candidate_state_stock", "declined; original_prefix_retained=true; negative_proofs=false");
+                finishAllocationFailure(family, blocked, failed, replayFragmented);
+            }
+        } finally { if (failed != null) failed.close(); }
+    }
+
+    /** An extra cohort may expose contention before the next rule actually
+     * fails. Observed cross-rule losses may break ties below the already failed
+     * rules, in one bounded trial of this isolated stock replay. */
+    private boolean repairSupportChoices() {
+        if (supportFeedbackTried || choiceRepair == null || !choiceRepair.active()) return false;
+        supportFeedbackTried = true;
+        long limit = Math.min(1024, choiceRepair.remainingWork() / 8), start = budget.nodes();
+        if (limit < 128) return false;
+        boolean changed = false;
+        outer: for (var transition : transitions.keySet()) {
+            var recipe = proposed.recipes().get(transition.variant());
+            for (var original : recipe.slots()) {
+                if (budget.nodes() - start >= limit) break outer;
+                budget.check();
+                if (original.key().family() == null || original.key().entity()) continue;
+                var used = families.get(original.key().family());
+                for (var actual : transition.slots()) {
+                    if (budget.nodes() - start >= limit) break outer;
+                    budget.check();
+                    if (actual.inputSlot() != original.inputSlot()) continue;
+                    K after = used.nominalAfterOne(actual.key());
+                    for (var other : families.values()) {
+                        // protectSecondary scans at most eight existing rules.
+                        if (budget.nodes() - start + 10 >= limit) break outer;
+                        budget.check();
+                        if (other.id().equals(used.id())) continue;
+                        long before = other.accepts(actual.key()) ? other.capacity(actual.key()) : 0;
+                        long retained = after != null && other.accepts(after) ? other.capacity(after) : 0;
+                        if (before > retained) changed |= choiceRepair.protectSecondary(other);
+                    }
+                }
+            }
+        }
+        if (!changed) return false;
+        finishObservation(PlanningBudget.CandidateOutcome.INCONCLUSIVE);
+        resetRestoration(); startRestoration(restorationWord); choiceCandidates++;
+        budget.note("candidate_state_stock", "secondary_resource_choices; same_source_counts=true; negative_proofs=false");
+        return true;
     }
 
     /** Request an additional entity eligible for any deficient or fragmented slot,
@@ -940,13 +1093,16 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         boolean quantified = false;
         if (!choiceRepair.protect(family)) {
             if (families.size() > 8 || !choiceRepair.canRefineCosts()) return false;
-            long bytes = 384L + 48L * proposed.patternTimesExact().size();
+            long bytes = 384L + 48L * (proposed.patternTimesExact().size() + (replayAdditional == null ? 0 : replayAdditional.size()));
             if (!budget.tryReserve(bytes)) return false;
             try {
                 var states = new ArrayList<K>();
                 for (String id : proposed.patternTimesExact().keySet()) {
                     budget.check(); var activating = activations.get(proposed.recipes().get(id).binding());
                     if (activating != null) states.add(activating.state());
+                }
+                if (replayAdditional != null) for (String id : replayAdditional.keySet()) {
+                    budget.check(); states.add(activations.get(id).state());
                 }
                 quantified = choiceRepair.refineCosts(family, new ArrayList<>(families.values()), states);
             } finally { budget.release(bytes); }
@@ -1120,6 +1276,13 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (!unclaimed.containsKey(binding) && !reserve(224)) return;
             unclaimed.merge(binding, value.getValue(), BigInteger::add);
         }
+        if (replayAdditional != null) for (var value : replayAdditional.entrySet()) {
+            budget.check();
+            if (!reserve(320)) return;
+            var activating = activations.get(value.getKey());
+            unclaimed.merge(value.getKey(), value.getValue(), BigInteger::add);
+            if (!claim(value.getKey(), activating, value.getValue())) { stop(Reason.ACTIVATION_OWNERSHIP); return; }
+        }
         observation = budget.observeCandidate(PlanningBudget.CandidateOrigin.ALLOCATION);
     }
 
@@ -1262,8 +1425,24 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         clearLoop(); declinedLoop = null;
         toolGroups.clear(); pools.clear(); restored.clear(); transitions.clear(); program.clear(); free.clear(); unclaimed.clear(); advanced.clear();
         budget.release(memory - proposalMemory); memory = proposalMemory;
-        for (var value : stock.entrySet()) { budget.check(); free.put(value.getKey(), BigInteger.valueOf(value.getValue())); }
+        restoreInitialFree();
         restoredFirings = BigInteger.ZERO; programNodes = 1;
+    }
+
+    private void restoreInitialFree() {
+        if (!replayOnly) {
+            for (var value : stock.entrySet()) { budget.check(); free.put(value.getKey(), BigInteger.valueOf(value.getValue())); }
+            return;
+        }
+        // A bounded replay must not scan/copy the unrelated captured stock.
+        for (var count : proposed.patternTimesExact().entrySet()) for (var slot : proposed.recipes().get(count.getKey()).slots()) {
+            budget.check();
+            if (slot.key().family() == null) free.put(slot.key().physical(), BigInteger.valueOf(stock.getOrDefault(slot.key().physical(), 0L)));
+        }
+        for (String id : replayAdditional.keySet()) {
+            budget.check(); K state = activations.get(id).state();
+            free.put(state, BigInteger.valueOf(stock.getOrDefault(state, 0L)));
+        }
     }
 
     private boolean append(String id, long runs, long repetitions) {
@@ -1387,6 +1566,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
 
     @Override public void close() {
         finishObservation(PlanningBudget.CandidateOutcome.ABANDONED);
+        if (activationReplay != null) activationReplay.close(); activationReplay = null;
+        if (replayFailure != null) replayFailure.close(); replayFailure = null;
+        replayFamily = null; replayBlocked = null;
         clearSelection();
         clearCycle();
         clearLoop(); declinedLoop = null;
@@ -1399,6 +1581,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (verification != null) verification.close(); verification = null;
         if (assembly != null) assembly.close(); assembly = null;
         cursor = null; restorationWord = null; proposed = null;
+        replayAdditional = null;
         captureStock = null; captureExternal = null;
         families.clear(); entityFamilies.clear(); known.clear(); activationStates = List.of(); auxiliary.clear(); sources.clear(); activations.clear(); pools.clear();
         free.clear(); restored.clear(); transitions.clear(); program.clear(); toolGroups.clear(); capacityCaps.clear(); entityFloors.clear(); entityUnionFloors.clear(); unclaimed.clear(); advanced.clear();

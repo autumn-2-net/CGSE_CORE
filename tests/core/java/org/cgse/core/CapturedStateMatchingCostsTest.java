@@ -98,7 +98,7 @@ public final class CapturedStateMatchingCostsTest {
         stock.put("raw", 1L); return new Fixture(List.copyOf(entries), stock, n, mode, cohort, amount, manufacture);
     }
 
-    private static void oracle(Fixture f) {
+    static void oracle(Fixture f) {
         var inventory = exact(f.stock()); long pairs = f.mode() == 2 ? 1 : f.n();
         String a = f.mode() == 2 ? "a:" + (f.n() + 1L) * 10 : "a", b = f.mode() == 2 ? "b:" + (f.n() + 1L) : "b";
         if (f.manufactured()) { take(inventory, "metal", 1); add(inventory, "c", Math.multiplyExact(f.mode() == 1 ? f.n() : 1, f.cohort())); }
@@ -116,7 +116,7 @@ public final class CapturedStateMatchingCostsTest {
         check(inventory.get("product").compareTo(BigInteger.valueOf(f.amount())) >= 0, "Invalid literal oracle");
     }
 
-    private static void verify(GraphPlan<String> plan, Fixture f, Map<String, Long> seeds) {
+    static void verify(GraphPlan<String> plan, Fixture f, Map<String, Long> seeds) {
         PlanVerifier.verify(plan); PlanVerifier.verifyRuntimeInventory(plan); var inventory = new LinkedHashMap<String, BigInteger>();
         plan.initialExact().forEach((key, amount) -> { check(amount.signum() >= 0 && amount.compareTo(BigInteger.valueOf(f.stock().getOrDefault(key, 0L))) <= 0, "Invented initial tool"); inventory.put(key, amount); });
         var counts = new LinkedHashMap<String, BigInteger>(); plan.patternTimesExact().forEach((id, count) -> counts.merge(plan.recipes().get(id).binding(), count, BigInteger::add));

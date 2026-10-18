@@ -18,7 +18,7 @@ final class StateChoiceRepair<K> implements AutoCloseable {
     private final long started, allowance;
     private final List<StateFamily<K>> protectedRules = new ArrayList<>();
     private final Map<Choice<K>, Integer> scores = new HashMap<>();
-    private StateFamily<K> costRule;
+    private StateFamily<K> costRule, witnessedCostRule;
     private boolean costTried;
     private long memory = 512;
 
@@ -28,21 +28,49 @@ final class StateChoiceRepair<K> implements AutoCloseable {
     }
 
     private StateChoiceRepair(PlanningBudget budget) {
-        this.budget = budget; started = budget.nodes();
-        allowance = Math.min(32_768, budget.remainingWork() / 16);
+        this(budget, budget.nodes(), Math.min(32_768, budget.remainingWork() / 16));
+    }
+
+    private StateChoiceRepair(PlanningBudget budget, long started, long allowance) {
+        this.budget = budget; this.started = started; this.allowance = allowance;
     }
 
     boolean active() { return memory > 0 && budget.nodes() - started < allowance; }
 
+    long remainingWork() { return memory == 0 ? 0 : Math.max(0, allowance - (budget.nodes() - started)); }
+
+    /** Isolated preferences for a stock-support replay, sharing the original
+     * lifetime. Failed feedback must not mutate the parent's retained prefix. */
+    StateChoiceRepair<K> fork() {
+        long bytes = 512L + 128L * protectedRules.size();
+        if (!active() || !budget.tryReserve(bytes)) return null;
+        try {
+            var copy = new StateChoiceRepair<K>(budget, started, allowance);
+            copy.memory = bytes; copy.protectedRules.addAll(protectedRules);
+            // A quantified preference that failed on the old support may work
+            // with new physical tools. Reapply it without renewing that trial.
+            copy.costRule = costRule != null ? costRule : witnessedCostRule;
+            copy.witnessedCostRule = witnessedCostRule; copy.costTried = costTried;
+            return copy;
+        } catch (RuntimeException | Error failure) { budget.release(bytes); throw failure; }
+    }
+
     /** The lifetime allowance includes subsequent restoration and verification. */
     boolean protect(StateFamily<K> failed) {
+        return protect(failed, false);
+    }
+
+    boolean protectSecondary(StateFamily<K> affected) { return protect(affected, true); }
+
+    private boolean protect(StateFamily<K> failed, boolean secondary) {
         budget.checkpoint();
         if (!active() || protectedRules.size() == 8) return false;
         for (var rule : protectedRules) {
             budget.check(); if (rule.id().equals(failed.id())) return false;
         }
         if (!budget.tryReserve(128)) return false;
-        memory += 128; protectedRules.add(0, failed);
+        memory += 128;
+        if (secondary) protectedRules.add(failed); else protectedRules.add(0, failed);
         long bytes = 160L * scores.size(); scores.clear(); memory -= bytes; budget.release(bytes);
         return true;
     }
@@ -103,7 +131,7 @@ final class StateChoiceRepair<K> implements AutoCloseable {
                     long loss = loss(failed, rule, state);
                     Long previous = seen.putIfAbsent(category, loss);
                     if (previous != null && previous.longValue() != loss) {
-                        costRule = failed; return true;
+                        costRule = failed; witnessedCostRule = failed; return true;
                     }
                 }
             }
@@ -133,6 +161,6 @@ final class StateChoiceRepair<K> implements AutoCloseable {
     }
 
     @Override public void close() {
-        protectedRules.clear(); scores.clear(); costRule = null; budget.release(memory); memory = 0;
+        protectedRules.clear(); scores.clear(); costRule = null; witnessedCostRule = null; budget.release(memory); memory = 0;
     }
 }

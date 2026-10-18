@@ -217,6 +217,17 @@ Remainders cannot fund fractional cohorts. Unequal whole sizes and mixtures of
 whole and split slots stay on the original path; long-sized cohorts, declined
 workspace, bounded work, constructor failure and cancellation preserve ownership.
 
+`CapturedStateActivationStockTest` keeps 296 positive variants where surplus
+initial tools may be omitted from the capacity proposal. It reuses the literal
+source/physical oracle, with mixed/whole cohorts, consumed or worn returns,
+different orders, long quantities, seeds, forced crafting and manufactured-tool
+controls. Ordinary input stock cannot be claimed twice. Failed isolated replays,
+bounded work, optional memory, preference-copy isolation, cancellation, worker
+handoff and delayed runtime returns/save-load guard the continuation.
+Twelve additional cases have a constructive witness but require an omitted
+manufacturing source. They are reported as known feasible/unresolved separately
+from the 296 positives; only false negative proofs and leaks are asserted there.
+
 `CapturedStateOrderFeedbackTest` retains 109 positive combinations with 2/3/5/8
 destructive rules and 2/7/31 light uses. It checks a constructive temporal order,
 recipe/slot/stock permutations, whole/mixed and wide cohorts, exact seeds,
