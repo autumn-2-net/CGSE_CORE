@@ -3199,6 +3199,34 @@
       "evidence": "Four-worker fixed 40M request yields an independently verified original-recipe plan; retained alternative basis and residual frontiers survive worker handoffs.",
       "workers": 4,
       "expanded_budget": false
+    },
+    {
+      "name": "lattice-box/manual_small_n40_c3_d3_a1_s43_shuffle",
+      "source": "cases/graph/41/412b8d05f67ca4dec7e2359ef47550393f2c9e82d1e2152e0176930cae6a5b9d.json",
+      "sha256_lf": "b85930d0d495e7a52e05fef3c98dbc991aa780cf1f37586a93ab55b539eaec43",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 8000000,
+      "expected": "SAT",
+      "evidence": "6346fdf5 exhausts 40M search work. Reusing the stalled residual lattice with candidate-only sphere/box enumeration yields independently verified original-recipe plans. Numerical pruning never exports infeasibility; all original integer rows and primitive execution prefixes are checked."
+    },
+    {
+      "name": "lattice-box/manual_small_n40_c3_d3_a1_s43_shuffle/workers-4",
+      "source": "cases/graph/41/412b8d05f67ca4dec7e2359ef47550393f2c9e82d1e2152e0176930cae6a5b9d.json",
+      "sha256_lf": "b85930d0d495e7a52e05fef3c98dbc991aa780cf1f37586a93ab55b539eaec43",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 8000000,
+      "expected": "SAT",
+      "evidence": "Fixed 40M request with four workers; a retained residual lattice produces an independently verified primitive execution plan below the 8M observed-work guard.",
+      "workers": 4,
+      "expanded_budget": false
     }
   ]
 }

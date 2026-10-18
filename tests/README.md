@@ -1183,3 +1183,12 @@ reuse after a partial allocation fails, original-row validation, a recovered
 constructive model and cost guards for cheap decompositions. The execution
 boundary manifest pins two historical inputs in three recipe orders and with
 four workers. See `docs/vector-candidate-reuse.txt` for scope and measured costs.
+
+`CountLatticeEnumerationTest` checks bounded sphere/box candidate search against
+48 exhaustive original-coordinate oracles, including large offsets and side
+rows, a stalled allocation residual, tiny grants, worker handoffs, cancellation,
+memory refusal and nonfinite numerical factors. Every positive vector must pass
+all original integer rows; a declined numerical search has no proof authority.
+The execution manifest includes the recovered 40-group allocation in three
+orders and a four-worker fixed-budget run. Both are automatically discovered;
+see `docs/lattice-box-enumeration.txt` for admission and validation scope.

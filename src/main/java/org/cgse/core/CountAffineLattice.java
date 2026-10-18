@@ -13,6 +13,7 @@ import java.util.*;
 final class CountAffineLattice implements AutoCloseable {
 
     private static final int MAX_ALTERNATIVES = 32;
+    private static final long ENUMERATION_WORK = 262144;
     private static final ExactRational HALF = new ExactRational(BigInteger.ONE, BigInteger.TWO);
     private static final ExactRational LOVASZ = new ExactRational(BigInteger.valueOf(3), BigInteger.valueOf(4));
 
@@ -45,6 +46,9 @@ final class CountAffineLattice implements AutoCloseable {
     private CountLatticePotential.Workspace potentialWorkspace;
     private boolean deep, strengthened;
     private int alternative;
+    private boolean enumerating;
+    private long enumerationAt, enumerationWork;
+    private CountLatticeEnumeration enumeration;
     private int insertionFrom = -1, insertionTo;
 
     CountAffineLattice(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
@@ -138,6 +142,34 @@ final class CountAffineLattice implements AutoCloseable {
                     phase = 1;
                 }
             } else {
+                if (enumerating && work >= enumerationAt && enumerationWork < ENUMERATION_WORK) {
+                    long before = budget.threadWork();
+                    try {
+                        if (enumeration == null) {
+                            enumeration = new CountLatticeEnumeration(rows, lower, upper, repairPoint, basis, mu, norms, budget);
+                            budget.note("count_affine_enum", "start; variables=" + lower.length + "; kernel=" + basis.size());
+                        }
+                        boolean done = enumeration.step();
+                        if (done) {
+                            counts = enumeration.counts();
+                            budget.note("count_affine_enum", "done; witness=" + (counts != null) + "; work=" + enumeration.work() + "; nodes=" + enumeration.progress());
+                            checkpoints += enumeration.progress(); enumeration.close(); enumeration = null;
+                            enumerating = false;
+                            if (counts != null) {
+                                checkpoints += kernel.progress(); kernel.close(); kernel = null;
+                                return finish();
+                            }
+                        }
+                    } finally {
+                        long spent = budget.threadWork() - before; work += spent; enumerationWork += spent;
+                    }
+                    return false;
+                }
+                if (enumeration != null) {
+                    budget.note("count_affine_enum", "limit; work=" + enumeration.work() + "; nodes=" + enumeration.progress());
+                    checkpoints += enumeration.progress(); enumeration.close(); enumeration = null;
+                    enumerating = false;
+                }
                 long started = budget.threadWork();
                 boolean done;
                 try { done = kernel.step(); }
@@ -249,6 +281,9 @@ final class CountAffineLattice implements AutoCloseable {
     }
 
     private void reset() {
+        if (enumeration != null) {
+            checkpoints += enumeration.progress(); enumeration.close(); enumeration = null;
+        }
         if (kernel != null) kernel.close();
         kernel = null;
         closePotential();
@@ -560,6 +595,14 @@ final class CountAffineLattice implements AutoCloseable {
             if (retaining) kernel.retained();
         } finally { work += budget.threadWork() - started; }
         phase = 4;
+        enumerationAt = work + 262144;
+    }
+
+    /** A caller may opt a retained difficult residual into one extra search.
+     * Keep the ordinary kernel untouched while the bounded scout runs. */
+    CountAffineLattice enumerateBox() {
+        if (!retaining) throw new IllegalStateException("Box enumeration requires a retained owner");
+        enumerating = true; return this;
     }
 
     private void closePotential() {
@@ -740,7 +783,8 @@ final class CountAffineLattice implements AutoCloseable {
     boolean hasCoupledElimination() {
         return exactEliminations >= 2;
     }
-    long progress() { return checkpoints + (kernel == null ? 0 : kernel.progress()); }
+    long progress() { return checkpoints + (kernel == null ? 0 : kernel.progress()) +
+            (enumeration == null ? 0 : enumeration.progress()); }
     void resume(long quantum) {
         if (!retaining || !paused || complete) throw new IllegalStateException("Affine search is not paused");
         allowance = CountContinuation.deadline(work, quantum, budget);
@@ -750,6 +794,8 @@ final class CountAffineLattice implements AutoCloseable {
 
     @Override
     public void close() {
+        if (enumeration != null) enumeration.close();
+        enumeration = null;
         if (kernel != null) kernel.close();
         kernel = null;
         closePotential();

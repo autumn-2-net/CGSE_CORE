@@ -293,6 +293,10 @@ final class CountVectorPartition implements CountContinuation {
         }
         binLower = lo; binUpper = hi;
         affine = new CountAffineLattice(projected, lo, hi, budget, 32768).retained();
+        // The first allocation and inexpensive residual matching keep their
+        // original route. A stalled residual can reuse its reduced basis for
+        // a bounded box search, without discarding its ordinary kernel.
+        if (bin > 0) affine.enumerateBox();
         long estimate = bin == 0 ? 0 : CountMeetInMiddle.scoutWork(projected, lo, hi, budget);
         matchingTried = estimate <= 0 || estimate > maximumWork - work;
         // Preserve cheap rounding/kernel successes before paying for a table.

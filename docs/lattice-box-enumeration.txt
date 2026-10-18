@@ -1,0 +1,94 @@
+Retained box enumeration for residual allocations
+================================================
+
+Problem and scope
+-----------------
+The maintained manual_small_n40_c3_d3_a1_s43 input finds a checked first-bin
+allocation, then stalls in the 26-coordinate kernel of the remaining bin.
+Residual finite matching declines that domain. Repeating ordinary integer
+kernel moves exhausts the unchanged 40M search cap. This is a count-search
+failure, not a durability-model or executable-order regression.
+
+CountVectorPartition now enables one complementary enumeration opportunity
+on residual bins. The first bin and cheap residual matching retain their
+previous route. CountAffineLattice admits the scout after its ordinary kernel
+has spent 262,144 work; the scout has at most 262,144 additional work, charged
+to the same original request and parent local cap. Cooperative atomic steps
+can cross that local threshold. Grants, worker handoffs and later face trials
+do not replenish the allowance. The ordinary kernel remains owned and resumes
+if enumeration declines, runs out of its opportunity or returns no candidate.
+
+The reduced integer basis and current Gram factors are borrowed from the
+existing affine search. No second elimination or LLL pass is built. The scout
+translates its center around the earlier nearest-plane point, computes its
+projection with exact rational arithmetic, then enumerates nearby integer
+coordinates using numerical hints. It visits integers nearest the conditional
+center first and bounds distance in the orthogonal basis.
+
+A sphere alone contains many vectors outside the original quantity box.
+For each partial coordinate assignment, the remaining squared radius times
+the coordinate's projection into the remaining orthogonal span bounds its
+possible squared movement. If this cannot reach a quantity interval, that
+private branch is skipped before reconstructing every leaf. The fixed
+component outside the lattice span is included in this calculation.
+
+Correctness and resource boundary
+---------------------------------
+Numerical pruning is heuristic, not a certified domain fact. Every proposed
+vector is reconstructed with BigInteger and checked against every original
+integer bound and row before publication. A narrow sphere, rounding error,
+nonfinite hint, coordinate-range guard, precision refusal or empty enumeration
+cannot export infeasibility, tighten another solver's domains or reject all
+other first-bin allocations. Original recipe-prefix/target validation remains
+the final authority for a crafting plan.
+
+The scout reserves its arrays before allocation, counts preparation and search
+against its owner, and retains projection and tree state across handoffs.
+Cancellation, quota exhaustion and close release its workspace. Reset closes
+it before changing the borrowed basis. After a verified candidate, the now
+unneeded ordinary kernel is released too. No native library or public host
+interface is added; CGSE remains version 0.1.2.
+
+Evidence and limits
+-------------------
+The original input changes from SEARCH_LIMIT at 41,016,800 observed work
+(including compilation) to about 4.72M observed work at the same 40M search
+cap. Original order and orders 17/1009, plus a four-worker fixed-budget run,
+produce independently verified executable plans below 4.8M observed work.
+The maintained guard is 8M; its constructive SAT expectation is unchanged.
+
+The focused comparison covers 33 source/fuel inputs, 32 historical controls,
+48 planted direct allocation models and 17 orders of the previous execution
+regression. The source/fuel result improves from 20 to 21 verified plans, with
+12 still UNKNOWN. The 20 previous successes, all 32 controls, all 48 direct
+models and the 17 previous orders retain exactly the same results and observed
+work. Build, packaged-engine tests, Forge/AE dump artifacts and all 1,478
+baseline binary API entries pass. This is not the complete corpus or live Forge/AE
+runtime test. The other source/fuel limits and larger allocations outside the
+existing specialization's admission remain separate work.
+
+CountLatticeEnumerationTest includes 48 small boxes checked by independent
+original-coordinate enumeration, positive and empty scopes, side rows with
+80-bit coefficients, 70-bit offsets, the stalled historical residual, one-unit
+grants, cross-worker continuation, cancellation, memory refusal and numerical
+refusal on a valid integer basis with out-of-range factors. Existing affine,
+allocation, continuation, ownership and missing-material tests also apply.
+
+Failed prototypes are retained in local case storage. Repeated projection
+toward the box made no hard-case gain and substantially slowed one cheap
+decomposition. Pure rational sphere search spent its opportunity on too few
+nodes; numerical sphere search without quantity-box pruning also failed this
+input. The retained implementation combines enumeration with box pruning.
+
+Reference
+---------
+FPLLL's public enumeration interface documents enumeration with Gram data,
+target coordinates, a distance limit and pruning:
+https://fplll.github.io/fplll/classEnumeration.html
+https://fplll.github.io/fplll/classPruner.html
+
+This implementation is independently written for CGSE's bounded candidate
+search. It does not import FPLLL code, claim its pruning guarantees or use
+numerical absence as a global proof. The original inputs, native comparisons,
+failed trials, source snapshots and reproduction commands stay in the local
+case archive; player evidence is not included in repository changes.
