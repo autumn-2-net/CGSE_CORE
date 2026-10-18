@@ -7,7 +7,12 @@ import java.util.*;
 
 /** Optional main-planner prefix witnesses inside a completed refill's supply ceiling. */
 final class RefillSupplySearch<K> implements AutoCloseable {
-    private enum Phase { ROOT, DISCOVER, INPUTS, OUTPUTS, COMPILE, MACROS, MACRO_SUMMARY, CYCLES, TRIAL, SUPPLY, SEARCH, SUMMARY, COPY, NEEDS, BINDINGS, MISSING, VERIFY, DONE }
+    private enum Phase { ROOT, DISCOVER, INPUTS, OUTPUTS, COMPILE, MACROS, MACRO_SUMMARY, CYCLES, TRIAL, SUPPLY, SEARCH, PREFIXES, WORDS, SIZE_SUMMARY, SIZE, SUMMARY, COPY, NEEDS, BINDINGS, MISSING, VERIFY, DONE }
+    private static final class WordFrame {
+        final PlanStep step;
+        int child;
+        WordFrame(PlanStep step) { this.step = step; }
+    }
     private final GraphPlan<K> original;
     private GraphPlan<K> result, base, candidate;
     private final RefillProducerOrder<K> order;
@@ -43,7 +48,12 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     private SequenceSummary<K> summary;
     private PlanVerification<K> verifying;
     private PlanStep prefix;
-    private boolean strict, mergingBindings, accelerated, shortcutsRelevant;
+    private boolean strict, mergingBindings, accelerated, shortcutsRelevant, resizing;
+    private PlanStep retainedWord;
+    private Deque<WordFrame> words;
+    private Set<PlanStep> seenWords;
+    private int wordVisits, sizedWords;
+    private RefillRepeatSizing<K> sizing;
     private long memory;
 
     RefillSupplySearch(GraphPlan<K> original, RefillProducerOrder<K> order, Map<K, Long> stock,
@@ -81,6 +91,19 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                 prefix = searching.witness(); searching.close(); searching = null;
                 summarizing = new SummaryComputation<>(prefix, recipes, budget); phase = Phase.SUMMARY; return false;
             }
+            if (phase == Phase.SIZE_SUMMARY) {
+                if (!summarizing.step()) return false;
+                sizing = new RefillRepeatSizing<>(summarizing.result(), base, stock, external, force, ignoreTargetStock, budget);
+                phase = Phase.SIZE; return false;
+            }
+            if (phase == Phase.SIZE) {
+                if (!sizing.step()) return false;
+                BigInteger runs = sizing.result(); sizing = null;
+                if (runs.signum() == 0) { endTrial(); return false; }
+                prefix = PlanStep.repeat(prefix, runs);
+                summarizing.close(); summarizing = new SummaryComputation<>(prefix, recipes, budget);
+                phase = Phase.SUMMARY; return false;
+            }
             if (phase == Phase.SUMMARY) {
                 if (!summarizing.step()) return false;
                 summary = summarizing.result();
@@ -93,12 +116,14 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             }
             if (phase == Phase.VERIFY) {
                 if (!verifying.step()) return false;
-                result = candidate; endRoot(); return false;
+                result = candidate;
+                if (resizing) endTrial(); else endRoot();
+                return false;
             }
             for (int i = 0; i < 64; i++) {
                 budget.check();
                 if (advance()) return true;
-                if (phase == Phase.COMPILE || phase == Phase.MACRO_SUMMARY || phase == Phase.CYCLES || phase == Phase.SEARCH || phase == Phase.SUMMARY || phase == Phase.VERIFY) return false;
+                if (phase == Phase.COMPILE || phase == Phase.MACRO_SUMMARY || phase == Phase.CYCLES || phase == Phase.SEARCH || phase == Phase.SIZE_SUMMARY || phase == Phase.SIZE || phase == Phase.SUMMARY || phase == Phase.VERIFY) return false;
             }
             return false;
         } catch (PlanningBudget.Exhausted limit) {
@@ -108,6 +133,35 @@ final class RefillSupplySearch<K> implements AutoCloseable {
 
     private boolean advance() {
         switch (phase) {
+            case PREFIXES -> {
+                // Only inspect prefixes accepted by THIS search. The original
+                // suffix can be huge or contain per-push configurations; it is
+                // not a source of repeat hints. The wrapper is created below
+                // only after a complete funded-word verification.
+                if (retainedWord == original.steps() || !(retainedWord instanceof PlanStep.Sequence sequence) || sequence.children().size() != 2) return stop();
+                PlanStep next = sequence.children().get(0); retainedWord = sequence.children().get(1);
+                if (seenWords.add(next)) { reserve(128); words.push(new WordFrame(next)); }
+                phase = Phase.WORDS;
+            }
+            case WORDS -> {
+                if (++wordVisits > 256 || sizedWords == 16) return stop();
+                if (words.isEmpty()) { phase = Phase.PREFIXES; break; }
+                WordFrame frame = words.peek(); PlanStep child = null;
+                if (frame.step instanceof PlanStep.Sequence sequence && frame.child < sequence.children().size())
+                    child = sequence.children().get(frame.child++);
+                else if (frame.step instanceof PlanStep.Repeat repeat && repeat.times() > 0 && frame.child++ == 0) child = repeat.body();
+                if (child != null) {
+                    if (seenWords.add(child)) { reserve(128); words.push(new WordFrame(child)); }
+                } else {
+                    words.pop();
+                    // Postorder exposes a compact loop body before the larger
+                    // prefix which contains many copies of that same body.
+                    if (frame.step instanceof PlanStep.Sequence sequence && sequence.children().size() > 1) {
+                        reserve(512); sizedWords++; base = result; recipes = base.recipes(); prefix = frame.step;
+                        summarizing = new SummaryComputation<>(prefix, recipes, budget); phase = Phase.SIZE_SUMMARY;
+                    }
+                }
+            }
             case ROOT -> {
                 if (!roots.hasNext()) return finish();
                 root = roots.next(); var node = order.get(root);
@@ -217,7 +271,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                     // The discovered binding map has at most12 entries.
                     // Merge it through the same cursor, without copying a
                     // possibly large original suffix's physical bindings twice.
-                    if (!mergingBindings) {
+                    if (!mergingBindings && recipes != base.recipes()) {
                         mergingBindings = true; bindingEntries = recipes.entrySet().iterator();
                     } else {
                         bindingEntries = null; entries = initial.entrySet().iterator(); strict = false; phase = Phase.MISSING;
@@ -229,12 +283,12 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                     var e = entries.next();
                     BigInteger gap = external.contains(e.getKey()) ? BigInteger.ZERO : e.getValue().subtract(BigInteger.valueOf(available(e.getKey()))).max(BigInteger.ZERO);
                     int comparison = gap.compareTo(base.missingExact().getOrDefault(e.getKey(), BigInteger.ZERO));
-                    if (comparison > 0) { endRoot(); break; }
+                    if (comparison > 0) { rejectCandidate(); break; }
                     strict |= comparison < 0;
                     if (gap.signum() > 0) { reserve(128); deficits.put(e.getKey(), gap); }
                 } else {
                     entries = null; strict |= deficits.size() < base.missingExact().size();
-                    if (!strict) { endRoot(); break; }
+                    if (!strict) { rejectCandidate(); break; }
                     candidate = GraphPlan.ownedRefill(base, new PlanStep.Sequence(List.of(prefix, base.steps())), bindings, initial, deficits,
                             deficits.isEmpty() ? GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL : base.result(), budget.nodes());
                     verifying = new PlanVerification<>(GraphPlan.ownedRefill(candidate, candidate.steps(), candidate.recipes(), candidate.initialExact(), Map.of(),
@@ -248,12 +302,13 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     }
 
     private long available(K key) { return ignoreTargetStock && original.target().equals(key) ? 0 : stock.getOrDefault(key, 0L); }
+    private void rejectCandidate() { if (resizing) endTrial(); else endRoot(); }
     private void endTrial() {
         if (searching != null) { searching.close(); searching = null; }
         if (summarizing != null) { summarizing.close(); summarizing = null; }
         if (verifying != null) { verifying.close(); verifying = null; }
         summary = null; prefix = null; candidate = null; entries = null; bindingEntries = null; ports = null;
-        phase = Phase.TRIAL;
+        sizing = null; phase = resizing ? Phase.WORDS : Phase.TRIAL;
     }
     private void endRoot() {
         endTrial(); sources = null; recipe = null; pending = null; visited = null; domain = null;
@@ -264,13 +319,21 @@ final class RefillSupplySearch<K> implements AutoCloseable {
         phase = Phase.ROOT;
     }
     private boolean finish() {
-        if (!accelerated && shortcutsRelevant && !result.missingExact().isEmpty() && budget.remainingWork() >= 4096) {
+        if (!accelerated && !resizing && shortcutsRelevant && !result.missingExact().isEmpty() && budget.remainingWork() >= 4096) {
             // Keep the old bounded search's completed incumbent. A faster
             // shortcut can otherwise choose an incomparable bill early and
             // prevent a later root from retaining its previous improvement.
             endRoot(); accelerated = true; roots = result.missingExact().keySet().iterator();
             passStarted = budget.nodes(); allowance = Math.min(8192, budget.remainingWork() / 4);
             return false;
+        }
+        if (!resizing && result != original && !result.missingExact().isEmpty() && budget.remainingWork() >= 1024) {
+            // Completed primitive and shortcut searches keep their existing
+            // quotas and incumbent. Exact sizing adds no route enumeration.
+            endRoot(); resizing = true; retainedWord = result.steps();
+            reserve(512); words = new ArrayDeque<>(); seenWords = Collections.newSetFromMap(new IdentityHashMap<>());
+            passStarted = budget.nodes(); allowance = Math.min(4096, budget.remainingWork() / 4);
+            phase = Phase.PREFIXES; return false;
         }
         return stop();
     }
@@ -283,6 +346,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     @Override public void close() {
         endRoot(); phase = Phase.DONE;
+        words = null; seenWords = null; retainedWord = null;
         budget.release(memory); memory = 0;
     }
 }

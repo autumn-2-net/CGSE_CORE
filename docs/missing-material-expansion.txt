@@ -217,6 +217,36 @@ charged. Work/time/memory limits keep the best verified bill; cancellation remai
 exceptional. These are small candidate searches, not binary search proofs of
 minimum supply or a complete multi-objective frontier.
 
+After those searches retain their completed bill, RefillRepeatSizing may improve
+the repetition count of an already witnessed prefix fragment. For its exact need r,
+net change d and the retained suffix's need R, n positive copies require
+
+  max(r + max(0, -d) * (n - 1), R - d * n).
+
+With supply ceiling C = stock + retained shortage, each negative-delta coordinate
+therefore caps n by both 1 + floor((C-r)/(-d)) and floor((C-R)/(-d)). A first-copy
+requirement above C rejects the word. Positive-delta shortages plateau at
+ceil(max(0, R-max(r,stock))/d); the largest such breakpoint, capped by every loss,
+reduces the fixed word's shortages without adding another material. Zero-net tools,
+external supplies, ignored target stock and forced production credit retain their
+existing meanings. Counts and bounds stay exact beyond long.
+
+This uses only prefix words accepted by this RefillSupplySearch instance. Saved
+postorder cursors expose small sequence bodies before their repeated enclosing
+words; repeats are never unrolled, shared words are visited once, and zero repeats
+are skipped. The original suffix is not mined for hints or rewritten. The scan
+freezes the earlier prefix chain before accepting further improvements, preventing
+the newly synthesized prefixes from recursively becoming new hints. Each candidate
+is composed with the latest retained bill and fully verified through the same
+publication path. It cannot replace a shortage that an earlier pass eliminated.
+
+Sizing starts only with a changed, still-missing bill and at least1024 remaining
+work units. It uses at most min(4096, remaining/4) plus one continuation, scans at
+most256 word entries and summarizes at most16 sequence bodies. Each sizing slice
+visits at most32 material coordinates. It preserves the preceding searches' quotas
+and results on work/time/memory exits; cancellation propagates. This is a bounded
+fixed-word quantity refinement, not a new route search or global minimum proof.
+
 Refill preparation, source selection, input/output support evaluation, full-vector
 comparison, applying a selected prefix, reversing prefixes and building deficits
 also retain cursors. Each expansion step performs at most 64 operations, or calls
@@ -308,6 +338,11 @@ intermediate obligations and preservation of the primitive-search incumbent.
 Its240 arithmetic/literal round-trip oracles retain tool and coproduct semantics;
 exact totals beyond long, compiler/summary interruptions and one-worker handoffs
 exercise the shortcut path without treating restricted search failure as proof.
+RefillRepeatSizingTest adds120 complete main requests with arithmetic conservation
+bounds and literal replay, plus320 independently enumerated fixed-word quantity
+oracles. Returned tools, coproducts, seeds, external/forced/ignored target supplies,
+exact large totals, wide scans, interrupted sizing/publication, parent retention
+and one-worker handoffs cover the optional breakpoint pass.
 MissingExpansionLimitTest observes real production state-machine transitions
 to expansion, then interrupts work/time/memory or cancellation. It exercises
 both completed and absent root proofs, completed child publication, ordinary
@@ -349,8 +384,10 @@ Known boundaries after the refill review at 224e9172:
   Its hints and greedy allocation are incomplete. Root main planning now tries
   bounded cyclic prefix synthesis within the completed supply ceiling, with
   exact linear-chain and paired round-trip shortcuts after primitive search. Large
-  neighborhoods, useful routes outside that support and quantities not sampled
-  can still remain boundaries. Ordinary fallback retains its cheaper expansion.
+  neighborhoods and useful routes outside that support can still remain boundaries.
+  Exact quantity breakpoints now refine observed prefix words; unrelated words,
+  interleavings and the bounded hint scan remain incomplete. Ordinary fallback
+  retains its cheaper expansion.
   A stopped expansion is not proof that a material has no useful producer, nor
   a certificate of minimum supply.
 - Refill enumeration/publication and final verifier key traversal use bounded
