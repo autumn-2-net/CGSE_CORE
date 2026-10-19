@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.*;
 public final class RefillVerificationTest {
     private static int checks;
     public static void main(String[] args) throws Exception {
-        randomWords(); separateObligations(); exactAndShared(); publicProduction(); limits(); scheduler(false); scheduler(true);
+        randomWords(); separateObligations(); exactAndShared(); conditionalMetadata(); publicProduction(); limits(); scheduler(false); scheduler(true);
         System.out.println("RefillVerificationTest: assertions=" + checks);
     }
     private static GraphRecipe<String> recipe(String id, Map<String, Long> in, Map<String, Long> out) {
@@ -82,6 +82,40 @@ public final class RefillVerificationTest {
         plan = new GraphPlan<>("G", 512, false, deep, Map.of("r", r), Map.of("raw", 512L), Map.of(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
         compare(plan);
     }
+    private static void conditionalMetadata() {
+        var plan = VerificationContinuationTest.wide(128);
+        long mandatory, fullWork;
+        SequenceSummary<?> expected;
+        Map<String, BigInteger> counts;
+        var shortBudget = MissingMaterialExpansionTest.budget(100_000);
+        try (var work = PlanVerification.refill(plan, shortBudget)) {
+            while (!work.step()) {}
+            mandatory = shortBudget.nodes(); expected = work.summary();
+        }
+        var fullBudget = MissingMaterialExpansionTest.budget(100_000);
+        try (var work = new PlanVerification<>(plan, fullBudget)) {
+            while (!work.step()) {}
+            fullWork = fullBudget.nodes(); counts = work.patternCounts();
+        }
+        check(fullWork > mandatory, "Fixture has no optional metadata work");
+        for (long prior : new long[] {0, 2048}) for (long floor : new long[] {prior, prior + mandatory, prior + mandatory + 1, Long.MAX_VALUE}) {
+            var b = MissingMaterialExpansionTest.budget(100_000); b.charge(prior);
+            boolean skip = floor <= prior + mandatory;
+            try (var work = PlanVerification.refillAfterWork(plan, b, floor)) {
+                while (!work.step()) {}
+                check(work.summary().equals(expected), "Conditional metadata changed witness validation");
+                check(b.nodes() == prior + (skip ? mandatory : fullWork), "Work threshold changed the unsaturated quality allowance");
+                if (skip) {
+                    try { work.patternCounts(); throw new AssertionError("Invented conditional counts"); }
+                    catch (IllegalStateException e) { checks++; }
+                    try { work.physicalProduced(plan.target()); throw new AssertionError("Invented conditional output"); }
+                    catch (IllegalStateException e) { checks++; }
+                } else check(work.patternCounts().equals(counts), "Lost metadata before the threshold");
+            }
+            check(b.reservedBytes() == 0, "Conditional metadata workspace");
+        }
+        check(shortBudget.reservedBytes() == 0 && fullBudget.reservedBytes() == 0, "Threshold oracle workspace");
+    }
     private static void publicProduction() {
         var tool = new GraphRecipe<>("use", "physical", List.of(new GraphRecipe.Slot<>("raw", 1L),
                 new GraphRecipe.Slot<>("tool", 1L, 0, true, true)), Map.of("tool", 1L, "G", 1L));
@@ -124,9 +158,14 @@ public final class RefillVerificationTest {
         check(a.reservedBytes() == 0 && b.reservedBytes() == 0, "Verifier workspace");
     }
     private static void rejects(GraphPlan<String> plan) {
-        for (boolean refill : List.of(false, true)) {
+        for (int mode = 0; mode < 4; mode++) {
             var b = MissingMaterialExpansionTest.budget(100_000);
-            try (var work = refill ? PlanVerification.refill(plan, b) : new PlanVerification<>(plan, b)) {
+            try (var work = switch (mode) {
+                case 0 -> new PlanVerification<>(plan, b);
+                case 1 -> PlanVerification.refill(plan, b);
+                case 2 -> PlanVerification.refillAfterWork(plan, b, 0);
+                default -> PlanVerification.refillAfterWork(plan, b, Long.MAX_VALUE);
+            }) {
                 try { while (!work.step()) {} throw new AssertionError("Accepted an unmet execution obligation"); }
                 catch (IllegalArgumentException expected) { checks++; }
             }

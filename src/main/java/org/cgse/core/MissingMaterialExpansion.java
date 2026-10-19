@@ -23,6 +23,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private final boolean forceCraft, ignoreTargetStock;
     private final PlanningBudget budget;
     private final boolean allowMixed, borrowedOrder;
+    private final BigInteger targetProduction;
     private final long startedWork;
     private final Map<K, BigInteger> required = new LinkedHashMap<>();
     private final Map<String, GraphRecipe<K>> recipes = new LinkedHashMap<>();
@@ -58,14 +59,15 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
 
     MissingMaterialExpansion(GraphCompiler<K> compiler, GraphPlan<K> original, Map<K, Long> stock,
                              Set<K> external, Set<String> excluded, boolean forceCraft, boolean ignoreTargetStock, PlanningBudget budget) {
-        this(compiler, original, stock, external, excluded, forceCraft, ignoreTargetStock, budget, false, null);
+        this(compiler, original, stock, external, excluded, forceCraft, ignoreTargetStock, budget, false, null, BigInteger.ZERO);
     }
     private MissingMaterialExpansion(GraphCompiler<K> compiler, GraphPlan<K> original, Map<K, Long> stock,
                                      Set<K> external, Set<String> excluded, boolean forceCraft, boolean ignoreTargetStock,
-                                     PlanningBudget budget, boolean allowMixed, RefillProducerOrder<K> completedOrder) {
+                                     PlanningBudget budget, boolean allowMixed, RefillProducerOrder<K> completedOrder, BigInteger targetProduction) {
         this.compiler = compiler; this.original = original; this.stock = stock; this.external = external;
         this.excluded = excluded; this.forceCraft = forceCraft; this.ignoreTargetStock = ignoreTargetStock; this.budget = budget;
         this.allowMixed = allowMixed; startedWork = budget.nodes();
+        this.targetProduction = targetProduction;
         order = completedOrder; borrowedOrder = completedOrder != null;
         if (!allowMixed && !hasProducibleMissing(compiler, original)) {
             // Terminal-only bills already satisfy expansion's boundary contract.
@@ -85,11 +87,19 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     /** The main planner may search a small cyclic prefix; ordinary fallback
      * keeps its existing expansion/word-reduction responsibilities. */
     MissingMaterialExpansion<K> refineCycles(boolean enabled) { cycleSearchEnabled = enabled; return this; }
+    /** A funded empty word has no existing production credit. Forced fallback
+     * goals must therefore establish the order's credit while adding a prefix;
+     * ordinary refinement only preserves the credit of its verified suffix. */
+    static <K> MissingMaterialExpansion<K> fromGoals(GraphCompiler<K> compiler, GraphPlan<K> boundary, Map<K, Long> stock,
+                                                     Set<K> external, boolean force, PlanningBudget budget) {
+        BigInteger production = force && !external.contains(boundary.target()) ? BigInteger.valueOf(boundary.amount()) : BigInteger.ZERO;
+        return new MissingMaterialExpansion<>(compiler, boundary, stock, external, Set.of(), force, force, budget, false, null, production);
+    }
     /** A bounded alternative reuses complete support, without recursively
      * searching more cyclic prefixes or publishing a nested frontier. */
     static <K> MissingMaterialExpansion<K> alternative(GraphCompiler<K> compiler, GraphPlan<K> plan, Map<K, Long> stock,
             Set<K> external, Set<String> excluded, boolean force, boolean ignoreTargetStock, PlanningBudget budget, RefillProducerOrder<K> order) {
-        return new MissingMaterialExpansion<>(compiler, plan, stock, external, excluded, force, ignoreTargetStock, budget, true, order);
+        return new MissingMaterialExpansion<>(compiler, plan, stock, external, excluded, force, ignoreTargetStock, budget, true, order, BigInteger.ZERO);
     }
     private static <K> boolean hasProducibleMissing(GraphCompiler<K> compiler, GraphPlan<K> plan) {
         // Only a cheap index lookup here. Source inspection belongs to the
@@ -138,7 +148,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                 // Rankings and source lists are complete and stock-independent.
                 // This child has exactly the same roots/exclusions/compiler and
                 // borrows them read-only; only the parent releases their charge.
-                improvement = new MissingMaterialExpansion<>(compiler, original, stock, external, excluded, forceCraft, ignoreTargetStock, budget, true, order);
+                improvement = new MissingMaterialExpansion<>(compiler, original, stock, external, excluded, forceCraft, ignoreTargetStock, budget, true, order, targetProduction);
                 return false;
             }
             return complete();
@@ -268,7 +278,12 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                         deficits.isEmpty() ? GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL : original.result(), budget.nodes());
                 var funded = GraphPlan.ownedRefill(candidate, candidate.steps(), candidate.recipes(), candidate.initialExact(), Map.of(),
                         GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL, budget.nodes());
-                verification = new PlanVerification<>(funded, budget); phase = Phase.VERIFY;
+                // Count/output totals are unused here. Skip them only after
+                // mandatory expansion/fold work saturates later quality quotas;
+                // small expansions keep their existing work-scaled scheduling.
+                long floor = startedWork > Long.MAX_VALUE - MIX_WORK_LIMIT / 4 ? Long.MAX_VALUE : startedWork + MIX_WORK_LIMIT / 4;
+                verification = PlanVerification.refillAfterWork(funded, budget, floor);
+                phase = Phase.VERIFY;
             }
             case DONE -> { return true; }
             default -> throw new IllegalStateException("Child continuation must use its own slice");
@@ -428,7 +443,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         // A prefix may use target stock to prepare a cyclic input, but must
         // replace that consumption. Preserve the verified suffix's production
         // credit instead of treating existing finished goods as new crafting.
-        return forceCraft && original.target().equals(key) ? value.max(prefixDelta.negate()) : value;
+        return forceCraft && original.target().equals(key) ? value.max(targetProduction.subtract(prefixDelta)) : value;
     }
     private BigInteger gain(GraphRecipe<K> recipe, K key) {
         return BigInteger.valueOf(recipe.outputs().getOrDefault(key, 0L)).subtract(BigInteger.valueOf(recipe.inputs().getOrDefault(key, 0L)));
@@ -452,7 +467,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             }
         }
         if (forceCraft && original.target().equals(key) && loss.signum() > 0)
-            limit = limit.min(targetDelta.add(previous).divide(loss));
+            limit = limit.min(targetDelta.add(previous).subtract(targetProduction).divide(loss));
         return limit;
     }
     /** Keep the old count too: its extra firings may supply a useful coproduct. */
@@ -463,7 +478,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         BigInteger gap = required.getOrDefault(key, BigInteger.ZERO).subtract(BigInteger.valueOf(input)).max(BigInteger.ZERO);
         BigInteger runs = CheckedAmounts.ceilDiv(gap, delta).max(BigInteger.ONE);
         if (forceCraft && original.target().equals(key))
-            runs = runs.max(CheckedAmounts.ceilDiv(targetDelta.negate().max(BigInteger.ZERO), delta));
+            runs = runs.max(CheckedAmounts.ceilDiv(targetProduction.subtract(targetDelta).max(BigInteger.ZERO), delta));
         return runs;
     }
 

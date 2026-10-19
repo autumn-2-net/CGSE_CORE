@@ -23,6 +23,18 @@ public final class GraphFallback {
 
     private GraphFallback() {}
 
+    /** Lower bound for the two complete folds and count pass in Expansion.
+     * Each emitted step is a fresh, positive batch (possibly a compact Repeat). */
+    static long finishingWorkLowerBound(GraphRecipe<?> recipe) {
+        long ports = (long) recipe.inputs().size() + recipe.outputs().size();
+        if (!recipe.hasInputReturns()) return 4 + 2 * ports;
+        // Returned-input batches cannot use the fused port loop. Each port and
+        // each scale/merge key takes a separate fold step: Expansion+fold charge
+        // twice, and Expansion+verifier+fold three times. max bounds the union.
+        long keys = Math.max(recipe.inputs().size(), recipe.outputs().size());
+        return 4 + 5 * (ports + 2 * keys);
+    }
+
     public static <K> GraphPlan<K> plan(GraphCompiler<K> compiler, K target, long amount,
                                         Map<K, Long> stock, Set<K> external, Map<K, Long> seeds,
                                         boolean preserve, boolean forceCraft, PlanningBudget budget) {
@@ -31,10 +43,45 @@ public final class GraphFallback {
             while (!work.step()) { /* All traversal, arithmetic and verification share the fallback budget. */ }
             candidate = work.result;
         }
+        if (candidate == null) return refillGoals(compiler, target, amount, stock, external, seeds, preserve, forceCraft, budget);
         if (!MissingMaterialExpansion.needed(compiler, candidate)) return MissingMaterialExpansion.terminalResult(candidate);
         try (var expansion = new MissingMaterialExpansion<>(compiler, candidate, stock, external, Set.of(), forceCraft, forceCraft, budget)) {
             while (!expansion.step()) { /* A cutoff is a budget exit, never a terminal material. */ }
             return expansion.result();
+        }
+    }
+
+    /** The old material word cannot fit its mandatory finishing work. Start a
+     * compact backward bill instead, using only the unchanged remaining budget.
+     * The empty word is funded by its explicit goals, not by invented production. */
+    private static <K> GraphPlan<K> refillGoals(GraphCompiler<K> compiler, K target, long amount, Map<K, Long> stock,
+                                               Set<K> external, Map<K, Long> seeds, boolean preserve, boolean force,
+                                               PlanningBudget budget) {
+        long memory = 0;
+        try {
+            Map<K, BigInteger> initial = new LinkedHashMap<>(), missing = new LinkedHashMap<>();
+            for (var e : seeds.entrySet()) {
+                budget.check(); budget.reserve(384); memory += 384;
+                initial.put(e.getKey(), BigInteger.valueOf(e.getValue()));
+            }
+            budget.check();
+            if (!initial.containsKey(target)) { budget.reserve(384); memory += 384; }
+            initial.merge(target, BigInteger.valueOf(amount), BigInteger::add);
+            for (var e : initial.entrySet()) {
+                budget.check();
+                long have = force && target.equals(e.getKey()) ? 0 : stock.getOrDefault(e.getKey(), 0L);
+                BigInteger gap = e.getValue().subtract(BigInteger.valueOf(have));
+                if (gap.signum() > 0 && !external.contains(e.getKey())) missing.put(e.getKey(), gap);
+            }
+            var boundary = new GraphPlan<>(target, amount, preserve, new PlanStep.Sequence(List.of()), Map.of(), initial, seeds, missing,
+                    missing.isEmpty() ? GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL : GraphPlan.Result.MISSING_INPUT, budget.nodes(), 0);
+            if (missing.isEmpty()) return boundary;
+            try (var expansion = MissingMaterialExpansion.fromGoals(compiler, boundary, stock, external, force, budget)) {
+                while (!expansion.step()) { /* No old tree, no replenishment loans, no extra allowance. */ }
+                return expansion.result();
+            }
+        } finally {
+            budget.release(memory);
         }
     }
 
@@ -92,6 +139,8 @@ public final class GraphFallback {
         private long memory;
         private boolean rootsDone, searched;
         private long witnessAllowance;
+        private boolean materialExpansion, measureSummaryReplay;
+        private long finishingWorkLowerBound, summaryReplayWork;
 
         Expansion(GraphCompiler<K> compiler, K target, long amount, Map<K, Long> stock, Set<K> external,
                   Map<K, Long> seeds, boolean preserve, boolean forceCraft, PlanningBudget budget) {
@@ -142,6 +191,17 @@ public final class GraphFallback {
         }
 
         private boolean step() {
+            // Each emitted positive step owns at least one distinct batch. The
+            // two mandatory folds each visit all its recipe ports; count indexing
+            // and propagation visit its edge/leaf at least four more times. Even
+            // ignoring all other work, this word can no longer finish. Never use
+            // the bound to classify feasibility or interrupt a funded witness.
+            if (materialExpansion && summary == null && finishingWorkLowerBound > budget.remainingWork()) {
+                budget.checkpoint();
+                budget.note("fallback_refill", "compact_goals; emitted_steps=" + steps.size() +
+                        "; finish_lower_bound=" + finishingWorkLowerBound + "; remaining=" + budget.remainingWork());
+                return true;
+            }
             budget.check();
             if (!searched) {
                 searched = true;
@@ -153,6 +213,7 @@ public final class GraphFallback {
                         rootsDone = true;
                         seedGoals = java.util.Collections.emptyIterator();
                     } else if (witnessAllowance > 0) return true;
+                    else materialExpansion = true;
                 }
                 return false;
             }
@@ -163,7 +224,19 @@ public final class GraphFallback {
             }
             if (summary != null) {
                 if (keys == null) {
-                    if (!summary.step()) return false;
+                    long before = measureSummaryReplay ? budget.threadSearchWork() : 0;
+                    boolean complete = summary.step();
+                    // The immutable word's second fold repeats exactly this
+                    // work, with Expansion and verifier checkpoints per call.
+                    // Use the calling thread's clock, never another worker's work.
+                    if (measureSummaryReplay) summaryReplayWork += budget.threadSearchWork() - before + 2;
+                    if (!complete) return false;
+                    long verificationFloor = summaryReplayWork + 4L * steps.size();
+                    if (measureSummaryReplay && verificationFloor > budget.remainingWork()) {
+                        budget.note("fallback_refill", "compact_goals; measured_fold; emitted_steps=" + steps.size() +
+                                "; finish_lower_bound=" + verificationFloor + "; remaining=" + budget.remainingWork());
+                        return true;
+                    }
                     var all = new java.util.LinkedHashSet<>(summary.result().keys());
                     all.add(target);
                     all.addAll(seeds.keySet());
@@ -206,6 +279,11 @@ public final class GraphFallback {
                 return false;
             }
             program = new PlanStep.Sequence(steps);
+            // Enable the per-thread work clock only when finishing this tree is
+            // a material fraction of the remaining quota. Tracking every later
+            // budget charge slows small previews. This gate only decides whether
+            // to measure; the actual admission decision still needs a lower bound.
+            measureSummaryReplay = materialExpansion && finishingWorkLowerBound >= budget.remainingWork() / 4;
             summary = new SummaryComputation<>(program, recipes, budget);
             return false;
         }
@@ -291,6 +369,7 @@ public final class GraphFallback {
                     reserve(256);
                     recipes.put(recipe.id(), recipe);
                     steps.add(PlanStep.batch(recipe.id(), runs));
+                    finishingWorkLowerBound += GraphFallback.finishingWorkLowerBound(recipe);
                     pop();
                 }
             }

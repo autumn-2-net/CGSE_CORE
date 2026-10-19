@@ -114,9 +114,14 @@ entry is not a forced-crafting proof; count/output accessors reject unavailable
 metadata. Public verification and its low-net-gain ForceCraftProof path retain
 the full production bookkeeping. RefillVerificationTest compares both modes on
 literal funded words and deficient-prefix/goal/seed counterexamples, shared and
-huge words, returned tokens, limits and scheduler handoff. Prefix expansion's
-separate verifier is unchanged: its consumed work currently also sizes later
-quality passes, so removing its count pass needs a separate quota analysis.
+huge words, returned tokens, limits and scheduler handoff. Prefix expansion also
+omits unused metadata after its mandatory expansion/fold/key checks have spent
+2048 work units: the later work-scaled quality allowance is then already at its
+8192 ceiling. Below that threshold it retains the original count pass and hence
+the small-preview scheduling allowance. The remaining-work cap still applies;
+saved work can make more of that existing allowance available. No prefix, target
+or final-seed validation is skipped. Threshold equality, prior request work and
+deficient witnesses are covered by RefillVerificationTest.
 The work cap is at most 8192 units and one quarter of remaining work (with a
 single bounded continuation of overshoot), scaled down for small expansions.
 Plain cursor slices visit at most 64 entries; child folds/verifiers own their
@@ -528,6 +533,51 @@ final seeds, copy isolation, memory/time/cancellation, a request-wide concurrent
 cap, independent budget accounts, and real one-worker scheduler handoffs. Existing
 continuation tests check that annotation retains the unchanged witness/maps.
 This is additive engine diagnostic metadata; host UI display is separate.
+
+Ordinary fallback under a tight request budget
+---------------------------------------------
+
+The initial funded search still runs first. Its positive witnesses and the
+separate witnessByCost entry keep their old path. If funded search fails,
+the forward material tree can repeat a shared dependency thousands of times
+before finishing its first summary, second verification fold and count pass.
+Backward refill cannot repair a tree that has already spent the whole budget.
+
+Expansion now tracks a lower bound on those mandatory finishing operations.
+Ordinary batches require both port scans and the count traversal. Returned-input
+batches additionally require separate key scaling and parent merging; compact
+long-overflow repeats still contain at least one fresh positive batch per emitted
+step. If that bound reaches a quarter of the remaining work, the first fold also
+records calling-thread work. Small previews avoid enabling per-charge thread
+accounting just for this optional measurement. Once that fold completes, it supplies
+a stronger lower bound for the identical second fold, including its caller
+checkpoints. This must be updated if that pipeline changes. Work performed by
+another budget-sharing worker cannot inflate the measured fold.
+
+Only when that lower bound exceeds the remaining request work does fallback
+discard the unfinished tree. It then starts backward expansion directly from
+delivery plus explicit final seeds. The empty word is funded by those goals;
+no synthetic recipe or forward loan supplies production. Forced requests add
+an explicit net-production floor, so a supplied target startup seed cannot
+count toward newly crafted output. The complete resulting word is verified
+against its exact starting supplies, target and final seeds before publication.
+The original remaining budget is used; there is no fresh allowance or retry
+after exhaustion. All abandoned tree workspace is released first.
+
+FallbackCompactRefillTest covers repeated shared dependencies through 20 levels,
+catalog/input reversal, returned tools, explicit seeds, existing target stock,
+forced production, and leaf totals beyond long. Small words receive independent
+primitive replay; large words have exact conservation and prefix checks. It
+checks the admission bound against actual full folds/count verification and
+exercises work/memory/cancellation exits. Existing completed high-budget results
+are compared separately with the pre-change engine.
+
+This admission rule is deliberately conservative. It does not estimate every
+later source-ranking/expansion cost. A larger budget can still admit the old
+tree and then expire in later refinement; success is not monotonic in the work
+cap. The replacement bill may choose different incomparable supplies from an
+old run given a larger budget. It is a verified refill witness, not a minimum
+supply certificate or a proof of infeasibility under the original stock.
 
 Known boundaries after the refill review at 224e9172:
 

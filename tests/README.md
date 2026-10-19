@@ -79,6 +79,14 @@ coproducts, forced production and randomized DAGs. Exact large counts and budget
 cleanup are checked separately. Main and fallback previews use the same verified
 backward expansion; a work limit is not a terminal material.
 
+`FallbackCompactRefillTest` guards tight-budget fallback recovery on repeated
+shared dependencies, returned tools, input/catalog reversal and explicit seeds.
+Primitive replay and exact conservation cover forced production and counts
+beyond long. The finishing-work admission bound is checked against actual folds
+and count verification; work/memory/cancellation exits must release workspace.
+`RefillVerificationTest` also checks the optional metadata threshold, preserving
+small-preview work allowances and every prefix/delivery/final-seed obligation.
+
 `RequestCoverageTest` keeps incomplete candidate/state domains distinct from
 complete infeasibility, including retained smaller requests and direct emission.
 `CapturedReachableTest` checks sparse executable witnesses beyond the initial

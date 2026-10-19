@@ -14,7 +14,8 @@ public final class PlanVerification<K> implements AutoCloseable {
     private final GraphPlan<K> plan;
     private final PlanningBudget budget;
     private final SummaryComputation<K> computation;
-    private final PlanCountComputation counts;
+    private PlanCountComputation counts;
+    private long refillWorkFloor = -1;
     private SequenceSummary<K> summary;
     private Iterator<K> keys;
     private Iterator<Map.Entry<String, BigInteger>> patterns;
@@ -34,6 +35,15 @@ public final class PlanVerification<K> implements AutoCloseable {
      * forced-crafting proof; ordinary/public verification keeps its metadata. */
     static <K> PlanVerification<K> refill(GraphPlan<K> funded, PlanningBudget budget) {
         return new PlanVerification<>(funded, budget, null, false);
+    }
+
+    /** Expansion uses elapsed work to size later quality passes. Retain the old
+     * metadata pass unless the mandatory fold/key checks already reach that
+     * scheduling floor. Never remove the prefix/goal/seed checks themselves. */
+    static <K> PlanVerification<K> refillAfterWork(GraphPlan<K> funded, PlanningBudget budget, long floor) {
+        var verification = new PlanVerification<K>(funded, budget);
+        verification.refillWorkFloor = floor;
+        return verification;
     }
 
     /** Only the exact immutable plan produced by this assembly can reuse its
@@ -121,7 +131,9 @@ public final class PlanVerification<K> implements AutoCloseable {
                 checkingSeeds = true; keys = plan.seeds().keySet().iterator(); key = plan.target();
                 if (summary.delta().containsKey(key)) continue;
             } else {
-                keys = null; phase = counts == null ? 4 : 2; return;
+                keys = null;
+                if (refillWorkFloor >= 0 && budget.nodes() >= refillWorkFloor) counts = null;
+                phase = counts == null ? 4 : 2; return;
             }
             BigInteger goal = BigInteger.valueOf(plan.seeds().getOrDefault(key, 0L));
             if (key.equals(plan.target())) goal = goal.add(BigInteger.valueOf(plan.amount()));
