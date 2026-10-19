@@ -178,6 +178,53 @@ requests and their work guards, with an unchanged source snapshot. This is not
 a new complete standard/all/corpus/live-host campaign; the prior 342/342 complete
 standard result belongs to 180b460f.
 
-The three nine-dimensional canonical cases remain UNKNOWN, including the one
-outside the existing multiplicity bound. The separate unresolved direct seed31
-also remains unchanged. Version stays 0.1.4; no adapter change is required.
+At that boundary three nine-dimensional canonical cases remained UNKNOWN,
+including one outside the multiplicity bound. The separate unresolved direct
+seed31 was also unchanged. Version stays 0.1.4; no adapter change is required.
+
+Wide multiplicities and additional conserved dimensions
+-------------------------------------------------------
+The next runtime classification found that the million-scale, nine-dimensional
+case never reached vector repair: capacity<=64 and dimensions<=6 both rejected
+it during preparation. The amount is stored as an integer bound; it need not
+allocate one state per unit. Preparation now permits nonnegative widths below
+2^30 and up to ten conserved dimensions. The neighborhood admits the resulting
+twenty signed faces and at most 2560 terms. Group, variable, preparation, memory
+and local/request work limits remain in force. The dense affine-kernel limit
+does not change, and the existing exact restricted repair is reused.
+
+Wider domains also require exact residual identities. A one-byte multiplicity
+would alias values separated by 256 and could reuse another branch's exact
+rejection. Wide-capacity partitions now encode four bytes per group and reserve
+the larger retained key; old small partitions keep their previous representation.
+The key still includes the actual destination and original group coordinates.
+Only complete exact residual rejection inserts a key. Numeric hints, restricted
+neighborhood misses and work limits cannot reject another allocation.
+
+CountVectorCapacityTest covers six planted large-count models with seven, nine
+and ten dimensions, two/three destinations, fixed opposite-sign inputs and
+large signed offsets. Exact row/bound checks, one-unit and worker handoffs,
+contradictory side conditions, full-width residual identity, unsupported bounds,
+cancellation and memory refusal remain explicit.
+
+Packaged comparison against 15cb1152 recovers the million-scale canonical case
+in 552,330 total work, versus SEARCH_LIMIT at 44,243,135 total work with the same
+40M search cap. Orders 17/1009 finish in 552,452/552,551; fixed-cap four-worker
+execution also passes. These four requests are pinned with a 1M observed-work
+guard. Original recipe prefixes and targets are independently replayed.
+Its accounted reservation peak falls from 40,161,376 to 11,603,328 bytes; this is
+not process RSS or a server-thread timing measurement.
+
+The 33-case family improves from 30 to 31 PASS. All 30 old successful cases keep
+exactly their work and reserved peak; 28 graph controls, 4 count controls,
+18 recovered orders, 6 older allocation orders, 33 count variants and 17 earlier
+execution orders preserve results. Build, ABI1478, source-JAR matching and Forge embedded dump
+packaging and discovery pass. The scoped campaign passes 35/35, including all 621 registered execution
+requests and cost guards, with the source snapshot unchanged. This is not a
+new complete standard, full-corpus or live-host run.
+
+Two small-capacity nine-dimensional cases remain UNKNOWN. Diagnostic 56/80/96-
+coordinate repairs, each at 4M work, found no witness on either case; exact
+reduction dominated these runs. Those diagnostic dense-limit changes are not
+part of production. This result does not establish infeasibility or rule out
+a better broad-core strategy. The separate direct seed31 also remains open.

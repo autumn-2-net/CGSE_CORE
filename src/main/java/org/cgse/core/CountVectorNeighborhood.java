@@ -37,11 +37,11 @@ final class CountVectorNeighborhood implements CountContinuation {
     private static CountVectorNeighborhood create(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower,
                                                   BigInteger[] upper, PlanningBudget budget, long quantum,
                                                   boolean centered) {
-        if (lower.length <= 32 || lower.length > 128 || upper.length != lower.length || rows.size() > 12 || quantum <= 0 ||
+        if (lower.length <= 32 || lower.length > 128 || upper.length != lower.length || rows.size() > 20 || quantum <= 0 ||
                 budget.remainingWork() < 32768) return null;
         long terms = 0;
         for (var row : rows) { budget.check(); terms += row.terms().size(); }
-        if (terms > 1536) return null;
+        if (terms > 2560) return null;
         for (int i = 0; i < lower.length; i++) {
             budget.check();
             if (upper[i] == null || lower[i].signum() < 0 || lower[i].bitLength() > 30 || upper[i].bitLength() > 30 ||

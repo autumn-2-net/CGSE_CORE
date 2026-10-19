@@ -1384,6 +1384,13 @@ returned tools, incomplete coverage, external supplies, configuration dispatch,
 work/time/memory/cancellation and worker transfer while an accepted partial bill
 and its verifier remain owned. Both programs are automatically discovered.
 
+`CountVectorCapacityTest` covers large multiplicities and seven/nine/ten conserved
+dimensions with two/three destinations, fixed opposite-sign inputs and large
+signed offsets. It checks exact full-row validation, residual-key aliasing,
+one-unit/worker handoffs, cancellation and memory/admission limits. The recovered
+million-scale nine-dimensional graph is pinned in three recipe orders and with
+four workers at the unchanged 40M cap, with a 1M observed-work guard.
+
 `CountVectorCenteringTest` covers bounded interior candidates with twelve
 independently planted allocation bins, partially fixed and shifted domains,
 tiny continuation grants and worker handoffs. Exact original-row validation

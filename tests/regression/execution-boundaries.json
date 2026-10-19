@@ -3491,6 +3491,34 @@
       "workers": 4,
       "expanded_budget": false,
       "evidence": "The same original-order request returns a complete independently replayed witness under four workers and a fixed 40M cap. Interior sweeps and exact repairs keep owned continuations and release all reservations."
+    },
+    {
+      "name": "vector-capacity/manual_large_n96_c2_d9_a1_s719_shuffle",
+      "source": "cases/graph/bd/bd409dcaf224b68658447e250f3438e94212ddf80206ec66244607e5a663b23f.json",
+      "sha256_lf": "6f28f7a4a4973d230796674d3d5d5fe76f2cffd7f711423c1ed70542f31a8c71",
+      "work": 40000000,
+      "maximum_observed_work": 1000000,
+      "expected": "SAT",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "evidence": "15cb1152 reaches the original40M search cap in all three recipe orders. Bounded vector admission now preserves nine conserved dimensions and million-scale multiplicities; existing LP/exact restricted repair returns a fully funded original-recipe execution. Every primitive prefix and target is independently verified. Original request cap remains40M; one-million observed-work guard pins the recovered path."
+    },
+    {
+      "name": "vector-capacity/manual_large_n96_c2_d9_a1_s719_shuffle/workers-4",
+      "source": "cases/graph/bd/bd409dcaf224b68658447e250f3438e94212ddf80206ec66244607e5a663b23f.json",
+      "sha256_lf": "6f28f7a4a4973d230796674d3d5d5fe76f2cffd7f711423c1ed70542f31a8c71",
+      "work": 40000000,
+      "maximum_observed_work": 1000000,
+      "expected": "SAT",
+      "orders": [
+        0
+      ],
+      "workers": 4,
+      "expanded_budget": false,
+      "evidence": "Same nine-dimensional wide-capacity graph, independently replayed under four workers with fixed40M search cap. No budget expansion or floating-point proof authority."
     }
   ]
 }

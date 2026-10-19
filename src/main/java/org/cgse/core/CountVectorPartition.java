@@ -49,6 +49,7 @@ final class CountVectorPartition implements CountContinuation {
     private CountVectorNeighborhood neighborhood;
     private boolean neighborhoodTried;
     private boolean centeredTried, centeredAllocation;
+    private boolean wideCapacity;
     private int interiorCompletionDepth;
     private long neighborhoodAt;
     private List<ExactLinearProgram.Constraint> projected;
@@ -103,8 +104,9 @@ final class CountVectorPartition implements CountContinuation {
         for (int i = 0; i < lower.length; i++) {
             prepareCheck();
             if (upper[i] == null || lower[i].bitLength() > 1024 || upper[i].bitLength() > 1024 ||
-                    upper[i].compareTo(lower[i]) < 0 || upper[i].subtract(lower[i]).compareTo(BigInteger.valueOf(64)) > 0)
+                    upper[i].compareTo(lower[i]) < 0 || upper[i].subtract(lower[i]).bitLength() > 30)
                 throw new Declined();
+            wideCapacity |= upper[i].subtract(lower[i]).compareTo(BigInteger.valueOf(64)) > 0;
         }
         for (var row : rows) {
             prepareCheck();
@@ -171,7 +173,7 @@ final class CountVectorPartition implements CountContinuation {
         }
         if (bins.size() < 2 || bins.size() > 8) throw new Declined();
         dimensions = new ArrayList<>(bins.get(0).dimensions.keySet());
-        if (dimensions.size() < 2 || dimensions.size() > 6) throw new Declined();
+        if (dimensions.size() < 2 || dimensions.size() > 10) throw new Declined();
         for (var target : bins) if (!target.dimensions.keySet().equals(bins.get(0).dimensions.keySet())) throw new Declined();
         for (int g = 0; g < groups.size(); g++) {
             prepareCheck();
@@ -301,7 +303,7 @@ final class CountVectorPartition implements CountContinuation {
                 completedProgress += matching.progress(); matching.close(); matching = null;
                 if (impossible && residualKey != null && rejectedResiduals.size() < 512 &&
                         !rejectedResiduals.contains(residualKey)) {
-                    long bytes = 192L + 4L * groups.size();
+                    long bytes = 192L + (wideCapacity ? 8L : 4L) * groups.size();
                     if (budget.tryReserve(bytes)) { memory += bytes; rejectedResiduals.add(residualKey); }
                 }
                 // Exhaustion refutes only this residual allocation, not the
@@ -465,12 +467,16 @@ final class CountVectorPartition implements CountContinuation {
         finish("alternatives_unresolved");
     }
     private BigInteger residualKey() {
-        // Every multiplicity is in [0,64]. Include the actual destination and
+        // Encode the complete multiplicity. Include the actual destination and
         // original group coordinates, independent of a retry's column order.
         // Only exact matching exhaustion inserts keys; a numeric miss cannot.
-        byte[] packed = new byte[remaining.length + 1];
-        for (int g = 0; g < remaining.length; g++) { budget.check(); packed[g] = (byte) remaining[g].intValueExact(); }
-        packed[remaining.length] = (byte) ((bin + attempt) % bins.size());
+        int width = wideCapacity ? 4 : 1;
+        byte[] packed = new byte[width * remaining.length + 1];
+        for (int g = 0; g < remaining.length; g++) {
+            budget.check(); int value = remaining[g].intValueExact();
+            for (int b = 0; b < width; b++) packed[width * g + b] = (byte) (value >>> (8 * b));
+        }
+        packed[packed.length - 1] = (byte) ((bin + attempt) % bins.size());
         return new BigInteger(1, packed);
     }
     private void restart() {
