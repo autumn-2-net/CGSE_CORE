@@ -1,0 +1,105 @@
+Restricted repairs for wide vector allocations (2026-10-19)
+===========================================================
+
+Runtime evidence after ee56a690
+------------------------------
+Ten canonical constructive allocation cases remained UNKNOWN at 40M search
+work. Runtime traces distinguish their failures. Eight models encounter the
+48-group vector admission ceiling, sometimes in more than one compiled view.
+One large-multiplicity model declines before forming groups. The 40-group,
+three-dimensional model admits correctly, completes its exact intersections,
+and remains in the first bin's 37-coordinate kernel search. It is not missing
+a material row or a legal execution schedule after finding counts.
+
+A bounded projection experiment solves that first bin with only 24 free
+coordinates selected around an LP point. Keeping every original coordinate
+in the dense lattice was unnecessary for this candidate. The compiler's
+capacity groups and exact conserved bin targets provide the smaller problem;
+neither a new global budget nor a different feasibility model is needed.
+
+Implementation and scope
+------------------------
+CountVectorPartition can now admit up to 128 groups within its existing 384
+variable, 2..8 bin, 2..6 dimension, capacity<=64 and preparation-work limits.
+This does not widen CountAffineLattice's dense-kernel limit. Wide bins use the
+new CountVectorNeighborhood candidate strategy. The complete partition and
+original execution still decide whether a proposal is usable.
+
+The strategy retains a CountLpHint session and checks its finite point before
+using it. It first validates the rounded full point with exact integers. If
+rounding fails, it keeps fractional coordinates free and chooses a deterministic
+24-coordinate neighborhood, fixing other coordinates only inside this proposal.
+The fixed terms are subtracted exactly from every original bin RHS. The existing
+CountAffineLattice, kernel search and box enumeration then repair this small
+model. A second 24-coordinate selection diversifies the restrictions; a final
+28-coordinate selection widens the first neighborhood after both smaller
+attempts fail. No recipe ID, fixture identity or known witness is consulted.
+
+Each restored vector must satisfy every full-bin row and bound. The partition
+then checks its original rows, including side conditions not used in its
+decomposition. The planner independently checks the lifted primitive execution.
+LP statuses, failed fixings and unsuccessful neighborhoods never establish
+infeasibility, remove original choices or populate the exact residual-conflict
+cache. Large signed original offsets are restored after the normalized bin
+repair; they are not converted to floating point.
+
+Scheduling, accounting and ownership
+------------------------------------
+Up to 32 groups retain the previous algorithm path. For 33..48 groups the new
+search starts only after 3,145,728 work in that bin. An early prototype starting
+at 1,048,576 found a different first allocation and made a formerly solved
+40-group case slower. The final delayed opportunity preserves its ordinary
+success. Above 48 groups, the restricted search can start immediately because
+the former dense-vector admission did not cover those groups.
+
+Each neighborhood has at most three 786,432-work repair attempts, with its
+combined ceiling further limited to one eighth of remaining request work.
+LP acquisition is bounded by 262,144 work. These are additional local ceilings
+inside the existing vector and request caps, not new request credits. Preparation,
+fixing, exact arithmetic, verification, LP and retained child work are charged.
+Resuming an owner never renews an attempt's ceiling or restarts a finished LP.
+
+The ordinary affine frontier stays available while a neighborhood runs; an
+unsuccessful restricted search returns to it. Matching and neighborhood children
+are not run concurrently. Memory reservations cover the fixed projection and
+the existing children retain their own reservations. Completion, refusal,
+cancellation and parent closure release all owned workspaces.
+
+Validation
+----------
+CountVectorNeighborhoodTest contains twelve planted bins across 40, 64, 96 and
+128 variables. It checks all returned vectors independently, ordinary and tiny
+grants with identical work/results, worker handoff, contradictory original side
+conditions, memory refusal, cancellation during repair, small request refusal,
+and a complete 64-group allocation with alternating +/-2^70 offsets.
+The automatically discovered test and the maintained execution-boundary manifest
+keep these cases in standard/all regression discovery.
+
+At the unchanged 40M search cap, the packaged comparison improves the canonical
+source/fuel family from 23/33 to 29/33. All previous 23 successes keep exactly
+their work. Total work, including compilation and unresolved requests, falls
+from 611,554,541 to 438,805,293. All 18 original/shuffled requests of the six
+recovered graphs pass (baseline 1/18), as do all six fixed-budget four-worker
+requests. A strict cost guard also preserves the earlier 40-group success.
+
+The 28 graph controls preserve all results, reducing total work from 326,440,554
+to 298,699,939. One request uses 3,848 additional work (+0.044%); the other old
+successes do not increase. No reserved-memory peak increases in either paired
+graph batch. These are charged work and budget reservation measurements, not
+wall-time, cumulative allocation or game/main-thread performance claims.
+Four count controls, 33 main-count variants, six older allocation orders and
+17 earlier execution-order cases preserve their results. Build, all 1,478 ABI
+entries, source-jar matching, Forge/embedded AE dump packaging and automatic
+test discovery pass. Version remains 0.1.4; no host or adapter change is needed.
+
+Four original-order cases remain UNKNOWN: the 64-group, three-bin,
+three-dimensional seed-43 allocation, and the three nine-dimensional models
+with 96/128 groups (one also has multiplicities outside the vector cap).
+The restricted method does not solve general large-dimensional allocation;
+exhausted neighborhoods remain candidates for further algorithms, not negative
+oracles. The existing unresolved direct allocation seed 31 is unchanged.
+Local input snapshots, traces, prototype failures and raw observations remain
+outside the repository. The complete standard suite passes 342/342, including
+all 613 registered execution-boundary requests and their unchanged old work
+guards. The source snapshot is unchanged throughout this run. This is not
+a complete all/corpus campaign or a live-host run.

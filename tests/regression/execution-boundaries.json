@@ -3283,6 +3283,186 @@
       "evidence": "Fixed 40M request and four workers preserve the compiled structural frontier and existing completion ceiling; the original-recipe execution is independently verified.",
       "workers": 4,
       "expanded_budget": false
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n128_c2_d3_a1_s719_shuffle",
+      "source": "cases/graph/01/01a736105b44a7f5b5e5cd6e500071feaa05788eef71ff80dc858f15c90e61a1.json",
+      "sha256_lf": "cf21b09f2d32a17fc5b6289c8d521170f4e936752f7572a16d452d9bcedbfd38",
+      "work": 40000000,
+      "maximum_observed_work": 15000000,
+      "expected": "SAT",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "evidence": "ee56a690 exhausts the original-order 40M search cap. LP-guided exact restricted bin repair returns independently replayed original-recipe execution for all three orders. Restricted misses never prove infeasibility; original rows and integer bounds remain authoritative."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n128_c2_d3_a1_s719_shuffle/workers-4",
+      "source": "cases/graph/01/01a736105b44a7f5b5e5cd6e500071feaa05788eef71ff80dc858f15c90e61a1.json",
+      "sha256_lf": "cf21b09f2d32a17fc5b6289c8d521170f4e936752f7572a16d452d9bcedbfd38",
+      "work": 40000000,
+      "maximum_observed_work": 15000000,
+      "expected": "SAT",
+      "orders": [
+        0
+      ],
+      "workers": 4,
+      "expanded_budget": false,
+      "evidence": "The same complete original-recipe witness checks pass with four workers and an unchanged 40M request cap; retained LP and affine children release all reservations."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n64_c3_d3_a1_s107_shuffle",
+      "source": "cases/graph/4a/4ac323419b170b594dfc130dc2ee94eb9c77cf65b9d8bf66ad1b4358fae7cc40.json",
+      "sha256_lf": "da8bb47c6c2b496c05c7be3e052aed40d009c63f4b58581340a09e13aa205cdb",
+      "work": 40000000,
+      "maximum_observed_work": 40000000,
+      "expected": "SAT",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "evidence": "ee56a690 exhausts the original-order 40M search cap. LP-guided exact restricted bin repair returns independently replayed original-recipe execution for all three orders. Restricted misses never prove infeasibility; original rows and integer bounds remain authoritative."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n64_c3_d3_a1_s107_shuffle/workers-4",
+      "source": "cases/graph/4a/4ac323419b170b594dfc130dc2ee94eb9c77cf65b9d8bf66ad1b4358fae7cc40.json",
+      "sha256_lf": "da8bb47c6c2b496c05c7be3e052aed40d009c63f4b58581340a09e13aa205cdb",
+      "work": 40000000,
+      "maximum_observed_work": 40000000,
+      "expected": "SAT",
+      "orders": [
+        0
+      ],
+      "workers": 4,
+      "expanded_budget": false,
+      "evidence": "The same complete original-recipe witness checks pass with four workers and an unchanged 40M request cap; retained LP and affine children release all reservations."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n40_c3_d3_a1_s313_shuffle",
+      "source": "cases/graph/62/6203279fe42c423bbe1b5d7f2ebbca79667b1c2101661c3d7442e551c54ba514.json",
+      "sha256_lf": "d8b4295f3d2f65e6405d6144b676d30314a6e738ad65da088ae96989dda6fd0c",
+      "work": 40000000,
+      "maximum_observed_work": 8000000,
+      "expected": "SAT",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "evidence": "ee56a690 exhausts the original-order 40M search cap. LP-guided exact restricted bin repair returns independently replayed original-recipe execution for all three orders. Restricted misses never prove infeasibility; original rows and integer bounds remain authoritative."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n40_c3_d3_a1_s313_shuffle/workers-4",
+      "source": "cases/graph/62/6203279fe42c423bbe1b5d7f2ebbca79667b1c2101661c3d7442e551c54ba514.json",
+      "sha256_lf": "d8b4295f3d2f65e6405d6144b676d30314a6e738ad65da088ae96989dda6fd0c",
+      "work": 40000000,
+      "maximum_observed_work": 8000000,
+      "expected": "SAT",
+      "orders": [
+        0
+      ],
+      "workers": 4,
+      "expanded_budget": false,
+      "evidence": "The same complete original-recipe witness checks pass with four workers and an unchanged 40M request cap; retained LP and affine children release all reservations."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n64_c3_d3_a1_s313_shuffle",
+      "source": "cases/graph/95/959fa5631b36d3d5c7be174163c4364628a5ffc6b9db1c6d9952c80383701658.json",
+      "sha256_lf": "c0707edf4562888db82f725e7842ed30be6b50d3afd5ee85edaba2dfe10298b7",
+      "work": 40000000,
+      "maximum_observed_work": 15000000,
+      "expected": "SAT",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "evidence": "ee56a690 exhausts the original-order 40M search cap. LP-guided exact restricted bin repair returns independently replayed original-recipe execution for all three orders. Restricted misses never prove infeasibility; original rows and integer bounds remain authoritative."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n64_c3_d3_a1_s313_shuffle/workers-4",
+      "source": "cases/graph/95/959fa5631b36d3d5c7be174163c4364628a5ffc6b9db1c6d9952c80383701658.json",
+      "sha256_lf": "c0707edf4562888db82f725e7842ed30be6b50d3afd5ee85edaba2dfe10298b7",
+      "work": 40000000,
+      "maximum_observed_work": 15000000,
+      "expected": "SAT",
+      "orders": [
+        0
+      ],
+      "workers": 4,
+      "expanded_budget": false,
+      "evidence": "The same complete original-recipe witness checks pass with four workers and an unchanged 40M request cap; retained LP and affine children release all reservations."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n96_c2_d3_a1_s719_shuffle",
+      "source": "cases/graph/d0/d044a8f243d59076092a16d52ef02af5f28c3e9dfcf6f79f4969319e6e60044a.json",
+      "sha256_lf": "b754c255b0c7454ee59601778a47b84e313bfac0b4d8f2e85a5a4c06965ec49c",
+      "work": 40000000,
+      "maximum_observed_work": 16000000,
+      "expected": "SAT",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "evidence": "ee56a690 exhausts the original-order 40M search cap. LP-guided exact restricted bin repair returns independently replayed original-recipe execution for all three orders. Restricted misses never prove infeasibility; original rows and integer bounds remain authoritative."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n96_c2_d3_a1_s719_shuffle/workers-4",
+      "source": "cases/graph/d0/d044a8f243d59076092a16d52ef02af5f28c3e9dfcf6f79f4969319e6e60044a.json",
+      "sha256_lf": "b754c255b0c7454ee59601778a47b84e313bfac0b4d8f2e85a5a4c06965ec49c",
+      "work": 40000000,
+      "maximum_observed_work": 16000000,
+      "expected": "SAT",
+      "orders": [
+        0
+      ],
+      "workers": 4,
+      "expanded_budget": false,
+      "evidence": "The same complete original-recipe witness checks pass with four workers and an unchanged 40M request cap; retained LP and affine children release all reservations."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n64_c2_d3_a1_s107_shuffle",
+      "source": "cases/graph/f6/f66c34479e052dcc42f2c4b6a1d12b5e3cdb69c39a43aaef3466a7da38071c78.json",
+      "sha256_lf": "9dd9fa6b9ad245b58b61c5f4ffbad3dbc14713c37aea027c8ec34d18c4ccc29d",
+      "work": 40000000,
+      "maximum_observed_work": 2000000,
+      "expected": "SAT",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "evidence": "ee56a690 exhausts the original-order 40M search cap. LP-guided exact restricted bin repair returns independently replayed original-recipe execution for all three orders. Restricted misses never prove infeasibility; original rows and integer bounds remain authoritative."
+    },
+    {
+      "name": "vector-neighborhood/manual_small_n64_c2_d3_a1_s107_shuffle/workers-4",
+      "source": "cases/graph/f6/f66c34479e052dcc42f2c4b6a1d12b5e3cdb69c39a43aaef3466a7da38071c78.json",
+      "sha256_lf": "9dd9fa6b9ad245b58b61c5f4ffbad3dbc14713c37aea027c8ec34d18c4ccc29d",
+      "work": 40000000,
+      "maximum_observed_work": 2000000,
+      "expected": "SAT",
+      "orders": [
+        0
+      ],
+      "workers": 4,
+      "expanded_budget": false,
+      "evidence": "The same complete original-recipe witness checks pass with four workers and an unchanged 40M request cap; retained LP and affine children release all reservations."
+    },
+    {
+      "name": "vector-neighborhood/preserve-ordinary-forty-group-success",
+      "source": "cases/graph/41/412b8d05f67ca4dec7e2359ef47550393f2c9e82d1e2152e0176930cae6a5b9d.json",
+      "sha256_lf": "b85930d0d495e7a52e05fef3c98dbc991aa780cf1f37586a93ab55b539eaec43",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 4500000,
+      "expected": "SAT",
+      "evidence": "An early restricted repair selected a less useful first bin and increased this previously solved request from 4.048M to 11.331M work. Delayed admission preserves the existing independently verified witness at exactly 4,048,355 work."
     }
   ]
 }

@@ -46,6 +46,9 @@ final class CountVectorPartition implements CountContinuation {
     private long alternativeRemaining = 32768;
     private boolean repairing, alternativesPriced;
     private CountMeetInMiddle matching;
+    private CountVectorNeighborhood neighborhood;
+    private boolean neighborhoodTried;
+    private long neighborhoodAt;
     private List<ExactLinearProgram.Constraint> projected;
     private BigInteger[] binLower, binUpper;
     private long matchingAt;
@@ -129,9 +132,9 @@ final class CountVectorPartition implements CountContinuation {
             for (int id : variables) owner[id] = groups.size();
             groups.add(new Group(variables, capacity));
         }
-        // The child can repair a kernel of at most 48 coordinates. Larger
-        // allocations retain the ordinary search; this is not a domain limit.
-        if (groups.size() < 4 || groups.size() > 48) throw new Declined();
+        // Wide bins use a small restricted repair, without building a dense
+        // lattice over every group. Admission is not a domain restriction.
+        if (groups.size() < 4 || groups.size() > 128) throw new Declined();
         for (int i = 0; i < lower.length; i++) {
             prepareCheck(); if (!lower[i].equals(upper[i]) && owner[i] < 0) throw new Declined();
         }
@@ -246,8 +249,8 @@ final class CountVectorPartition implements CountContinuation {
                 }
                 beginBin(); return false;
             }
-            if (matching == null && !matchingTried && work >= matchingAt) beginMatching();
-            if (matching == null && !matchingEntered && projected != null && affine.boxSearchMissed()) {
+            if (neighborhood == null && matching == null && !matchingTried && work >= matchingAt) beginMatching();
+            if (neighborhood == null && matching == null && !matchingEntered && projected != null && affine.boxSearchMissed()) {
                 // The unpruned Cartesian estimate can reject a small reachable
                 // table. After a failed box scout, let exact matching prune the
                 // actual targets once. Its nonretained cap cannot be renewed;
@@ -258,14 +261,23 @@ final class CountVectorPartition implements CountContinuation {
                 matching = new CountMeetInMiddle(projected, binLower, binUpper, budget,
                         grant);
             }
-            if (!(matching == null ? affine.step() : matching.step())) return false;
+            if (!neighborhoodTried && matching == null && work >= neighborhoodAt) {
+                neighborhoodTried = true;
+                neighborhood = CountVectorNeighborhood.create(projected, binLower, binUpper, budget, 32768);
+            }
+            if (!(neighborhood != null ? neighborhood.step() : matching == null ? affine.step() : matching.step())) return false;
             if (childPaused()) {
                 long available = Math.min(maximumWork, until) - work - (budget.threadWork() - before);
                 if (available > 0) resumeChild(Math.min(262144, available));
                 return false;
             }
             BigInteger[] found;
-            if (matching != null) {
+            boolean fromNeighborhood = neighborhood != null;
+            if (neighborhood != null) {
+                found = neighborhood.counts();
+                completedProgress += neighborhood.progress(); neighborhood.close(); neighborhood = null;
+                if (found == null) return false;
+            } else if (matching != null) {
                 found = matching.counts();
                 boolean impossible = matching.infeasible();
                 completedProgress += matching.progress(); matching.close(); matching = null;
@@ -284,7 +296,8 @@ final class CountVectorPartition implements CountContinuation {
                     if (matching != null) return false;
                 }
             }
-            if (found != null && bin == 0 && (alternativeRemaining > 0 || canDefer())) {
+            if (found != null && bin == 0 && (!fromNeighborhood || affine.counts() != null) &&
+                    (alternativeRemaining > 0 || canDefer())) {
                 // Keep the completed basis while validating the residual. A
                 // local failure can reuse it instead of eliminating again.
                 alternatives = affine;
@@ -322,6 +335,8 @@ final class CountVectorPartition implements CountContinuation {
             projected.add(new ExactLinearProgram.Constraint(terms, sign > 0 ? target.target[d] : target.target[d].negate()));
         }
         binLower = lo; binUpper = hi;
+        neighborhoodTried = order.length <= 32;
+        neighborhoodAt = work + (order.length > 48 ? 0 : 3_145_728);
         affine = new CountAffineLattice(projected, lo, hi, budget, 32768).retained();
         // Broad first allocations make the sphere tree too expensive. Smaller
         // first bins and stalled residuals may reuse their reduced basis;
@@ -350,9 +365,10 @@ final class CountVectorPartition implements CountContinuation {
             matching = new CountMeetInMiddle(projected, binLower, binUpper, budget, 32768).retained();
         }
     }
-    private boolean childPaused() { return matching == null ? affine.paused() : matching.paused(); }
+    private boolean childPaused() { return neighborhood != null ? neighborhood.paused() : matching == null ? affine.paused() : matching.paused(); }
     private void resumeChild(long quantum) {
-        if (matching == null) affine.resume(quantum); else matching.resume(quantum);
+        if (neighborhood != null) neighborhood.resume(quantum);
+        else if (matching == null) affine.resume(quantum); else matching.resume(quantum);
     }
     private void retry() {
         if (alternatives != null) {
@@ -462,6 +478,7 @@ final class CountVectorPartition implements CountContinuation {
     @Override public long progress() {
         long progress = completedProgress + (matching == null ? 0 : matching.progress()) +
                 (affine == null ? 0 : affine.progress()) + (alternatives == null ? 0 : alternatives.progress());
+        progress += neighborhood == null ? 0 : neighborhood.progress();
         for (var pending : deferred) progress += pending.search.progress();
         return progress;
     }
@@ -480,6 +497,7 @@ final class CountVectorPartition implements CountContinuation {
         if (matching != null) matching.close(); matching = null;
         if (affine != null) affine.close(); affine = null;
         if (alternatives != null) alternatives.close(); alternatives = null;
+        if (neighborhood != null) { completedProgress += neighborhood.progress(); neighborhood.close(); neighborhood = null; }
         projected = null; binLower = binUpper = null;
     }
 }

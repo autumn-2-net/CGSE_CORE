@@ -85,7 +85,10 @@ total search work. Reservation peaks are not uniformly lower: one previously
 solved graph uses 6016 additional bytes while requiring less search work.
 These peaks measure budgeted workspace, not JVM RSS.
 
-The remaining ten source/fuel cases and direct allocation seed 31 are separate
+At this increment, the remaining ten source/fuel cases and direct allocation seed 31 are separate
 open hard cases. This scheduling repair does not claim to solve those inputs,
 or to replace future algorithm work. No public ABI, version, native dependency
 or GTLCore adapter change is required.
+
+The follow-up in vector-neighborhood-repair.txt adds bounded restricted bin
+search for larger allocations and recovers six of those ten graph boundaries.
