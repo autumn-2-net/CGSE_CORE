@@ -296,6 +296,16 @@ final class CountViewSearch implements AutoCloseable {
                 search.engine == Engine.GROUPED_PARTITION);
     }
 
+    /** Continue an already selected allocation opportunity, without pricing a new one. */
+    long allocationCompletionQuantum() {
+        // Exact capacity groups admit a self-contained allocation search.
+        // Packing/LP neighborhoods still need their existing interleaved
+        // service: running their repair alone can delay useful competing cuts.
+        for (Search search : searches) if (pendingAllocationCompletion(search))
+            return Math.min(262144, Math.min(search.continuationLimit - search.work, budget.remainingWork()));
+        return 0;
+    }
+
     private void addGroupedPartition() {
         if (groupedPartitionAttempted || policy.mode() == CountPortfolioPolicy.Mode.PROOF) return;
         long before = budget.threadWork();
@@ -617,6 +627,12 @@ final class CountViewSearch implements AutoCloseable {
                 if (added) stalled = false;
                 else if (addIntegerJump()) stalled = false;
             }
+            // An owned allocation completion opportunity can cross a quiet
+            // phase (for example, kernel search before box enumeration). The
+            // outer coordinator must not interpret two idle feedback batches
+            // as surrendering that already bounded opportunity. Keep ordinary
+            // owner deadlines: another resume cannot renew its work ceiling.
+            if (stalled && searches.stream().anyMatch(this::pendingAllocationCompletion)) stalled = false;
             return counts != null || infeasible || stalled;
         } finally {
             long spent = budget.threadWork() - before;
@@ -761,6 +777,12 @@ final class CountViewSearch implements AutoCloseable {
         }
         var chosen = policy.select();
         return searches.stream().filter(search -> search.scheduling == chosen).findFirst().orElse(null);
+    }
+
+    private boolean pendingAllocationCompletion(Search search) {
+        return !search.done && search.scheduling.eligible && search.progress > 0 &&
+                search.work < search.continuationLimit &&
+                (search.specialist instanceof CountGroupedPartition || search.specialist instanceof CountVectorPartition);
     }
 
     /** Charged work in completed or retained portfolio steps. */

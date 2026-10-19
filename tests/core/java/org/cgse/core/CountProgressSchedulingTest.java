@@ -243,6 +243,8 @@ public final class CountProgressSchedulingTest {
                 }
                 check(quantum > 0 && quantum <= CountPortfolioPolicy.MAX_QUANTUM,
                         "Packing handoff bypassed the policy sample size");
+                check(search.allocationCompletionQuantum() == 0,
+                        "Packing repair bypassed its interleaved LP service using an allocation preference");
                 long bytes = budget.reservedBytes(), work = budget.threadWork();
                 check(search.packingContinuationQuantum() == quantum && budget.reservedBytes() == bytes &&
                         budget.threadWork() == work, "Repeated observation recreated a candidate frontier");

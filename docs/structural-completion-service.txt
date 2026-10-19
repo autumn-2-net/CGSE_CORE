@@ -1,0 +1,91 @@
+Compiled structural search completion (0.1.4)
+============================================
+
+Observed failure
+----------------
+The 24-group source/fuel graph recovered by deferred allocation repair still
+exhausted its 40M search allowance under recipe permutations 17 and 1009.
+Runtime traces showed that all three orders admitted the same allocation
+shape, and even produced identical first-bin coefficients, targets and bounds.
+The failed orders stopped before that bin's box enumeration or residual repair.
+
+The problem crossed two scheduling levels. CountViewSearch selected a bounded
+structural completion opportunity after the mandatory first engine visits.
+IntegerCountBranch still left that portfolio after its initial 262144-work
+compiled sample. Order-dependent whole-model scouts then consumed the optional
+recovery graph's remaining allowance. The selected allocation frontier owned
+state and an unspent opportunity, but did not receive enough execution time.
+Its early closure was neither a contradiction nor an invalid graph model.
+
+Scheduling change
+-----------------
+After the initial compiled sample, the branch now asks the portfolio whether
+an already selected structural opportunity remains. If so, it continues that
+same portfolio in batches of at most 262144 work. Completion, ineligibility or
+the existing ceiling ends this preference and returns to the ordinary pipeline.
+No new arm, solver, budget reservation or opportunity is created by this query.
+
+This applies to grouped/vector allocations with certified capacity structure.
+They already own request-local frontiers and bounded completion preferences.
+An idle feedback interval within one of those opportunities no longer yields
+the portfolio as wholly stalled. The ordinary parent deadline still yields,
+and mandatory first visits still run.
+
+Packing cores and LP neighborhoods keep their existing interleaved service.
+A broader prototype ran their repair before useful competing LP cuts and lost
+historical packing witnesses or exceeded their work guards. The complete
+execution-boundary group detected this regression. Structural admission must
+distinguish those cooperating searches from self-contained allocation problems;
+an unspent local allowance alone does not justify moving every tool earlier.
+
+The request cap, recovery-view cap, algorithm-local cap and completion ceiling
+are unchanged. Resuming, migrating to another worker, or repeatedly inspecting
+the remaining quantum cannot replenish them. The packing core retains its
+existing separate handling of distinct repair phases; a query does not advance
+or observe a new phase. Candidate-only tools remain ineligible in proof mode.
+
+No row, domain, conflict certificate or count model is changed. Positive counts
+still require original-domain validation, executable scheduling, primitive
+prefix verification, and restoration through the compiled graph. A restricted
+failure or exhausted opportunity cannot establish global infeasibility.
+
+Regression coverage
+-------------------
+CountCompletionServiceTest is automatically discovered by the standard runner.
+It exercises the actual compiled-to-outer-branch handoff on a planted integer
+allocation, moves the next step to another worker, and independently checks the
+resulting primitive execution and restored counts. It also checks mandatory
+visits, nonrenewable opportunities, a seven-unit request tail, proof eligibility,
+cancellation and complete release of reservations.
+
+CountPackingServiceTest retains its original companion-service ledger checks.
+CountProgressSchedulingTest additionally checks that a packing frontier cannot
+claim the allocation preference and bypass its established LP cooperation.
+
+The recovered graph orders are permanent execution boundaries. Their corpus
+oracle independently checks original recipe prefixes, target delivery and
+seed restoration. Full input orderings, baseline binaries, projected models,
+runtime traces and all failed/intermediate experiments are retained locally.
+Local evidence and player archives are not part of the repository change.
+
+The final package passes 39 related Java programs and all 588 registered
+execution-boundary requests, including the existing work guards and fixed or
+expanded four-worker budgets. The 33 paired main-count variants, four count
+controls and 17 older hard recipe orders are preserved. Build, 1478-entry ABI,
+Forge embedded AE dump packaging and automatic test discovery checks pass.
+This is targeted validation plus the complete execution-boundary group, not
+a new full standard/all or live-host run.
+
+The first paired source/fuel run moves from 22 to 23 solved out of 33 at the
+same 40M search cap. The two formerly failing permutations of the previous
+recovery also complete, at roughly 17.4M observed work. Existing successful
+members of that batch and the 28 historical graph controls retain their
+witnesses without a search-work increase. The old 22 successes use 8.5% less
+total search work. Reservation peaks are not uniformly lower: one previously
+solved graph uses 6016 additional bytes while requiring less search work.
+These peaks measure budgeted workspace, not JVM RSS.
+
+The remaining ten source/fuel cases and direct allocation seed 31 are separate
+open hard cases. This scheduling repair does not claim to solve those inputs,
+or to replace future algorithm work. No public ABI, version, native dependency
+or GTLCore adapter change is required.

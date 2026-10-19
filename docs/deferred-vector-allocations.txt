@@ -67,7 +67,7 @@ the same request cap. The 33-case source/fuel batch moves from 21 to 22 solved;
 the other 11 unresolved graphs need further work.
 
 That recovered graph also completes with four workers at the fixed 40M cap.
-Two newly checked recipe permutations (17 and 1009) remain unresolved on both
+At that change, recipe permutations 17 and 1009 remained unresolved on both
 the old and new builds, with the same work and reservation peaks. These are
 separate recorded failures, not passing order-independent oracles. The direct
 seed-31 trace reuses five exact residual conflicts before its bounded stop.
@@ -84,6 +84,11 @@ larger structures outside vector admission and the remaining direct allocation
 still lack a witness within their limits. Full joint affine search and native
 five-second CP-SAT, SCIP and Z3 probes were also recorded locally; their UNKNOWN
 results do not establish infeasibility or a general performance ranking.
+
+The subsequent compiled-opportunity handoff repair recovers both permutations
+without changing this allocation algorithm or its quotas. Its runtime diagnosis,
+cross-level scheduling contract and regression coverage are documented in
+structural-completion-service.txt.
 
 Reproduction inputs, baseline jars, exact orderings, failed experiments, native
 outputs, budgets and per-run commands are preserved in the local case registry.
