@@ -57,7 +57,7 @@ public final class RefillNormalizedWordTest {
   System.out.println("RefillNormalizedWordTest: assertions="+checks);
  }
  private static void families() {
-  int atBound=0,primaryAtBound=0,total=0,retainedRagged=0;
+  int atBound=0,primaryAtBound=0,total=0;
   for(int parts:new int[]{2,4,8})for(int width:new int[]{2,3})for(int factor:new int[]{1,2})for(long goal:new long[]{1,3})
   for(long seed:new long[]{0,2})for(long joint:new long[]{0,3})for(boolean separated:List.of(false,true))for(boolean reverse:List.of(false,true))for(int shape=0;shape<(factor==1?5:3);shape++) {
    var f=fixture(parts,width,factor,goal,seed,joint,separated,reverse,shape);var b=budget();GraphPlan<String> result;
@@ -75,17 +75,13 @@ public final class RefillNormalizedWordTest {
     b=budget();try(var owner=owner(f.plan,b)) {while(!owner.step()){}result=reduce(f.plan,f.stock,Set.of(),true,b,16384,owner.summary());}
     check(b.reservedBytes()==0,"Diagnostic workspace");
    }
-   // An already successful older grouping keeps priority. Alternating
-   // partitions can group two rounds and stop with a valid partial reduction;
-   // normalization is not yet a second refinement of that accepted word.
-   if(shape==3&&result.initialExact().get("feed").longValueExact()>f.needed*factor){retainedRagged++;continue;}
    try { bound(f,result); }
    catch(AssertionError failure) { throw new AssertionError(parts+"-"+width+"-"+factor+"-"+goal+"-"+seed+"-"+joint+"-"+separated+"-"+reverse+"-"+shape+" feed="+result.initialExact().get("feed"),failure); }
    for(int i=0;i<parts*width;i++)check(result.patternTimesExact().get("r"+i).equals(BigInteger.valueOf(f.needed*factor)),"Split a required segment");
    for(var e:f.plan.patternTimesExact().entrySet())if(e.getKey().startsWith("side"))check(e.getValue().equals(result.patternTimesExact().get(e.getKey())),"Lost compulsory gap");
   }
-  System.out.println("Normalized families: default bound="+atBound+"/"+total+", primary="+primaryAtBound+"/1152, retained ragged="+retainedRagged);
-  check(total==1536&&primaryAtBound>=1078,"Default-budget quality regressed: "+atBound+"/"+total);
+  System.out.println("Normalized families: default bound="+atBound+"/"+total+", primary="+primaryAtBound+"/1152");
+  check(total==1536&&atBound>=1462&&primaryAtBound>=1078,"Default-budget quality regressed: "+atBound+"/"+total);
  }
  private static void bound(Fixture f,GraphPlan<String> p) {
   // Fixed startup A, feed per round, net A/joint growth and retained seeds

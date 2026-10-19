@@ -838,9 +838,9 @@ Known boundaries after the refill review at 224e9172:
 - Optional verified whole-word reduction now removes dominated firings already
   selected upstream, including the complete main-solver growth example (1001
   firings becomes one when no final A seed is required). It remains bounded and
-  conservative: it does not replace recipes, optimize inside opaque composite
-  repeat bodies, rewrite consumed configuration pushes, or claim global minimum
-  supplies. Multi-recipe loops already present in the word are eligible too.
+  conservative: it does not replace recipes, generally optimize inside opaque
+  composite repeat bodies, rewrite consumed configuration pushes, or claim global
+  minimum supplies. Multi-recipe loops already present in the word are eligible too.
   Adjacent repeated flat blocks can now be reduced jointly, including longer
   periods suggested by exact repeated-atom anchors after the short scan fails,
   a completed structural certificate proves it has no match, or an inner short
@@ -860,12 +860,29 @@ Known boundaries after the refill review at 224e9172:
   The new child keeps at most one already computed body summary across flat gap
   steps, under the same immutable binding. Its charged lease is evicted before
   folding a different body; there is no cross-request cache or fresh allowance.
-  Existing successful groupings retain priority and their results. In particular,
-  an old grouping of two differently partitioned rounds may make a useful partial
-  reduction and stop before normalization; the continuation does not yet refine
-  that accepted word a second time. Distances hidden by other eligible anchors,
-  general algebraic equivalence, opaque repeat interiors and scans stopped by
-  the original optional cap remain incomplete.
+  Existing successful groupings retain priority and their results. If all active
+  maximum count bounds rounded upward for a grouped composite, one bounded
+  follow-up can factor that accepted unit's exact dispatch period. Differently
+  partitioned rounds may otherwise be rounded up together, retaining an extra
+  round despite an already useful reduction. Integral active bounds do not admit
+  the follow-up. The residual only schedules analysis; exact canonical atoms and
+  an incremental prefix-function scan must prove the complete period. Nested
+  repetition counts stay nested, including values whose product exceeds long;
+  the pass never unfolds loops or merges dispatch batches. One-event primitive
+  periods are declined. At most one selected unit is factored per invocation.
+  The accepted child and its verifier stay charged while the new child borrows
+  that exact word/binding/supply fold. Backward pruning and full verification use
+  the accepted bill's tighter supply ceiling. An unsuccessful or interrupted
+  follow-up retains that bill; cancellation propagates. Analysis receives at
+  most 2048 work and half the remaining allowance; analysis and pruning together
+  share the original quota, with no recursive restart or cache budget use.
+  The 96 former alternating-partition boundaries now reach their feed bound in
+  the existing 8192 allowance, as do 256 additional two/three/four-round variants.
+  Of the 1536 prior normalized-word variants, 1462 reach their scoped bound;
+  74 still need the diagnostic 16384 quota. This is not global supply optimality.
+  Distances hidden by other eligible anchors, general algebraic equivalence,
+  unrecognized repeat interiors and scans stopped by the original optional cap
+  remain incomplete.
   Very small work-scaled preview allowances can still
   retain the old flat bill; recognizing blocks does not increase that quota.
   Existing forced production credit is retained even if it is surplus.

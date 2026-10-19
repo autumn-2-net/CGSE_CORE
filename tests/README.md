@@ -1366,8 +1366,20 @@ and 96 ordinary expansion paths to terminal supplies. Independent primitive
 replay checks enablement, final seeds and supply ceilings. Conservation gives
 scoped feed bounds, not global optimality. The original 8,192 quality cap is
 retained; a separate 16,384 diagnostic distinguishes remaining cap exits from
-recognition limits. Alternating partitions that already receive a partial
-reduction from the older pass remain an explicit boundary. Forced production,
+recognition limits. The 96 alternating partitions that previously stopped after
+a partial reduction now reach the scoped bound at the unchanged default cap.
+Forced production,
 consumed configuration, external supply, incomplete coverage, all new suspended
 phases and worker ownership transfer are guarded too. All three test programs
 are included through automatic discovery in `standard`.
+
+`RefillUnitPeriodsTest` independently compares dispatch traces for exact period
+factorization, including identity wrappers, opaque nested atoms, hash collisions,
+long equal prefixes, overflow-sized nested counts, quota and memory refusals.
+`RefillAcceptedPeriodsTest` covers 256 two/three/four-round partition variants in
+both catalog orders. Primitive replay and conservation bound the feed demand;
+all reach that bound within the existing 8,192-work quality allowance. Integral
+active requirements decline the extra pass. Tests also guard target credit,
+returned tools, incomplete coverage, external supplies, configuration dispatch,
+work/time/memory/cancellation and worker transfer while an accepted partial bill
+and its verifier remain owned. Both programs are automatically discovered.

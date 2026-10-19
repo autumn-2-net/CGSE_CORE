@@ -15,7 +15,7 @@ import java.util.*;
  * preserves executability without requiring all unrequested final coproducts.
  */
 final class RefillWordPruning<K> implements AutoCloseable {
-    private enum Phase { RECIPES, STRUCTURE, CONSUMED, PRODUCED, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, BLOCKS, ANCHORS, SHAPES, NORMAL_FORMS, SPANS, BLOCK_PRUNE, DONE }
+    private enum Phase { RECIPES, STRUCTURE, CONSUMED, PRODUCED, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, BLOCKS, ANCHORS, SHAPES, NORMAL_FORMS, SPANS, BLOCK_PRUNE, PERIODS, PERIOD_PRUNE, DONE }
     private final GraphPlan<K> original;
     private final Map<K, Long> stock;
     private final Set<K> external;
@@ -45,6 +45,11 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private RefillWordSpans spans;
     private List<PlanStep> groupedAtoms;
     private RefillWordPruning<K> blockPruning;
+    private RefillUnitPeriods periods;
+    private RefillWordPruning<K> periodPruning;
+    private GraphPlan<K> factored;
+    private PlanStep roundedUnit;
+    private boolean trackRounding, unitRounded;
     private SequenceSummary<K> summary, unitSummary;
     private PlanStep lastUnit;
     private SequenceSummary<K> lastUnitSummary;
@@ -153,7 +158,13 @@ final class RefillWordPruning<K> implements AutoCloseable {
             }
             if (phase == Phase.BLOCK_PRUNE) {
                 if (!blockPruning.step()) return false;
-                if (blockPruning.result() != regrouped) { result = blockPruning.result(); return finish(); }
+                if (blockPruning.result() != regrouped) {
+                    result = blockPruning.result();
+                    long left = allowance - (budget.nodes() - started);
+                    if (blockPruning.roundedUnit == null || left < 1024) return finish();
+                    periods = new RefillUnitPeriods(blockPruning.reversed, blockPruning.roundedUnit, budget, Math.min(2048, left / 2));
+                    phase = Phase.PERIODS; return false;
+                }
                 else if (blocks != null || anchors != null && anchors.hasShortBlocks()) {
                     // A short tandem can be a necessary inner loop rather than
                     // a reducible outer round. Recognition alone is not quality
@@ -166,6 +177,24 @@ final class RefillWordPruning<K> implements AutoCloseable {
                     return normalTried ? finishGrouping() : startAnchors(true);
                 }
                 return finishGrouping();
+            }
+            if (phase == Phase.PERIODS) {
+                if (!periods.step()) return false;
+                if (periods.result() == null) return finish();
+                // The accepted child and its verifier remain owned throughout.
+                // Factoring proves the same complete dispatch trace, so its
+                // checked fold is valid under this exact supply/binding tuple.
+                factored = GraphPlan.ownedRefill(result, periods.result(), result.recipes(), result.initialExact(), result.missingExact(), result.result(), budget.nodes());
+                periodPruning = new RefillWordPruning<>(factored, stock, external, forceCraft, ignoreTargetStock, budget,
+                        allowance - (budget.nodes() - started), blockPruning.verification.summary());
+                periodPruning.allowBlocks = false; periodPruning.inheritedStructure = true;
+                periodPruning.compactCursors = true; periodPruning.reuseUnit = true;
+                phase = Phase.PERIOD_PRUNE; return false;
+            }
+            if (phase == Phase.PERIOD_PRUNE) {
+                if (!periodPruning.step()) return false;
+                if (periodPruning.result() != factored) result = periodPruning.result();
+                return finish();
             }
             for (int i = 0; i < 64; i++) {
                 budget.check();
@@ -334,7 +363,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
         return false;
     }
 
-    private void startUnit() { unitKeys(); runs = BigInteger.ZERO; phase = Phase.SUPPORT; }
+    private void startUnit() { unitKeys(); runs = BigInteger.ZERO; unitRounded = false; phase = Phase.SUPPORT; }
     private void emit() {
         changed |= !runs.equals(oldRuns);
         var delta = unitDelta(original.target());
@@ -343,6 +372,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
             reserve(64);
             var kept = runs.equals(oldRuns) ? atom : PlanStep.repeat(unit, runs);
             reversed.add(kept);
+            if (unitRounded && roundedUnit == null) roundedUnit = kept;
             if (atom instanceof PlanStep.Batch) flatBatches++;
             else opaqueAtoms++;
             if (!hintTried) {
@@ -389,14 +419,26 @@ final class RefillWordPruning<K> implements AutoCloseable {
             BigInteger before = value(inventory, key).subtract(delta.multiply(oldRuns));
             put(inventory, key, before);
             if (delta.signum() > 0) {
-                runs = runs.max(ceil(value(required, key).subtract(before), delta));
+                supportRuns(value(required, key).subtract(before), delta);
                 if (forceCraft && key.equals(original.target())) {
                     BigInteger prefix = before.subtract(original.initialExact().getOrDefault(key, BigInteger.ZERO));
-                    runs = runs.max(ceil(targetCredit.subtract(prefix).subtract(tailTarget), delta));
+                    supportRuns(targetCredit.subtract(prefix).subtract(tailTarget), delta);
                 }
             }
         }
         return true;
+    }
+
+    private void supportRuns(BigInteger gap, BigInteger gain) {
+        var bound = ceil(gap, gain);
+        if (trackRounding && unitRecipe == null) {
+            int comparison = bound.compareTo(runs);
+            if (comparison >= 0) {
+                boolean rounded = gap.signum() > 0 && gain.multiply(bound).compareTo(gap) > 0;
+                unitRounded = comparison > 0 ? rounded : unitRounded && rounded;
+            }
+        }
+        runs = runs.max(bound);
     }
 
     private boolean startOriginal() {
@@ -526,6 +568,10 @@ final class RefillWordPruning<K> implements AutoCloseable {
         // It replaces the normal unit lease, has no preparation quota, and is
         // evicted before folding a different body. Existing passes stay first.
         blockPruning.reuseUnit = normalTried || spansTried;
+        // Only opaque grouping can hide a smaller dispatch period. A strict
+        // rounding residual in every active count bound admits a follow-up;
+        // integral requirements and ordinary flat groups keep their old path.
+        blockPruning.trackRounding = opaqueAtoms >= 2 && !normalTried;
         blockPruning.allowBlocks = false; phase = Phase.BLOCK_PRUNE; return false;
     }
     private boolean finish() {
@@ -544,6 +590,8 @@ final class RefillWordPruning<K> implements AutoCloseable {
     }
     private void release(long bytes) { budget.release(bytes); memory -= bytes; }
     @Override public void close() {
+        if (periodPruning != null) { periodPruning.close(); periodPruning = null; }
+        if (periods != null) { periods.close(); periods = null; }
         if (blockPruning != null) { blockPruning.close(); blockPruning = null; }
         if (blocks != null) { blocks.close(); blocks = null; }
         discardHint();
