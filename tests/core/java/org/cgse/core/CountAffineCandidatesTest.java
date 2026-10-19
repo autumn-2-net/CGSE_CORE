@@ -29,6 +29,12 @@ public final class CountAffineCandidatesTest {
             check(solve(model(2), 127, null).equals(solve(model(2), 127, executor)), "Worker handoff lost the basis");
         } finally { executor.shutdownNow(); }
         limits();
+        for (int seed : new int[] {0, 1}) {
+            var whole = solve(model(seed), 262144, null, true);
+            var sliced = solve(model(seed), 1, null, true);
+            check(whole.equals(sliced), "Widened targets renewed the grant or lost a basis");
+            check(whole.candidates.size() > 33, "Widened original-coordinate targets not exercised");
+        }
         System.out.println("Affine alternatives: 6 whole/sliced streams, " + distinct + " distinct original-row witnesses; handoff, cancellation and memory refusal passed");
     }
 
@@ -60,6 +66,10 @@ public final class CountAffineCandidatesTest {
     }
 
     private static Result solve(Model model, long quantum, ExecutorService executor) throws Exception {
+        return solve(model, quantum, executor, false);
+    }
+
+    private static Result solve(Model model, long quantum, ExecutorService executor, boolean widened) throws Exception {
         var budget = new PlanningBudget(0, 8_000_000, 64L << 20, () -> false, System::nanoTime);
         var candidates = new ArrayList<List<BigInteger>>();
         try (var search = new CountAffineLattice(model.rows, model.low, model.high, budget, Math.max(32768, quantum)).retained()) {
@@ -68,12 +78,16 @@ public final class CountAffineCandidatesTest {
                 check(visits < 1_000_000, "Candidate enumeration stalled");
                 boolean done = executor == null ? search.step() : executor.submit(search::step).get(30, TimeUnit.SECONDS);
                 if (!done) continue;
-                if (search.paused()) { search.resume(quantum); continue; }
+                if (search.paused()) {
+                    if (widened) search.widenAlternativeTargets();
+                    search.resume(quantum); continue;
+                }
                 var counts = search.counts();
                 if (counts == null) break;
                 check(valid(model, counts), "Original-row or domain violation");
                 candidates.add(List.of(counts.clone()));
-                check(candidates.size() <= 33, "Alternative bound was renewed");
+                check(candidates.size() <= (widened ? 257 : 33), "Alternative bound was renewed");
+                if (widened) search.widenAlternativeTargets();
                 if (!search.nextCandidate()) break;
             }
             check(budget.diagnostics().contains("basis_reused"), "Reuse was not exercised");

@@ -38,6 +38,11 @@ final class CountVectorPartition implements CountContinuation {
     private int[] order;
     private CountAffineLattice affine;
     private CountAffineLattice alternatives;
+    private record Deferred(CountAffineLattice search, int attempt, boolean next) {}
+    private final Deque<Deferred> deferred = new ArrayDeque<>();
+    private final Set<BigInteger> rejectedResiduals = new HashSet<>();
+    private BigInteger residualKey;
+    private boolean deferredActive;
     private long alternativeRemaining = 32768;
     private boolean repairing, alternativesPriced;
     private CountMeetInMiddle matching;
@@ -212,6 +217,7 @@ final class CountVectorPartition implements CountContinuation {
                 // This extra branch has no live ordinary frontier to replace:
                 // the previous residual already failed. Resume its pending
                 // allocation-order retry, without renewing the scout's quota.
+                deferAlternatives();
                 clearChildren();
                 repairing = false;
                 retry();
@@ -232,7 +238,14 @@ final class CountVectorPartition implements CountContinuation {
                 for (int g = 0; g < groups.size(); g++) { budget.check(); candidate[target.variables[g]] = lower[target.variables[g]].add(remaining[g]); }
                 verifying = true; return false;
             }
-            if (affine == null) { beginBin(); return false; }
+            if (affine == null) {
+                residualKey = deferredActive && bin > 0 ? residualKey() : null;
+                if (residualKey != null && rejectedResiduals.contains(residualKey)) {
+                    budget.note("count_vector_residual", "exact_conflict_reused; bin=" + bin);
+                    retry(); return complete;
+                }
+                beginBin(); return false;
+            }
             if (matching == null && !matchingTried && work >= matchingAt) beginMatching();
             if (matching == null && !matchingEntered && projected != null && affine.boxSearchMissed()) {
                 // The unpruned Cartesian estimate can reject a small reachable
@@ -256,6 +269,11 @@ final class CountVectorPartition implements CountContinuation {
                 found = matching.counts();
                 boolean impossible = matching.infeasible();
                 completedProgress += matching.progress(); matching.close(); matching = null;
+                if (impossible && residualKey != null && rejectedResiduals.size() < 512 &&
+                        !rejectedResiduals.contains(residualKey)) {
+                    long bytes = 192L + 4L * groups.size();
+                    if (budget.tryReserve(bytes)) { memory += bytes; rejectedResiduals.add(residualKey); }
+                }
                 // Exhaustion refutes only this residual allocation, not the
                 // original problem. Refusal leaves the affine child available.
                 if (found == null && !impossible) return false;
@@ -266,7 +284,7 @@ final class CountVectorPartition implements CountContinuation {
                     if (matching != null) return false;
                 }
             }
-            if (found != null && bin == 0 && alternativeRemaining > 0) {
+            if (found != null && bin == 0 && (alternativeRemaining > 0 || canDefer())) {
                 // Keep the completed basis while validating the residual. A
                 // local failure can reuse it instead of eliminating again.
                 alternatives = affine;
@@ -316,7 +334,10 @@ final class CountVectorPartition implements CountContinuation {
         // Price that scout against the residual matcher, with bounded headroom:
         // an expensive table gives the lattice longer to avoid building it.
         // Parent handoffs never renew this one-time opportunity.
-        matchingAt = work + Math.min(131072, Math.max(32768, estimate / 8));
+        // The deferred branch is enumerating different first allocations after
+        // ordinary decompositions failed. An affordable exact residual check
+        // avoids repeating the same affine warmup for every rejected candidate.
+        matchingAt = work + (deferredActive ? 0 : Math.min(131072, Math.max(32768, estimate / 8)));
     }
     private void beginMatching() {
         matchingTried = true;
@@ -348,16 +369,70 @@ final class CountVectorPartition implements CountContinuation {
                 affine = alternatives; alternatives = null; matchingTried = true;
                 return;
             }
-            completedProgress += alternatives.progress(); alternatives.close(); alternatives = null;
+            if (canDefer() && alternatives.nextCandidate()) deferred.addLast(new Deferred(alternatives, attempt, false));
+            else { completedProgress += alternatives.progress(); alternatives.close(); }
+            alternatives = null;
         }
         repairing = false;
-        if (++attempt >= 2 * bins.size()) { finish("decompositions_unresolved"); return; }
+        if (deferredActive) { resumeDeferred(); return; }
+        if (++attempt >= 2 * bins.size()) {
+            if (!deferred.isEmpty() && maximumWork - work >= 32768) {
+                // All ordinary decompositions have failed. Continue the first
+                // interrupted alternative search without rebuilding its basis
+                // or consuming the allowance of an earlier successful path.
+                deferredActive = true;
+                alternativeRemaining = Math.min(1_048_576, maximumWork - work);
+                resumeDeferred();
+                return;
+            }
+            finish("decompositions_unresolved"); return;
+        }
         restart();
+    }
+    private boolean canDefer() {
+        // Retained bases already own their reservations. Keep ample headroom
+        // for the ordinary paths and never retain another tail-search branch.
+        return !deferredActive && deferred.size() < 2 * bins.size() &&
+                budget.reservedBytes() <= budget.availableBytes() / 4;
+    }
+    private void deferAlternatives() {
+        if (!canDefer()) return;
+        if (bin == 0 && affine != null) {
+            deferred.addLast(new Deferred(affine, attempt, false)); affine = null;
+        } else if (alternatives != null) {
+            deferred.addLast(new Deferred(alternatives, attempt, true)); alternatives = null;
+        }
+    }
+    private void resumeDeferred() {
+        while (!deferred.isEmpty() && alternativeRemaining > 0) {
+            var pending = deferred.removeFirst();
+            affine = pending.search;
+            affine.widenAlternativeTargets();
+            if (pending.next && !affine.nextCandidate()) {
+                completedProgress += affine.progress(); affine.close(); affine = null;
+                continue;
+            }
+            attempt = pending.attempt;
+            restart(); repairing = true; matchingTried = true;
+            budget.note("count_vector_deferred", "basis_resumed; attempt=" + attempt + "; allowance=" + alternativeRemaining);
+            return;
+        }
+        finish("alternatives_unresolved");
+    }
+    private BigInteger residualKey() {
+        // Every multiplicity is in [0,64]. Include the actual destination and
+        // original group coordinates, independent of a retry's column order.
+        // Only exact matching exhaustion inserts keys; a numeric miss cannot.
+        byte[] packed = new byte[remaining.length + 1];
+        for (int g = 0; g < remaining.length; g++) { budget.check(); packed[g] = (byte) remaining[g].intValueExact(); }
+        packed[remaining.length] = (byte) ((bin + attempt) % bins.size());
+        return new BigInteger(1, packed);
     }
     private void restart() {
         candidate = lower.clone(); remaining = new BigInteger[groups.size()];
         for (int g = 0; g < groups.size(); g++) { budget.check(); remaining[g] = groups.get(g).capacity; }
         bin = 0; verifying = false; verified = 0;
+        residualKey = null;
     }
     private void prepareCheck() {
         budget.check(); if (budget.threadWork() - prepareStarted > 32768) throw new Declined();
@@ -385,14 +460,18 @@ final class CountVectorPartition implements CountContinuation {
     @Override public BigInteger[] counts() { return counts == null ? null : counts.clone(); }
     @Override public long work() { return work; }
     @Override public long progress() {
-        return completedProgress + (matching == null ? 0 : matching.progress()) + (affine == null ? 0 : affine.progress()) +
-                (alternatives == null ? 0 : alternatives.progress());
+        long progress = completedProgress + (matching == null ? 0 : matching.progress()) +
+                (affine == null ? 0 : affine.progress()) + (alternatives == null ? 0 : alternatives.progress());
+        for (var pending : deferred) progress += pending.search.progress();
+        return progress;
     }
     @Override public boolean matches(List<ExactLinearProgram.Constraint> other, BigInteger[] low, BigInteger[] high) {
         return rows.equals(other) && Arrays.equals(lower, low) && Arrays.equals(upper, high);
     }
     @Override public void close() {
         clearChildren();
+        while (!deferred.isEmpty()) { var child = deferred.removeFirst().search; completedProgress += child.progress(); child.close(); }
+        rejectedResiduals.clear(); residualKey = null;
         budget.release(memory); memory = 0;
     }
     private void clearChildren() {

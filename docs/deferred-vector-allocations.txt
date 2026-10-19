@@ -1,0 +1,90 @@
+Deferred multidimensional allocation repair (0.1.4)
+==================================================
+
+Failure class
+-------------
+An exact first-bin allocation need not leave a feasible allocation for the
+other bins. In the profiled hard cases, finite-domain matching quickly proves
+that particular residual impossible. The complete input still has a planted
+integer witness. Returning to several allocation orders finds more first-bin
+witnesses, but none of their first residuals completes the request.
+
+The previous small alternative-candidate scout ends before some useful bases
+are revisited. Raising its allowance on the ordinary path also makes previously
+cheap successes more expensive. The new repair therefore follows all ordinary
+allocation orders; it does not replace them or raise the request's work limit.
+
+Search and ownership
+--------------------
+CountVectorPartition retains reusable first-bin affine bases after failed
+residual checks, together with each basis's bin and column ordering. The early
+32768-work scout and the ordinary order retries run first. If they fail, one
+deferred opportunity resumes these bases, without repeating elimination or
+Gram reduction. It may try up to 256 deterministic nearest-plane targets per
+basis. Each accepted first-bin point is checked in its original coordinates.
+
+The entire deferred branch, including residual checks, shares one 1048576-work
+allowance within the partition's existing local and request limits. Like the
+other child scouts, its local allowance is checked between bounded steps; the
+last step may cross that local boundary. The request budget remains enforced.
+The partition limit remains min(8388608, remaining request work / 4) at entry.
+Changing workers, granting another slice, trying another basis, or calling the
+target-widening hook again cannot renew those limits. Tiny grants can include
+more charged parent checks; they must preserve the witness and bounded work,
+not identical administrative costs across different slice sizes.
+
+In this deferred branch an affordable exact residual matcher runs before
+repeating the affine warmup. If it declines or reaches a limit, the affine
+frontier remains available. A proven empty residual can be remembered using
+its destination and the remaining capacity of every original group. Retries
+with different column orders can reuse that exact conflict. At most 512 such
+keys are retained, with explicit budget reservations. Numeric misses and local
+limits never insert a conflict, and a residual conflict is not a global proof.
+
+Deferred bases keep their original reservations. New deferrals require current
+reservations to be no more than one quarter of available memory, leaving at
+least four fifths of the effective allowance free at that point. The number
+of pending bases is bounded by the ordinary order count. Memory refusal skips
+this optional continuation. Cancellation, scope replacement and close release
+all active/deferred children and conflict records. Scope matching still checks
+the complete original rows and bounds; none of this state crosses requests.
+
+Validation and limits
+---------------------
+The maintained vector tests now check all 48 planted direct allocations. The
+previous 46 witnesses remain available; seed 39 adds a witness after ordinary
+orders have all failed. Its original, translated and permuted models also run
+through the main count portfolio and independent original-row checks. Seed 31
+retains its constructive SAT oracle but is still unresolved by this strategy.
+It has an explicit work guard rather than an invented infeasibility oracle.
+
+The recovered historical source/fuel graph is pinned in
+tests/regression/execution-boundaries.json and therefore runs in standard/all.
+The corpus harness independently checks primitive execution prefixes, required
+inventory, target delivery and seed restoration. The original 21672d06 build
+exhausts 40M search work on that input. The new path yields a verified plan at
+the same request cap. The 33-case source/fuel batch moves from 21 to 22 solved;
+the other 11 unresolved graphs need further work.
+
+That recovered graph also completes with four workers at the fixed 40M cap.
+Two newly checked recipe permutations (17 and 1009) remain unresolved on both
+the old and new builds, with the same work and reservation peaks. These are
+separate recorded failures, not passing order-independent oracles. The direct
+seed-31 trace reuses five exact residual conflicts before its bounded stop.
+
+In the paired 48-model run, all 46 previously successful models retain exactly
+their earlier search work. Holding several bases does cost memory: the largest
+budgeted peak rises from 3111468 to 6744400 bytes across that batch, with all
+reservations released on close. This is reserved workspace, not a measurement
+of JVM RSS or an assertion of unchanged memory use. The headroom guard is part
+of the admission contract, and a live-memory-pressure control exercises refusal.
+
+The changes do not fix every allocation family: broad first-bin searches,
+larger structures outside vector admission and the remaining direct allocation
+still lack a witness within their limits. Full joint affine search and native
+five-second CP-SAT, SCIP and Z3 probes were also recorded locally; their UNKNOWN
+results do not establish infeasibility or a general performance ranking.
+
+Reproduction inputs, baseline jars, exact orderings, failed experiments, native
+outputs, budgets and per-run commands are preserved in the local case registry.
+This change adds no public ABI, native dependency or GTLCore adapter requirement.

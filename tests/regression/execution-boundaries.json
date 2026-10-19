@@ -3227,6 +3227,32 @@
       "evidence": "Fixed 40M request with four workers; a retained residual lattice produces an independently verified primitive execution plan below the 8M observed-work guard.",
       "workers": 4,
       "expanded_budget": false
+    },
+    {
+      "name": "deferred-vector/manual_fuel_n24_c3_d2_a3_s313_aliases",
+      "source": "cases/graph/85/8568ca2d35b6728e557380b1f411f846d902b69872352852e534337f56b614d0.json",
+      "sha256_lf": "dbfe848190ec47894ede778836543142768253a9d8384bdf44b44b5a67a21498",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 25000000,
+      "expected": "SAT",
+      "evidence": "Baseline 21672d06 exhausts 40M search work. Retained alternative first allocations and exact residual checks yield a primitive-prefix-verified original-recipe plan. Partial residual rejection is never a global infeasibility proof."
+    },
+    {
+      "name": "deferred-vector/manual_fuel_n24_c3_d2_a3_s313_aliases/workers-4",
+      "source": "cases/graph/85/8568ca2d35b6728e557380b1f411f846d902b69872352852e534337f56b614d0.json",
+      "sha256_lf": "dbfe848190ec47894ede778836543142768253a9d8384bdf44b44b5a67a21498",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 25000000,
+      "expected": "SAT",
+      "evidence": "Fixed 40M search request with four workers preserves deferred affine bases and exact residual checks; independently verified original-recipe execution is below the 25M observed-work guard.",
+      "workers": 4,
+      "expanded_budget": false
     }
   ]
 }

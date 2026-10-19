@@ -38,6 +38,7 @@ public final class CountVectorPartitionTest {
         reusedCandidates();
         firstBinEnumeration();
         boundedMatchingRecovery();
+        deferredCandidates();
         boundaries();
         System.out.println("Vector partition: 12 whole/sliced pairs, 12 permutations, worker handoff and scope/limit controls; solved=" + solved);
     }
@@ -307,6 +308,10 @@ public final class CountVectorPartitionTest {
     }
 
     private static void mainAllocation(Model model) {
+        mainAllocation(model, 3_000_000);
+    }
+
+    private static void mainAllocation(Model model, long maximumObservedWork) {
         var budget = new PlanningBudget(0, 40_000_000, 256L << 20, () -> false, System::nanoTime);
         try {
             // This entry embeds the exact model in recipes, runs the actual
@@ -314,8 +319,72 @@ public final class CountVectorPartitionTest {
             // execution prefixes before restoring the original coordinates.
             var result = CountModelReplay.solve("main-counts", model.rows, model.low, model.high, budget, 40_000_000);
             check(result.counts() != null && !result.infeasible() && valid(model, result.counts()), "Main count portfolio missed first-bin witness");
-            check(budget.nodes() < 3_000_000, "First-bin main count work regressed");
+            check(budget.nodes() < maximumObservedWork, "Main count work regressed: " + budget.nodes());
         } finally { check(budget.reservedBytes() == 0, "Main first-bin search leaked workspace"); }
+    }
+
+    private static void deferredCandidates() throws Exception {
+        for (int seed = 0; seed < 48; seed++) {
+            var input = model(seed, false, 18 + seed % 7, 3, 2, 997);
+            check(valid(input, input.witness), "Hard allocation constructive oracle");
+            var result = solve(input, 262144, null);
+            // Seed 31 remains unresolved, with a constructive SAT oracle. Its
+            // bounded failure must not become a negative global conclusion.
+            if (seed != 31) check(result.counts != null, "Historical allocation lost: " + seed);
+            else {
+                check(result.work < 2_400_000, "Deferred quota renewed across branches");
+                if (result.counts == null) check(result.diagnostics.contains("exact_conflict_reused"),
+                        "Repeated exact residual rejection was not reused");
+            }
+        }
+        var input = model(39, false, 22, 3, 2, 997);
+        var whole = solve(input, 262144, null);
+        var sliced = solve(input, 1, null);
+        check(whole.counts != null && Arrays.equals(whole.counts, sliced.counts),
+                "Deferred basis or allowance changed across one-unit handoffs");
+        check(whole.diagnostics.contains("count_vector_deferred"), "Deferred repair not exercised");
+        // Tiny visits include the same already-charged parent checks as the
+        // ordinary search; their administrative work need not be identical.
+        check(whole.work < 2_000_000 && sliced.work < 2_000_000, "Deferred repair rebuilt earlier decompositions");
+        var shifted = model(39, true, 22, 3, 2, 997);
+        var reordered = permute(input, 71916);
+        for (var variant : List.of(input, shifted, reordered)) {
+            check(solve(variant, 113, null).counts != null, "Deferred scope lost translated/reordered witness");
+            mainAllocation(variant, 10_000_000);
+        }
+        var worker = Executors.newSingleThreadExecutor();
+        try {
+            check(Arrays.equals(whole.counts, solve(input, 127, worker).counts), "Deferred basis lost across workers");
+        } finally { worker.shutdownNow(); }
+        var cancel = new AtomicBoolean();
+        var budget = new PlanningBudget(0, 16_000_000, 64L << 20, cancel::get, System::nanoTime);
+        try (var search = CountVectorPartition.create(input.rows, input.low, input.high, budget, 4096)) {
+            check(search != null, "Deferred cancellation admission");
+            while (!budget.diagnostics().contains("count_vector_deferred")) {
+                if (!search.step()) continue;
+                check(search.paused(), "Deferred repair not reached"); search.resume(4096);
+            }
+            cancel.set(true); boolean stopped = false;
+            try { search.step(); } catch (CancellationException expected) { stopped = true; }
+            check(stopped, "Deferred basis ignored cancellation");
+        }
+        check(budget.reservedBytes() == 0, "Deferred basis or conflict table leaked");
+        var guarded = new PlanningBudget(0, 16_000_000, 64L << 20, () -> false, System::nanoTime);
+        long held = 48L << 20;
+        check(guarded.tryReserve(held), "Memory guard");
+        try (var search = CountVectorPartition.create(input.rows, input.low, input.high, guarded, 4096)) {
+            check(search != null, "Ordinary allocation lost under memory pressure");
+            while (true) {
+                if (!search.step()) continue;
+                if (!search.paused()) break;
+                search.resume(4096);
+            }
+            if (search.counts() != null) check(valid(input, search.counts()), "Memory guard invented a witness");
+            check(!guarded.diagnostics().contains("count_vector_deferred"), "Deferred bases ignored memory headroom");
+        } finally {
+            check(guarded.reservedBytes() == held, "Memory refusal retained a basis"); guarded.release(held);
+        }
+        System.out.println("Deferred allocations: 47/48 planted witnesses; original/shifted/permuted main-count replay, tiny grants, worker handoff, cancellation and memory headroom passed");
     }
 
     private static void boundaries() throws Exception {
