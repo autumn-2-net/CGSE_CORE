@@ -745,7 +745,8 @@ final class CountViewSearch implements AutoCloseable {
                 // the final repair preference compensates for the completed
                 // scout's measured cost, once. Request and local caps still pay
                 // every operation, including the scout itself.
-                long interrupted = packing.phase() == CountPackingCore.Phase.DISTANCE_REPAIR ? packing.restoredScoutWork() : 0;
+                long interrupted = packing.phase() == CountPackingCore.Phase.DISTANCE_REPAIR ||
+                        packing.phase() == CountPackingCore.Phase.RESUMED_ENUMERATION ? packing.restoredScoutWork() : 0;
                 search.continuationLimit = Math.max(search.continuationLimit, saturatedAdd(search.work,
                         Math.min(packing.remainingAllowance(), saturatedAdd(budget.remainingWork() / 3, interrupted))));
             }

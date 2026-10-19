@@ -3581,6 +3581,46 @@
       "maximum_observed_work": 18000000,
       "expected": "SAT",
       "evidence": "Existing canonical SAT input and primitive execution oracle. The old suffix admission estimate delayed index reuse and first-plan completion; the observed-work guard pins this general structural scheduling improvement within the unchanged40M request envelope."
+    },
+    {
+      "name": "mknapcb6_09_bks/retained-enumeration",
+      "source": "cases/graph/59/5973bfea12a50a2ca3c4bda393c9f520e12506ff4f6b72792bb9ad23b1b61c79.json",
+      "sha256_lf": "ed3312007ac0c4cfe71587e98148b40274dbf8cfeda9c52483098fa7e6d2c096",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 38000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle; every plan is independently replayed against original primitive inputs/outputs, final target and seeds. All eight orders previously exhausted the same40M search cap. Retaining the paid exact frontier across inconclusive PB repair restores these witnesses without importing a native solution or increasing the request allowance."
+    },
+    {
+      "name": "mknapcb6_09_bks/retained-enumeration/four-workers-fixed",
+      "source": "cases/graph/59/5973bfea12a50a2ca3c4bda393c9f520e12506ff4f6b72792bb9ad23b1b61c79.json",
+      "sha256_lf": "ed3312007ac0c4cfe71587e98148b40274dbf8cfeda9c52483098fa7e6d2c096",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 38000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle; every plan is independently replayed against original primitive inputs/outputs, final target and seeds. All eight orders previously exhausted the same40M search cap. Retaining the paid exact frontier across inconclusive PB repair restores these witnesses without importing a native solution or increasing the request allowance.",
+      "workers": 4,
+      "expanded_budget": false
     }
   ]
 }

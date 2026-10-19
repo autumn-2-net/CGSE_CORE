@@ -67,7 +67,7 @@ final class CountPackingNeighborhood implements AutoCloseable {
 
     boolean step() {
         if (complete) return true;
-        if (propagation != null) return propagation.step();
+        if (propagation != null) return complete = propagation.step();
         if (exchange != null) return exchange.step();
         if (!learning.step()) return false;
         if (learning.paused()) {
@@ -85,6 +85,9 @@ final class CountPackingNeighborhood implements AutoCloseable {
     }
 
     boolean feasible() { return exchange != null ? exchange.feasible() : propagation != null ? propagation.feasible() : feasible; }
+    /** Only exhaustion of the full face may retire another search of it.
+     * A restricted exchange or refused workspace provides no such conclusion. */
+    boolean provedInfeasible() { return complete && !feasible() && (propagation != null || learning != null && learning.infeasible()); }
     long assignment() {
         if (!feasible()) throw new IllegalStateException("No neighborhood witness");
         return exchange != null ? exchange.assignment() : propagation != null ? propagation.assignment() : assignment;

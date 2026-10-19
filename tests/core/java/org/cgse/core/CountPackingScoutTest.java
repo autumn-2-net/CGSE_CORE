@@ -49,6 +49,7 @@ public final class CountPackingScoutTest {
         var worker = Executors.newSingleThreadExecutor();
         try (var core = CountPackingCore.create(view, new CountModelViews.Domains(low, high, 0), budget, Long.MAX_VALUE)) {
             while (get(core, "search") == null) check(!core.step(), "Fixture closed before its frontier");
+            Object enumeration = get(core, "search");
             long maximum = (long) get(core, "maximumWork"), normal = (long) get(core, "normalWork"), learning = (long) get(core, "learningLimit");
             // Exercise retained handoffs without replaying millions of unrelated
             // enumeration operations. Only the owned-work clock is advanced.
@@ -90,7 +91,8 @@ public final class CountPackingScoutTest {
                         "Missing bounded restoration event");
                 long scoutWork = core.restoredScoutWork();
                 set(core, "work", learning + scoutWork); core.resume(Long.MAX_VALUE); core.step();
-                check(core.phase() == CountPackingCore.Phase.DISTANCE_REPAIR && core.completionEpoch() == epoch + 2 &&
+                check(core.phase() == CountPackingCore.Phase.RESUMED_ENUMERATION && get(core, "search") == enumeration &&
+                        get(core, "enumerationBase") == null && core.completionEpoch() == epoch + 2 &&
                         core.restoredScoutWork() == scoutWork && (long) get(core, "maximumWork") == maximum,
                         "Original phase allowance or completion event was replenished");
             } else {

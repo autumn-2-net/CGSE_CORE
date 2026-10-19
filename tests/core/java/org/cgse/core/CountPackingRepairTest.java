@@ -47,6 +47,7 @@ public final class CountPackingRepairTest {
         } finally { worker.shutdownNow(); }
         wordBoundary();
         phaseScope();
+        refusedRepairRetainsEnumeration();
         lifecycle();
         System.out.println("Packing repairs: 512 exhaustive Boolean/distance controls, scoped failure, cached projection, fixed phase caps and cleanup passed");
     }
@@ -62,6 +63,7 @@ public final class CountPackingRepairTest {
             }
             if (journal != null) for (var entry : journal.entries())
                 check(CountProof.verify(entry, 1_000_000) == CountProof.Verdict.VERIFIED, "Invalid scoped PB proof");
+            check(repair.provedInfeasible() == !repair.feasible(), "Full face exhaustion was not distinguished from refusal");
             return repair.feasible() ? repair.assignment() : null;
         } finally { check(budget.reservedBytes() == 0, "Repair reservation leaked"); }
     }
@@ -104,11 +106,13 @@ public final class CountPackingRepairTest {
             check(core.phase() == CountPackingCore.Phase.CONFLICT_REPAIR, "Missing learned phase marker");
             check(get(core, "coreCoefficients") == projection, "Phase rebuilt the same projection");
             set(core, "work", get(core, "learningLimit")); core.resume(Long.MAX_VALUE); core.step();
-            check(core.phase() == CountPackingCore.Phase.DISTANCE_REPAIR, "Missing distance phase marker");
-            check(get(core, "coreCoefficients") == projection, "Distance phase lost compiled rows");
+            check(core.phase() == CountPackingCore.Phase.RESUMED_ENUMERATION && get(core, "search") == originalSearch &&
+                    get(core, "enumerationBase") == null, "Inconclusive repair discarded the paid enumeration frontier");
+            check(get(core, "coreCoefficients") == projection, "Resuming enumeration lost compiled rows");
             check((long) get(core, "maximumWork") == ceiling, "Handoff replenished its total allowance");
             // Proposal zero is legal as a hint but at distance <= 6 it cannot
             // meet the demand of eight. The original model has 8-of-64 witnesses.
+            set(core, "phase", CountPackingCore.Phase.DISTANCE_REPAIR);
             set(core, "seed", new boolean[64]); set(core, "coreSize", 64); set(core, "compiledSize", 0);
             var begin = CountPackingCore.class.getDeclaredMethod("beginCore"); begin.setAccessible(true); begin.invoke(core);
             while (!core.step()) {}
@@ -124,11 +128,29 @@ public final class CountPackingRepairTest {
         check(budget.reservedBytes() == 0, "Scoped repair leaked");
     }
 
+    private static void refusedRepairRetainsEnumeration() throws Exception {
+        var view = view(); var budget = budget(40_000_000, 64L << 20, () -> false);
+        try (var core = CountPackingCore.create(view, new CountModelViews.Domains(view.lower(), view.upper(), 0), budget, Long.MAX_VALUE)) {
+            while (get(core, "search") == null) check(!core.step(), "No enumeration to retain");
+            Object enumeration = get(core, "search");
+            long occupied = budget.availableBytes(); budget.reserve(occupied);
+            try {
+                set(core, "work", get(core, "normalWork")); core.resume(Long.MAX_VALUE); core.step();
+                check(core.phase() == CountPackingCore.Phase.RESUMED_ENUMERATION && get(core, "search") == enumeration &&
+                        get(core, "enumerationBase") == null,
+                        "Refused PB workspace discarded or retired the original enumeration");
+            } finally { budget.release(occupied); }
+            while (!core.step()) {}
+            check(core.counts() != null, "Lost feasible enumeration after PB workspace refusal");
+        }
+        check(budget.reservedBytes() == 0, "Refused PB handoff leaked");
+    }
+
     private static void lifecycle() {
         var a = new long[][] {{1, 1}, {-1, -1}}; var b = new long[] {1, -1};
         var tiny = budget(40_000_000, 1, () -> false);
         try (var repair = new CountPackingNeighborhood(a, b, 0, tiny, true)) {
-            check(repair.step() && !repair.feasible(), "Optional repair ignored memory refusal");
+            check(repair.step() && !repair.feasible() && !repair.provedInfeasible(), "Optional repair treated memory refusal as a proof");
         }
         check(tiny.reservedBytes() == 0, "Declined reconstruction leaked");
         var stop = new AtomicBoolean(); var cancelled = budget(40_000_000, 64L << 20, stop::get);

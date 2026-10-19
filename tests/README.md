@@ -1413,3 +1413,15 @@ counts are independently replayed. See `docs/vector-neighborhood-repair.txt`.
 `CountCompletionServiceTest` additionally guards a single scheduling extension
 per newly observed residual depth, with unchanged request/local budgets,
 proof-mode exclusion, repeated observations and a seven-unit remaining tail.
+
+`CapturedStateForcedWearTest` includes 252 required positive requests. Its 72
+longer manufacture/wear variants exercise the handoff from fully restored
+physical execution to assembly and verification under the original parent
+deadline. Independent physical replay, forced production, delayed returns,
+reload, cancellation, worker transfer and unchanged speculative limits guard
+that handoff. The longer cases are no longer accepted as unresolved boundaries.
+
+`CountPackingRepairTest`, `CountPackingScoutTest` and `CountPackingScheduleTest`
+guard retained exact enumeration across PB repair and nested exchange scouts.
+They distinguish scoped infeasibility from workspace refusal and check a repair
+grant measured from actual entry without renewing request or local limits.

@@ -99,13 +99,19 @@ public final class CountPackingScheduleTest {
                 worker.submit(() -> budget.charge(budget.remainingWork() - allowance)).get();
             }
             check(core.work() >= normal / 2 && core.work() < normal, "Fixture did not cross the observation boundary");
+            long entered = core.work();
             core.resume(Long.MAX_VALUE); worker.submit(core::step).get();
             check(core.phase() == CountPackingCore.Phase.CONFLICT_REPAIR && !(boolean) field(core, "scouting") &&
                     field(core, "scoutBase") == null && !(boolean) field(core, "flexiblePending"),
                     "Shared request depletion stranded a scout or postponed the PB repair");
             Object search = field(core, "search");
+            long repairLimit = (long) field(core, "repairLimit");
+            check(repairLimit == entered + learning - normal && repairLimit < learning &&
+                    field(core, "enumerationBase") != null,
+                    "Early pressure gave PB the unused enumeration grant or discarded its frontier");
             for (int i = 0; i < 3; i++) { core.resume(1); worker.submit(core::step).get(); }
             check(field(core, "search") == search && (long) field(core, "normalWork") == normal &&
+                    (long) field(core, "repairLimit") == repairLimit &&
                     (long) field(core, "learningLimit") == learning && (long) field(core, "maximumWork") == maximum,
                     "Repair handoff rebuilt the frontier or replenished fixed ceilings");
             check(core.counts() == null && budget.cachePreparationWork() == 0,

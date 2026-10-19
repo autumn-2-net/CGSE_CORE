@@ -1,0 +1,91 @@
+Historical hard cases by mechanism (2026-10-20)
+
+Use distinct counting units. The last full corpus snapshot contains 20,927
+canonical records (20,727 PASS, 194 unresolved, 6 unsupported). Subsequent
+family campaigns reconcile that inventory; they do not constitute a new full
+corpus run. Order/quantity/force variants, quality goals and unconfirmed player
+reports must not be added together as if they were canonical solver failures.
+
+At e4ebf301 the documented canonical backlog is 162:
+  156 Boolean multidimensional resource/profit selections;
+    4 sparse integer equality count models (144 or 257 variables);
+    2 source/fuel allocations (96 or 128 groups, 9 dimensions).
+There is also one unresolved direct allocation seed31, a separate set of 72
+long manufactured-tool/wear variants, and 74/1536 refill-quality variants whose
+valid bills have not reached the scoped feed bound at the default 8192 cap.
+The 74 reach that bound at a diagnostic 16384 cap; they are not failed plans.
+Six unsupported finite-domain test conversions and player reports without
+sufficient reproduction inputs have separate statuses, not UNSAT or PASS.
+
+1. Long wear: completion ownership rather than more entity search
+
+   The 72 unresolved variants share one structure: manufacturing an omitted
+   tool cohort, allocating distinct tools, then using a changing physical key
+   repeatedly. Runtime tracing shows the entire valid word is restored before
+   its short trial expires during assembly. CapturedStatePlanning now lets that
+   completed word finish under the original parent deadline. All 72 variants
+   solve and all 72 shorter controls retain identical work/peak reservation.
+   These cases are required positives in CapturedStateForcedWearTest; see
+   state-review-followup.txt. Arbitrary longer state trajectories and general
+   temporal entity assignment remain incomplete.
+
+2. Boolean packing: preserve complementary search work, then strengthen bounds
+
+   Runtime profiles of all 156 unresolved graphs at e4ebf301 terminate as:
+     57 request-cap exits during PB conflict repair;
+     56 local-cap exits during distance repair;
+     34 request-cap exits during distance repair;
+      9 request-cap exits during ordinary enumeration.
+   These are terminal phases, not a proof that each phase caused the failure.
+   147 discard a paid enumeration stack/index when switching to PB; 58 enter
+   that switch early under request pressure. The current ownership correction
+   retains the exact frontier and measures PB's existing grant from actual entry.
+   It returns to the same enumeration after inconclusive PB, with scoped proof
+   checks before retiring it. See packing-phase-reuse.txt.
+
+   These inputs are acyclic capacity selections, not tool or loop scheduling.
+   Dimensions (choices, capacities): (100,10)9, (100,30)22, (250,5)11,
+   (250,10)19, (250,30)25, (500,5)14, (500,10)28, (500,30)28.
+   Compiler advice should expose those dimensions, active capacities and price
+   structure. Candidate-only coordinates/fixings must remain separate from
+   original-model proofs. A local face's UNSAT result cannot close its exterior.
+
+   A bounded warm-LP branch prototype finds two isolated local witnesses, but
+   its whole-request integration loses three prior successful cases at the
+   unchanged cap. The prototype and its traces remain archived for further
+   scheduling work; it is not shipped as a replacement for the old portfolio.
+   Likewise, simply shortening the PB grant loses a historical witness. New
+   methods need correctness and preserved results/costs across their family;
+   lack of a new hard-case success alone is not a rejection criterion.
+
+   Final production comparison covers all 296 packing inputs at the same 40M
+   cap: 140 -> 141 verified positives, 156 -> 155 unresolved, no lost witness.
+   Every old positive has identical reported work and peak reservation. The
+   canonical ledger therefore becomes 161 (155 packing + 4 equalities + 2 allocation).
+   This is an incremental ledger update, not a fresh 20,927-case full run.
+
+3. Integer equalities and source/fuel allocation: distinct algebraic services
+
+   The four equality models need integer-lattice/box reasoning, not Boolean
+   packing neighborhoods. The two source/fuel models have vector allocation
+   structure and exact residual checks. Their next common improvements should
+   be selected from their own runtime failures: reduced integral coordinates,
+   residual completion and structural dispatch between those services. Do not
+   interpret the size of the Boolean backlog as evidence for applying its
+   algorithm to these models. Their latest results are inherited from the
+   earlier family campaigns; this increment does not freshly solve all six.
+
+4. Refill quality, unsupported conversion and unconfirmed reports
+
+   The refill group already has executable, verified bills. Its next target is
+   reducing repeated word/period analysis at the original quality allowance.
+   Preserve that scoped quality goal separately from feasibility and from a
+   global minimum-supply proof. Unsupported conversion needs a representation
+   change; reports without sufficient input need reproducible evidence. Neither
+   should inflate the numerical solver backlog or acquire an invented oracle.
+
+Prioritization rule: group by observed lost progress, representation boundary,
+search/verification phase and structural coordinates. Compare a whole failing
+family plus its successful controls before accepting a common change. Keep
+original inputs, budgets, orderings and all unsuccessful experiments locally;
+promote verified recovered cases into mandatory repository regression coverage.
