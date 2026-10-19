@@ -1099,6 +1099,16 @@ Index partition samples affect ordering only. Exact leaf bounds are joined after
 both children finish; 156 uniquely determined full-box assignments guard against
 using sampled extrema for pruning. Storage follows the actual eight-point leaves.
 
+Admission estimates row scans and tree partitioning separately, matching the
+sampled internal nodes and exact bottom-up joins. The dense parity regression
+must close within 2M work across worker handoffs, including index construction;
+the independent cache-preparation allowance must remain unused. The unchanged
+40M request envelope also guards `mknapcb3_05_bks` in seven recipe orders, serial
+and four-worker modes, with a 35M observed-work limit. Order 1 remains unresolved
+in the diagnostic comparison and is not registered as a passing execution.
+The `mknapcb3_27_bks` and `mknapcb7_09_bks` cost guards preserve the recovered
+early completion paths. All returned plans require primitive execution checks.
+
 `CountPackingIndexTest` checks 144 unique signed/scaled assignments and 256
 exhaustive radius oracles, including 64 variables, incomplete tree leaves,
 worker handoffs, compact-memory admission and cancellation during tree joins.

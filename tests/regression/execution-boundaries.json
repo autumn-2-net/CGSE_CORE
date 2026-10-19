@@ -3519,6 +3519,68 @@
       "workers": 4,
       "expanded_budget": false,
       "evidence": "Same nine-dimensional wide-capacity graph, independently replayed under four workers with fixed40M search cap. No budget expansion or floating-point proof authority."
+    },
+    {
+      "name": "mknapcb3_05_bks/structural-suffix-admission",
+      "source": "cases/graph/d8/d865d394c9a850951957f217f0fb151c7db62fa9c5ac2787ce300a50aa4c27ed.json",
+      "sha256_lf": "e965eb48ca730af76f3b4f8e8742ae1a773b651405934cc0038347bda5484bc6",
+      "orders": [
+        0,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 35000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing feasibility oracle; each returned plan is independently replayed against primitive recipe inputs and outputs. Earlier reuse of the exact suffix index consumes the same search account; no native witness or additional budget is supplied. Orders0/17 previously exhausted40M, while the other listed serial orders already passed. Order1 remains unresolved in the recorded comparison and is not a passing execution oracle."
+    },
+    {
+      "name": "mknapcb3_05_bks/structural-suffix-admission/four-workers-fixed",
+      "source": "cases/graph/d8/d865d394c9a850951957f217f0fb151c7db62fa9c5ac2787ce300a50aa4c27ed.json",
+      "sha256_lf": "e965eb48ca730af76f3b4f8e8742ae1a773b651405934cc0038347bda5484bc6",
+      "orders": [
+        0,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 35000000,
+      "expected": "SAT",
+      "evidence": "Same canonical graph and seven orders, independently replayed under four workers with the original fixed40M search cap and a35M observed-work guard. Order1 remains unresolved; restricted face failures do not prove global infeasibility.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb3_27_bks/structural-suffix-admission",
+      "source": "cases/graph/79/79ebefa7f0fb5558c87c88a3dc82ccafa08229f76fb7b393e9eb49ddd0ff70b7.json",
+      "sha256_lf": "b1df368af654eee0b571e5a56e413c61baa0ec24752f17af16e82083266ca355",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 3000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT input and primitive execution oracle. The old suffix admission estimate delayed index reuse and first-plan completion; the observed-work guard pins this general structural scheduling improvement within the unchanged40M request envelope."
+    },
+    {
+      "name": "mknapcb7_09_bks/structural-suffix-admission",
+      "source": "cases/graph/fe/fe3c526fbbfa297e634afa1a9c2c5a62238f0cc1b2aefabe9d192f40c53b2336.json",
+      "sha256_lf": "9c10f0fba631e0e7897446351e561bfe5dd597a31f81bc99faed902de8fbdc9f",
+      "orders": [
+        0
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 18000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT input and primitive execution oracle. The old suffix admission estimate delayed index reuse and first-plan completion; the observed-work guard pins this general structural scheduling improvement within the unchanged40M request envelope."
     }
   ]
 }

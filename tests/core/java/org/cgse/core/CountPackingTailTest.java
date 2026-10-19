@@ -72,6 +72,7 @@ public final class CountPackingTailTest {
         restorationLimit();
         exactJoin();
         retainedIntegration();
+        denseSuffixAdmission();
         System.out.println(checked + " exhaustive signed/scaled suffix queries, bit 64, forced holes, changed prefixes, handoffs and cleanup passed");
     }
 
@@ -149,6 +150,31 @@ public final class CountPackingTailTest {
             catch (CancellationException expected) {}
         }
         check(budget.reservedBytes() == 0, "Cancelled query leaked");
+    }
+
+    private static void denseSuffixAdmission() throws Exception {
+        // Equivalent scaled rows make repeated propagation costly without
+        // changing the independent parity oracle: even terms cannot sum to
+        // an odd target. This must close inside the existing local allowance,
+        // including all index construction, across retained worker handoffs.
+        var a = new long[12][26]; var b = new long[12];
+        var random = new Random(4331); var base = new long[26]; long sum = 0;
+        for (int i = 0; i < base.length; i++) sum += base[i] = 2L * (1 + random.nextInt(50));
+        long goal = (sum / 2) | 1;
+        for (int r = 0; r < a.length; r++) {
+            long scale = (r % 2 == 0 ? 1 : -1) * (r + 1L);
+            b[r] = goal * scale;
+            for (int i = 0; i < base.length; i++) a[r][i] = base[i] * scale;
+        }
+        var budget = new PlanningBudget(0, 2_000_000, 64L << 20, () -> false, System::nanoTime);
+        var worker = Executors.newSingleThreadExecutor();
+        try (var search = new CountPackingSearch(a, b, 0, budget)) {
+            int turns = 0;
+            while (!(++turns % 64 == 0 ? worker.submit(search::step).get() : search.step())) {}
+            check(!search.feasible(), "Scaled odd equality gained a witness");
+        } finally { worker.shutdownNow(); }
+        check(budget.reservedBytes() == 0, "Dense retained suffix leaked");
+        check(budget.cachePreparationWork() == 0, "Suffix preparation spent the cache allowance");
     }
 
     private static boolean valid(long[][] a, long[] b, long assignment) {

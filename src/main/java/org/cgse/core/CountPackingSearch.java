@@ -150,13 +150,14 @@ final class CountPackingSearch implements AutoCloseable {
                 feasible = complete = true;
                 return true;
             }
-            // Amortize a finite exact tail only after this same search has
-            // already spent a measured warmup repeating suffix propagation.
-            // Include the table depth in that estimate: admitting after just a
-            // few repeats costs easy cores their low-budget witness. This is
-            // a scheduling estimate; construction/query work is charged in full.
+            // Require repeated, measured suffix work before buying an index.
+            // Point generation, exact leaf bounds and joins scan the rows;
+            // partitioning also scales with the suffix width. They are added,
+            // not multiplied: charging a full row scan at every tree depth
+            // delays reuse even though internal nodes use sampled axes and joins.
+            // This is admission advice only; all actual work remains charged.
             if (size >= 2 * TAIL_BITS && Long.numberOfTrailingZeros(undecided[depth]) >= size - TAIL_BITS) {
-                long warmup = (1L << TAIL_BITS) * positive.length * (TAIL_BITS + 1) * 2;
+                long warmup = (1L << TAIL_BITS) * (4 * positive.length + 3 * TAIL_BITS);
                 if (!tailAttempted && tailWork >= warmup && budget.remainingWork() >= warmup) {
                     tailAttempted = true;
                     tail = CountPackingTail.create(coefficients, size - TAIL_BITS, budget);
