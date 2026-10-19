@@ -382,7 +382,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                     if (!strict) { rejectCandidate(); break; }
                     candidate = GraphPlan.ownedRefill(base, new PlanStep.Sequence(List.of(prefix, base.steps())), bindings, initial, deficits,
                             deficits.isEmpty() ? GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL : base.result(), budget.nodes());
-                    verifying = new PlanVerification<>(GraphPlan.ownedRefill(candidate, candidate.steps(), candidate.recipes(), candidate.initialExact(), Map.of(),
+                    verifying = PlanVerification.refill(GraphPlan.ownedRefill(candidate, candidate.steps(), candidate.recipes(), candidate.initialExact(), Map.of(),
                             GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL, budget.nodes()), budget);
                     phase = Phase.VERIFY;
                 }

@@ -20,12 +20,20 @@ public final class PlanVerification<K> implements AutoCloseable {
     private Iterator<Map.Entry<String, BigInteger>> patterns;
     private Iterator<Map.Entry<K, Long>> outputs;
     private BigInteger runs;
-    private final Map<K, BigInteger> totals = new LinkedHashMap<>();
+    private final Map<K, BigInteger> totals;
     private int phase;
     private boolean checkingSeeds;
 
     public PlanVerification(GraphPlan<K> plan, PlanningBudget budget) {
         this(plan, budget, null);
+    }
+
+    /** Supplemental refill witnesses need exact prefix, delivery and final-seed
+     * checks, but their callers do not consume gross production/count metadata.
+     * Their existing force-credit guards remain separate. This is not a general
+     * forced-crafting proof; ordinary/public verification keeps its metadata. */
+    static <K> PlanVerification<K> refill(GraphPlan<K> funded, PlanningBudget budget) {
+        return new PlanVerification<>(funded, budget, null, false);
     }
 
     /** Only the exact immutable plan produced by this assembly can reuse its
@@ -35,6 +43,11 @@ public final class PlanVerification<K> implements AutoCloseable {
      * verified net target gain covers the order also need no gross totals;
      * the remaining forced orders retain the full production bookkeeping. */
     PlanVerification(GraphPlan<K> plan, PlanningBudget budget, AllocationSearch.Candidate<K> assembled) {
+        this(plan, budget, assembled, true);
+    }
+
+    private PlanVerification(GraphPlan<K> plan, PlanningBudget budget, AllocationSearch.Candidate<K> assembled,
+                             boolean collectProduction) {
         try (var costs = budget.trace(PlanningCostTrace.Stage.VERIFY)) {
             if (!plan.feasible() || !plan.missingExact().isEmpty()) throw new IllegalArgumentException("Unverified plan");
             this.plan = plan;
@@ -43,9 +56,10 @@ public final class PlanVerification<K> implements AutoCloseable {
                     assembled.witness == plan.steps();
             var known = sameAssembly ? Map.of(plan.steps(), assembled.summary) : Map.<PlanStep, SequenceSummary<K>>of();
             computation = new SummaryComputation<>(plan.steps(), plan.recipes(), budget, known);
-            boolean needProduction = !sameAssembly || assembled.force &&
-                    assembled.summary.delta(plan.target()).compareTo(BigInteger.valueOf(plan.amount())) < 0;
+            boolean needProduction = collectProduction && (!sameAssembly || assembled.force &&
+                    assembled.summary.delta(plan.target()).compareTo(BigInteger.valueOf(plan.amount())) < 0);
             counts = needProduction ? new PlanCountComputation(plan.steps()) : null;
+            totals = needProduction ? new LinkedHashMap<>() : null;
         }
     }
 

@@ -106,6 +106,17 @@ keeps its memory charge until the child closes; unrelated words and terminal-onl
 bills use their own fold. This avoids repeating the original-word verification.
 The old verified bill remains available during refinement and on work/time/
 memory exits; cancellation propagates. Scratch memory is charged and released.
+The word-reduction and cyclic-supply verifiers use PlanVerification.refill: the
+same complete exact fold and prefix/delivery/final-seed checks, without building
+recipe multiplicities and gross physical-output totals that these callers never
+read. Their existing net target-credit guards remain in place. This internal
+entry is not a forced-crafting proof; count/output accessors reject unavailable
+metadata. Public verification and its low-net-gain ForceCraftProof path retain
+the full production bookkeeping. RefillVerificationTest compares both modes on
+literal funded words and deficient-prefix/goal/seed counterexamples, shared and
+huge words, returned tokens, limits and scheduler handoff. Prefix expansion's
+separate verifier is unchanged: its consumed work currently also sizes later
+quality passes, so removing its count pass needs a separate quota analysis.
 The work cap is at most 8192 units and one quarter of remaining work (with a
 single bounded continuation of overshoot), scaled down for small expansions.
 Plain cursor slices visit at most 64 entries; child folds/verifiers own their
@@ -512,8 +523,7 @@ Known boundaries after the refill review at 224e9172:
   longer periods, distinct opaque composites and scans stopped by the optional
   cap remain incomplete. Very small work-scaled preview allowances can still
   retain the old flat bill; recognizing blocks does not increase that quota.
-  Existing forced
-  production credit is retained even if it is surplus.
+  Existing forced production credit is retained even if it is surplus.
 - A bounded alternative pass covers stock-funded producer mixtures that the
   single-source proposals miss, with whole-bill dominance guarding acceptance.
   Its hints and greedy allocation are incomplete. Root main planning now tries

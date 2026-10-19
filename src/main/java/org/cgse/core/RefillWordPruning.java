@@ -302,7 +302,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
         reserve(bytes); return bytes;
     }
     private PlanVerification<K> verify(GraphPlan<K> plan) {
-        return new PlanVerification<>(GraphPlan.ownedRefill(plan, plan.steps(), plan.recipes(), plan.initialExact(), Map.of(),
+        return PlanVerification.refill(GraphPlan.ownedRefill(plan, plan.steps(), plan.recipes(), plan.initialExact(), Map.of(),
                 GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL, budget.nodes()), budget);
     }
     private void push(List<PlanStep> children) { reserve(64); stack.push(new Cursor(children)); }
