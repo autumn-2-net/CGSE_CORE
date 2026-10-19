@@ -122,6 +122,16 @@ collisions, repeated occurrences and zero/long counts. Deep opaque identities,
 memory refusal/pressure and interruptions cover optional-index ownership. Both
 programs are discovered automatically; no central test list is required.
 
+`RefillCompositeWordTest` adds 768 segmented-loop variants with equal but
+independently allocated execution nodes, plus 96 normal expanded-prefix cases.
+Primitive replay and scoped feed bounds cover both admission and structural
+identity, using the existing quality allowance and a charged owning verifier.
+Force/configuration/external/coverage contracts, interruptions and worker
+handoff remain explicit. `RefillWordShapesTest` independently compares exact
+AST identity classes and checks collisions, dispatch boundaries, huge counts,
+deep/wide words, per-turn work and optional-workspace refusal/release. Both
+programs are discovered automatically by the standard suite.
+
 `RequestCoverageTest` keeps incomplete candidate/state domains distinct from
 complete infeasibility, including retained smaller requests and direct emission.
 `CapturedReachableTest` checks sparse executable witnesses beyond the initial

@@ -320,6 +320,72 @@ improved 56 of the 112 archived variants, preserving 32 previous successes and
 retaining 24 larger bills. The cursor/index continuation above subsequently
 completes all 112 at their scoped bound; broader irregular families remain open.
 
+Segmented words and exact local structural identity
+--------------------------------------------------
+
+An outer loop can consist of several Repeat(Sequence(...), n) segments instead
+of flat batches. Two previous admission/recognition rules missed this case: the
+grouping gate counted only flat batches, and opaque nodes compared by object
+identity. Independently compiled equal segments could therefore keep unnecessary
+rounds and their feed bill, even though the supplied execution word was valid.
+
+After existing identity-based grouping fails to improve the bill, a word with
+at least two opaque atoms and four total atoms may spend remaining quality work
+on exact local hash-consing. Opaque-only words can enter this continuation too.
+The pass requires at least 1024 work left and receives at most min(2048, left/2).
+It uses the original pruning allowance, runs once, and cannot recursively start
+another grouping search. Previously successful grouping retains its priority.
+
+RefillWordShapes interns exact batch recipe/count, repeat body/count, and ordered
+sequence-child identities. Child lists use constant-sized cons keys. Traversal
+is iterative and charged in slices of at most 64 visits; it does not recursively
+hash a composite or enumerate repeat occurrences. Hash collisions require exact
+key equality. Distinct recipe IDs, order, zero operations, sequence nesting and
+physical batch boundaries remain distinct. This is structural identity within
+one bound recipe catalog, not an algebraic rewrite or cross-request cache.
+
+The optional workspace is capped at min(256 KiB, available workspace/16) on entry.
+Allocation refusal or a work/time limit retains the already verified incumbent;
+cancellation still propagates. No partial identity mapping is published. The
+private traversal/intern tables are released before regrouping and verification;
+only the charged result references live until the owning continuation closes.
+All candidates still pass the existing exact supply, prefix, target-credit and
+final-seed checks. An identity-only negative short-block hint is not reused after
+canonicalization changes the atoms.
+
+RefillCompositeWordTest covers 768 segment/count/seed/coproduct/catalog/nesting
+variants with a charged owning verifier and independent primitive execution.
+Every variant reaches its scoped feed-conservation bound under the existing
+8192-work pruning quota; the previous revision 4f8b6213 reached none. In 96 normal
+expanded-prefix cases, 48 already reduced shared segments and 48 retained excess
+for independently allocated segments; all 96 now reach the terminal-supply bound.
+These are refill reduction/expansion results, not new main-solver infeasibility
+or universal minimum-supply claims. Very small work-scaled quotas may still stop.
+Configuration dispatch, forced output, external supply, incomplete coverage,
+cutoffs, summary ownership and scheduler handoff remain regression contracts.
+
+RefillWordShapesTest checks exact identity classes against independent AST
+signatures, colliding recipe hashes, dispatch/order/zero boundaries, shared DAGs,
+wide/deep structures and huge nested repetition counts without unfolding. It
+also checks per-turn work, optional memory refusal, interruptions and release.
+
+The paired local validation retains the outcomes of 4615 previous input/budget
+combinations. A further 6144 segmented-word work/memory combinations show no
+sampled bill regression. At 4096 quality work, 760/768 reach the bound; at 6144
+and above all 768 do. Tight 16/32-KiB request workspace makes this optional
+analysis decline, retaining the valid incumbent. This is not monotonic-success
+or minimum-supply certification beyond those inputs.
+
+The added reduction is not free: default-quota work across these 768 previously
+unreduced words rises from 634112 to 1594000. Maximum accounted pruning workspace
+rises from 6912 to 65152 bytes (excluding the external summary in this cost probe;
+the permanent tests charge its owner). Three alternating warmed JVM pairs put
+three newly reduced segment samples at about 0.05..0.16 ms CPU per pruning call,
+versus about 0.03..0.13 ms before. Ten old controls retain their work and workspace;
+CPU medians mostly stay within the 15.625-ms timer bin for a measurement batch,
+with the returned-input control about 5.9% higher. These are local measurements,
+not a general speedup or a host main-thread latency guarantee.
+
 Mixed-source stock allocation is an optional improvement of the completed bill.
 While inspecting ordinary candidates, expansion detects positive partial batches
 that introduce no additional deficits. Only if such a hint remains useful after
@@ -780,8 +846,10 @@ Known boundaries after the refill review at 224e9172:
   a completed structural certificate proves it has no match, or an inner short
   grouping makes no supply improvement. The bounded continuation retains useful
   prior results; it does not exhaust all nested block decompositions.
-  Nonadjacent repetitions, distances hidden by other eligible predecessors, distinct
-  opaque composites and scans stopped by the optional cap remain incomplete.
+  Exact-equal opaque composites now have a bounded structural-identity pass.
+  Nonadjacent repetitions, distances hidden by other eligible predecessors,
+  algebraically equivalent but structurally different composites, and scans
+  stopped by the optional cap remain incomplete.
   Very small work-scaled preview allowances can still
   retain the old flat bill; recognizing blocks does not increase that quota.
   Existing forced production credit is retained even if it is surplus.

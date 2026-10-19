@@ -15,7 +15,7 @@ import java.util.*;
  * preserves executability without requiring all unrequested final coproducts.
  */
 final class RefillWordPruning<K> implements AutoCloseable {
-    private enum Phase { RECIPES, STRUCTURE, CONSUMED, PRODUCED, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, BLOCKS, ANCHORS, BLOCK_PRUNE, DONE }
+    private enum Phase { RECIPES, STRUCTURE, CONSUMED, PRODUCED, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, BLOCKS, ANCHORS, SHAPES, BLOCK_PRUNE, DONE }
     private final GraphPlan<K> original;
     private final Map<K, Long> stock;
     private final Set<K> external;
@@ -40,6 +40,8 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private RefillWordBlocks blocks;
     private RefillShortBlockHint shortHint;
     private RefillWordAnchors anchors;
+    private RefillWordShapes shapes;
+    private List<PlanStep> groupedAtoms;
     private RefillWordPruning<K> blockPruning;
     private SequenceSummary<K> summary, unitSummary;
     private final SequenceSummary<K> verifiedOriginal;
@@ -50,7 +52,8 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private boolean feedback, changed, allocated, compactCursors, hintTried, shortBlocksImpossible;
     private boolean allowBlocks = true, inheritedStructure;
     private Phase phase = Phase.RECIPES;
-    private int reverseIndex, flatBatches;
+    private int reverseIndex, flatBatches, opaqueAtoms;
+    private boolean shapesTried;
     private long memory, summaryBytes, unitBytes, structureBytes, structureStarted;
 
     RefillWordPruning(GraphPlan<K> original, Map<K, Long> stock, Set<K> external, boolean forceCraft,
@@ -111,11 +114,20 @@ final class RefillWordPruning<K> implements AutoCloseable {
             }
             if (phase == Phase.ANCHORS) {
                 if (!anchors.step()) return false;
-                return anchors.result() == null ? finish() : pruneBlocks(anchors.result(), true);
+                return anchors.result() == null ? finishGrouping() : pruneBlocks(anchors.result(), true);
+            }
+            if (phase == Phase.SHAPES) {
+                if (!shapes.step()) return false;
+                if (shapes.result() == null || !shapes.changed() && flatBatches >= 4) return finish();
+                groupedAtoms = shapes.result();
+                long left = allowance - (budget.nodes() - started);
+                if (left < 512) return finish();
+                blocks = new RefillWordBlocks(groupedAtoms, budget, Math.min(2048, left / 2), compactCursors);
+                phase = Phase.BLOCKS; return false;
             }
             if (phase == Phase.BLOCK_PRUNE) {
                 if (!blockPruning.step()) return false;
-                if (blockPruning.result() != regrouped) result = blockPruning.result();
+                if (blockPruning.result() != regrouped) { result = blockPruning.result(); return finish(); }
                 else if (blocks != null || anchors != null && anchors.hasShortBlocks()) {
                     // A short tandem can be a necessary inner loop rather than
                     // a reducible outer round. Recognition alone is not quality
@@ -127,12 +139,12 @@ final class RefillWordPruning<K> implements AutoCloseable {
                     if (anchors != null) { anchors.close(); anchors = null; }
                     return startAnchors(true);
                 }
-                return finish();
+                return finishGrouping();
             }
             for (int i = 0; i < 64; i++) {
                 budget.check();
                 if (advance()) return true;
-                if (phase == Phase.ORIGINAL || phase == Phase.SUMMARY || phase == Phase.VERIFY || phase == Phase.BLOCKS || phase == Phase.ANCHORS) return false;
+                if (phase == Phase.ORIGINAL || phase == Phase.SUMMARY || phase == Phase.VERIFY || phase == Phase.BLOCKS || phase == Phase.ANCHORS || phase == Phase.SHAPES) return false;
             }
             return false;
         } catch (PlanningBudget.Exhausted limit) {
@@ -301,6 +313,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
             var kept = runs.equals(oldRuns) ? atom : PlanStep.repeat(unit, runs);
             reversed.add(kept);
             if (atom instanceof PlanStep.Batch) flatBatches++;
+            else opaqueAtoms++;
             if (!hintTried) {
                 hintTried = true;
                 if (allowBlocks && allowance >= 4096 && original.recipes().size() > 16) shortHint = RefillShortBlockHint.tryCreate(budget);
@@ -414,7 +427,22 @@ final class RefillWordPruning<K> implements AutoCloseable {
                     compactCursors || budget.nodes() - started >= 2048);
             phase = Phase.BLOCKS; return false;
         }
-        return finish();
+        return finishGrouping();
+    }
+    private List<PlanStep> groupingWord() { return groupedAtoms == null ? reversed : groupedAtoms; }
+    private boolean finishGrouping() {
+        long left = allowance - (budget.nodes() - started);
+        // First preserve every result of the existing identity-based passes.
+        // An opaque-only word previously failed the flat-batch admission gate.
+        // With no grouping improvement, exact local shapes can enable one more
+        // bounded attempt, using only the same remaining quality allowance.
+        if (!allowBlocks || shapesTried || opaqueAtoms < 2 || reversed.size() < 4 || left < 1024) return finish();
+        shapesTried = true;
+        if (blockPruning != null) { blockPruning.close(); blockPruning = null; regrouped = null; }
+        if (blocks != null) { blocks.close(); blocks = null; }
+        if (anchors != null) { anchors.close(); anchors = null; }
+        shapes = new RefillWordShapes(reversed, budget, Math.min(2048, left / 2));
+        phase = Phase.SHAPES; return false;
     }
     private boolean startAnchors() {
         return startAnchors(false);
@@ -422,8 +450,8 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private boolean startAnchors(boolean longerOnly) {
         long left = allowance - (budget.nodes() - started);
         // Two periods beyond the old 16-atom horizon need >=34 atoms.
-        if (left < 1024 || reversed.size() < 34) return finish();
-        anchors = new RefillWordAnchors(reversed, budget, Math.min(2048, left / 2),
+        if (left < 1024 || groupingWord().size() < 34) return finishGrouping();
+        anchors = new RefillWordAnchors(groupingWord(), budget, Math.min(2048, left / 2),
                 longerOnly ? RefillWordBlocks.MAX_PERIOD + 1 : 2);
         phase = Phase.ANCHORS; return false;
     }
@@ -470,6 +498,8 @@ final class RefillWordPruning<K> implements AutoCloseable {
         if (blocks != null) { blocks.close(); blocks = null; }
         discardHint();
         if (anchors != null) { anchors.close(); anchors = null; }
+        if (shapes != null) { shapes.close(); shapes = null; }
+        groupedAtoms = null;
         if (verification != null) { verification.close(); verification = null; }
         if (computation != null) { computation.close(); computation = null; }
         entries = null; seeds = null; recipes = null;
