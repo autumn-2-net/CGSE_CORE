@@ -112,6 +112,16 @@ mixed units, 2048-work handoff boundaries and interruption cleanup. It charges
 the actual owning verifier, limits each cooperative turn and preserves the
 existing pruning allowance. Both are discovered as core programs automatically.
 
+`RefillNestedBlocksTest` covers 384 nested-loop variants where necessary short
+rounds used to suppress an outer reduction. Independent feed bounds and primitive
+replay require completion within the unchanged 8192 allowance, with real verifier
+ownership. Force/seed/tool/configuration/coverage contracts, exact long-period
+traces, limits and worker transfer stay checked. `RefillBlockWindowTest` compares
+1840 indexed/unindexed words for identical grouping, including ring boundaries,
+collisions, repeated occurrences and zero/long counts. Deep opaque identities,
+memory refusal/pressure and interruptions cover optional-index ownership. Both
+programs are discovered automatically; no central test list is required.
+
 `RequestCoverageTest` keeps incomplete candidate/state domains distinct from
 complete infeasibility, including retained smaller requests and direct emission.
 `CapturedReachableTest` checks sparse executable witnesses beyond the initial

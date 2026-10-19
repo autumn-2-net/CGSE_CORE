@@ -48,7 +48,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private PlanStep atom, unit;
     private BigInteger oldRuns, runs, targetCredit = BigInteger.ZERO, tailTarget = BigInteger.ZERO;
     private boolean feedback, changed, allocated, compactCursors, hintTried, shortBlocksImpossible;
-    private boolean allowBlocks = true;
+    private boolean allowBlocks = true, inheritedStructure;
     private Phase phase = Phase.RECIPES;
     private int reverseIndex, flatBatches;
     private long memory, summaryBytes, unitBytes, structureBytes, structureStarted;
@@ -103,8 +103,9 @@ final class RefillWordPruning<K> implements AutoCloseable {
                 if (!blocks.step()) return false;
                 if (blocks.result() != null) return pruneBlocks(blocks.result(), false);
                 // Keep the original short-period pass and every completed bill
-                // first. Only an unsuccessful scan may spend leftover quota on
-                // longer anchor hints; no fresh allowance or fixed-point loop.
+                // first. An unsuccessful scan may spend leftover quota on
+                // anchor hints; an unproductive short grouping can continue
+                // at a larger period too, without a fresh allowance.
                 blocks.close(); blocks = null;
                 return startAnchors();
             }
@@ -115,6 +116,17 @@ final class RefillWordPruning<K> implements AutoCloseable {
             if (phase == Phase.BLOCK_PRUNE) {
                 if (!blockPruning.step()) return false;
                 if (blockPruning.result() != regrouped) result = blockPruning.result();
+                else if (blocks != null || anchors != null && anchors.hasShortBlocks()) {
+                    // A short tandem can be a necessary inner loop rather than
+                    // a reducible outer round. Recognition alone is not quality
+                    // progress. With the incumbent unchanged, the original
+                    // reverse word and its verified binding are still exact.
+                    // Release this failed attempt before using leftover quota.
+                    blockPruning.close(); blockPruning = null; regrouped = null;
+                    if (blocks != null) { blocks.close(); blocks = null; }
+                    if (anchors != null) { anchors.close(); anchors = null; }
+                    return startAnchors(true);
+                }
                 return finish();
             }
             for (int i = 0; i < 64; i++) {
@@ -133,6 +145,10 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private boolean advance() {
         switch (phase) {
             case RECIPES -> {
+                if (inheritedStructure) {
+                    recipes = null;
+                    return startOriginal();
+                }
                 if (recipes.hasNext()) {
                     var recipe = recipes.next();
                     if (recipe.batchSensitiveInputs()) return finish();
@@ -389,20 +405,26 @@ final class RefillWordPruning<K> implements AutoCloseable {
         if (accept) result = candidate;
         // The original per-batch pass runs first with its unchanged allowance.
         // Further grouping starts from that completed incumbent, and every
-        // interruption keeps it. One child pass only; no recursive fixed point.
+        // interruption keeps it. Children cannot regroup recursively; only an
+        // unproductive short grouping may try a larger-period sibling.
         long left = allowance - (budget.nodes() - started);
         if (allowBlocks && flatBatches >= 4 && left >= 512) {
             if (shortBlocksImpossible) return startAnchors();
-            blocks = new RefillWordBlocks(reversed, budget, Math.min(2048, left / 2));
+            blocks = new RefillWordBlocks(reversed, budget, Math.min(2048, left / 2),
+                    compactCursors || budget.nodes() - started >= 2048);
             phase = Phase.BLOCKS; return false;
         }
         return finish();
     }
     private boolean startAnchors() {
+        return startAnchors(false);
+    }
+    private boolean startAnchors(boolean longerOnly) {
         long left = allowance - (budget.nodes() - started);
         // Two periods beyond the old 16-atom horizon need >=34 atoms.
         if (left < 1024 || reversed.size() < 34) return finish();
-        anchors = new RefillWordAnchors(reversed, budget, Math.min(2048, left / 2));
+        anchors = new RefillWordAnchors(reversed, budget, Math.min(2048, left / 2),
+                longerOnly ? RefillWordBlocks.MAX_PERIOD + 1 : 2);
         phase = Phase.ANCHORS; return false;
     }
     private boolean pruneBlocks(PlanStep word, boolean reuseOriginal) {
@@ -411,12 +433,21 @@ final class RefillWordPruning<K> implements AutoCloseable {
         // Exact grouping preserves every batch boundary and its order. The
         // owning verifier stays charged until this child closes.
         var known = verification != null && result == candidate ? verification.summary() : null;
-        // A failed short scan may leave the original word untouched. Its
-        // external verifier still owns the borrowed fold through this entire
-        // continuation; exact grouping changes no execution or binding.
-        if (known == null && reuseOriginal && result == original) known = verifiedOriginal;
+        // When the original word is unchanged, its external verifier still
+        // owns the borrowed fold throughout this continuation. Exact grouping
+        // changes no execution or binding. Small passes retain old scheduling.
+        boolean scheduledFloor = budget.nodes() - started >= 2048;
+        if (known == null && (reuseOriginal || scheduledFloor) && result == original) known = verifiedOriginal;
         blockPruning = new RefillWordPruning<>(regrouped, stock, external, forceCraft, ignoreTargetStock, budget,
                 allowance - (budget.nodes() - started), known);
+        // This is the same quality pass, not a fresh work-scaled preview. The
+        // parent's reached floor permits its child to omit empty handoffs too.
+        blockPruning.compactCursors = compactCursors || scheduledFloor;
+        // This parent already checked every recipe for batch-sensitive inputs
+        // and admitted this unchanged execution trace. Only grouping differs;
+        // a repeated binding/feedback scan adds no information. The child still
+        // verifies all resulting supplies, force credit, delivery and seeds.
+        blockPruning.inheritedStructure = scheduledFloor && result == original;
         blockPruning.allowBlocks = false; phase = Phase.BLOCK_PRUNE; return false;
     }
     private boolean finish() {

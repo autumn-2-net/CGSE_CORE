@@ -15,6 +15,7 @@ final class RefillWordAnchors implements AutoCloseable {
     private final List<PlanStep> reverse, groups = new ArrayList<>(), output = new ArrayList<>();
     private final PlanningBudget budget;
     private final long started, allowance;
+    private final int minimumPeriod;
     private Map<BatchKey, Integer> batches = new HashMap<>();
     private Map<PlanStep, Integer> composites = new IdentityHashMap<>();
     private List<PlanStep> body;
@@ -22,10 +23,16 @@ final class RefillWordAnchors implements AutoCloseable {
     private Phase phase = Phase.FIND;
     private int scan, committed, start, period, offset, copies, next;
     private long memory, anchorBytes;
-    private boolean allocated, changed;
+    private boolean allocated, changed, shortBlocks;
 
     RefillWordAnchors(List<PlanStep> reverse, PlanningBudget budget, long allowance) {
+        this(reverse, budget, allowance, 2);
+    }
+
+    RefillWordAnchors(List<PlanStep> reverse, PlanningBudget budget, long allowance, int minimumPeriod) {
+        if (minimumPeriod < 2) throw new IllegalArgumentException("Invalid minimum tandem period");
         this.reverse = reverse; this.budget = budget; this.allowance = allowance; started = budget.nodes();
+        this.minimumPeriod = minimumPeriod;
     }
 
     boolean step() {
@@ -47,15 +54,15 @@ final class RefillWordAnchors implements AutoCloseable {
                         var key = new BatchKey(batch.recipe(), batch.runs());
                         previous = batches.get(key);
                         if (previous == null) reserveAnchor();
-                        batches.put(key, scan);
+                        if (replace(previous)) batches.put(key, scan);
                     } else {
                         previous = composites.get(atom);
                         if (previous == null) reserveAnchor();
-                        composites.put(atom, scan);
+                        if (replace(previous)) composites.put(atom, scan);
                     }
                     // The nearest equal atom is only a hint. A failed hint does
                     // not imply that a longer/different repetition is absent.
-                    if (previous == null || scan - previous < 2 || scan - previous > (reverse.size() - previous) / 2) scan++;
+                    if (previous == null || scan - previous < minimumPeriod || scan - previous > (reverse.size() - previous) / 2) scan++;
                     else { start = previous; period = scan - previous; offset = 0; phase = Phase.MATCH; }
                 }
                 case MATCH -> {
@@ -77,6 +84,7 @@ final class RefillWordAnchors implements AutoCloseable {
                     else phase = Phase.EMIT;
                 }
                 case EMIT -> {
+                    shortBlocks |= period <= RefillWordBlocks.MAX_PERIOD;
                     reserve(160); groups.add(new PlanStep.Repeat(FrozenPlanSteps.owned(body), copies)); body = null;
                     committed = start + period * copies; scan = committed; changed = true;
                     // No published word owns these maps. Drop them in constant
@@ -105,7 +113,14 @@ final class RefillWordAnchors implements AutoCloseable {
         return a == b || a instanceof PlanStep.Batch x && b instanceof PlanStep.Batch y &&
                 x.runs() == y.runs() && x.recipe().equals(y.recipe());
     }
+    private boolean replace(Integer previous) {
+        // In the larger-period continuation, nearby duplicates must not keep
+        // hiding the first eligible anchor. Retain it until the distance can
+        // span the requested floor. The original nearest-anchor path is intact.
+        return previous == null || minimumPeriod == 2 || scan - previous >= minimumPeriod;
+    }
     PlanStep result() { return result; }
+    boolean hasShortBlocks() { return shortBlocks; }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     private void reserveAnchor() { reserve(128); anchorBytes += 128; }
     @Override public void close() { budget.release(memory); memory = 0; anchorBytes = 0; }

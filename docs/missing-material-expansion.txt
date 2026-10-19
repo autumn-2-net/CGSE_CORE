@@ -162,7 +162,7 @@ nor enumerates opaque repeat bodies. Batch equality compares only recipe/count;
 composite equality uses identity without recursive equals/hashCode. Separate
 occurrences of a shared node remain separate executions. Grouping creates an
 ordered composite Repeat, then invokes the same verified backward reduction
-once, with grouping disabled in that child. This lets an entire A -> B -> more A
+with grouping disabled in that child. This lets an entire A -> B -> more A
 round shrink even when a constituent alone would lack its returned startup/tool.
 
 The completed per-batch result is published before grouping starts. Both initial
@@ -178,6 +178,21 @@ final reduced candidate is always verified afresh. Scratch and retained word
 memory stay charged until child close. RefillWordBlocksTest checks literal
 batch traces, conservation, tool returns, seeds/coproducts, forced credit,
 configuration exclusions, memory/time/work/cancel exits and scheduler handoff.
+
+After the parent's 2048-work scheduling floor, the short scan can maintain an
+optional 15-atom lookahead index. Only periods whose first atoms are exactly equal
+need a full block comparison. Masks retain every occurrence, including duplicates
+across the ring boundary; they do not select a different period or authorize a
+match. Exact grouping order is identical to the unindexed scan when both finish.
+Each insertion/eviction is a charged continuation visit. A completed block can
+jump past the window without traversing that gap. Batch keys use recipe/count;
+opaque composites use identity, never recursive equality or a hash-only match.
+
+The index reserves 4096 bytes only when that is at most one sixteenth of available
+workspace. Refusal keeps the original scan. Allocation pressure drops the index
+before group storage, and scan completion/limits release it before child work.
+This accelerates failed first-atom comparisons within the existing scan allowance;
+it does not increase any request, pruning or cache-preparation budget.
 
 An optional 16-atom sliding index can prove the short scan has no match. Every
 exact period2..16 tandem necessarily has equal atoms within that distance. The
@@ -203,27 +218,62 @@ gets its original scan first. Anchor scanning receives at most min(2048, remaini
 visits; reduction and verification use the rest. It never extends the request
 or pruning quota and never recursively invokes another grouping pass.
 
+Recognizing a short block is not itself a supply reduction: it can be a necessary
+inner loop within a reducible outer round. If the short-group child returns its
+input plan unchanged, the parent closes that failed attempt and may use the same
+remaining allowance for one larger-period sibling. This also applies when the
+nearest-anchor scan only grouped short loops. The sibling requires period >=17,
+so it cannot re-enter this continuation through another short block. An improving
+child always keeps priority. A cutoff still returns the completed incumbent.
+This is a bounded choice of passes, not repeated retries until the budget grows.
+
 Each atom's nearest equal predecessor proposes a period. The entire ordered
 block and every extension are then compared exactly, including recipe IDs and
 batch counts. Hash collisions cannot authorize grouping. Opaque composite nodes
 use identity and are not unrolled or compared recursively. Unmatched prefixes,
 tails, zero batches and separate occurrences keep their exact execution order.
-This is an incomplete hint: repeated atoms inside a period can conceal another
-useful distance, and an interrupted scan publishes no partial regrouping.
+For the larger-period sibling, a too-near duplicate retains its previous anchor
+until the minimum distance is reached. Otherwise an inner repetition could keep
+overwriting the start of an outer block, even when two full copies exist. The
+original nearest-predecessor policy remains unchanged for the first anchor scan.
+This remains an incomplete hint: it does not retain all eligible predecessors,
+and an interrupted scan publishes no partial regrouping.
 
 The resulting compact word uses the existing exact backward reduction and final
 verification. If no preceding reduction changed the original plan, its externally
 owned verified summary may also serve the long-block child; the owner remains
-alive and charged throughout. Both initial and missing supply still must be
+alive and charged throughout. After the 2048-work scheduling floor, an unchanged
+original word can lend the fold to a short-group child too. That exact grouping
+can also inherit the parent's completed recipe/feedback admission and cursor
+scheduling floor. It need not rescan unchanged recipe bindings or re-establish
+the same structural hint. Small refinements keep their prior scheduling, and
+every changed word still receives complete final verification. These are local
+immutable facts, with no cross-request stock or recipe cache.
+Both initial and missing supply still must be
 componentwise bounded by the completed incumbent. Time/work/memory limits retain
 that incumbent, while cancellation propagates. Anchors and candidate word storage
 are reserved and released; each cursor turn visits at most 64 entries. The extra
 optional search can consume more of the existing allowance and workspace.
 
-The cursor/index combination completes all 112 archived 8/16/17/24/32/48/64-step
+RefillNestedBlocksTest covers 384 variants: outer chains of 8/16/24/32 recipes,
+inner growth loops of 2/3/4 rounds, different delivery/seed/coproduct obligations,
+forward/reversed catalogs and flat/nested sequence forms. All reach the independent
+feed-conservation bound under the original 8192 pruning allowance. Each word is
+replayed primitively, with real owning-summary memory charged, unchanged binding,
+force credit, returned tools and explicit final seeds. Larger capped words are
+checked for legality and cleanup without making retained excess an optimum.
+Tests also cover incomplete-model metadata, external supply, batch-sensitive
+configuration, exact long-period traces, continuation cutoffs and worker transfer.
+
+RefillBlockWindowTest compares indexed and unindexed grouping for 1840 random
+and ring-boundary words, including colliding identifiers, zero/long counts and
+periods inside/outside the short horizon. Deep opaque identities, quota exits,
+optional memory refusal and pressure fallback retain exact occurrence semantics.
+
+The preceding cursor/index revision completed all 112 archived 8/16/17/24/32/48/64-step
 loop variants at their scoped feed-conservation bound, including the 24 variants
-previously retained by the cap. Summed pruning work falls from 562234 to 394796;
-the maximum accounted pruning workspace rises from 60512 to 81120 bytes because
+previously retained by the cap. Summed pruning work fell from 562234 to 394796;
+the maximum accounted pruning workspace rose from 60512 to 81120 bytes because
 more words reach grouping and final verification. These peaks exclude the
 externally owned original summary in that paired probe. Permanent tests charge
 the real owning verifier too. This is bounded word refinement, not a claim that
@@ -235,6 +285,21 @@ by about 4%. A 64-step sample costs about 18% more CPU while completing grouping
 reduction and verification that the baseline never reached. Previous completed
 sample workspace peaks do not increase. These are local measurements, not host
 main-thread latency or a wall-time guarantee.
+
+Against that revision (6fa43837), the nested-block continuation improves 144 of
+192 default-quota variants, keeping the previous 48 completed bills unchanged.
+All 192 reach their scoped bound. Summed pruning work falls from 995434 to 829118
+(-16.7%); maximum pruning workspace rises from 56448 to 60096 bytes. Those peaks
+again exclude the externally owned summary; permanent tests charge its owner.
+Five quota sweeps from 4096 through 16384 show no sampled result regressions, but
+the smaller quotas still retain some excess. The 4096 sweep spends about 4.2%
+more work; acceleration is not uniform at every quota.
+
+Three alternating warmed JVM pairs keep most control CPU medians within the
+15.625-ms timer resolution. The 32-step ordinary loop sample uses about 12.5%
+less CPU; the largest nested sample uses about 9.1% more CPU while now completing
+outer reduction and final verification. Its accounted peak grows by 3328 bytes.
+These sampled costs do not establish a universal CPU speedup or minimum bill.
 
 RefillShortBlockHintTest compares negative certificates with the exact short
 recognizer across window edges, random words, counts, collisions and deep opaque
@@ -250,10 +315,10 @@ final seeds, coproduct requirements and reversed catalogs, including the normal
 expanded-prefix entry. Primitive execution and feed conservation are independent
 oracles. Exact trace tests cover long periods, separators, zero counts, colliding
 identifiers and deeply nested opaque nodes. Limits and scheduler transfer retain
-the incumbent and release owned memory. In a 112-request paired synthetic family,
-56 previously unreduced bills improve and 32 prior reduced bills are unchanged;
-24 larger combinations still retain their old bills within the original quota.
-Some 48/64-step loops improve, without a claim that all such loops now complete.
+the incumbent and release owned memory. Its original bounded implementation
+improved 56 of the 112 archived variants, preserving 32 previous successes and
+retaining 24 larger bills. The cursor/index continuation above subsequently
+completes all 112 at their scoped bound; broader irregular families remain open.
 
 Mixed-source stock allocation is an optional improvement of the completed bill.
 While inspecting ordinary candidates, expansion detects positive partial batches
@@ -711,9 +776,11 @@ Known boundaries after the refill review at 224e9172:
   repeat bodies, rewrite consumed configuration pushes, or claim global minimum
   supplies. Multi-recipe loops already present in the word are eligible too.
   Adjacent repeated flat blocks can now be reduced jointly, including longer
-  periods suggested by exact repeated-atom anchors after the short scan fails
-  or a completed structural certificate proves it has no match.
-  Nonadjacent repetitions, distances hidden by internal repeated atoms, distinct
+  periods suggested by exact repeated-atom anchors after the short scan fails,
+  a completed structural certificate proves it has no match, or an inner short
+  grouping makes no supply improvement. The bounded continuation retains useful
+  prior results; it does not exhaust all nested block decompositions.
+  Nonadjacent repetitions, distances hidden by other eligible predecessors, distinct
   opaque composites and scans stopped by the optional cap remain incomplete.
   Very small work-scaled preview allowances can still
   retain the old flat bill; recognizing blocks does not increase that quota.

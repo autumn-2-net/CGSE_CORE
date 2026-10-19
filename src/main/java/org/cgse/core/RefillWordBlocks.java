@@ -3,7 +3,10 @@
 package org.cgse.core;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Exact adjacent tandem blocks in a completed reverse word; no recipe algebra. */
 final class RefillWordBlocks implements AutoCloseable {
@@ -18,9 +21,15 @@ final class RefillWordBlocks implements AutoCloseable {
     private int position, period = 2, offset, copies, next;
     private long memory;
     private boolean changed, allocated;
+    private Window window;
 
     RefillWordBlocks(List<PlanStep> reverse, PlanningBudget budget, long allowance) {
+        this(reverse, budget, allowance, false);
+    }
+
+    RefillWordBlocks(List<PlanStep> reverse, PlanningBudget budget, long allowance, boolean indexed) {
         this.reverse = reverse; this.budget = budget; this.allowance = allowance; started = budget.nodes();
+        if (indexed && Window.BYTES <= budget.availableBytes() / 16 && budget.tryReserve(Window.BYTES)) window = new Window();
     }
 
     boolean step() {
@@ -28,11 +37,19 @@ final class RefillWordBlocks implements AutoCloseable {
         if (phase == Phase.DONE) return true;
         if (!allocated) { reserve(256); allocated = true; }
         for (int i = 0; i < 64; i++) {
-            if (budget.nodes() - started >= allowance) { phase = Phase.DONE; return true; }
+            if (budget.nodes() - started >= allowance) { discardWindow(); phase = Phase.DONE; return true; }
             budget.check();
             switch (phase) {
                 case FIND -> {
+                    // Only equal first atoms can start a tandem. Fill the small
+                    // lookahead incrementally, then skip exactly unequal periods.
+                    // The complete block is still compared in its original order.
+                    if (window != null && offset == 0 && position < reverse.size()) {
+                        if (!window.prepare(position)) break;
+                        period = window.nextPeriod(reverse.get(position), position, period);
+                    }
                     if (position == reverse.size()) {
+                        discardWindow();
                         if (!changed) { phase = Phase.DONE; return true; }
                         next = groups.size(); phase = Phase.OUTPUT;
                     } else if (period > MAX_PERIOD || period > (reverse.size() - position) / 2) {
@@ -76,6 +93,62 @@ final class RefillWordBlocks implements AutoCloseable {
                 x.runs() == y.runs() && x.recipe().equals(y.recipe());
     }
     PlanStep result() { return result; }
-    private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
-    @Override public void close() { budget.release(memory); memory = 0; }
+    private void reserve(long bytes) {
+        if (window != null && budget.availableBytes() < bytes) discardWindow();
+        budget.reserve(bytes); memory += bytes;
+    }
+    private void discardWindow() {
+        if (window != null) { window = null; budget.release(Window.BYTES); }
+    }
+    @Override public void close() { discardWindow(); budget.release(memory); memory = 0; }
+
+    /** At most 15 future atoms. Masks use absolute positions modulo 32, so
+     * eviction and insertion are constant sized and every update is charged. */
+    private final class Window {
+        private static final long BYTES = 4096;
+        private record BatchKey(String recipe, long runs) {}
+        private Map<BatchKey, Integer> batches = new HashMap<>();
+        private Map<PlanStep, Integer> composites = new IdentityHashMap<>();
+        private Object[] ring = new Object[32];
+        private int first, end;
+
+        boolean prepare(int position) {
+            // Long arithmetic also covers a list near the maximum int size.
+            int begin = (int) Math.min((long) reverse.size(), (long) position + 2);
+            int limit = (int) Math.min((long) reverse.size(), (long) position + MAX_PERIOD + 1);
+            if (begin > end) {
+                // An accepted block can jump past the whole window. No retained
+                // word owns these private containers; do not walk the skipped gap.
+                batches = new HashMap<>(); composites = new IdentityHashMap<>(); ring = new Object[32];
+                first = end = begin;
+                return false;
+            }
+            if (first < begin) {
+                int slot = first++ & 31, bit = 1 << slot; Object key = ring[slot]; ring[slot] = null;
+                if (key instanceof BatchKey b) remove(batches, b, bit);
+                else remove(composites, (PlanStep) key, bit);
+                return false;
+            }
+            if (end < limit) {
+                PlanStep atom = reverse.get(end); int slot = end++ & 31, bit = 1 << slot;
+                if (atom instanceof PlanStep.Batch b) {
+                    var key = new BatchKey(b.recipe(), b.runs()); ring[slot] = key;
+                    batches.put(key, batches.getOrDefault(key, 0) | bit);
+                } else { ring[slot] = atom; composites.put(atom, composites.getOrDefault(atom, 0) | bit); }
+                return false;
+            }
+            return true;
+        }
+        private <T> void remove(Map<T, Integer> entries, T key, int bit) {
+            int mask = entries.get(key) & ~bit;
+            if (mask == 0) entries.remove(key); else entries.put(key, mask);
+        }
+        int nextPeriod(PlanStep atom, int position, int period) {
+            if (period > MAX_PERIOD) return period;
+            int mask = atom instanceof PlanStep.Batch b ? batches.getOrDefault(new BatchKey(b.recipe(), b.runs()), 0) : composites.getOrDefault(atom, 0);
+            int allowed = (1 << (MAX_PERIOD + 1)) - 1;
+            int distances = Integer.rotateRight(mask, position & 31) & allowed & (-1 << period);
+            return distances == 0 ? MAX_PERIOD + 1 : Integer.numberOfTrailingZeros(distances);
+        }
+    }
 }
