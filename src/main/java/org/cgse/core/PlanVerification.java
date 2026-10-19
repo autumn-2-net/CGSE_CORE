@@ -4,6 +4,7 @@
 package org.cgse.core;
 
 import java.math.BigInteger;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -46,6 +47,25 @@ public final class PlanVerification<K> implements AutoCloseable {
         return verification;
     }
 
+    /** Internal assembly owns this exact immutable word and its bindings. The
+     * completed fold replaces arithmetic only; goals/seeds and production
+     * bookkeeping still use the new plan. Public verification never trusts a
+     * caller-supplied fold. Identity lookup cannot alias a different word. */
+    static <K> PlanVerification<K> folded(GraphPlan<K> plan, PlanningBudget budget,
+                                          PlanStep word, SequenceSummary<K> summary) {
+        var known = new IdentityHashMap<PlanStep, SequenceSummary<K>>();
+        known.put(word, summary);
+        return new PlanVerification<>(plan, budget, null, true, known);
+    }
+
+    /** The refill owner preserves the original suffix and all its bindings. */
+    static <K> PlanVerification<K> refillAfterWork(GraphPlan<K> funded, PlanningBudget budget, long floor,
+                                                   PlanStep suffix, SequenceSummary<K> summary) {
+        var verification = folded(funded, budget, suffix, summary);
+        verification.refillWorkFloor = floor;
+        return verification;
+    }
+
     /** Only the exact immutable plan produced by this assembly can reuse its
      * completed fold. Other plans, including copies with changed inventory or
      * recipes, take the ordinary verification path. No cross-request cache.
@@ -58,13 +78,18 @@ public final class PlanVerification<K> implements AutoCloseable {
 
     private PlanVerification(GraphPlan<K> plan, PlanningBudget budget, AllocationSearch.Candidate<K> assembled,
                              boolean collectProduction) {
+        this(plan, budget, assembled, collectProduction, Map.of());
+    }
+
+    private PlanVerification(GraphPlan<K> plan, PlanningBudget budget, AllocationSearch.Candidate<K> assembled,
+                             boolean collectProduction, Map<PlanStep, SequenceSummary<K>> completed) {
         try (var costs = budget.trace(PlanningCostTrace.Stage.VERIFY)) {
             if (!plan.feasible() || !plan.missingExact().isEmpty()) throw new IllegalArgumentException("Unverified plan");
             this.plan = plan;
             this.budget = budget;
             boolean sameAssembly = assembled != null && assembled.proposed == plan && assembled.summary != null &&
                     assembled.witness == plan.steps();
-            var known = sameAssembly ? Map.of(plan.steps(), assembled.summary) : Map.<PlanStep, SequenceSummary<K>>of();
+            var known = sameAssembly ? Map.of(plan.steps(), assembled.summary) : completed;
             computation = new SummaryComputation<>(plan.steps(), plan.recipes(), budget, known);
             boolean needProduction = collectProduction && (!sameAssembly || assembled.force &&
                     assembled.summary.delta(plan.target()).compareTo(BigInteger.valueOf(plan.amount())) < 0);

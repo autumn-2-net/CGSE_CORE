@@ -82,7 +82,7 @@ public final class FallbackCompactRefillTest {
                 }
                 var recipe = r("r" + i, in, out); recipes.put(recipe.id(), recipe);
                 var runs = trial % 7 == 0 ? BigInteger.valueOf(Long.MAX_VALUE).pow(2).add(ONE) : BigInteger.valueOf(1 + random.nextInt(10));
-                steps.add(PlanStep.batch(recipe.id(), runs)); lower += GraphFallback.finishingWorkLowerBound(recipe);
+                steps.add(PlanStep.batch(recipe.id(), runs)); lower += GraphFallback.unsharedFinishingWorkLowerBound(recipe);
             }
             var word = new PlanStep.Sequence(steps); var b = budget(1_000_000, 32L << 20);
             try (var fold = new SummaryComputation<>(word, recipes, b)) {

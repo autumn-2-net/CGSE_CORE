@@ -56,6 +56,8 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private int prefixIndex;
     private long memory;
     private BigInteger targetDelta = BigInteger.ZERO;
+    private SequenceSummary<K> originalSummary;
+    private long originalSummaryBytes;
 
     MissingMaterialExpansion(GraphCompiler<K> compiler, GraphPlan<K> original, Map<K, Long> stock,
                              Set<K> external, Set<String> excluded, boolean forceCraft, boolean ignoreTargetStock, PlanningBudget budget) {
@@ -87,6 +89,16 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     /** The main planner may search a small cyclic prefix; ordinary fallback
      * keeps its existing expansion/word-reduction responsibilities. */
     MissingMaterialExpansion<K> refineCycles(boolean enabled) { cycleSearchEnabled = enabled; return this; }
+    /** Only the same completed fallback witness may lend its immutable suffix.
+     * Prefix construction copies its bindings and refuses conflicting IDs.
+     * Retained vectors have an optional reservation, owned by this expansion. */
+    MissingMaterialExpansion<K> reuseSuffix(GraphPlan<K> verified, SequenceSummary<K> summary) {
+        if (verified != original || phase != Phase.START || summary == null || originalSummary != null) return this;
+        long bytes = 256L + 128L * ((long) summary.required().size() + summary.delta().size() + summary.peak().size());
+        if (bytes > budget.availableBytes() / 16 || !budget.tryReserve(bytes)) return this;
+        memory += bytes; originalSummaryBytes = bytes; originalSummary = summary;
+        return this;
+    }
     /** A funded empty word has no existing production credit. Forced fallback
      * goals must therefore establish the order's credit while adding a prefix;
      * ordinary refinement only preserves the credit of its verified suffix. */
@@ -282,7 +294,11 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                 // mandatory expansion/fold work saturates later quality quotas;
                 // small expansions keep their existing work-scaled scheduling.
                 long floor = startedWork > Long.MAX_VALUE - MIX_WORK_LIMIT / 4 ? Long.MAX_VALUE : startedWork + MIX_WORK_LIMIT / 4;
-                verification = PlanVerification.refillAfterWork(funded, budget, floor);
+                // A shorter fold must not shrink the existing word-quality
+                // allowance. Borrow only after preparation itself saturates it.
+                if (budget.nodes() < floor) releaseOriginalSummary();
+                verification = originalSummary == null ? PlanVerification.refillAfterWork(funded, budget, floor) :
+                        PlanVerification.refillAfterWork(funded, budget, floor, original.steps(), originalSummary);
                 phase = Phase.VERIFY;
             }
             case DONE -> { return true; }
@@ -291,6 +307,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         return false;
     }
     private boolean complete() {
+        if (verification == null) releaseOriginalSummary();
         phase = Phase.DONE;
         if (!allowMixed && !result.feasible() && budget.remainingWork() >= 512) {
             // Only the exact candidate just verified can lend its fold. This
@@ -506,7 +523,13 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
     boolean diagnosing() { return diagnostics != null; }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
+    private void releaseOriginalSummary() {
+        originalSummary = null;
+        budget.release(originalSummaryBytes); memory -= originalSummaryBytes; originalSummaryBytes = 0;
+    }
+
     @Override public void close() {
+        releaseOriginalSummary();
         if (diagnostics != null) { diagnostics.close(); diagnostics = null; }
         if (cycleSearch != null) { cycleSearch.close(); cycleSearch = null; }
         if (pruning != null) { pruning.close(); pruning = null; }

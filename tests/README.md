@@ -82,10 +82,19 @@ backward expansion; a work limit is not a terminal material.
 `FallbackCompactRefillTest` guards tight-budget fallback recovery on repeated
 shared dependencies, returned tools, input/catalog reversal and explicit seeds.
 Primitive replay and exact conservation cover forced production and counts
-beyond long. The finishing-work admission bound is checked against actual folds
-and count verification; work/memory/cancellation exits must release workspace.
+beyond long. The unshared finishing-work routing reference is checked against
+actual full folds/count verification; work/memory/cancellation exits must release
+workspace.
 `RefillVerificationTest` also checks the optional metadata threshold, preserving
 small-preview work allowances and every prefix/delivery/final-seed obligation.
+
+`FallbackSummaryReuseTest` checks immutable suffix reuse, returned tools and
+counts beyond long. It rejects underfunded prefixes, goals and seeds, and refuses
+different plan/word identities or unavailable optional memory. Primitive replay
+checks complete execution; small refinements retain their old work allowance.
+It also checks summary-only metadata access, the 256-step boundary, work/time/
+cancellation cleanup and scheduler ownership transfer. Discovery includes it
+automatically with the other core programs.
 
 `RequestCoverageTest` keeps incomplete candidate/state domains distinct from
 complete infeasibility, including retained smaller requests and direct emission.

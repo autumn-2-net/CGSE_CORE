@@ -543,18 +543,19 @@ the forward material tree can repeat a shared dependency thousands of times
 before finishing its first summary, second verification fold and count pass.
 Backward refill cannot repair a tree that has already spent the whole budget.
 
-Expansion now tracks a lower bound on those mandatory finishing operations.
+Expansion tracks a reference lower bound for the original unshared pipeline.
 Ordinary batches require both port scans and the count traversal. Returned-input
 batches additionally require separate key scaling and parent merging; compact
 long-overflow repeats still contain at least one fresh positive batch per emitted
 step. If that bound reaches a quarter of the remaining work, the first fold also
 records calling-thread work. Small previews avoid enabling per-charge thread
 accounting just for this optional measurement. Once that fold completes, it supplies
-a stronger lower bound for the identical second fold, including its caller
-checkpoints. This must be updated if that pipeline changes. Work performed by
-another budget-sharing worker cannot inflate the measured fold.
+a stronger reference bound for the identical second fold, including its caller
+checkpoints. These describe the unshared pipeline; they are not lower bounds for
+the accelerated path below. Work performed by another budget-sharing worker
+cannot inflate the measured fold.
 
-Only when that lower bound exceeds the remaining request work does fallback
+Only when that reference bound exceeds the remaining request work does fallback
 discard the unfinished tree. It then starts backward expansion directly from
 delivery plus explicit final seeds. The empty word is funded by those goals;
 no synthetic recipe or forward loan supplies production. Forced requests add
@@ -564,6 +565,30 @@ against its exact starting supplies, target and final seeds before publication.
 The original remaining budget is used; there is no fresh allowance or retry
 after exhaustion. All abandoned tree workspace is released first.
 
+Completed material trees with at least 256 emitted steps reuse their already
+computed immutable summary in the first funded verifier. This verifier still
+checks every prefix requirement, delivery and final seed. Its caller only reads
+the checked summary, so it omits the otherwise unused gross production/count
+pass. Funded search witnesses, witnessByCost, public verification and the existing
+force/source guards retain their previous behavior. Small material trees retain
+their previous work-scaled refinement scheduling too.
+
+The same completed word can then lend its summary to backward expansion. The
+borrow requires the exact original plan object, and prefix assembly preserves
+its recipe bindings, rejecting conflicting IDs. Summary lookup uses word identity;
+equal but different words cannot reuse another binding's arithmetic. The new
+prefix is folded normally, then the complete word's prefix requirements, target
+and seeds are verified against its new supplies. This is local immutable suffix
+reuse, with no stock/recipe cache across requests.
+
+Retained vectors require an optional reservation of at most one sixteenth of the
+available workspace. Refusal uses ordinary folding; completion, limits and
+cancellation release the lease. At publication, reuse is also declined unless
+mandatory preparation has already reached the 2048-work quality-scheduling
+floor. This avoids shrinking later work-scaled quality allowances for small
+refinements. The old unshared routing reference is deliberately retained so the
+optimization does not divert already successful compact-goal previews.
+
 FallbackCompactRefillTest covers repeated shared dependencies through 20 levels,
 catalog/input reversal, returned tools, explicit seeds, existing target stock,
 forced production, and leaf totals beyond long. Small words receive independent
@@ -572,10 +597,24 @@ checks the admission bound against actual full folds/count verification and
 exercises work/memory/cancellation exits. Existing completed high-budget results
 are compared separately with the pre-change engine.
 
+FallbackSummaryReuseTest covers large repeated suffixes, returned tools, counts
+beyond long, changed goals/seeds/prefixes and binding identity, ordinary versus
+summary-only verification, optional reservation refusal, work/time/cancellation,
+and scheduler ownership transfer. Small refinements preserve their old work
+counts; independently replayed larger words preserve primitive input enabling,
+target delivery and final seeds. Missing metadata cannot be read as force credit.
+
+In two archived fallback requests, the original 262144-work limit now completes
+at 202714/197045 work. Their 131072 successes and generous-budget words/bills are
+unchanged. A paired sweep of 94 case/cap combinations from 131072 through 393216,
+plus 1048576, completes all sampled requests: 32 formerly stopped, 62 already
+complete and unchanged. Accounted peaks do not increase in these samples.
+
 This admission rule is deliberately conservative. It does not estimate every
-later source-ranking/expansion cost. A larger budget can still admit the old
-tree and then expire in later refinement; success is not monotonic in the work
-cap. The replacement bill may choose different incomparable supplies from an
+later source-ranking/expansion cost. The sampled discontinuities are fixed, but
+this does not establish general monotonic success for every possible work cap.
+Other trees can still expire in later refinement. The replacement bill may
+choose different incomparable supplies from an
 old run given a larger budget. It is a verified refill witness, not a minimum
 supply certificate or a proof of infeasibility under the original stock.
 
