@@ -718,3 +718,35 @@ For related-slot tables, first preserve actual legal tuples through every
 allocation/recovery/proof path; an independent-marginal flag alone is unsafe.
 No new public API, host adapter, version bump or solver budget is needed for
 the guaranteed-use feedback corrections above.
+
+Completed support words keep their verification opportunity (2026-10-20)
+-----------------------------------------------------------------------
+The separate 72 longer manufacture/wear variants above had a common completion
+failure, not an absent physical path. For the n=63 / q=3 / forced / order=0
+trace, all 644 physical firings had already been restored (manufacture, warmup,
+pair and 641 tool uses). The support trial then exhausted its allowance partway
+through assembling the exact word. The parent discarded that word and retried
+inferior choices, schedules and count refinements.
+
+A support replay now captures the original parent's remaining deadline once.
+Only a fully restored word, with an assembly already owned, can use it for
+assembly, prefix verification and forced-production proof. The choice/search
+allowance and 8192 speculative-restoration cap are unchanged. Switching threads,
+rechecking or failing a candidate does not replenish the parent deadline. Global
+work, time, memory and cancellation controls still apply; no result is published
+until the original physical and forced-production checks finish.
+
+At the same 40M search / 64MiB reservation caps, all 144 longer variants now
+solve: 72 previous positives plus 72 formerly unresolved variants. The previous
+72 have identical search work and peak reservation. The newly solved group
+falls from 16,498,118 to 9,496,338 total search work (42.4% less); every variant
+uses less work and has the same peak reservation. These are one structural
+family across twelve source/slot/stock orders, three cohort quantities and
+ordinary/forced targets, not 72 separate canonical corpus records.
+
+CapturedStateForcedWearTest promotes these cases to positive requirements and
+retains independent literal source/slot/prefix checks. It also exercises delayed
+returns/reload at n=63, cancellation during verification, completion on a new
+worker after the trial expires, refusal at the inherited parent deadline and
+refusal of unfinished restoration at its original cap. This does not claim an
+unbounded symbolic-state solver or a general temporal-assignment proof.

@@ -55,7 +55,8 @@ final class StateChoiceRepair<K> implements AutoCloseable {
         } catch (RuntimeException | Error failure) { budget.release(bytes); throw failure; }
     }
 
-    /** The lifetime allowance includes subsequent restoration and verification. */
+    /** The lifetime bounds choices and speculative restoration. A fully restored
+     * support word may finish verification under its original parent deadline. */
     boolean protect(StateFamily<K> failed) {
         return protect(failed, false);
     }

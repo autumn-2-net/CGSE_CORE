@@ -581,11 +581,13 @@ The public tests are under tests/core/java/org/cgse/core:
     sufficient net-production proofs, full partial-gain production counts,
     target turnover/optional coproducts, returned-target exclusion, wide exact
     gains and cancellation.
-  CapturedStateForcedWearTest: 180 manufactured-tool/wear positives, including
+  CapturedStateForcedWearTest: 252 manufactured-tool/wear positives, including
     ordinary and stocked forced targets, twelve source/slot/stock orders, original-source
     counts and physical replay, delayed returns/reload and cancellation during
-    final verification. Another 72 longer literal-feasible cases remain open;
-    their local-limit safety checks are not counted as positive passes.
+    final verification. All 72 longer literal-feasible variants now require a
+    verified plan. Full physical restoration hands completion to the parent's
+    existing deadline; unfinished speculative restoration keeps its short cap.
+    Worker transfer and both sides of the deadline are independently guarded.
   SummaryBatchContinuationTest: 622 literal-prefix comparisons through adjacent
     batches, overlapping returns, shared/nested words, zero repeats, wide amounts,
     bounded 32-port continuations and cancellation. Batch folding does not change

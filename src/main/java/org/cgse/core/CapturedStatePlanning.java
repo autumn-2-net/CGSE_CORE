@@ -96,6 +96,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     private GraphRecipe<Key<K>> replayBlocked;
     private Map<String, BigInteger> replayAdditional;
     private boolean activationTried, replayFragmented, replayOnly, supportFeedbackTried;
+    private long replayCompletionAllowance;
     private int choiceCandidates;
     private StateScheduleRepair<Key<K>> orderRepair;
     private StateFamily<K> orderFailure;
@@ -153,9 +154,12 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
                         assembly != null ? PlanningCostTrace.Stage.ASSEMBLE : proposed != null ? PlanningCostTrace.Stage.RESTORE : PlanningCostTrace.Stage.SEARCH)) {
             budget.checkpoint();
             budget.phase(!prepared ? PlanningBudget.Phase.BUILD : assembly == null ? PlanningBudget.Phase.SOLVE : PlanningBudget.Phase.VERIFY);
-            if (budget.nodes() - workStarted >= allowance) return stop(Reason.LOCAL_WORK_LIMIT);
-            // A restored physical word may finish assembly/verification within
-            // its reserved share, while speculative restoration keeps a short cap.
+            // A completely restored support word is a candidate of the parent
+            // planner. Finish its assembly and verification under that parent's
+            // original deadline; the short choice trial must not discard it.
+            // No new restoration/search gets this completion allowance.
+            long activeAllowance = replayOnly && assembly != null ? replayCompletionAllowance : allowance;
+            if (budget.nodes() - workStarted >= activeAllowance) return stop(Reason.LOCAL_WORK_LIMIT);
             if (replayOnly && assembly == null && budget.nodes() - workStarted >= 8192) return stop(Reason.LOCAL_WORK_LIMIT);
             if (!captured) capture();
             else if (!prepared) prepare();
@@ -961,6 +965,9 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             if (replay.done || !replay.reserve(1024L + 192L * families.size() + 224L * (sources.size() + activations.size()) + 160L * ports)) return false;
             replay.replayOnly = true; replay.choiceRepair = choiceRepair.fork();
             if (replay.choiceRepair == null) return false;
+            // Express the parent's fixed deadline relative to the child clock.
+            // It is captured once, never renewed by steps, retries or workers.
+            replay.replayCompletionAllowance = Math.max(0, allowance - (replay.workStarted - workStarted));
             replay.captured = true; replay.prepared = true; replay.captureStock = null; replay.captureExternal = null;
             replay.families.putAll(families); replay.sources.putAll(sources); replay.activations.putAll(activations);
             replay.proposed = candidate; replay.replayAdditional = new LinkedHashMap<>(additional);
