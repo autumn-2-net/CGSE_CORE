@@ -969,6 +969,12 @@ changed stock, 24 recipe permutations and one/four-worker handoffs. Cancellation
 must release both live frontiers. Seven additional `GraphExecutionBoundaries`
 retain the default 40M request budget, including two feasible cases that prevent
 extra count turns from starving stock/allocation witnesses.
+`ExecutionScoutTest` adds 120 independent finite-state oracles for earlier
+execution-search admission during an earned stock/count turn. Returned tools,
+recipe permutations, population and port boundaries, per-push exclusions,
+optional memory refusal and work/time/cancellation exits guard the structural
+hint. The quarter-share limit and existing source-witness budgets stay fixed;
+see `../docs/root-execution-reachability.txt` for the scheduling diagnosis.
 
 `CountSparseCongruenceTest` checks integer equality elimination against 1,200
 independent determinant oracles, cyclic Latin systems of even and odd order,

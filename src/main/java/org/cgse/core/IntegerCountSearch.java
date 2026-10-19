@@ -53,6 +53,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     private IntegerCountBranch<K> shellProbe;
     private long shellWork, shellAllowance;
     private boolean executionBlocked, reachabilityAttempted;
+    private boolean executionScoutRequested, executionScoutAssessed;
     private CountReachability<K> reachability;
     private IntegerCountBranch<K> reachabilityProbe;
     private long reachabilityWork, reachabilityAllowance, reachabilityMaximum;
@@ -265,6 +266,20 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             prepareShell();
         }
         if (shell != null) return stepShell();
+        if (best == null && executionScoutRequested && !executionScoutAssessed && !reachabilityAttempted &&
+                work >= 32768 && allowance - work >= 16384 && budget.remainingWork() >= 32768) {
+            executionScoutAssessed = true;
+            long before = budget.threadWork();
+            boolean smallPopulation;
+            try { smallPopulation = compileRecovery && CountReachability.smallClosedPopulation(model); }
+            finally { work += budget.threadWork() - before; }
+            if (smallPopulation) {
+                prepareReachability();
+                // Optional admission failure must not suppress the older
+                // recovery attempt after an actual execution conflict.
+                if (reachability == null) reachabilityAttempted = false;
+            }
+        }
         if (best == null && !reachabilityAttempted && work >= 32768 &&
                 (executionBlocked || unresolved && pending.isEmpty() && deferred.isEmpty())) prepareReachability();
         if (reachability != null) return stepReachability();
@@ -380,6 +395,9 @@ final class IntegerCountSearch<K> implements AutoCloseable {
     void resume() {
         resume(2_000_000, false);
     }
+
+    /** The coordinator may test execution shape when sharing a stock-view turn. */
+    void considerExecutionScout() { executionScoutRequested = true; }
 
     /** A competing frontier funds this turn; local progress cannot enlarge its grant. */
     void resumeBounded(long maximumWork) {

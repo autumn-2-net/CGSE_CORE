@@ -289,6 +289,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                     // branch handoffs. Full-model proofs keep their bounded turn.
                     stockCountTurn = true;
                     stockCountStarted = budget.searchWork();
+                    countSearch.considerExecutionScout();
                     countSearch.resumeBounded(stockCountCredit());
                 } else countSearch.resume();
                 phase = 14;

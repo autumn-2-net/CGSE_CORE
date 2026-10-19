@@ -99,3 +99,53 @@ procedure. Large or growing state spaces can still return UNKNOWN. Large sparse
 integer equalities need other tools; widening CountJump's pair search was tested
 separately and rejected after reducing solved cases at equal work. No such pair
 search change is included here.
+
+Earlier admission during stock/count handoff, 2026-10-19
+------------------------------------------------------
+The retained stock/count regression exposed a scheduling gap: a small original
+execution frontier could settle the order, but count search had to encounter an
+unschedulable candidate before admitting it. Raising the count share from a
+quarter to a half previously fixed this case while delaying a different source
+witness beyond its budget. Restoring the quarter brought this failure back.
+
+The coordinator now requests one structural assessment when returning an earned
+stock-view turn to the complete count model. Assessment requires 32K completed
+count work, 16K unused turn work and 32K remaining request work. The hint accepts
+at most 32 material keys and 64 recipes, no consumed per-push inputs, and one to
+eight stocked tokens among nonexternal recipe outputs. Every such input/output
+port has unit multiplicity, and no original recipe may increase the population
+of these produced tokens. Terminal feed consumption and exact returned tools
+are retained. The hint scans all original sources; it does not select producers
+or infer infeasibility from population size.
+
+An accepted hint starts the existing bounded execution search and independent
+proof checker sooner. It keeps the current stock/count share, the current turn
+grant and the order cap. Witnesses still owe forced production and seed checks.
+An incomplete frontier is not a proof. Optional admission refusal leaves the
+older execution-conflict recovery available. Assessment is charged once per
+count search, reserves its scratch memory and releases it on every exit.
+
+The original 4M retained case now completes with a checked negative conclusion
+after 1,386,046 search work; its closed frontier has 65 states. The original
+quarter-share baseline exhausted 4M and finished only at 4,076,148 with an 8M
+cap. Both cold/warm and supplied-stock variants are guarded by the existing
+StockCountHandoffTest. The competing hard_random_0201 source case remains
+solved at 40M; its original order uses 30,317,582 work versus 30,317,569 before.
+These are work counts, not elapsed-time speedup claims.
+
+ExecutionScoutTest checks 120 finite token-ring models with an independent raw
+execution oracle, returned tools, source permutations, structural exclusions,
+population/width boundaries, memory refusal, work/time caps and cancellation.
+Existing root-proof, projected-proof and complete planner tests retain the proof
+scope and bounded-handoff contracts. Large state spaces can still be cut off;
+the hint only changes when an already available algorithm receives service.
+
+Final validation for this admission change: all 327 standard programs/batches
+pass, including 580 pinned execution cases across serial and four-worker modes.
+The 2,063 paired refill/historical requests keep their results against 5b96d576.
+The 108-request tradeoff family pays 2,228 additional work units (about 0.045%); the
+other synthetic families retain their work totals, and none increases accounted
+peak memory. Offline assembly, 1,478 ABI contracts and the bundled AE dump mod
+checks pass; six key programs also pass against the packaged engine. Version
+remains 0.1.4. This is the complete standard suite plus paired sampling, not a
+complete graph-corpus or live-game campaign.
