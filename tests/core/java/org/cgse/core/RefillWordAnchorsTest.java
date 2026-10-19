@@ -15,8 +15,8 @@ public final class RefillWordAnchorsTest {
         try { PHASE = RefillWordPruning.class.getDeclaredField("phase"); PHASE.setAccessible(true); }
         catch (ReflectiveOperationException e) { throw new ExceptionInInitializerError(e); }
     }
-    private record Fixture(List<GraphRecipe<String>> recipes, GraphPlan<String> plan, Map<String, Long> stock, long needed) {}
-    private static Fixture fixture(int length, long goal, long seed, long joint, boolean reverse, int shape) {
+    record Fixture(List<GraphRecipe<String>> recipes, GraphPlan<String> plan, Map<String, Long> stock, long needed) {}
+    static Fixture fixture(int length, long goal, long seed, long joint, boolean reverse, int shape) {
         var recipes = new ArrayList<GraphRecipe<String>>(); var word = new ArrayList<PlanStep>();
         long needed = Math.max(goal + seed, joint);
         for (int i = 0; i < length; i++) {

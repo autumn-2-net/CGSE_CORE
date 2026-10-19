@@ -8,7 +8,7 @@ import java.util.List;
 /** Exact adjacent tandem blocks in a completed reverse word; no recipe algebra. */
 final class RefillWordBlocks implements AutoCloseable {
     private enum Phase { FIND, EXTEND, BODY, EMIT, OUTPUT, DONE }
-    private static final int MAX_PERIOD = 16;
+    static final int MAX_PERIOD = 16;
     private final List<PlanStep> reverse, groups = new ArrayList<>(), output = new ArrayList<>();
     private final PlanningBudget budget;
     private final long started, allowance;

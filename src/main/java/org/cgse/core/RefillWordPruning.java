@@ -38,6 +38,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private PlanVerification<K> verification;
     private SummaryComputation<K> computation;
     private RefillWordBlocks blocks;
+    private RefillShortBlockHint shortHint;
     private RefillWordAnchors anchors;
     private RefillWordPruning<K> blockPruning;
     private SequenceSummary<K> summary, unitSummary;
@@ -46,7 +47,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private GraphPlan<K> regrouped;
     private PlanStep atom, unit;
     private BigInteger oldRuns, runs, targetCredit = BigInteger.ZERO, tailTarget = BigInteger.ZERO;
-    private boolean feedback, changed, allocated;
+    private boolean feedback, changed, allocated, compactCursors, hintTried, shortBlocksImpossible;
     private boolean allowBlocks = true;
     private Phase phase = Phase.RECIPES;
     private int reverseIndex, flatBatches;
@@ -72,7 +73,12 @@ final class RefillWordPruning<K> implements AutoCloseable {
         try {
             budget.checkpoint();
             if (phase == Phase.DONE) return true;
-            if (budget.nodes() - started >= allowance) return finish();
+            long spent = budget.nodes() - started;
+            if (spent >= allowance) return finish();
+            // Small work-scaled refinements retain their previous scheduling.
+            // Once quality quotas are saturated, combine empty cursor handoffs;
+            // every hierarchy/atom and material-key visit is still charged.
+            compactCursors |= spent >= 2048;
             if (!allocated) { reserve(256); allocated = true; }
             // Child folds/verifiers each own their slice; never append them to
             // a full cursor slice. The optional cap can overshoot by one slice.
@@ -100,11 +106,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
                 // first. Only an unsuccessful scan may spend leftover quota on
                 // longer anchor hints; no fresh allowance or fixed-point loop.
                 blocks.close(); blocks = null;
-                long left = allowance - (budget.nodes() - started);
-                // Two periods beyond the old 16-atom horizon need >=34 atoms.
-                if (left < 1024 || reversed.size() < 34) return finish();
-                anchors = new RefillWordAnchors(reversed, budget, Math.min(2048, left / 2));
-                phase = Phase.ANCHORS; return false;
+                return startAnchors();
             }
             if (phase == Phase.ANCHORS) {
                 if (!anchors.step()) return false;
@@ -118,7 +120,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
             for (int i = 0; i < 64; i++) {
                 budget.check();
                 if (advance()) return true;
-                if (phase == Phase.ORIGINAL || phase == Phase.SUMMARY || phase == Phase.VERIFY || phase == Phase.BLOCKS) return false;
+                if (phase == Phase.ORIGINAL || phase == Phase.SUMMARY || phase == Phase.VERIFY || phase == Phase.BLOCKS || phase == Phase.ANCHORS) return false;
             }
             return false;
         } catch (PlanningBudget.Exhausted limit) {
@@ -192,12 +194,22 @@ final class RefillWordPruning<K> implements AutoCloseable {
             }
             case NEXT -> {
                 if (stack.isEmpty()) {
+                    // Only a completed stream can certify absence. Release the
+                    // optional index before constructing/verifying a candidate.
+                    shortBlocksImpossible = shortHint != null && !shortHint.possible();
+                    discardHint();
                     if (!changed) return complete(false);
                     reverseIndex = reversed.size(); phase = Phase.STEPS;
                 } else if (stack.peek().index == 0) { stack.pop(); release(64); }
                 else {
                     atom = stack.peek().previous();
                     if (atom instanceof PlanStep.Sequence sequence) push(sequence.children());
+                    else if (compactCursors && atom instanceof PlanStep.Batch batch) {
+                        if (batch.runs() == 0) break;
+                        oldRuns = BigInteger.valueOf(batch.runs());
+                        unit = batch.runs() == 1 ? atom : new PlanStep.Batch(batch.recipe(), 1);
+                        unitRecipe = original.recipes().get(batch.recipe()); startUnit();
+                    }
                     else { unit = atom; oldRuns = BigInteger.ONE; phase = Phase.UNWRAP; }
                 }
             }
@@ -219,6 +231,8 @@ final class RefillWordPruning<K> implements AutoCloseable {
                     } else {
                         // Composite repeat bodies stay opaque: never unroll or
                         // reorder their internal execution into independent batches.
+                        // A child fold has priority over the optional index.
+                        discardHint();
                         computation = new SummaryComputation<>(unit, original.recipes(), budget); phase = Phase.SUMMARY;
                     }
                 }
@@ -227,22 +241,16 @@ final class RefillWordPruning<K> implements AutoCloseable {
                 if (!visitUnit(false)) {
                     if (runs.compareTo(oldRuns) > 0) return finish();
                     unitKeys(); phase = Phase.APPLY;
+                    if (compactCursors && (runs.signum() == 0 || !visitUnit(true))) emit();
                 }
             }
             case APPLY -> {
-                if (runs.signum() == 0 || !visitUnit(true)) { entries = null; ports = null; phase = Phase.EMIT; }
-            }
-            case EMIT -> {
-                changed |= !runs.equals(oldRuns);
-                tailTarget = tailTarget.add(unitDelta(original.target()).multiply(runs));
-                if (runs.signum() > 0) {
-                    reserve(64);
-                    reversed.add(runs.equals(oldRuns) ? atom : PlanStep.repeat(unit, runs));
-                    if (atom instanceof PlanStep.Batch) flatBatches++;
+                if (runs.signum() == 0 || !visitUnit(true)) {
+                    if (compactCursors) emit();
+                    else { entries = null; ports = null; phase = Phase.EMIT; }
                 }
-                atom = null; unit = null; unitSummary = null; unitRecipe = null; phase = Phase.NEXT;
-                release(unitBytes); unitBytes = 0;
             }
+            case EMIT -> emit();
             case STEPS -> {
                 if (reverseIndex > 0) { reserve(16); steps.add(reversed.get(--reverseIndex)); }
                 else { entries = required.entrySet().iterator(); phase = Phase.DEFICITS; }
@@ -268,6 +276,25 @@ final class RefillWordPruning<K> implements AutoCloseable {
     }
 
     private void startUnit() { unitKeys(); runs = BigInteger.ZERO; phase = Phase.SUPPORT; }
+    private void emit() {
+        changed |= !runs.equals(oldRuns);
+        var delta = unitDelta(original.target());
+        if (delta.signum() != 0) tailTarget = tailTarget.add(delta.multiply(runs));
+        if (runs.signum() > 0) {
+            reserve(64);
+            var kept = runs.equals(oldRuns) ? atom : PlanStep.repeat(unit, runs);
+            reversed.add(kept);
+            if (atom instanceof PlanStep.Batch) flatBatches++;
+            if (!hintTried) {
+                hintTried = true;
+                if (allowBlocks && allowance >= 4096 && original.recipes().size() > 16) shortHint = RefillShortBlockHint.tryCreate(budget);
+            }
+            if (shortHint != null) shortHint.offer(kept);
+        }
+        entries = null; ports = null;
+        atom = null; unit = null; unitSummary = null; unitRecipe = null; phase = Phase.NEXT;
+        release(unitBytes); unitBytes = 0;
+    }
     private void unitKeys() {
         if (unitRecipe == null) entries = unitSummary.delta().entrySet().iterator();
         else { ports = unitRecipe.inputs().keySet().iterator(); unitOutputs = false; }
@@ -286,7 +313,9 @@ final class RefillWordPruning<K> implements AutoCloseable {
         } else {
             if (!ports.hasNext()) {
                 if (unitOutputs) return false;
-                ports = unitRecipe.outputs().keySet().iterator(); unitOutputs = true; return true;
+                ports = unitRecipe.outputs().keySet().iterator(); unitOutputs = true;
+                if (!compactCursors) return true;
+                if (!ports.hasNext()) return false;
             }
             key = ports.next();
             if (unitOutputs && unitRecipe.inputs().containsKey(key)) return true;
@@ -363,10 +392,18 @@ final class RefillWordPruning<K> implements AutoCloseable {
         // interruption keeps it. One child pass only; no recursive fixed point.
         long left = allowance - (budget.nodes() - started);
         if (allowBlocks && flatBatches >= 4 && left >= 512) {
+            if (shortBlocksImpossible) return startAnchors();
             blocks = new RefillWordBlocks(reversed, budget, Math.min(2048, left / 2));
             phase = Phase.BLOCKS; return false;
         }
         return finish();
+    }
+    private boolean startAnchors() {
+        long left = allowance - (budget.nodes() - started);
+        // Two periods beyond the old 16-atom horizon need >=34 atoms.
+        if (left < 1024 || reversed.size() < 34) return finish();
+        anchors = new RefillWordAnchors(reversed, budget, Math.min(2048, left / 2));
+        phase = Phase.ANCHORS; return false;
     }
     private boolean pruneBlocks(PlanStep word, boolean reuseOriginal) {
         regrouped = GraphPlan.ownedRefill(result, word, result.recipes(), result.initialExact(), result.missingExact(),
@@ -388,11 +425,19 @@ final class RefillWordPruning<K> implements AutoCloseable {
         return true;
     }
     GraphPlan<K> result() { return result; }
-    private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
+    private void discardHint() {
+        if (shortHint != null) { shortHint.close(); shortHint = null; }
+    }
+    private void reserve(long bytes) {
+        // Never let optional structure information displace the primary pass.
+        if (shortHint != null && budget.availableBytes() < bytes) discardHint();
+        budget.reserve(bytes); memory += bytes;
+    }
     private void release(long bytes) { budget.release(bytes); memory -= bytes; }
     @Override public void close() {
         if (blockPruning != null) { blockPruning.close(); blockPruning = null; }
         if (blocks != null) { blocks.close(); blocks = null; }
+        discardHint();
         if (anchors != null) { anchors.close(); anchors = null; }
         if (verification != null) { verification.close(); verification = null; }
         if (computation != null) { computation.close(); computation = null; }

@@ -139,6 +139,14 @@ BigIntegers. Composite units still use their complete ordered summary. No cache,
 cache-preparation work or additional refinement allowance is introduced. The
 final independent prefix/delivery/seed verification is unchanged.
 
+After this pass itself has consumed 2048 work units, ordinary cursor handoffs
+combine empty input/output boundaries, flat-batch unwrapping and emission with
+their adjacent charged visits. Each atom/hierarchy descent and each material
+port is still visited within the 64-unit cooperative slice; there is no unbounded
+port loop. Earlier scheduling is retained so small work-scaled preview allowances
+do not shrink. The saved visits stay inside the original request/refinement quota.
+Zero target deltas also avoid unused exact multiplication/addition.
+
 RefillUnitTraversalTest replays repeated words with positive/negative/zero net
 ports, catalog/input order reversal, final seeds, mixed direct/composite units,
 long-limit quantities and cutoffs. It also requires wide repeated words to reach
@@ -171,11 +179,27 @@ memory stay charged until child close. RefillWordBlocksTest checks literal
 batch traces, conservation, tool returns, seeds/coproducts, forced credit,
 configuration exclusions, memory/time/work/cancel exits and scheduler handoff.
 
-If that short-period scan produces no complete grouping, a second bounded scan
+An optional 16-atom sliding index can prove the short scan has no match. Every
+exact period2..16 tandem necessarily has equal atoms within that distance. The
+index observes all retained atoms during their already charged emission; only
+the completed stream can certify absence. Any nearby equality, including distance
+one, conservatively keeps the short scan. Batch equality uses recipe/count and
+opaque composites use identity, matching the exact recognizer. Hash collisions
+are not equality. No second word traversal or cross-request cache is introduced.
+Admission requires at least 4096 pruning allowance and more than 16 bound recipes;
+these are cost guards, not correctness assumptions. The fixed index reserves
+2304 bytes only when that fits within one sixteenth of available workspace.
+Reservation refusal keeps the original scan. A possible match releases the index
+early; primary allocation pressure or a composite child fold discards it. A
+completed negative certificate releases it before candidate construction and
+verification. Optional information cannot displace those primary allocations.
+
+If that short-period scan produces no complete grouping, or the completed index
+proves no short match exists, a second bounded scan
 can use repeated atoms as anchors for longer tandem blocks. It runs only with
 at least 34 retained atoms and 1024 units left in the SAME pruning allowance.
-The original per-batch and short-period paths run first, so their completed
-results keep priority. Anchor scanning receives at most min(2048, remaining/2)
+The original per-batch result keeps priority, and any possible short match still
+gets its original scan first. Anchor scanning receives at most min(2048, remaining/2)
 visits; reduction and verification use the rest. It never extends the request
 or pruning quota and never recursively invokes another grouping pass.
 
@@ -195,6 +219,31 @@ componentwise bounded by the completed incumbent. Time/work/memory limits retain
 that incumbent, while cancellation propagates. Anchors and candidate word storage
 are reserved and released; each cursor turn visits at most 64 entries. The extra
 optional search can consume more of the existing allowance and workspace.
+
+The cursor/index combination completes all 112 archived 8/16/17/24/32/48/64-step
+loop variants at their scoped feed-conservation bound, including the 24 variants
+previously retained by the cap. Summed pruning work falls from 562234 to 394796;
+the maximum accounted pruning workspace rises from 60512 to 81120 bytes because
+more words reach grouping and final verification. These peaks exclude the
+externally owned original summary in that paired probe. Permanent tests charge
+the real owning verifier too. This is bounded word refinement, not a claim that
+all longer or irregular loops reach minimum supply within 8192 work.
+Work-unit reduction is not a proportional CPU-speedup claim. In three alternating
+warmed JVM comparisons, calling-thread CPU medians for small/32-step controls
+stay within the timer's coarse resolution; the ordinary fallback control varies
+by about 4%. A 64-step sample costs about 18% more CPU while completing grouping,
+reduction and verification that the baseline never reached. Previous completed
+sample workspace peaks do not increase. These are local measurements, not host
+main-thread latency or a wall-time guarantee.
+
+RefillShortBlockHintTest compares negative certificates with the exact short
+recognizer across window edges, random words, counts, collisions and deep opaque
+atoms. It checks fixed storage, optional refusal and early release.
+RefillCursorSchedulingTest uses independent primitive replay and conservation
+for all 112 variants in two nesting forms, plus 80..256-step and irregular words,
+mixed direct/composite units, exact long-limit ports and cutoff boundaries around
+2048. Real verifier ownership, per-turn work, memory pressure and cancellation
+remain explicit contracts.
 
 RefillWordAnchorsTest covers 17/24/32-step loops with returned tools, explicit
 final seeds, coproduct requirements and reversed catalogs, including the normal
@@ -662,7 +711,8 @@ Known boundaries after the refill review at 224e9172:
   repeat bodies, rewrite consumed configuration pushes, or claim global minimum
   supplies. Multi-recipe loops already present in the word are eligible too.
   Adjacent repeated flat blocks can now be reduced jointly, including longer
-  periods suggested by exact repeated-atom anchors after the short scan fails.
+  periods suggested by exact repeated-atom anchors after the short scan fails
+  or a completed structural certificate proves it has no match.
   Nonadjacent repetitions, distances hidden by internal repeated atoms, distinct
   opaque composites and scans stopped by the optional cap remain incomplete.
   Very small work-scaled preview allowances can still

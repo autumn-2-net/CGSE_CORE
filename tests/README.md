@@ -103,6 +103,15 @@ prefixes. Exact batch traces cover collisions, zero counts, unmatched separators
 and opaque deep repeats. Budget exits retain the incumbent; real scheduler
 handoff checks borrowed-summary ownership. It is discovered automatically.
 
+`RefillShortBlockHintTest` compares the optional negative structural certificate
+with the exact short-block recognizer, including distance16/17, recipe/count
+collisions, deep opaque identities and bounded index ownership.
+`RefillCursorSchedulingTest` checks 224 loop/nesting variants against independent
+primitive replay and feed conservation, plus larger/irregular words, exact ports,
+mixed units, 2048-work handoff boundaries and interruption cleanup. It charges
+the actual owning verifier, limits each cooperative turn and preserves the
+existing pruning allowance. Both are discovered as core programs automatically.
+
 `RequestCoverageTest` keeps incomplete candidate/state domains distinct from
 complete infeasibility, including retained smaller requests and direct emission.
 `CapturedReachableTest` checks sparse executable witnesses beyond the initial
