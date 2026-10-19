@@ -15,7 +15,7 @@ import java.util.*;
  * preserves executability without requiring all unrequested final coproducts.
  */
 final class RefillWordPruning<K> implements AutoCloseable {
-    private enum Phase { RECIPES, STRUCTURE, CONSUMED, PRODUCED, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, DONE }
+    private enum Phase { RECIPES, STRUCTURE, CONSUMED, PRODUCED, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, BLOCKS, BLOCK_PRUNE, DONE }
     private final GraphPlan<K> original;
     private final Map<K, Long> stock;
     private final Set<K> external;
@@ -35,13 +35,17 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private GraphRecipe<K> inspecting;
     private PlanVerification<K> verification;
     private SummaryComputation<K> computation;
+    private RefillWordBlocks blocks;
+    private RefillWordPruning<K> blockPruning;
     private SequenceSummary<K> summary, unitSummary;
     private GraphPlan<K> candidate, result;
+    private GraphPlan<K> regrouped;
     private PlanStep atom, unit;
     private BigInteger oldRuns, runs, targetCredit = BigInteger.ZERO, tailTarget = BigInteger.ZERO;
     private boolean feedback, changed, allocated;
+    private boolean allowBlocks = true;
     private Phase phase = Phase.RECIPES;
-    private int reverseIndex;
+    private int reverseIndex, flatBatches;
     private long memory, summaryBytes, unitBytes, structureBytes, structureStarted;
 
     RefillWordPruning(GraphPlan<K> original, Map<K, Long> stock, Set<K> external, boolean forceCraft,
@@ -64,7 +68,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
         try {
             budget.checkpoint();
             if (phase == Phase.DONE) return true;
-            if (budget.nodes() - started >= allowance) return finish(false);
+            if (budget.nodes() - started >= allowance) return finish();
             if (!allocated) { reserve(256); allocated = true; }
             // Child folds/verifiers each own their slice; never append them to
             // a full cursor slice. The optional cap can overshoot by one slice.
@@ -82,19 +86,37 @@ final class RefillWordPruning<K> implements AutoCloseable {
             }
             if (phase == Phase.VERIFY) {
                 if (!verification.step()) return false;
-                if (forceCraft && verification.summary().delta(original.target()).compareTo(targetCredit) < 0) return finish(false);
-                return finish(true);
+                if (forceCraft && verification.summary().delta(original.target()).compareTo(targetCredit) < 0) return finish();
+                return complete(true);
+            }
+            if (phase == Phase.BLOCKS) {
+                if (!blocks.step()) return false;
+                if (blocks.result() == null) return finish();
+                regrouped = GraphPlan.ownedRefill(result, blocks.result(), result.recipes(), result.initialExact(), result.missingExact(),
+                        result.result(), budget.nodes());
+                // Regrouping preserves every batch boundary and its order. The
+                // completed incumbent verifier can lend the same exact fold;
+                // this parent keeps that verifier's charge through child close.
+                var known = verification != null && result == candidate ? verification.summary() : null;
+                blockPruning = new RefillWordPruning<>(regrouped, stock, external, forceCraft, ignoreTargetStock, budget,
+                        allowance - (budget.nodes() - started), known);
+                blockPruning.allowBlocks = false; phase = Phase.BLOCK_PRUNE; return false;
+            }
+            if (phase == Phase.BLOCK_PRUNE) {
+                if (!blockPruning.step()) return false;
+                if (blockPruning.result() != regrouped) result = blockPruning.result();
+                return finish();
             }
             for (int i = 0; i < 64; i++) {
                 budget.check();
                 if (advance()) return true;
-                if (phase == Phase.ORIGINAL || phase == Phase.SUMMARY || phase == Phase.VERIFY) return false;
+                if (phase == Phase.ORIGINAL || phase == Phase.SUMMARY || phase == Phase.VERIFY || phase == Phase.BLOCKS) return false;
             }
             return false;
         } catch (PlanningBudget.Exhausted limit) {
             // A verified bill is already available. Optional quality work must
             // not turn it into a limit result; cancellation still propagates.
-            budget.failureDetail(retainedFailure); return finish(false);
+            budget.failureDetail(retainedFailure); return finish();
         }
     }
 
@@ -103,7 +125,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
             case RECIPES -> {
                 if (recipes.hasNext()) {
                     var recipe = recipes.next();
-                    if (recipe.batchSensitiveInputs()) return finish(false);
+                    if (recipe.batchSensitiveInputs()) return finish();
                     feedback |= recipe.hasInputReturns();
                 } else {
                     recipes = null;
@@ -162,7 +184,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
             }
             case NEXT -> {
                 if (stack.isEmpty()) {
-                    if (!changed) return finish(false);
+                    if (!changed) return complete(false);
                     reverseIndex = reversed.size(); phase = Phase.STEPS;
                 } else if (stack.peek().index == 0) { stack.pop(); release(64); }
                 else {
@@ -198,7 +220,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
                         }
                     }
                 } else {
-                    if (runs.compareTo(oldRuns) > 0) return finish(false);
+                    if (runs.compareTo(oldRuns) > 0) return finish();
                     entries = unitSummary.delta().entrySet().iterator(); phase = Phase.APPLY;
                 }
             }
@@ -215,6 +237,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
                 if (runs.signum() > 0) {
                     reserve(64);
                     reversed.add(runs.equals(oldRuns) ? atom : PlanStep.repeat(unit, runs));
+                    if (atom instanceof PlanStep.Batch) flatBatches++;
                 }
                 atom = null; unit = null; unitSummary = null; phase = Phase.NEXT;
                 release(unitBytes); unitBytes = 0;
@@ -226,10 +249,10 @@ final class RefillWordPruning<K> implements AutoCloseable {
             case DEFICITS -> {
                 if (entries.hasNext()) {
                     var e = entries.next(); K key = e.getKey(); BigInteger need = e.getValue();
-                    if (need.compareTo(original.initialExact().getOrDefault(key, BigInteger.ZERO)) > 0) return finish(false);
+                    if (need.compareTo(original.initialExact().getOrDefault(key, BigInteger.ZERO)) > 0) return finish();
                     long have = ignoreTargetStock && key.equals(original.target()) ? 0 : stock.getOrDefault(key, 0L);
                     BigInteger deficit = external.contains(key) ? BigInteger.ZERO : need.subtract(BigInteger.valueOf(have)).max(BigInteger.ZERO);
-                    if (deficit.compareTo(original.missingExact().getOrDefault(key, BigInteger.ZERO)) > 0) return finish(false);
+                    if (deficit.compareTo(original.missingExact().getOrDefault(key, BigInteger.ZERO)) > 0) return finish();
                     if (deficit.signum() > 0) put(missing, key, deficit);
                 } else {
                     entries = null;
@@ -254,7 +277,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
         // plan or borrowed summary can reference these traversal containers.
         structure = null; consumed = null; ports = null; inspecting = null;
         release(structureBytes); structureBytes = 0;
-        return found ? startOriginal() : finish(false);
+        return found ? startOriginal() : finish();
     }
 
     private boolean beginOriginal() {
@@ -262,7 +285,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
             targetCredit = summary.delta(original.target());
             // Some indivisible forced plans need a separate count proof.
             // Preserve those unchanged, rather than weakening its premise.
-            if (targetCredit.compareTo(BigInteger.valueOf(original.amount())) < 0) return finish(false);
+            if (targetCredit.compareTo(BigInteger.valueOf(original.amount())) < 0) return finish();
         }
         entries = original.initialExact().entrySet().iterator(); phase = Phase.INITIAL; return false;
     }
@@ -289,16 +312,29 @@ final class RefillWordPruning<K> implements AutoCloseable {
         Cursor(List<PlanStep> children) { this.children = children; index = children.size(); }
         PlanStep previous() { return children.get(--index); }
     }
-    private boolean finish(boolean accept) {
+    private boolean complete(boolean accept) {
         if (accept) result = candidate;
+        // The original per-batch pass runs first with its unchanged allowance.
+        // Further grouping starts from that completed incumbent, and every
+        // interruption keeps it. One child pass only; no recursive fixed point.
+        long left = allowance - (budget.nodes() - started);
+        if (allowBlocks && flatBatches >= 4 && left >= 512) {
+            blocks = new RefillWordBlocks(reversed, budget, Math.min(2048, left / 2));
+            phase = Phase.BLOCKS; return false;
+        }
+        return finish();
+    }
+    private boolean finish() {
         phase = Phase.DONE;
-        budget.note("refill_word", (accept ? "pruned" : "retained_original") + "; work=" + (budget.nodes() - started));
+        budget.note("refill_word", (result != original ? "pruned" : "retained_original") + "; work=" + (budget.nodes() - started));
         return true;
     }
     GraphPlan<K> result() { return result; }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     private void release(long bytes) { budget.release(bytes); memory -= bytes; }
     @Override public void close() {
+        if (blockPruning != null) { blockPruning.close(); blockPruning = null; }
+        if (blocks != null) { blocks.close(); blocks = null; }
         if (verification != null) { verification.close(); verification = null; }
         if (computation != null) { computation.close(); computation = null; }
         entries = null; seeds = null; recipes = null;

@@ -113,6 +113,30 @@ slices. Terminal-only missing bills can enter this optional pass too, without
 rebuilding the producer graph or losing the bill at an exhausted entry boundary.
 Words with no observed feedback decline before folding the whole word.
 
+After the original per-batch pass completes, RefillWordBlocks can recognize
+exact adjacent repetitions of 2..16 atoms in its retained execution word. It
+keeps every batch's recipe, count and order; it neither rearranges interleavings
+nor enumerates opaque repeat bodies. Batch equality compares only recipe/count;
+composite equality uses identity without recursive equals/hashCode. Separate
+occurrences of a shared node remain separate executions. Grouping creates an
+ordered composite Repeat, then invokes the same verified backward reduction
+once, with grouping disabled in that child. This lets an entire A -> B -> more A
+round shrink even when a constituent alone would lack its returned startup/tool.
+
+The completed per-batch result is published before grouping starts. Both initial
+and missing vectors of the child are bounded by that incumbent, not merely by
+the original larger bill. Cutoffs retain it, and cancellation propagates. The
+scan starts only with at least four retained flat batches and 512 units left in
+the SAME pruning allowance, uses at most min(2048, remaining/2) charged visits,
+and leaves the rest for the child. No extra request allowance or recursive
+fixed-point loop is introduced. Cursor turns visit at most 64 entries and child
+folds/verifiers run in separate turns. A just-completed incumbent verification
+can lend its exact fold because regrouping preserves the execution trace; the
+final reduced candidate is always verified afresh. Scratch and retained word
+memory stay charged until child close. RefillWordBlocksTest checks literal
+batch traces, conservation, tool returns, seeds/coproducts, forced credit,
+configuration exclusions, memory/time/work/cancel exits and scheduler handoff.
+
 Mixed-source stock allocation is an optional improvement of the completed bill.
 While inspecting ordinary candidates, expansion detects positive partial batches
 that introduce no additional deficits. Only if such a hint remains useful after
@@ -484,8 +508,11 @@ Known boundaries after the refill review at 224e9172:
   conservative: it does not replace recipes, optimize inside opaque composite
   repeat bodies, rewrite consumed configuration pushes, or claim global minimum
   supplies. Multi-recipe loops already present in the word are eligible too.
-  Flat batches are reduced individually: without discovering joint blocks they
-  can retain more firings than an equivalent composite repeat. Existing forced
+  Adjacent repeated flat blocks can now be reduced jointly. Nonadjacent or
+  longer periods, distinct opaque composites and scans stopped by the optional
+  cap remain incomplete. Very small work-scaled preview allowances can still
+  retain the old flat bill; recognizing blocks does not increase that quota.
+  Existing forced
   production credit is retained even if it is surplus.
 - A bounded alternative pass covers stock-funded producer mixtures that the
   single-source proposals miss, with whole-bill dominance guarding acceptance.

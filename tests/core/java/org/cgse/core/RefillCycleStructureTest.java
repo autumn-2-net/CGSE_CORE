@@ -71,11 +71,9 @@ public final class RefillCycleStructureTest {
         var parts = new ArrayList<PlanStep>(); for (int i = 0; i < 20; i++) parts.add(fixture.body); parts.add(new PlanStep.Batch("finish", 1));
         var old = RefillWordPruningTest.literalPlan(fixture.recipes, new PlanStep.Sequence(parts), Map.of(), Map.of(), Set.of());
         var flat = prune(old, Map.of(), 8192);
-        // A flat word prunes individual batches. At the last kept return its
-        // original prefix has already consumed A, so that local bound keeps
-        // ten pairs. A composite repeat can remove the whole pair and needs
-        // only nine. This pass neither invents blocks nor claims optimality.
-        check(flat.patternTimesExact().get("r0").equals(BigInteger.TEN) && flat.initialExact().get("feed").equals(BigInteger.TEN),
+        // The original per-batch result keeps ten pairs. Exact adjacent block
+        // recognition can then prune a whole pair, matching a composite repeat.
+        check(flat.patternTimesExact().get("r0").equals(BigInteger.valueOf(9)) && flat.initialExact().get("feed").equals(BigInteger.valueOf(9)),
                 "Flat shared occurrences were skipped: " + flat.patternTimesExact() + "/" + flat.initialExact());
         PlanStep deep = fixture.word; for (int i = 0; i < 200; i++) deep = new PlanStep.Sequence(List.of(deep));
         old = RefillWordPruningTest.literalPlan(fixture.recipes, deep, Map.of(), Map.of(), Set.of());
