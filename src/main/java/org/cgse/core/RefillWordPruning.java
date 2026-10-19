@@ -33,6 +33,8 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private Set<K> consumed;
     private Iterator<K> ports;
     private GraphRecipe<K> inspecting;
+    private GraphRecipe<K> unitRecipe;
+    private boolean unitOutputs;
     private PlanVerification<K> verification;
     private SummaryComputation<K> computation;
     private RefillWordBlocks blocks;
@@ -82,7 +84,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
                 if (!computation.step()) return false;
                 unitSummary = computation.result(); computation.close(); computation = null;
                 unitBytes = retain(unitSummary);
-                entries = unitSummary.delta().entrySet().iterator(); runs = BigInteger.ZERO; phase = Phase.SUPPORT; return false;
+                startUnit(); return false;
             }
             if (phase == Phase.VERIFY) {
                 if (!verification.step()) return false;
@@ -202,44 +204,37 @@ final class RefillWordPruning<K> implements AutoCloseable {
                         oldRuns = oldRuns.multiply(BigInteger.valueOf(batch.runs())); unit = new PlanStep.Batch(batch.recipe(), 1);
                     }
                     if (oldRuns.signum() == 0) { phase = Phase.NEXT; break; }
-                    // Composite repeat bodies stay opaque: never unroll or
-                    // reorder their internal execution into independent batches.
-                    computation = new SummaryComputation<>(unit, original.recipes(), budget); phase = Phase.SUMMARY;
+                    if (unit instanceof PlanStep.Batch batch) {
+                        // A one-firing recipe already owns the exact immutable
+                        // ports. Stream them instead of rebuilding three summary
+                        // maps for every occurrence; no retained cache is needed.
+                        unitRecipe = original.recipes().get(batch.recipe());
+                        startUnit();
+                    } else {
+                        // Composite repeat bodies stay opaque: never unroll or
+                        // reorder their internal execution into independent batches.
+                        computation = new SummaryComputation<>(unit, original.recipes(), budget); phase = Phase.SUMMARY;
+                    }
                 }
             }
             case SUPPORT -> {
-                if (entries.hasNext()) {
-                    var e = entries.next(); K key = e.getKey(); BigInteger delta = e.getValue();
-                    BigInteger before = value(inventory, key).subtract(delta.multiply(oldRuns));
-                    put(inventory, key, before);
-                    if (delta.signum() > 0) {
-                        runs = runs.max(ceil(value(required, key).subtract(before), delta));
-                        if (forceCraft && key.equals(original.target())) {
-                            BigInteger prefix = before.subtract(original.initialExact().getOrDefault(key, BigInteger.ZERO));
-                            runs = runs.max(ceil(targetCredit.subtract(prefix).subtract(tailTarget), delta));
-                        }
-                    }
-                } else {
+                if (!visitUnit(false)) {
                     if (runs.compareTo(oldRuns) > 0) return finish();
-                    entries = unitSummary.delta().entrySet().iterator(); phase = Phase.APPLY;
+                    unitKeys(); phase = Phase.APPLY;
                 }
             }
             case APPLY -> {
-                if (runs.signum() > 0 && entries.hasNext()) {
-                    var e = entries.next(); K key = e.getKey(); BigInteger delta = e.getValue();
-                    BigInteger first = unitSummary.required(key).add(delta.negate().max(BigInteger.ZERO).multiply(runs.subtract(BigInteger.ONE)));
-                    put(required, key, first.max(value(required, key).subtract(delta.multiply(runs))));
-                } else { entries = null; phase = Phase.EMIT; }
+                if (runs.signum() == 0 || !visitUnit(true)) { entries = null; ports = null; phase = Phase.EMIT; }
             }
             case EMIT -> {
                 changed |= !runs.equals(oldRuns);
-                tailTarget = tailTarget.add(unitSummary.delta(original.target()).multiply(runs));
+                tailTarget = tailTarget.add(unitDelta(original.target()).multiply(runs));
                 if (runs.signum() > 0) {
                     reserve(64);
                     reversed.add(runs.equals(oldRuns) ? atom : PlanStep.repeat(unit, runs));
                     if (atom instanceof PlanStep.Batch) flatBatches++;
                 }
-                atom = null; unit = null; unitSummary = null; phase = Phase.NEXT;
+                atom = null; unit = null; unitSummary = null; unitRecipe = null; phase = Phase.NEXT;
                 release(unitBytes); unitBytes = 0;
             }
             case STEPS -> {
@@ -264,6 +259,49 @@ final class RefillWordPruning<K> implements AutoCloseable {
             default -> throw new IllegalStateException("Unexpected refill pruning phase " + phase);
         }
         return false;
+    }
+
+    private void startUnit() { unitKeys(); runs = BigInteger.ZERO; phase = Phase.SUPPORT; }
+    private void unitKeys() {
+        if (unitRecipe == null) entries = unitSummary.delta().entrySet().iterator();
+        else { ports = unitRecipe.inputs().keySet().iterator(); unitOutputs = false; }
+    }
+    private BigInteger unitDelta(K key) {
+        // Both ports are nonnegative longs, so their difference fits in long.
+        return unitRecipe == null ? unitSummary.delta(key) : BigInteger.valueOf(
+                unitRecipe.outputs().getOrDefault(key, 0L) - unitRecipe.inputs().getOrDefault(key, 0L));
+    }
+    /** One port per charged cursor visit, including duplicate returned outputs. */
+    private boolean visitUnit(boolean applying) {
+        K key; BigInteger delta;
+        if (unitRecipe == null) {
+            if (!entries.hasNext()) return false;
+            var e = entries.next(); key = e.getKey(); delta = e.getValue();
+        } else {
+            if (!ports.hasNext()) {
+                if (unitOutputs) return false;
+                ports = unitRecipe.outputs().keySet().iterator(); unitOutputs = true; return true;
+            }
+            key = ports.next();
+            if (unitOutputs && unitRecipe.inputs().containsKey(key)) return true;
+            delta = unitDelta(key);
+        }
+        if (applying) {
+            BigInteger need = unitRecipe == null ? unitSummary.required(key) : BigInteger.valueOf(unitRecipe.inputs().getOrDefault(key, 0L));
+            BigInteger first = need.add(delta.negate().max(BigInteger.ZERO).multiply(runs.subtract(BigInteger.ONE)));
+            put(required, key, first.max(value(required, key).subtract(delta.multiply(runs))));
+        } else {
+            BigInteger before = value(inventory, key).subtract(delta.multiply(oldRuns));
+            put(inventory, key, before);
+            if (delta.signum() > 0) {
+                runs = runs.max(ceil(value(required, key).subtract(before), delta));
+                if (forceCraft && key.equals(original.target())) {
+                    BigInteger prefix = before.subtract(original.initialExact().getOrDefault(key, BigInteger.ZERO));
+                    runs = runs.max(ceil(targetCredit.subtract(prefix).subtract(tailTarget), delta));
+                }
+            }
+        }
+        return true;
     }
 
     private boolean startOriginal() {
@@ -338,7 +376,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
         if (verification != null) { verification.close(); verification = null; }
         if (computation != null) { computation.close(); computation = null; }
         entries = null; seeds = null; recipes = null;
-        structure = null; consumed = null; ports = null; inspecting = null;
+        structure = null; consumed = null; ports = null; inspecting = null; unitRecipe = null;
         budget.release(memory); memory = 0;
     }
 }

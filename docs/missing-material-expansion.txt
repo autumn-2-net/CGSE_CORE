@@ -124,6 +124,24 @@ slices. Terminal-only missing bills can enter this optional pass too, without
 rebuilding the producer graph or losing the bill at an exhausted entry boundary.
 Words with no observed feedback decline before folding the whole word.
 
+Single-recipe units read their immutable input/output ports directly during the
+backward support and requirement passes. They no longer build required/delta/peak
+maps for every occurrence. Input ports are visited first, then outputs not already
+visited as inputs; duplicate returned outputs still consume a bounded cursor
+visit. Zero-net returned tools therefore keep their startup requirement. Port
+differences fit in long, while repetition counts and requirements remain exact
+BigIntegers. Composite units still use their complete ordered summary. No cache,
+cache-preparation work or additional refinement allowance is introduced. The
+final independent prefix/delivery/seed verification is unchanged.
+
+RefillUnitTraversalTest replays repeated words with positive/negative/zero net
+ports, catalog/input order reversal, final seeds, mixed direct/composite units,
+long-limit quantities and cutoffs. It also requires wide repeated words to reach
+their one-firing conservation bound within the existing 8192-work allowance when
+the enclosing verifier already owns the original fold, including constrained
+memory and release of all private workspace. This improves completed witnesses
+within the quota; it does not guarantee that every bounded pass will finish.
+
 After the original per-batch pass completes, RefillWordBlocks can recognize
 exact adjacent repetitions of 2..16 atoms in its retained execution word. It
 keeps every batch's recipe, count and order; it neither rearranges interleavings
