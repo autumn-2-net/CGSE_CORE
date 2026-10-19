@@ -847,9 +847,25 @@ Known boundaries after the refill review at 224e9172:
   grouping makes no supply improvement. The bounded continuation retains useful
   prior results; it does not exhaust all nested block decompositions.
   Exact-equal opaque composites now have a bounded structural-identity pass.
-  Nonadjacent repetitions, distances hidden by other eligible predecessors,
-  algebraically equivalent but structurally different composites, and scans
-  stopped by the optional cap remain incomplete.
+  A failed identity grouping may normalize sequence association, singleton
+  sequence/repeat wrappers and representable nested repeats. Its representatives
+  are existing immutable words; batches keep their original recipe, size and
+  dispatch order. No loop is unfolded and no batch is merged or split. Normal
+  forms use exact intern keys, bounded iterative traversal and a private optional
+  memory share; a stopped scan publishes no partial equivalence information.
+  Equal nonadjacent spans can then become separate pruning units while all gap
+  steps remain in place. Recognition itself removes nothing. Backward prefix
+  requirements and whole-word verification must establish every reduction,
+  including gap enabling, returned tools, final seeds and forced target credit.
+  The new child keeps at most one already computed body summary across flat gap
+  steps, under the same immutable binding. Its charged lease is evicted before
+  folding a different body; there is no cross-request cache or fresh allowance.
+  Existing successful groupings retain priority and their results. In particular,
+  an old grouping of two differently partitioned rounds may make a useful partial
+  reduction and stop before normalization; the continuation does not yet refine
+  that accepted word a second time. Distances hidden by other eligible anchors,
+  general algebraic equivalence, opaque repeat interiors and scans stopped by
+  the original optional cap remain incomplete.
   Very small work-scaled preview allowances can still
   retain the old flat bill; recognizing blocks does not increase that quota.
   Existing forced production credit is retained even if it is surplus.

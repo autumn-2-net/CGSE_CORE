@@ -1352,3 +1352,22 @@ dimensions, with closed-form Gram factors and original side constraints.
 The bounded matching follow-up also guards the recovered seed-27 allocation,
 one-unit grants and cancellation with both the matcher and ordinary kernel
 owned. A numerical miss is only a scheduling hint, never an infeasibility proof.
+
+`RefillWordNormalFormsTest` independently replays exact batch dispatch events
+through sequence association, singleton identities and nested repeats. It guards
+batch sizes, order, hash collisions, zero/empty nodes, deep/shared structures,
+overflow counts and bounded work/memory/cancellation. `RefillWordSpansTest`
+checks 240 separated-span words with distinct mandatory gaps and preserves the
+entire dispatch trace before any pruning is attempted.
+
+`RefillNormalizedWordTest` covers 1,536 normalized, ragged-partition and flat
+cyclic words in both catalog orders, plus 72 resource-dependent gap variants
+and 96 ordinary expansion paths to terminal supplies. Independent primitive
+replay checks enablement, final seeds and supply ceilings. Conservation gives
+scoped feed bounds, not global optimality. The original 8,192 quality cap is
+retained; a separate 16,384 diagnostic distinguishes remaining cap exits from
+recognition limits. Alternating partitions that already receive a partial
+reduction from the older pass remain an explicit boundary. Forced production,
+consumed configuration, external supply, incomplete coverage, all new suspended
+phases and worker ownership transfer are guarded too. All three test programs
+are included through automatic discovery in `standard`.
