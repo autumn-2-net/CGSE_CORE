@@ -76,6 +76,7 @@ final class CountViewSearch implements AutoCloseable {
         long proposalBytes;
         long sliceWork, progress, work, candidates, verified, dead, unknown, downstreamWork;
         int repairCompletionObserved;
+        int allocationCompletionObserved;
         long continuationLimit, continuationProgress, continuationCheckpoint;
         long observedRoundingWork;
         long publishedRoots;
@@ -296,7 +297,7 @@ final class CountViewSearch implements AutoCloseable {
                 search.engine == Engine.GROUPED_PARTITION);
     }
 
-    /** Continue an already selected allocation opportunity, without pricing a new one. */
+    /** Continue a selected allocation opportunity, including newly checked residual depths. */
     long allocationCompletionQuantum() {
         // Exact capacity groups admit a self-contained allocation search.
         // Packing/LP neighborhoods still need their existing interleaved
@@ -754,6 +755,7 @@ final class CountViewSearch implements AutoCloseable {
                         Math.min(4_194_304, budget.remainingWork() / 8);
                 search.continuationLimit = saturatedAdd(search.work, opportunity);
             }
+            extendVectorCompletion(search);
             if (search.work < search.continuationLimit) return search;
         }
         if (sampled) for (Search search : searches) {
@@ -780,9 +782,24 @@ final class CountViewSearch implements AutoCloseable {
     }
 
     private boolean pendingAllocationCompletion(Search search) {
+        if (!search.done && search.scheduling.eligible) extendVectorCompletion(search);
         return !search.done && search.scheduling.eligible && search.progress > 0 &&
                 search.work < search.continuationLimit &&
                 (search.specialist instanceof CountGroupedPartition || search.specialist instanceof CountVectorPartition);
+    }
+
+    private void extendVectorCompletion(Search search) {
+        if (search.continuationLimit == 0 || search.work < search.continuationLimit ||
+                !(search.specialist instanceof CountVectorPartition vector) ||
+                vector.interiorCompletionDepth() <= search.allocationCompletionObserved) return;
+        search.allocationCompletionObserved = vector.interiorCompletionDepth();
+        // Only a verified allocation prefix with an admitted residual repair
+        // earns this finite scheduling preference. It spends the existing
+        // request/local allowances; pauses and repeated decompositions do not
+        // renew it. Packing and generic LP service remain unchanged.
+        long grant = Math.min(vector.remainingAllowance(), Math.min(2_097_152, budget.remainingWork() / 8));
+        search.continuationLimit = saturatedAdd(search.work, grant);
+        budget.note("count_vector_completion", "depth=" + search.allocationCompletionObserved + "; allowance=" + grant);
     }
 
     /** Charged work in completed or retained portfolio steps. */

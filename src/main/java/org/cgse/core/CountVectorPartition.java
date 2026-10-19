@@ -48,6 +48,8 @@ final class CountVectorPartition implements CountContinuation {
     private CountMeetInMiddle matching;
     private CountVectorNeighborhood neighborhood;
     private boolean neighborhoodTried;
+    private boolean centeredTried, centeredAllocation;
+    private int interiorCompletionDepth;
     private long neighborhoodAt;
     private List<ExactLinearProgram.Constraint> projected;
     private BigInteger[] binLower, binUpper;
@@ -261,9 +263,16 @@ final class CountVectorPartition implements CountContinuation {
                 matching = new CountMeetInMiddle(projected, binLower, binUpper, budget,
                         grant);
             }
-            if (!neighborhoodTried && matching == null && work >= neighborhoodAt) {
-                neighborhoodTried = true;
-                neighborhood = CountVectorNeighborhood.create(projected, binLower, binUpper, budget, 32768);
+            if (neighborhood == null && !neighborhoodTried && matching == null && work >= neighborhoodAt) {
+                // A successful interior allocation leaves a related residual.
+                // Try that geometry first there, while retaining LP and ordinary
+                // affine/matching fallbacks. Retry resets the preference.
+                if (centeredAllocation && !centeredTried) {
+                    beginCenteredNeighborhood();
+                } else {
+                    neighborhoodTried = true;
+                    neighborhood = CountVectorNeighborhood.create(projected, binLower, binUpper, budget, 32768);
+                }
             }
             if (!(neighborhood != null ? neighborhood.step() : matching == null ? affine.step() : matching.step())) return false;
             if (childPaused()) {
@@ -275,8 +284,17 @@ final class CountVectorPartition implements CountContinuation {
             boolean fromNeighborhood = neighborhood != null;
             if (neighborhood != null) {
                 found = neighborhood.counts();
+                if (found != null && neighborhood.isCentered()) centeredAllocation = true;
                 completedProgress += neighborhood.progress(); neighborhood.close(); neighborhood = null;
-                if (found == null) return false;
+                if (found == null) {
+                    if (!centeredTried) {
+                        // Preserve existing LP successes. A failed restricted
+                        // vertex search is not a failed full bin: spend one
+                        // finite interior repair inside this parent's old cap.
+                        beginCenteredNeighborhood();
+                    }
+                    return false;
+                }
             } else if (matching != null) {
                 found = matching.counts();
                 boolean impossible = matching.infeasible();
@@ -322,6 +340,16 @@ final class CountVectorPartition implements CountContinuation {
     }
 
     private Bin currentBin() { return bins.get((bin + attempt) % bins.size()); }
+    private void beginCenteredNeighborhood() {
+        centeredTried = true;
+        neighborhood = CountVectorNeighborhood.centered(projected, binLower, binUpper, budget, 32768);
+        // A checked prefix followed by a newly admitted residual repair is
+        // distinct from more slices of the same failed first allocation.
+        // Depth is monotone across retries, so reordering cannot renew service.
+        if (neighborhood != null) interiorCompletionDepth = Math.max(interiorCompletionDepth, bin);
+    }
+    int interiorCompletionDepth() { return interiorCompletionDepth; }
+    long remainingAllowance() { return complete ? 0 : Math.max(0, maximumWork - work); }
     private int groupAt(int i) { return order[(i + attempt / bins.size()) % order.length]; }
     private void beginBin() {
         projected = new ArrayList<>(); var target = currentBin();
@@ -336,6 +364,7 @@ final class CountVectorPartition implements CountContinuation {
         }
         binLower = lo; binUpper = hi;
         neighborhoodTried = order.length <= 32;
+        centeredTried = false;
         neighborhoodAt = work + (order.length > 48 ? 0 : 3_145_728);
         affine = new CountAffineLattice(projected, lo, hi, budget, 32768).retained();
         // Broad first allocations make the sphere tree too expensive. Smaller
@@ -445,6 +474,7 @@ final class CountVectorPartition implements CountContinuation {
         return new BigInteger(1, packed);
     }
     private void restart() {
+        centeredAllocation = false;
         candidate = lower.clone(); remaining = new BigInteger[groups.size()];
         for (int g = 0; g < groups.size(); g++) { budget.check(); remaining[g] = groups.get(g).capacity; }
         bin = 0; verifying = false; verified = 0;

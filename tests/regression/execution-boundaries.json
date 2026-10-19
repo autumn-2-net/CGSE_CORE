@@ -3317,28 +3317,28 @@
       "source": "cases/graph/4a/4ac323419b170b594dfc130dc2ee94eb9c77cf65b9d8bf66ad1b4358fae7cc40.json",
       "sha256_lf": "da8bb47c6c2b496c05c7be3e052aed40d009c63f4b58581340a09e13aa205cdb",
       "work": 40000000,
-      "maximum_observed_work": 40000000,
+      "maximum_observed_work": 24000000,
       "expected": "SAT",
       "orders": [
         0,
         17,
         1009
       ],
-      "evidence": "ee56a690 exhausts the original-order 40M search cap. LP-guided exact restricted bin repair returns independently replayed original-recipe execution for all three orders. Restricted misses never prove infeasibility; original rows and integer bounds remain authoritative."
+      "evidence": "ee56a690 exhausts the original-order 40M search cap. LP-guided exact restricted bin repair returns independently replayed original-recipe execution for all three orders. Restricted misses never prove infeasibility; original rows and integer bounds remain authoritative. Bounded service for an admitted interior residual after a verified allocation prefix reduces the original/shuffled and four-worker requests below 24M observed work; this tighter guard retains the original 40M request cap."
     },
     {
       "name": "vector-neighborhood/manual_small_n64_c3_d3_a1_s107_shuffle/workers-4",
       "source": "cases/graph/4a/4ac323419b170b594dfc130dc2ee94eb9c77cf65b9d8bf66ad1b4358fae7cc40.json",
       "sha256_lf": "da8bb47c6c2b496c05c7be3e052aed40d009c63f4b58581340a09e13aa205cdb",
       "work": 40000000,
-      "maximum_observed_work": 40000000,
+      "maximum_observed_work": 24000000,
       "expected": "SAT",
       "orders": [
         0
       ],
       "workers": 4,
       "expanded_budget": false,
-      "evidence": "The same complete original-recipe witness checks pass with four workers and an unchanged 40M request cap; retained LP and affine children release all reservations."
+      "evidence": "The same complete original-recipe witness checks pass with four workers and an unchanged 40M request cap; retained LP and affine children release all reservations. Bounded service for an admitted interior residual after a verified allocation prefix reduces the original/shuffled and four-worker requests below 24M observed work; this tighter guard retains the original 40M request cap."
     },
     {
       "name": "vector-neighborhood/manual_small_n40_c3_d3_a1_s313_shuffle",
@@ -3463,6 +3463,34 @@
       "maximum_observed_work": 4500000,
       "expected": "SAT",
       "evidence": "An early restricted repair selected a less useful first bin and increased this previously solved request from 4.048M to 11.331M work. Delayed admission preserves the existing independently verified witness at exactly 4,048,355 work."
+    },
+    {
+      "name": "vector-interior/manual_small_n64_c3_d3_a1_s43_shuffle",
+      "source": "cases/graph/57/570487d24a0927d19083ae952c7771772d8970e7f606ca4adb15b20eb60e169f.json",
+      "sha256_lf": "1d858827111cffa203ddb5d12be6421f3337e1dca042702776f8e170cb38b7db",
+      "work": 40000000,
+      "maximum_observed_work": 16000000,
+      "expected": "SAT",
+      "orders": [
+        0,
+        17,
+        1009
+      ],
+      "evidence": "180b460f exhausts the unchanged 40M search cap in all three recipe orders. Bounded interior rounding/affine repair followed by residual method reuse yields full original-recipe execution witnesses. Every prefix and target is independently replayed; numeric and restricted failures have no infeasibility authority."
+    },
+    {
+      "name": "vector-interior/manual_small_n64_c3_d3_a1_s43_shuffle/workers-4",
+      "source": "cases/graph/57/570487d24a0927d19083ae952c7771772d8970e7f606ca4adb15b20eb60e169f.json",
+      "sha256_lf": "1d858827111cffa203ddb5d12be6421f3337e1dca042702776f8e170cb38b7db",
+      "work": 40000000,
+      "maximum_observed_work": 16000000,
+      "expected": "SAT",
+      "orders": [
+        0
+      ],
+      "workers": 4,
+      "expanded_budget": false,
+      "evidence": "The same original-order request returns a complete independently replayed witness under four workers and a fixed 40M cap. Interior sweeps and exact repairs keep owned continuations and release all reservations."
     }
   ]
 }

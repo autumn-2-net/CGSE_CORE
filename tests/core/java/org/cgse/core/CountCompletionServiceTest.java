@@ -64,6 +64,35 @@ public final class CountCompletionServiceTest {
             search.resume(17);
             check(search.allocationCompletionQuantum() == 0 && number(allocation, "continuationLimit") == ceiling,
                     "Owner resume renewed a spent ceiling");
+            // Simulate a newly observed checked-prefix/residual milestone,
+            // without changing any row, count or mathematical frontier.
+            var vector = (CountVectorPartition) get(allocation, "specialist");
+            set(vector, "interiorCompletionDepth", 1);
+            search.mode(CountPortfolioPolicy.Mode.PROOF);
+            check(search.allocationCompletionQuantum() == 0 && number(allocation, "allocationCompletionObserved") == 0,
+                    "A residual milestone bypassed proof eligibility");
+            search.mode(CountPortfolioPolicy.Mode.FIRST_WITNESS);
+            long tail = vector.remainingAllowance();
+            quantum = search.allocationCompletionQuantum();
+            long extended = number(allocation, "continuationLimit");
+            check(quantum > 0 && quantum <= 262144 && extended > ceiling &&
+                    extended - ceiling <= Math.min(tail, Math.min(2_097_152, budget.remainingWork() / 8)),
+                    "Residual preference grew its request/local share");
+            work = budget.nodes(); bytes = budget.reservedBytes();
+            for (int i = 0; i < 20; i++) check(search.allocationCompletionQuantum() == quantum &&
+                    number(allocation, "continuationLimit") == extended, "Repeated residual observation renewed service");
+            check(budget.nodes() == work && budget.reservedBytes() == bytes, "Residual observation rebuilt a frontier");
+            set(allocation, "work", extended);
+            check(search.allocationCompletionQuantum() == 0, "Same prefix received another opportunity");
+            search.resume(17);
+            check(search.allocationCompletionQuantum() == 0, "Parent resume renewed a residual preference");
+            long vectorWork = number(vector, "work");
+            set(vector, "work", number(vector, "maximumWork") - 7);
+            set(vector, "interiorCompletionDepth", 2);
+            check(search.allocationCompletionQuantum() == 7, "New depth bypassed the allocation's local tail");
+            set(allocation, "work", number(allocation, "continuationLimit"));
+            check(search.allocationCompletionQuantum() == 0, "Exhausted residual tail was renewed");
+            set(vector, "work", vectorWork);
             set(allocation, "work", spent);
             budget.charge(budget.remainingWork() - 7);
             check(search.allocationCompletionQuantum() == 7, "Shared request tail was enlarged");

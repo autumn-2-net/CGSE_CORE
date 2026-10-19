@@ -1383,3 +1383,16 @@ active requirements decline the extra pass. Tests also guard target credit,
 returned tools, incomplete coverage, external supplies, configuration dispatch,
 work/time/memory/cancellation and worker transfer while an accepted partial bill
 and its verifier remain owned. Both programs are automatically discovered.
+
+`CountVectorCenteringTest` covers bounded interior candidates with twelve
+independently planted allocation bins, partially fixed and shifted domains,
+tiny continuation grants and worker handoffs. Exact original-row validation
+rejects contradictory bounds that alias in floating point; nonfinite projection,
+cancellation, memory refusal and repeated close remain candidate-only exits.
+The execution manifest also guards the recovered 64-group, three-destination
+allocation in three recipe orders and with four workers, at the unchanged 40M
+request cap and a 16M observed-work guard. Original recipe prefixes and target
+counts are independently replayed. See `docs/vector-neighborhood-repair.txt`.
+`CountCompletionServiceTest` additionally guards a single scheduling extension
+per newly observed residual depth, with unchanged request/local budgets,
+proof-mode exclusion, repeated observations and a seven-unit remaining tail.

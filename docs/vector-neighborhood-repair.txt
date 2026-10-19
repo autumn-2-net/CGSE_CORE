@@ -92,7 +92,7 @@ Four count controls, 33 main-count variants, six older allocation orders and
 entries, source-jar matching, Forge/embedded AE dump packaging and automatic
 test discovery pass. Version remains 0.1.4; no host or adapter change is needed.
 
-Four original-order cases remain UNKNOWN: the 64-group, three-bin,
+At commit 180b460f, four original-order cases remain UNKNOWN: the 64-group, three-bin,
 three-dimensional seed-43 allocation, and the three nine-dimensional models
 with 96/128 groups (one also has multiplicities outside the vector cap).
 The restricted method does not solve general large-dimensional allocation;
@@ -103,3 +103,81 @@ outside the repository. The complete standard suite passes 342/342, including
 all 613 registered execution-boundary requests and their unchanged old work
 guards. The source snapshot is unchanged throughout this run. This is not
 a complete all/corpus campaign or a live-host run.
+
+Interior follow-up
+-----------------
+The remaining 64-group/three-bin/three-dimensional request repeatedly reaches
+an LP vertex, but none of its small restricted integer cores finishes. A vertex
+keeps many coordinates at endpoints; fixing those values can leave too little
+freedom for an integer completion. Refusing those cores is not a proof about
+the full bin, nor about the remaining destinations.
+
+CountVectorNeighborhood now also supports an interior hint. Starting at the
+finite box midpoint, it performs at most 64 sweeps of half-space projections,
+clipping each coordinate to its original bounds. One row is a retained step;
+handoffs never restart a sweep. Nonfinite arithmetic declines this candidate
+method. No projected inequality, floating-point point or temporary fixing is
+exported as a domain fact.
+
+The interior mode first uses fixed-seed stochastic rounding with 32 coordinates
+left free, then nearest rounding with a different 28-coordinate core. It reuses
+the existing retained exact affine/box repair. Both restored proposals and
+rounded shortcuts must pass every original integer row and bound. The mode
+retains the existing per-repair quota and overall neighborhood ceiling; the
+parent still pays all work inside its original finite allowance.
+
+Existing LP repairs run first. Only their failure opens one interior attempt
+for that bin. When an interior proposal succeeds, its related residual tries
+the same geometry before the LP repair; affordable exact matching keeps its
+priority. A failed attempt restores the other existing paths. Changing the
+destination ordering resets the preference. No case name, stored witness or
+known target count is used in dispatch.
+
+The portfolio also observes verified partial allocations followed by an admitted
+interior repair. When the original completion opportunity is spent, each newly
+reached residual depth can earn at most 2,097,152 further scheduling work, bounded
+by the allocation's remaining local allowance and one eighth of the request's
+remaining work. This changes scheduling priority, not the request or algorithm
+caps. The maximum observed depth survives destination retries; pauses, repeated
+observations and failed decompositions cannot replenish service. Mandatory first
+visits, candidate/proof eligibility and packing/LP interleaving stay in force.
+
+A prototype that changed only candidate geometry solved the new case but raised
+one existing request from 38.60M to 41.68M total work, exceeding its unchanged
+40M work guard. Restoring LP-first residual order still cost 41.68M. Runtime
+traces showed a valid prefix waiting behind the spent outer opportunity. The
+bounded depth-based continuation addresses that delay; the guard is retained.
+
+CountVectorCenteringTest covers twelve independently planted, partially fixed
+bins with shifted bounds, tiny slices, worker handoffs, cancellation, repeated
+close and memory admission. Contradictory integer rows that alias as doubles
+and nonfinite projection arithmetic cannot become accepted witnesses. The
+original neighborhood, allocation, scheduling and exact lattice tests remain
+enabled. CountCompletionServiceTest also checks one-time residual-depth service,
+proof eligibility, repeated observations and a seven-unit local tail.
+End-to-end packaged comparisons preserve all previous successes: the
+canonical family improves from 29/33 to 30/33, with the new original-order request
+finishing in 13,111,690 total work. Orders 17/1009 and the fixed-cap four-worker
+run also pass; they retain a 16M observed-work guard. The older near-limit
+64-group seed107 request falls from 38,597,144 to 19,159,525 work, and its
+original/shuffled and worker guards are tightened to 24M without changing
+the 40M request cap.
+
+One old 96-group success uses 254,853 extra work (+2.07%); the other 27 old
+successes keep exactly their work. Total work in the 33-case batch falls from
+438,805,293 to 390,969,591. All 28 graph controls keep identical results, work and
+reserved peaks. The newly solved original case increases its reservation peak from
+37,122,619 to 38,604,335 bytes; no original-order old success increases its peak.
+These measurements are charged work and reservations, not RSS or game latency.
+
+Four count controls, 18 previous recovered orders, six earlier allocation orders,
+33 main-count variants and 17 older execution orders preserve results. Build,
+ABI1478, source-jar matching, Forge/embedded dump packaging and discovery pass.
+The scoped campaign passes 34/34, including all 617 registered execution
+requests and their work guards, with an unchanged source snapshot. This is not
+a new complete standard/all/corpus/live-host campaign; the prior 342/342 complete
+standard result belongs to 180b460f.
+
+The three nine-dimensional canonical cases remain UNKNOWN, including the one
+outside the existing multiplicity bound. The separate unresolved direct seed31
+also remains unchanged. Version stays 0.1.4; no adapter change is required.
