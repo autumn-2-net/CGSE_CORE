@@ -96,6 +96,13 @@ It also checks summary-only metadata access, the 256-step boundary, work/time/
 cancellation cleanup and scheduler ownership transfer. Discovery includes it
 automatically with the other core programs.
 
+`RefillWordAnchorsTest` guards the optional long-period continuation after an
+unsuccessful short-block scan. It checks primitive execution and feed conservation
+for long growth loops, tool/seed/coproduct contracts, nested words and expanded
+prefixes. Exact batch traces cover collisions, zero counts, unmatched separators
+and opaque deep repeats. Budget exits retain the incumbent; real scheduler
+handoff checks borrowed-summary ownership. It is discovered automatically.
+
 `RequestCoverageTest` keeps incomplete candidate/state domains distinct from
 complete infeasibility, including retained smaller requests and direct emission.
 `CapturedReachableTest` checks sparse executable witnesses beyond the initial

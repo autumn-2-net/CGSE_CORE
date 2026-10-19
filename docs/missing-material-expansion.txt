@@ -171,6 +171,41 @@ memory stay charged until child close. RefillWordBlocksTest checks literal
 batch traces, conservation, tool returns, seeds/coproducts, forced credit,
 configuration exclusions, memory/time/work/cancel exits and scheduler handoff.
 
+If that short-period scan produces no complete grouping, a second bounded scan
+can use repeated atoms as anchors for longer tandem blocks. It runs only with
+at least 34 retained atoms and 1024 units left in the SAME pruning allowance.
+The original per-batch and short-period paths run first, so their completed
+results keep priority. Anchor scanning receives at most min(2048, remaining/2)
+visits; reduction and verification use the rest. It never extends the request
+or pruning quota and never recursively invokes another grouping pass.
+
+Each atom's nearest equal predecessor proposes a period. The entire ordered
+block and every extension are then compared exactly, including recipe IDs and
+batch counts. Hash collisions cannot authorize grouping. Opaque composite nodes
+use identity and are not unrolled or compared recursively. Unmatched prefixes,
+tails, zero batches and separate occurrences keep their exact execution order.
+This is an incomplete hint: repeated atoms inside a period can conceal another
+useful distance, and an interrupted scan publishes no partial regrouping.
+
+The resulting compact word uses the existing exact backward reduction and final
+verification. If no preceding reduction changed the original plan, its externally
+owned verified summary may also serve the long-block child; the owner remains
+alive and charged throughout. Both initial and missing supply still must be
+componentwise bounded by the completed incumbent. Time/work/memory limits retain
+that incumbent, while cancellation propagates. Anchors and candidate word storage
+are reserved and released; each cursor turn visits at most 64 entries. The extra
+optional search can consume more of the existing allowance and workspace.
+
+RefillWordAnchorsTest covers 17/24/32-step loops with returned tools, explicit
+final seeds, coproduct requirements and reversed catalogs, including the normal
+expanded-prefix entry. Primitive execution and feed conservation are independent
+oracles. Exact trace tests cover long periods, separators, zero counts, colliding
+identifiers and deeply nested opaque nodes. Limits and scheduler transfer retain
+the incumbent and release owned memory. In a 112-request paired synthetic family,
+56 previously unreduced bills improve and 32 prior reduced bills are unchanged;
+24 larger combinations still retain their old bills within the original quota.
+Some 48/64-step loops improve, without a claim that all such loops now complete.
+
 Mixed-source stock allocation is an optional improvement of the completed bill.
 While inspecting ordinary candidates, expansion detects positive partial batches
 that introduce no additional deficits. Only if such a hint remains useful after
@@ -626,9 +661,11 @@ Known boundaries after the refill review at 224e9172:
   conservative: it does not replace recipes, optimize inside opaque composite
   repeat bodies, rewrite consumed configuration pushes, or claim global minimum
   supplies. Multi-recipe loops already present in the word are eligible too.
-  Adjacent repeated flat blocks can now be reduced jointly. Nonadjacent or
-  longer periods, distinct opaque composites and scans stopped by the optional
-  cap remain incomplete. Very small work-scaled preview allowances can still
+  Adjacent repeated flat blocks can now be reduced jointly, including longer
+  periods suggested by exact repeated-atom anchors after the short scan fails.
+  Nonadjacent repetitions, distances hidden by internal repeated atoms, distinct
+  opaque composites and scans stopped by the optional cap remain incomplete.
+  Very small work-scaled preview allowances can still
   retain the old flat bill; recognizing blocks does not increase that quota.
   Existing forced production credit is retained even if it is surplus.
 - A bounded alternative pass covers stock-funded producer mixtures that the

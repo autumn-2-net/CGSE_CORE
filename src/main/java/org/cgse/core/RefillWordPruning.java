@@ -15,7 +15,7 @@ import java.util.*;
  * preserves executability without requiring all unrequested final coproducts.
  */
 final class RefillWordPruning<K> implements AutoCloseable {
-    private enum Phase { RECIPES, STRUCTURE, CONSUMED, PRODUCED, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, BLOCKS, BLOCK_PRUNE, DONE }
+    private enum Phase { RECIPES, STRUCTURE, CONSUMED, PRODUCED, ORIGINAL, INITIAL, FINAL, GOALS, NEXT, UNWRAP, SUMMARY, SUPPORT, APPLY, EMIT, STEPS, DEFICITS, VERIFY, BLOCKS, ANCHORS, BLOCK_PRUNE, DONE }
     private final GraphPlan<K> original;
     private final Map<K, Long> stock;
     private final Set<K> external;
@@ -38,8 +38,10 @@ final class RefillWordPruning<K> implements AutoCloseable {
     private PlanVerification<K> verification;
     private SummaryComputation<K> computation;
     private RefillWordBlocks blocks;
+    private RefillWordAnchors anchors;
     private RefillWordPruning<K> blockPruning;
     private SequenceSummary<K> summary, unitSummary;
+    private final SequenceSummary<K> verifiedOriginal;
     private GraphPlan<K> candidate, result;
     private GraphPlan<K> regrouped;
     private PlanStep atom, unit;
@@ -62,7 +64,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
         this.original = original; this.result = original; this.stock = stock; this.external = external;
         this.forceCraft = forceCraft; this.ignoreTargetStock = ignoreTargetStock; this.budget = budget;
         this.allowance = allowance; started = budget.nodes(); retainedFailure = budget.failureDetail();
-        summary = verified;
+        summary = verified; verifiedOriginal = verified;
         recipes = original.recipes().values().iterator();
     }
 
@@ -93,16 +95,20 @@ final class RefillWordPruning<K> implements AutoCloseable {
             }
             if (phase == Phase.BLOCKS) {
                 if (!blocks.step()) return false;
-                if (blocks.result() == null) return finish();
-                regrouped = GraphPlan.ownedRefill(result, blocks.result(), result.recipes(), result.initialExact(), result.missingExact(),
-                        result.result(), budget.nodes());
-                // Regrouping preserves every batch boundary and its order. The
-                // completed incumbent verifier can lend the same exact fold;
-                // this parent keeps that verifier's charge through child close.
-                var known = verification != null && result == candidate ? verification.summary() : null;
-                blockPruning = new RefillWordPruning<>(regrouped, stock, external, forceCraft, ignoreTargetStock, budget,
-                        allowance - (budget.nodes() - started), known);
-                blockPruning.allowBlocks = false; phase = Phase.BLOCK_PRUNE; return false;
+                if (blocks.result() != null) return pruneBlocks(blocks.result(), false);
+                // Keep the original short-period pass and every completed bill
+                // first. Only an unsuccessful scan may spend leftover quota on
+                // longer anchor hints; no fresh allowance or fixed-point loop.
+                blocks.close(); blocks = null;
+                long left = allowance - (budget.nodes() - started);
+                // Two periods beyond the old 16-atom horizon need >=34 atoms.
+                if (left < 1024 || reversed.size() < 34) return finish();
+                anchors = new RefillWordAnchors(reversed, budget, Math.min(2048, left / 2));
+                phase = Phase.ANCHORS; return false;
+            }
+            if (phase == Phase.ANCHORS) {
+                if (!anchors.step()) return false;
+                return anchors.result() == null ? finish() : pruneBlocks(anchors.result(), true);
             }
             if (phase == Phase.BLOCK_PRUNE) {
                 if (!blockPruning.step()) return false;
@@ -362,6 +368,20 @@ final class RefillWordPruning<K> implements AutoCloseable {
         }
         return finish();
     }
+    private boolean pruneBlocks(PlanStep word, boolean reuseOriginal) {
+        regrouped = GraphPlan.ownedRefill(result, word, result.recipes(), result.initialExact(), result.missingExact(),
+                result.result(), budget.nodes());
+        // Exact grouping preserves every batch boundary and its order. The
+        // owning verifier stays charged until this child closes.
+        var known = verification != null && result == candidate ? verification.summary() : null;
+        // A failed short scan may leave the original word untouched. Its
+        // external verifier still owns the borrowed fold through this entire
+        // continuation; exact grouping changes no execution or binding.
+        if (known == null && reuseOriginal && result == original) known = verifiedOriginal;
+        blockPruning = new RefillWordPruning<>(regrouped, stock, external, forceCraft, ignoreTargetStock, budget,
+                allowance - (budget.nodes() - started), known);
+        blockPruning.allowBlocks = false; phase = Phase.BLOCK_PRUNE; return false;
+    }
     private boolean finish() {
         phase = Phase.DONE;
         budget.note("refill_word", (result != original ? "pruned" : "retained_original") + "; work=" + (budget.nodes() - started));
@@ -373,6 +393,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
     @Override public void close() {
         if (blockPruning != null) { blockPruning.close(); blockPruning = null; }
         if (blocks != null) { blocks.close(); blocks = null; }
+        if (anchors != null) { anchors.close(); anchors = null; }
         if (verification != null) { verification.close(); verification = null; }
         if (computation != null) { computation.close(); computation = null; }
         entries = null; seeds = null; recipes = null;
