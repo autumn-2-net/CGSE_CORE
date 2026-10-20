@@ -23,7 +23,7 @@ target stock cannot replace the suffix's verified production credit.
 RefillProducerOrder indexes only the deficit's reachable producer support.
 Finite derivations from terminal supplies receive increasing ranks. Iterative
 SCC analysis ranks a remaining component above its outside feedstocks, with
-the same rank for all members of a cycle. An accepted prefix must reduce the
+the same rank for all members of a cycle. An ordinary prefix must reduce the
 selected deficit and can increase only strictly lower-ranked deficits. This
 prevents alternating loans around a cycle. A real startup seed can remain;
 an ordinary item downstream of that cycle is expanded to the actual seed.
@@ -69,6 +69,19 @@ incomparable candidates keep catalog priority. The existing preference for
 a fully stock-funded producer remains. No item/fluid exchange rate or sum
 of unlike missing quantities is used. Candidate scratch memory is charged
 and released even when comparison or evaluation exhausts a budget.
+
+After the established quality stages have completed, RefillSourceSearch can
+compare a few alternate producers after full expansion to terminal supply.
+It uses the verified incumbent's delivery, seeds, bindings and production
+credit, shares a completed rank index between bounded source trials, and
+publishes only a verified componentwise improvement in missing supply.
+First-ready ranks can be too shallow for an alternate path: a private trial
+may cross that order once per preferred material, consuming the exception
+when it applies the prefix. Ordinary expansion keeps the original guard.
+Cycles cannot renew a consumed exception or turn a failed trial into a
+negative proof. Nested seed subrequests and existing cyclic archives decline
+this extra pass. See review-0.1.5-followup.txt for admission, costs, production
+and per-push restrictions, validation, and remaining joint-count limitations.
 
 RefillWordPruning optionally reduces excessive counts already in the completed
 word. It works backward from delivery and final seeds, tracking inventory at

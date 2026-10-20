@@ -1295,9 +1295,10 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
     }
 
     private boolean expandMissing(GraphPlan<K> plan) {
-        if (!missingPreview || !MissingMaterialExpansion.needed(compiler, plan)) return false;
+        if (!missingPreview || !MissingMaterialExpansion.needed(compiler, plan, nesting == 0)) return false;
         if (verifying != null) { verifying.close(); verifying = null; }
-        missingExpansion = new MissingMaterialExpansion<>(compiler, plan, stock, external, excluded, forceCraft, false, budget).refineCycles(nesting == 0);
+        missingExpansion = new MissingMaterialExpansion<>(compiler, plan, stock, external, excluded, forceCraft, false, budget)
+                .refineCycles(nesting == 0).refineSources(nesting == 0);
         budget.note("missing_expansion", "start; verified_program_retained; initial_keys=" + plan.missingExact().size());
         phase = 21;
         return true;
@@ -1336,7 +1337,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
             seedOptimization.close();
             seedOptimization = null;
             discardQuantityAnalysis();
-            if (missingPreview && MissingMaterialExpansion.needed(compiler, retained)) {
+            if (missingPreview && MissingMaterialExpansion.needed(compiler, retained, nesting == 0)) {
                 return incompleteMissingExpansion(limit);
             }
             return missingPreview ? MissingMaterialExpansion.terminalResult(retained) : retained;

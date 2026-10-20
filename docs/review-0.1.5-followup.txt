@@ -1,0 +1,140 @@
+CGSE 0.1.5 review follow-up
+=========================
+Review baseline: d540c900, 2026-10-20. Version remains 0.1.5.
+The review combines source observations, isolated-class tests and research
+suggestions. A suggested search gap is not an invalid-plan or global-UNSAT bug.
+
+Confirmed and implemented: terminal comparison of source routes
+---------------------------------------------------------------
+The multihop example was reproduced against the released engine, through
+MissingMaterialExpansion, GraphFallback and GraphPlanner:
+
+  X -> A; Y -> A; 100 raw -> X; 1 raw -> Y; A -> G.
+
+With empty stock and one G requested, all three entries returned a verified
+100-raw refill in the first order, and a verified 1-raw refill in reverse order.
+The latter is both executable and minimal for this particular input: every
+source ultimately consumes positive raw. This is a refill-quality defect,
+not an invalid execution or an erroneous infeasibility proof.
+
+RefillSourceSearch runs after the incumbent's existing expansion, mixture,
+word reduction and optional cyclic searches. It examines the incumbent's
+bindings and material ports for alternate positive-net producers with multihop
+support. At most eight source preferences are retained. A preference never
+removes a source or becomes a learned mathematical constraint.
+
+Each trial starts from the same final delivery and explicit seed obligations.
+The verified original word supplies the forced-target production credit.
+An exact backward expansion rebuilds a complete execution, sharing one completed
+producer-rank index across the trials. Previously accepted preferences can
+compose across different materials; each new complete bill is compared with
+the latest incumbent, not with an obsolete original.
+
+The first-ready rank of a cheap short derivation need not admit a deeper
+alternative. Only these private trials may cross the old rank order once per
+preferred material. Applying that preference consumes the exception; repeated
+visits again obey the old rank guard. Each trial permits at most eight exceptions,
+and neither the original rank index nor ordinary expansion is changed.
+Asymmetric chain depths and closed-cycle alternatives are regression cases.
+
+Every candidate must finish expansion and execution verification. It replaces
+the primary only if its missing-supply vector is componentwise no larger and
+strictly smaller in at least one key. Equal or incomparable supplies preserve
+the previous primary. Quantities of unlike items or fluids are never summed
+as a price. Using more already-owned stock is permitted for strictly smaller
+new supply; this objective is not minimum total resource use.
+
+The original physical meaning of every bound recipe ID is preserved.
+Excluded sources and external supplies keep their scope. Returned tools,
+useful coproducts, exact counts beyond long, and final seeds enter the complete
+execution check. Trials preserve the original net target-production credit.
+Words needing a separate low-net forced-crafting proof are declined. All
+original bindings are checked before trials, including late bindings outside
+the hint window; per-push consumed configurations decline rewriting. Newly
+selected per-push sources are also declined.
+
+No changes are made to already-feasible orders or existing cyclic alternative
+archives. A single-batch missing plan can opt in when the target has alternative
+producers. Newly reached missing boundaries use the completed trial rank index,
+so the original terminal-only shortcut cannot mislabel a new cycle seed.
+The pass produces no negative proof, completeness claim or seed-optimality
+certificate. It does not invoke the count or cyclic solver from fallback.
+Nested seed-manufacturing subrequests decline this new optional pass, preserving
+the owner's later search opportunity and the old single-batch admission there.
+
+Limits and retained results
+--------------------------
+The lifetime allowance is min(8192, remaining search work / 4), shared by
+discovery, original verification, rank construction, all trials and comparisons.
+Hint discovery is capped at min(1024, max(128, allowance / 4)) visits.
+Ordinary cursors yield every 64 visits; nested verifiers keep their own bounded
+continuations. A quota can overshoot by one child turn, as in the existing
+optional refinements. Memory is charged and released, including builders of
+accepted words that outlive their trial.
+
+These are additional optional search costs after the old stages; the change
+is not advertised as a general speedup or as free cache work. A work, memory or
+time exit retains the last completely verified publication. Cancellation
+continues to propagate. No preparation or retained-solver budget is enlarged.
+
+Maintained checks and an additional historical improvement
+----------------------------------------------------------
+RefillSourceSearchTest exercises all three entries, source orders, chain
+depths, stock/tool/coproduct interactions, composed source preferences, external
+and excluded supplies, conflicting bindings, conditional coverage, forced
+credit, final seeds, large counts, primitive randomized path oracles, cutoffs
+before and after publication, and scheduler handoff.
+
+RefillMixtureTest retains its previous intermediate-stage assertion: a smaller
+sum of incomparable materials still cannot displace the old mixture bill
+(raw1=6, raw3=22). The new complete-route pass then finds raw1=2. Primitive
+execution independently verifies that improvement using the original stock.
+The old assertion was not weakened to accept arbitrary new bills.
+
+A separate paired run of the released and built engines covers 32 combinations
+of depth 1/8/64/512, single/alternate sources, missing/funded stock, and main/
+fallback entry. Primitive replay accepts every word. Five bills improve and
+27 remain unchanged; all 16 funded cases have identical charged work. Extra
+charged work in this sample is at most 2665. In the five-recipe review example,
+expansion/fallback spend 184 additional work and main spends 207. These are
+work-accounting comparisons, not a wall-clock benchmark or a general speedup.
+
+Current validation, with heavy work confined to four logical CPUs:
+  - Standard suite: 349 checks PASS.
+  - Curated graphs: 247 inputs in three orders, 741 requests PASS.
+  - Built-library source-choice test: 772 assertions PASS.
+  - Java 17 assemble and artifact checks PASS; all 1478 baseline API entries
+    preserved. The Forge mod still bundles AE dump.
+Production/test source hashes match between regression, build and final checks.
+The 20927-case canonical corpus and native game host were not rerun in this
+increment; the separately dated full 0.1.5 release record remains unchanged.
+
+Remaining review work
+---------------------
+Exact equality supports: CountEqualitySupport still returns interval hulls.
+Interior unsupported values can be lost even when both endpoints survive.
+A private small-domain mask arm needs its own rollback/reason-scope tests and
+paired sparse-equality comparisons before integration.
+
+Packing: retain the existing asymmetric exchanges and successful old samples.
+Persistent LP/core experiments must account for preparation and service costs;
+the previously unsuccessful warm-LP integration is not enabled by this change.
+
+Vector allocation: cross-block residual interfaces remain separate research.
+Candidate exhaustion cannot prove that every first-block choice is impossible.
+
+Refill optimization: this bounded source-preference search is not exhaustive
+joint path/count optimization or a complete Pareto archive. Finite hint coverage,
+rank refusals and quota exits do not certify a global minimum. Existing cycle
+frontiers are retained as-is rather than flattened into a new search.
+Hints currently favor producers absent from the incumbent binding map. The
+paired depth-64/512 main plans already mix both sources and retain their bills;
+reallocating those existing source counts is still part of joint optimization.
+The long fallback can also retain its incumbent at the bounded discovery/rank
+limit. These unchanged samples are not reported as recovered hard cases.
+
+Compiler feedback/modeling: newly added producer columns still require
+recertifying bounds and cuts. No signature weakening, arbitrary state jumping,
+instantaneous-machine-capacity bound, or independent-slot substitution for a
+true tuple relation is introduced. Host integration and general temporal
+entity assignment remain distinct from portable core regression evidence.

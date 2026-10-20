@@ -12,11 +12,12 @@ import java.util.concurrent.atomic.AtomicLong;
 /** Complete supply bills, independent allocation oracles, and retained-witness limits. */
 public final class RefillMixtureTest {
     private static int checks;
-    private static final Field IMPROVEMENT, PHASE;
+    private static final Field IMPROVEMENT, PHASE, SOURCES;
     static {
         try {
             IMPROVEMENT = MissingMaterialExpansion.class.getDeclaredField("improvement"); IMPROVEMENT.setAccessible(true);
             PHASE = MissingMaterialExpansion.class.getDeclaredField("phase"); PHASE.setAccessible(true);
+            SOURCES = MissingMaterialExpansion.class.getDeclaredField("sourceSearch"); SOURCES.setAccessible(true);
         } catch (ReflectiveOperationException failure) { throw new ExceptionInInitializerError(failure); }
     }
     private static Object child(MissingMaterialExpansion<?> expansion) throws IllegalAccessException { return IMPROVEMENT.get(expansion); }
@@ -95,7 +96,7 @@ public final class RefillMixtureTest {
                 r("two", ordered("A", 2, "S", 1), Map.of("A", 3L)), r("finish", Map.of("A", 8L), Map.of("G", 1L)));
         check(solve(grow, Map.of("A", 2L, "R", 3L, "S", 3L)).feasible(), "Stock-funded growth mixture");
     }
-    private static void protectWholeBill() {
+    private static void protectWholeBill() throws Exception {
         // Taking a stock-funded partial joint source first creates an extra
         // raw2 deficit after the remaining coproduct obligation is expanded.
         var recipes = List.of(r("part", ordered("raw2", 1, "raw3", 2), Map.of("B", 3L)),
@@ -125,8 +126,20 @@ public final class RefillMixtureTest {
                 r("r4-0", Map.of("raw1", 1L), Map.of("k4", 3L)),
                 r("r5-1", ordered("k0", 3, "raw0", 2), Map.of("k5", 1L)),
                 r("finish", ordered("k5", 2, "k4", 8), Map.of("G", 1L)));
-        check(solve(incomparable, Map.of("raw0", 4L, "raw3", 10L)).missing().equals(Map.of("raw1", 6L, "raw3", 22L)),
-                "A smaller sum of unlike supplies replaced an incomparable bill");
+        var stock = Map.of("raw0", 4L, "raw3", 10L); var b = MissingMaterialExpansionTest.budget(4_000_000);
+        try (var work = new MissingMaterialExpansion<>(new GraphCompiler<>(incomparable), suffix(incomparable, stock),
+                stock, Set.of(), Set.of(), true, false, b)) {
+            while (SOURCES.get(work) == null) check(!work.step(), "Source refinement was not reached");
+            // Retain the original mixture-stage oracle: an incomparable partial
+            // mixture must not replace the completed bill just by its sum.
+            check(work.result().missing().equals(Map.of("raw1", 6L, "raw3", 22L)),
+                    "A smaller sum of unlike supplies replaced an incomparable bill");
+            while (!work.step()) {}
+            // Complete-path refinement can instead find a strictly better bill.
+            check(work.result().missing().equals(Map.of("raw1", 2L)), "Lost normalized historical route");
+            MissingMaterialExpansionTest.verify(work.result(), stock);
+        }
+        check(b.reservedBytes() == 0, "Historical source trial workspace");
     }
     private static void boundaries() {
         var recipes = simple(10); var stock = Map.of("R", 5L, "S", 5L); var compiler = new GraphCompiler<>(recipes);

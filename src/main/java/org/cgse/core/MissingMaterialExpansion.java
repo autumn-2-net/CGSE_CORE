@@ -47,6 +47,11 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private MissingMaterialExpansion<K> improvement;
     private RefillWordPruning<K> pruning;
     private RefillSupplySearch<K> cycleSearch;
+    private RefillSourceSearch<K> sourceSearch;
+    private boolean sourceSearchDone, sourceSearchEnabled = true;
+    private boolean simpleSourcesOnly;
+    private Map<K, String> preferredSources = Map.of();
+    private Set<K> usedSourcePreferences = Set.of();
     private RefillBoundaryDiagnostics<K> diagnostics;
     private boolean cycleSearchEnabled, cycleSearchTried;
     private long improvementStart, improvementWork;
@@ -78,8 +83,12 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         }
     }
     static <K> boolean needed(GraphCompiler<K> compiler, GraphPlan<K> plan) {
+        return needed(compiler, plan, true);
+    }
+    static <K> boolean needed(GraphCompiler<K> compiler, GraphPlan<K> plan, boolean sourceChoices) {
         if (plan.feasible() || plan.missingExact().isEmpty()) return false;
-        return !(plan.steps() instanceof PlanStep.Batch) || hasProducibleMissing(compiler, plan);
+        return !(plan.steps() instanceof PlanStep.Batch) || sourceChoices && compiler.producers(plan.target()).size() > 1 ||
+                hasProducibleMissing(compiler, plan);
     }
     /** Only after needed() declined: a nonempty bill then has no indexed producer. */
     static <K> GraphPlan<K> terminalResult(GraphPlan<K> plan) {
@@ -89,6 +98,8 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     /** The main planner may search a small cyclic prefix; ordinary fallback
      * keeps its existing expansion/word-reduction responsibilities. */
     MissingMaterialExpansion<K> refineCycles(boolean enabled) { cycleSearchEnabled = enabled; return this; }
+    /** Bootstrap subrequests still owe their owner later search opportunities. */
+    MissingMaterialExpansion<K> refineSources(boolean enabled) { sourceSearchEnabled = enabled; return this; }
     /** Only the same completed fallback witness may lend its immutable suffix.
      * Prefix construction copies its bindings and refuses conflicting IDs.
      * Retained vectors have an optional reservation, owned by this expansion. */
@@ -113,6 +124,18 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             Set<K> external, Set<String> excluded, boolean force, boolean ignoreTargetStock, PlanningBudget budget, RefillProducerOrder<K> order) {
         return new MissingMaterialExpansion<>(compiler, plan, stock, external, excluded, force, ignoreTargetStock, budget, true, order, BigInteger.ZERO);
     }
+    /** Candidate-local source preference; it never excludes the old sources or
+     * turns failure of this restricted trial into a full-model negative proof. */
+    static <K> MissingMaterialExpansion<K> sourceAlternative(GraphCompiler<K> compiler, GraphPlan<K> goals, Map<K, Long> stock,
+            Set<K> external, Set<String> excluded, boolean force, boolean ignoreTargetStock, PlanningBudget budget,
+            RefillProducerOrder<K> order, BigInteger production, Map<K, String> preferred) {
+        var work = new MissingMaterialExpansion<>(compiler, goals, stock, external, excluded, force, ignoreTargetStock,
+                budget, true, order, production);
+        work.preferredSources = preferred;
+        work.usedSourcePreferences = new HashSet<>();
+        work.simpleSourcesOnly = true;
+        return work;
+    }
     private static <K> boolean hasProducibleMissing(GraphCompiler<K> compiler, GraphPlan<K> plan) {
         // Only a cheap index lookup here. Source inspection belongs to the
         // budgeted continuation, including rejected/excluded alternatives.
@@ -123,6 +146,10 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         if (diagnostics != null) {
             if (!diagnostics.step()) return false;
             result = diagnostics.result(); diagnostics.close(); diagnostics = null; return true;
+        }
+        if (sourceSearch != null && !sourceSearchDone) {
+            if (!sourceSearch.step()) return false;
+            result = sourceSearch.result(); sourceSearchDone = true; return explainBoundary();
         }
         if (cycleSearch != null) {
             if (!cycleSearch.step()) return false;
@@ -168,7 +195,8 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         for (int i = 0; i < OPERATIONS_PER_STEP; i++) {
             budget.check();
             if (advance()) return true;
-            if (phase == Phase.RANK || phase == Phase.VERIFY || pruning != null || cycleSearch != null || diagnostics != null) return false;
+            if (phase == Phase.RANK || phase == Phase.VERIFY || pruning != null || cycleSearch != null ||
+                    sourceSearch != null && !sourceSearchDone || diagnostics != null) return false;
         }
         return false;
     }
@@ -199,7 +227,14 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             case SELECT -> {
                 if (pending.isEmpty()) {
                     if (prefix.isEmpty()) { result = original; return complete(); }
-                    if (forceCraft && targetDelta.signum() < 0) throw new IllegalStateException("Refill lost verified production credit");
+                    if (forceCraft && targetDelta.signum() < 0) {
+                        // A private rank-crossing trial may reach a closed
+                        // turnover. Its owner rejects insufficient production;
+                        // do not publish the partially expanded word or abort
+                        // the already verified incumbent.
+                        if (simpleSourcesOnly) { result = original; phase = Phase.DONE; return true; }
+                        throw new IllegalStateException("Refill lost verified production credit");
+                    }
                     steps = new ArrayList<>(); prefixIndex = prefix.size(); phase = Phase.STEPS;
                 } else {
                     expanding = pending.remove(); queued.remove(expanding);
@@ -228,6 +263,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                     }
                 } else {
                     source = sources.next().recipe;
+                    if (simpleSourcesOnly && source.batchSensitiveInputs()) break;
                     GraphRecipe<K> existing = recipes.get(source.id());
                     if (existing != null && !existing.equals(source)) break;
                     BigInteger count = CheckedAmounts.ceilDiv(deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta), gain(source, expanding));
@@ -265,6 +301,9 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                     else required.put(entry.getKey(), entry.getValue());
                     enqueue(entry.getKey());
                 } else {
+                    if (preferred(expanding, selected.recipe)) {
+                        reserve(64); usedSourcePreferences.add(expanding);
+                    }
                     recipes.put(selected.recipe.id(), selected.recipe);
                     prefix.add(PlanStep.batch(selected.recipe.id(), selected.runs));
                     selected.close(); selected = null; entries = null; phase = Phase.SELECT;
@@ -326,6 +365,15 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
     private boolean explainBoundary() {
         if (allowMixed || result.feasible() || result.missingExact().isEmpty()) return true;
+        if (sourceSearchEnabled && sourceSearch == null && result.alternatives().isEmpty() && budget.remainingWork() >= 512) {
+            sourceSearch = new RefillSourceSearch<>(compiler, result, stock, external, excluded, forceCraft, ignoreTargetStock, budget);
+            return false;
+        }
+        var diagnosticOrder = sourceSearch == null ? null : sourceSearch.completedOrder();
+        if (diagnosticOrder != null) {
+            diagnostics = new RefillBoundaryDiagnostics<>(result, compiler, diagnosticOrder, budget);
+            return false;
+        }
         if (order == null) { result = terminalResult(result); return true; }
         diagnostics = new RefillBoundaryDiagnostics<>(result, compiler, order, budget);
         return false;
@@ -397,7 +445,14 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                 proposal.funded = false;
                 if (proposal.partialRuns != null && proposal.partialRuns.signum() > 0)
                     proposal.partialRuns = limitFunding(input, proposal.partialRuns, previous);
-                if (order.rank(input) >= order.rank(expanding)) { finishComparison(false); return; }
+                // First-ready ranks can hide a deeper, cheaper derivation.
+                // A private trial may cross that order once per preferred key.
+                // After applying it, every later expansion of that key again
+                // obeys the old rank guard. Finite preferences cannot turn a
+                // cyclic choice into an endlessly renewable rank exception.
+                if (order.rank(input) >= order.rank(expanding) && !preferred(expanding, proposal.recipe)) {
+                    finishComparison(false); return;
+                }
             }
         }
         // Iterator handoffs need no extra arithmetic/work unit or scheduler turn.
@@ -412,6 +467,8 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                         .compareTo(deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta)) < 0)
             partialOpportunity = true;
         if (selected == null || proposal.funded && !selected.funded) finishComparison(true);
+        else if (!selected.funded && preferred(expanding, proposal.recipe) != preferred(expanding, selected.recipe))
+            finishComparison(preferred(expanding, proposal.recipe));
         else if (forceCraft && proposal.delta.compareTo(selected.delta) < 0) finishComparison(false);
         else {
             strict = false; comparingSelected = false;
@@ -442,6 +499,9 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             selected = proposal;
         } else proposal.close();
         proposal = null; keys = null; phase = Phase.SOURCE;
+    }
+    private boolean preferred(K key, GraphRecipe<K> recipe) {
+        return recipe.id().equals(preferredSources.get(key)) && !usedSourcePreferences.contains(key);
     }
     private void enqueue(K key) {
         var node = order.get(key);
@@ -514,7 +574,11 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         @Override public void close() { budget.release(bytes); bytes = 0; }
     }
 
-    GraphPlan<K> result() { return cycleSearch == null ? result : cycleSearch.result(); }
+    GraphPlan<K> result() {
+        if (sourceSearch != null && !sourceSearchDone) return sourceSearch.result();
+        return cycleSearch == null ? result : cycleSearch.result();
+    }
+    BigInteger prefixProduction() { return targetDelta; }
     /** A parent retaining this completed alternative takes its conservative
      * builder charge; close still releases verifier/child scratch separately. */
     long takeResultCharge() {
@@ -531,6 +595,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     @Override public void close() {
         releaseOriginalSummary();
         if (diagnostics != null) { diagnostics.close(); diagnostics = null; }
+        if (sourceSearch != null) { sourceSearch.close(); sourceSearch = null; }
         if (cycleSearch != null) { cycleSearch.close(); cycleSearch = null; }
         if (pruning != null) { pruning.close(); pruning = null; }
         if (improvement != null) { improvement.close(); improvement = null; }
