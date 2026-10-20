@@ -3621,6 +3621,206 @@
       "evidence": "Existing canonical packing SAT oracle; every plan is independently replayed against original primitive inputs/outputs, final target and seeds. All eight orders previously exhausted the same40M search cap. Retaining the paid exact frontier across inconclusive PB repair restores these witnesses without importing a native solution or increasing the request allowance.",
       "workers": 4,
       "expanded_budget": false
+    },
+    {
+      "name": "mknapcb3_07_bks/asymmetric-exchange",
+      "source": "cases/graph/27/27f23325c75ec37c3d5503763ee3798c01abb454fb1a68629fc5a79a73bb55f2.json",
+      "sha256_lf": "819c02f7c16c2347b75abd06352133a2bc7f83047bd7a1098893de84df5aac34",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 11000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here."
+    },
+    {
+      "name": "mknapcb5_24_bks/asymmetric-exchange",
+      "source": "cases/graph/45/457c64880c4d0a62954a9bd86a20afbf56e683d82dccb626dd06db36a18c84a8.json",
+      "sha256_lf": "4836ef757a967fc5e3913b220b6079e79834db6d3df8a742a5f8a28ad0e4b277",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 11000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here."
+    },
+    {
+      "name": "mknapcb6_11_bks/asymmetric-exchange",
+      "source": "cases/graph/48/48c2ad793b244bc65c2dcf5df4a07d29285101ccfaa841ca2d9d22f9ad9a7e6c.json",
+      "sha256_lf": "87af60399c4c3aeff4c6d9a7dc5404269c646643bab7328ca7ed7e71c079f1fd",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 12000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here."
+    },
+    {
+      "name": "mknapcb4_25_bks/asymmetric-exchange",
+      "source": "cases/graph/50/5010683a1eb76a1d53063f95f5c1954db95393616c23636fbf1ca46ba6e4ee73.json",
+      "sha256_lf": "81467e79735842871aca4e425167f8d552007def85fc971e19d8d13bf6b9bdf0",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 39000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here."
+    },
+    {
+      "name": "mknapcb6_23_bks/asymmetric-exchange",
+      "source": "cases/graph/5f/5f2cc9d8678af27e7cbfdadaa23a8cac7fc53ae62f9e350ec9d98c5b8b012a1b.json",
+      "sha256_lf": "59f7395ef0faded74461c060ab92675a211338438b364cad6da2b0a24fc9102d",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 12000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here."
+    },
+    {
+      "name": "mknapcb3_07_bks/asymmetric-exchange/four-workers-fixed",
+      "source": "cases/graph/27/27f23325c75ec37c3d5503763ee3798c01abb454fb1a68629fc5a79a73bb55f2.json",
+      "sha256_lf": "819c02f7c16c2347b75abd06352133a2bc7f83047bd7a1098893de84df5aac34",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 11000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb5_24_bks/asymmetric-exchange/four-workers-fixed",
+      "source": "cases/graph/45/457c64880c4d0a62954a9bd86a20afbf56e683d82dccb626dd06db36a18c84a8.json",
+      "sha256_lf": "4836ef757a967fc5e3913b220b6079e79834db6d3df8a742a5f8a28ad0e4b277",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 11000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb6_11_bks/asymmetric-exchange/four-workers-fixed",
+      "source": "cases/graph/48/48c2ad793b244bc65c2dcf5df4a07d29285101ccfaa841ca2d9d22f9ad9a7e6c.json",
+      "sha256_lf": "87af60399c4c3aeff4c6d9a7dc5404269c646643bab7328ca7ed7e71c079f1fd",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 11000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_25_bks/asymmetric-exchange/four-workers-fixed",
+      "source": "cases/graph/50/5010683a1eb76a1d53063f95f5c1954db95393616c23636fbf1ca46ba6e4ee73.json",
+      "sha256_lf": "81467e79735842871aca4e425167f8d552007def85fc971e19d8d13bf6b9bdf0",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 39000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb6_23_bks/asymmetric-exchange/four-workers-fixed",
+      "source": "cases/graph/5f/5f2cc9d8678af27e7cbfdadaa23a8cac7fc53ae62f9e350ec9d98c5b8b012a1b.json",
+      "sha256_lf": "59f7395ef0faded74461c060ab92675a211338438b364cad6da2b0a24fc9102d",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        97,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 12000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here.",
+      "workers": 4,
+      "expanded_budget": false
     }
   ]
 }

@@ -1435,6 +1435,20 @@ that handoff. The longer cases are no longer accepted as unresolved boundaries.
 guard retained exact enumeration across PB repair and nested exchange scouts.
 They distinguish scoped infeasibility from workspace refusal and check a repair
 grant measured from actual entry without renewing request or local limits.
+The repair test also checks one finite allowance for enumeration displaced by
+an optional asymmetric search. Competing work and repeated observations cannot
+consume or renew that owned service, and the original phase/request caps apply.
+
+`CountPackingAsymmetricTest` independently exhausts 512 small signed systems
+with distinct left/right exchange radii. It checks flexible and ordinary bits,
+14-change witnesses, coefficients beyond exact double integers, odd-width
+orientation, worker transfer, cancellation, memory refusal and domain-cap
+rejection. Existing symmetric domains retain their original trajectory.
+See `docs/asymmetric-packing-exchange.txt` for the complete-model native
+comparison, neighborhood scope and unchanged-budget scheduling contracts.
+The execution manifest pins the five newly recovered packing graphs in eight
+recipe orders, serially and with four workers at a fixed 40M cap: 80 additional
+required positive requests, with independent primitive replay and work guards.
 
 `CountEqualitySupportTest` exhausts 1536 finite equation boxes and independently
 checks their supported endpoints, including signed large offsets, GCDs,

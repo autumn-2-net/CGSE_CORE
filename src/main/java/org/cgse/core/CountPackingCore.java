@@ -30,7 +30,8 @@ final class CountPackingCore implements CountContinuation {
     private long[][] coreCoefficients;
     private long[] coreBounds;
     private long corePreferred;
-    private boolean scouting, flexibleScout, flexiblePending;
+    private boolean scouting, flexibleScout, flexiblePending, asymmetricScout, rotateAsymmetric;
+    private long asymmetricStart, asymmetricWork, pressureLimit;
     private long scoutLimit, scoutAt, flexibleLimit, flexibleAt, flexibleAllowance;
     private long roundingStart, failedRoundingWork, stepStart = -1;
     private boolean scoutAttempted, wideScoutAttempted, wideScout;
@@ -105,7 +106,7 @@ final class CountPackingCore implements CountContinuation {
             // originally sized repair opportunity in the request. This moves
             // a phase boundary only; no local or global allowance is renewed.
             if (phase == Phase.ENUMERATION && (work >= normalWork ||
-                    work >= normalWork / 2 && budget.remainingWork() <= maximumWork - normalWork)) {
+                    work >= normalWork / 2 && repairPressureDue())) {
                 flexiblePending = false;
                 // The request can shrink while an optional scout is live.
                 // Restore the original face before constructing its PB repair.
@@ -153,7 +154,7 @@ final class CountPackingCore implements CountContinuation {
                 if (valid(candidate)) { counts = candidate; return finish("verified_candidate"); }
                 return finish("candidate_rejected");
             }
-            if (scouting) { if (!scheduleFlexibleScout()) endScout(); return false; }
+            if (scouting) { if (!scheduleFlexibleScout() && !beginAsymmetricScout()) endScout(); return false; }
             if (enumerationBase != null) {
                 // A declined PB workspace is not a closed face. Resume the
                 // original search; only a scoped proof can retire it early.
@@ -166,6 +167,18 @@ final class CountPackingCore implements CountContinuation {
             beginCore();
             return false;
         } finally { work += budget.threadWork() - before; stepStart = -1; }
+    }
+
+    private boolean repairPressureDue() {
+        if (budget.remainingWork() > maximumWork - normalWork) return false;
+        if (asymmetricWork == 0) return true;
+        // Give the retained enumeration its displaced service before the
+        // pressure-triggered PB handoff. Capture one owned-work deadline:
+        // another arm's large batch cannot consume this opportunity, and a
+        // repeated observation cannot renew it. The original normal/global
+        // ceilings still apply, so this moves a boundary, not either cap.
+        if (pressureLimit == 0) pressureLimit = Math.min(normalWork, work + asymmetricWork);
+        return work >= pressureLimit;
     }
 
     private Frontier parkSearch() {
@@ -308,13 +321,36 @@ final class CountPackingCore implements CountContinuation {
         scoutLimit = flexibleLimit;
         if (!beginFlexibleScout()) endScout();
     }
+    private boolean beginAsymmetricScout() {
+        if (wideScout || !flexibleScout || asymmetricScout || measuredWork() >= scoutLimit ||
+                budget.remainingWork() < 262144 || coreSize > 40 || fractional > 10) return false;
+        long flexible = 0;
+        for (int i = 0; i < free.length; i++) {
+            budget.operation(PlanningBudget.Operation.SCAN, 0);
+            if (lp.point[free[i]] > 1e-6 && lp.point[free[i]] < 1 - 1e-6) flexible |= 1L << i;
+        }
+        var expansion = CountPackingSchedule.expansion(free.length, flexible, budget);
+        if (expansion == null || measuredWork() >= scoutLimit) return false;
+        // The completed smaller neighborhood gets the first opportunity.
+        // This complementary domain inherits its original absolute deadline;
+        // neither a new table nor another worker buys a new scout allowance.
+        asymmetricStart = measuredWork();
+        asymmetricScout = true; rotateAsymmetric = expansion.rotate();
+        compiledSize = 0;
+        beginCore();
+        budget.note("count_packing_asymmetric", "left_points=" + expansion.leftPoints() +
+                "; right_points=" + expansion.rightPoints() + "; inherited_deadline=" + scoutLimit);
+        return true;
+    }
+
     private void endScout() {
         // A restricted miss is feedback about this attempt, never a proof.
         // Include the final atomic step, even when the frontier moved workers.
+        if (asymmetricScout) asymmetricWork += Math.max(0, measuredWork() - asymmetricStart);
         if (flexibleScout) failedRoundingWork += Math.max(0, measuredWork() - roundingStart);
         if (search != null) search.close();
         if (wideScout) wideScoutWork += work - wideScoutStart;
-        scouting = wideScout = flexibleScout = false;
+        scouting = wideScout = flexibleScout = asymmetricScout = rotateAsymmetric = false;
         restoreSearch(scoutBase); scoutBase = null;
         budget.note("count_packing_core", "resume_original; free=" + coreSize + "; work=" + work);
     }
@@ -340,7 +376,7 @@ final class CountPackingCore implements CountContinuation {
         // The parent reserves the bounded 35-by-64 coefficients, threshold
         // masks, suffix maxima and retained activity stack together. PB owns
         // its separate, optional reconstruction and conflict-learning storage.
-        var mode = wideScout ? CountPackingNeighborhood.Mode.EXCHANGE_FOUR :
+        var mode = asymmetricScout ? CountPackingNeighborhood.Mode.EXCHANGE_ASYMMETRIC : wideScout ? CountPackingNeighborhood.Mode.EXCHANGE_FOUR :
                 scouting ? CountPackingNeighborhood.Mode.EXCHANGE :
                 phase == Phase.CONFLICT_REPAIR ? CountPackingNeighborhood.Mode.LEARNING : CountPackingNeighborhood.Mode.PROPAGATION;
         long flexible = 0;
@@ -371,6 +407,14 @@ final class CountPackingCore implements CountContinuation {
             for (int i = 0; i < split; i++) { budget.operation(PlanningBudget.Operation.SCAN, 0); free[i] = ranked[2 * i + 1]; }
             for (int i = split; i < free.length; i++) { budget.operation(PlanningBudget.Operation.SCAN, 0); free[i] = ranked[2 * (i - split)]; }
         } else if (!wideScout) for (int i = 0; i < free.length / 2; i++) { int x = free[i]; free[i] = free[free.length - 1 - i]; free[free.length - 1 - i] = x; }
+        if (asymmetricScout && rotateAsymmetric) {
+            var before = free.clone();
+            int split = free.length / 2;
+            for (int i = 0; i < free.length; i++) {
+                budget.operation(PlanningBudget.Operation.SCAN, 0);
+                free[i] = before[(i + split) % free.length];
+            }
+        }
         var full = new ArrayList<long[]>(); var bounds = new ArrayList<Long>();
         for (int r = 0; r < m; r++) { full.add(matrix[r]); bounds.add(rhs[r]); }
         var demand = new long[n]; for (int i = 0; i < n; i++) demand[i] = -profit[i];

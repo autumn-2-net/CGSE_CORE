@@ -1,0 +1,128 @@
+Complementary asymmetric packing exchange (2026-10-20)
+=====================================================
+
+Prioritize unresolved models with independently verified CP-SAT or SCIP
+witnesses. A timeout is scoped to that engine, configuration and allowance;
+it does not establish infeasibility or intrinsic difficulty. Native reference
+solvers are test tools, never production dependencies or a source of stored
+solutions for the CGSE search.
+
+The first fresh screen covers 31 unresolved 100-choice packing models, two
+seconds each in CP-SAT 9.15.6755 and SCIP through PySCIPOpt 6.2.1, one thread.
+Neither produces a witness there. A second screen covers the nine 100-choice,
+ten-capacity models and two older LP-branch experiment targets, fifteen seconds
+each, using four CP-SAT threads and one SCIP thread. Both independently solve
+mknapcb4_25_bks: about three and eight seconds respectively. The other ten
+remain unresolved at those settings. All native witnesses are replayed against
+the original primitive recipe inputs, outputs, inventory and requested target.
+These are complete original models, not fixed local neighborhoods. This is
+not a new native comparison of every remaining historical case.
+
+Runtime evidence, then a structural change
+-----------------------------------------
+CP-SAT reports the successful worker as default_lp. Both native solvers return
+the same 100-bit selection. Comparing it to CGSE's numerical root rounding
+shows ten changed choices, all within CGSE's already chosen 40 coordinates.
+Five are fractional coordinates, and five are ordinary deviations. Under the
+existing alternating partition, four ordinary changes lie on one side and one
+on the other. The old ordinary exchange permits at most three per side; the
+later ordinary exchange permits four but not ten total changes. The bounded
+all-fractional rounding domain shrinks the ordinary radius to two per side.
+None contains this witness. The full retained engines still search outside
+those domains; a neighborhood miss has never proved the full model infeasible.
+
+A symmetric four-change/all-roundings experiment contains the witness but
+needs 6,545,815 work in its isolated exact matching search. Storing the opposite
+half with one ordinary change and streaming four changes needs 1,101,622.
+The indexed half has 512 assignments instead of 40,272. This explains the
+selected next domain without increasing the request cap or widening the graph.
+
+CountPackingSchedule chooses its orientation from the two exact combination
+counts. For h coordinates with f flexible bits and ordinary radius r, that
+count is 2^f times sum(k=0..r, binomial(h-f,k)). The selected orientation
+minimizes the sum of indexed and streamed assignments; ties keep the existing
+layout. Odd widths rotate the actual mask and coordinates together. Admission
+is limited to at most 40 coordinates and ten fractional bits, with no half
+exceeding 65,536 assignments. It does not inspect case names or native solutions.
+
+The existing sparse and smaller flexible searches run first. Only after the
+smaller flexible attempt finishes can its owner try this complementary domain.
+The original scout deadline and request budget are inherited. A new table,
+phase observation or worker handoff cannot renew either allowance. The original
+DFS and its scope remain parked until the scout finishes. Unsuccessful work
+participates in the existing measured rounding-service feedback.
+
+Whole-family validation exposed an important scheduling interaction. The
+first integration newly solved five cases but lost mknapcb3_05_bks. Its old
+enumeration was near a witness when optional work brought the request to the
+early PB-pressure boundary. Merely subtracting the optional cost from a global
+remaining-work comparison did not fix it: a competing engine can spend one
+large batch before this frontier gets another turn.
+
+The corrected handoff captures one deadline in this frontier's own work clock
+when early pressure first occurs. Completed asymmetric-search work may displace
+at most that much further enumeration service; the existing normal-phase and
+request ceilings still apply. Repeated observations cannot renew the deadline,
+and competing work cannot spend the frontier's owned service. Zero asymmetric
+work keeps the previous boundary exactly. CountPackingRepairTest checks those
+contracts, including cap clamping and unchanged request/local budgets.
+
+CountPackingExchange now supports distinct ordinary radii on its two halves.
+The right-side necessary minimum uses that side's actual radius; the prefix
+and subset buffers cover both radii, including when the flexible mask is empty.
+Table allocation, integer activity checks, exact leaf verification and memory
+release remain in the existing matcher. Its exhausted domain or refused
+workspace is never an original-model negative proof. Production candidates
+still pass original count restoration and independent primitive execution.
+
+This is a small, exact neighborhood combination. It does not transplant the
+CP-SAT LP worker, SCIP branch-and-cut, or a native floating-point certificate.
+Related reference principles are described in the original CP-SAT-LP paper:
+https://drops.dagstuhl.de/storage/00lipics/lipics-vol280-cp2023/LIPIcs.CP.2023.3/LIPIcs.CP.2023.3.pdf
+and SCIP's relaxation-induced neighborhood implementation:
+https://www.scipopt.org/doc/html/heur__rens_8c.php
+
+The maintained CountPackingAsymmetricTest independently enumerates 512 small
+signed systems, checking both returned witnesses and exhausted local domains.
+It also covers asymmetric larger buffers without flexible coordinates,
+14-change constructive witnesses, exact large rows, odd-width orientation,
+worker handoffs, cancelled/refused workspace and explicit oversized-domain
+refusal. Existing flexible/exchange/query/scout/schedule/tail/repair checks
+remain enabled. Whole-family comparisons, recovered graph orders and build
+results are recorded separately; isolated matching work is not whole-request
+time, JVM memory, or a global solver speedup.
+
+The complete 296-input packing comparison against f9737127 keeps the same
+40M search cap, 256 MiB reservation cap and canonical recipe ordering.
+Verified positives improve from 141 to 146; unresolved inputs fall from 155
+to 150. All 141 old positives survive. The five new canonical witnesses are:
+
+  mknapcb3_07_bks       9,626,510 reported work
+  mknapcb4_25_bks      33,580,045
+  mknapcb5_24_bks       9,940,147
+  mknapcb6_11_bks      10,772,105
+  mknapcb6_23_bks      10,820,957
+
+Old-positive aggregate reported work increases from 974,581,257 to
+1,002,756,051 (about 2.9%). This tradeoff is explicit: the additional domain
+adds capability, and its failed attempts can cost extra work on old positives.
+The original request/phase caps and existing performance guards are retained.
+The corrected mknapcb3_05_bks control passes at 32,397,582 work, within its
+existing 35M guard. Family totals update the canonical hard-case ledger only;
+they are not a new complete 20,927-record corpus run.
+
+Each new case also passes recipe orders 0,1,2,3,17,31,97,1009 in serial and
+with four workers under the same fixed 40M allowance. All 80 positive requests
+are pinned in execution-boundaries.json with source hashes and measured-work
+guards. The original serial baseline exhausts its cap on those 40 orders.
+The mknapcb3_05_bks control retains seven successful orders in both final modes;
+order 1 remains unresolved, as in the baseline, and is not relabeled PASS.
+
+Final relevant validation passes 14 additional core/portfolio programs and
+all seven registered execution batches (733 requests, including serial,
+fixed-budget workers and the existing expanded-budget controls). Existing
+observed-work guards are unchanged. The asymmetric, repair, scout and schedule
+tests also pass on the final source after the pressure-handoff correction.
+Offline assembly, all 1,478 baseline API entries, Forge/AE-dump packaging and
+source-jar correspondence pass at version 0.1.4. This is targeted validation,
+not a claim to have repeated the entire standard or historical corpus suite.

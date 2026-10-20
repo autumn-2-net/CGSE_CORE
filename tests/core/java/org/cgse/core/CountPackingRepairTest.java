@@ -47,6 +47,7 @@ public final class CountPackingRepairTest {
         } finally { worker.shutdownNow(); }
         wordBoundary();
         phaseScope();
+        displacedEnumerationService();
         refusedRepairRetainsEnumeration();
         lifecycle();
         System.out.println("Packing repairs: 512 exhaustive Boolean/distance controls, scoped failure, cached projection, fixed phase caps and cleanup passed");
@@ -126,6 +127,40 @@ public final class CountPackingRepairTest {
             }
         }
         check(budget.reservedBytes() == 0, "Scoped repair leaked");
+    }
+
+    private static void displacedEnumerationService() throws Exception {
+        var view = view();
+        for (long displaced : new long[] {0, 4096, 40_000_000}) {
+            var budget = budget(40_000_000, 64L << 20, () -> false);
+            try (var core = CountPackingCore.create(view, new CountModelViews.Domains(view.lower(), view.upper(), 0), budget, Long.MAX_VALUE)) {
+                long normal = (long) get(core, "normalWork"), maximum = (long) get(core, "maximumWork");
+                long start = normal / 2;
+                set(core, "work", start); set(core, "asymmetricWork", displaced);
+                var pressure = CountPackingCore.class.getDeclaredMethod("repairPressureDue"); pressure.setAccessible(true);
+                check(!(boolean) pressure.invoke(core) && (long) get(core, "pressureLimit") == 0,
+                        "Service was granted before request pressure");
+                budget.charge(budget.remainingWork() - (maximum - normal));
+                long remaining = budget.remainingWork();
+                check((boolean) pressure.invoke(core) == (displaced == 0), "Wrong first pressure response");
+                if (displaced > 0) {
+                    long deadline = (long) get(core, "pressureLimit");
+                    check(deadline > start && deadline <= normal, "Displaced service exceeded its original phase cap");
+                    // Competing work cannot spend this frontier's service or
+                    // trigger a new grant at every scheduling observation.
+                    budget.charge(1024); set(core, "work", deadline - 1);
+                    check(!(boolean) pressure.invoke(core), "Competing work spent owned enumeration service");
+                    set(core, "asymmetricWork", displaced + 1024);
+                    set(core, "work", deadline);
+                    check((boolean) pressure.invoke(core) && (long) get(core, "pressureLimit") == deadline,
+                            "Repeated pressure observation renewed the handoff deadline");
+                    remaining -= 1024;
+                }
+                check(budget.remainingWork() == remaining && (long) get(core, "normalWork") == normal &&
+                        (long) get(core, "maximumWork") == maximum, "Pressure handoff increased a budget");
+            }
+            check(budget.reservedBytes() == 0, "Displaced enumeration service leaked");
+        }
     }
 
     private static void refusedRepairRetainsEnumeration() throws Exception {
