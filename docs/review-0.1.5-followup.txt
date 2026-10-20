@@ -255,9 +255,11 @@ a positive oracle; short solver timeouts never supersede that evidence.
 Packing: retain the existing asymmetric exchanges and successful old samples.
 Persistent LP/core experiments must account for preparation and service costs.
 The failed replacement and eager LP integrations remain disabled; a deferred
-candidate method now retains bases within one proposed face. Projecting the
-full-model basis, expandable-core interfaces and stronger scoped cuts remain
-open. Private conflict handoff and private LP continuation cannot turn a
+candidate method now retains bases within one proposed face. Eligible parent
+bases also project into that face when every basic column survives, with exact
+projection identity and scale restoration. General refactorization after
+removing basic columns, expandable-core interfaces and stronger scoped cuts
+remain open. Private conflict handoff and private LP continuation cannot turn a
 restricted-face miss into a full-model proof.
 
 Vector allocation: cross-block residual interfaces remain separate research.
@@ -312,3 +314,24 @@ catalog orders. Both source counts matter: simply switching the preferred
 source cannot express the first optimum. The 512-deep fallback also improves
 from 300 raw to 3. These are refill-quality recoveries, not new feasible
 canonical packing/equality/allocation witnesses; that backlog remains 155.
+
+Implemented next: parent LP bases and reusable price products
+------------------------------------------------------------
+Review section 4.1 now has a scoped parent-basis handoff into the deferred LP
+arm. It preserves column/exterior identity, the original capacity-row mapping
+and all slack/objective scales, preparing the candidate before publication.
+Removed basic columns and incompatible rows retain the cold entry. Repeated
+integer prices also reuse exact products, while every node reconstructs its
+own box bound and implications. No branch order, service cap or proof boundary
+changes. See packing-lp-reuse.txt for scope and independent checks.
+
+The final 296-input packing comparison preserves 147 positives and 149
+unresolved inputs. Forty-eight order/scheduling requests preserve all previous
+witnesses and work guards. The cb3_01 positive saves 14705 reported work;
+cb6_09 adds 242, and all old-positive reserved peaks remain unchanged.
+Repeated wide-price kernel allocation falls substantially, without claiming
+the same reduction for whole requests. Five sensitivity-branch replacements
+remain disabled because each lost an old positive in its paired controls.
+The inherited canonical backlog remains 155; no full historical or native
+host regression is claimed. Maintained tests, fifteen injected faults and
+final artifact/API checks cover the implemented reuse boundaries.

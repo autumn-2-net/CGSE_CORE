@@ -419,6 +419,8 @@ final class CountPackingCore implements CountContinuation {
             if (lp.point[free[i]] > 1e-6 && lp.point[free[i]] < 1 - 1e-6) flexible |= 1L << i;
         }
         search = new CountPackingNeighborhood(coefficients, residual, corePreferred, budget, mode, flexible);
+        if (lpScout) search.warm(new CountPackingLpSearch.Root(coefficients, residual, budget,
+                lp.tableau, lp.point, lp.cost, lp.basis, lp.scales, lp.objectiveScale, free, seed));
         budget.note("count_packing_core", "begin; variables=" + columns.length + "; capacities=" + matrix.length +
                 "; fractional=" + fractional + "; free=" + coreSize + "; phase=" + phase + "; scout=" + scouting +
                 "; flexible=" + flexibleScout + "; work=" + work);

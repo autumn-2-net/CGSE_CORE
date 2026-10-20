@@ -78,6 +78,10 @@ final class CountPackingNeighborhood implements AutoCloseable {
         }
     }
 
+    void warm(CountPackingLpSearch.Root source) {
+        if (relaxation != null) relaxation.warm(source);
+    }
+
     boolean step() {
         if (complete) return true;
         if (relaxation != null) return complete = relaxation.step();

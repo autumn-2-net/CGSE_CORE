@@ -1,0 +1,119 @@
+Packing LP reuse within one request (0.1.6)
+
+Scope
+-----
+Review d540c900 section 4.1 asks for continued use of the LP information already
+paid for by the packing pipeline. Two bounded reuse mechanisms now serve that
+path: projecting an eligible parent basis into the existing deferred LP arm,
+and retaining exact price products while that arm's integer prices stay equal.
+The original PB opportunity, enumeration stack, branch order, deferred service
+deadline and request cap remain in place.
+
+The archived sensitivity branching experiment is separate. Five replacement
+variants lost the existing mknapcb3_01 positive at the same 40M cap. None is
+enabled. This is evidence against those replacements, not against retaining
+new complementary algorithms that preserve existing results.
+
+Parent basis projection
+-----------------------
+The parent relaxation owns the full Boolean model's tableau, point, reduced
+costs and basis. A proposed core removes columns by fixing them to its seed.
+When every basic column survives, the same basis can represent that core.
+Columns are mapped into the core's actual order and the removed exterior is
+substituted into the basic point.
+
+Slack coordinates are not necessarily in the same units: the full and local
+row maxima may differ. Each tableau column and basic row receives the
+corresponding scale conversion; point and reduced costs also retain their
+slack and objective scales. The existing dual reoptimization handles bounds
+after projection. A removed basic column, additional relaxation row or
+incompatible shape declines reuse and keeps the original cold entry. The
+capacities must also retain the parent's original prefix order: replacing an
+empty projected row with an aggregate cannot pass merely by matching row counts.
+
+The proposal is bound to the identical compiled rows, residual bounds and
+request account. It is consumed during construction and never retained as a
+cross-order cache. A reserved spare depth holds the candidate until the copy
+finishes; bad numerical data, optional memory refusal or interruption cannot
+partially replace the cold root. The temporary column mapping has its own
+bounded reservation, released on every exit.
+
+Price products
+--------------
+For a fixed projection and nonnegative integer prices y with scale q=65536,
+the reusable products are y*b and r=q*p-y*A. Their full key is the integer
+price vector, including every capacity coordinate. Long arithmetic is used
+only when the existing absolute-magnitude envelope admits every product,
+partial sum and target gap; larger certificates use BigInteger.
+
+Every node still reconstructs its own upper bound:
+  y*b + sum(fixed-one r) + sum(free max(0,r)).
+It then compares that bound with q*target and checks the strict reduced-cost
+implications in its current box. No upper bound, fixed literal or sibling
+domain is cached. Products become reusable only after a complete construction;
+an interrupted rebuild is not published. All lookups, rebuilds, applications
+and projection work remain charged to the existing owned service.
+
+Proof boundary
+--------------
+The warm basis and numerical branching remain candidate methods. Integer
+prices are recomputed from their current point and checked exactly; an LP
+status or numeric refusal cannot prove the original graph infeasible. Every
+proposed assignment still passes all original projected rows, including
+mixed rows omitted from the relaxation, and is restored into the original
+graph for full execution and supply validation.
+
+Maintained regression
+---------------------
+CountPackingWarmRootTest projects 96 actual parent relaxations under shuffled
+local columns. It independently checks B*T=A, primal capacity equations,
+objective/reduced-cost transformations, restored exterior assignments and
+exhaustive small Boolean optima. It also exercises unequal slack scales,
+nonbasic exterior perturbations, scope mismatches, removed basic columns,
+bad numeric data, memory refusal, mid-copy interruption and worker handoff.
+
+CountPackingPriceReuseTest checks 9216 price/box combinations, deriving the
+maximum certificate by independent Boolean enumeration. It covers changing
+only the last price, returning to earlier prices, both arithmetic widths,
+non-finite prices, current-box implications, worker handoff and interrupted
+rebuild publication. Existing packing LP, PB, scheduling, proof and lifecycle
+oracles remain part of the targeted checks.
+
+Private original artifacts, unsuccessful experiments, exact sources, commands,
+budgets, recipe ordering and immutable results are registered in
+.local/cases/packing-sensitive-branching-20261020. No player data is needed
+or committed. Host integration, larger excluded bases, general refactorization
+and cross-order basis reuse remain outside this change.
+
+Measured comparison
+-------------------
+The final actual JAR preserves all 147 positives across the 296 canonical
+packing inputs at unchanged 40M work and 256MiB; 149 remain unresolved.
+The canonical inherited backlog stays 155 including equality/allocation.
+This increment does not recover another canonical hard witness.
+
+Of the 147 positives, 145 keep identical work and all keep identical reserved
+peaks. mknapcb3_01 changes from 38,412,277 to 38,397,572 work; its LP nodes
+remain 1707, with 4835 -> 4791 pivots and 380 reused price certificates.
+mknapcb6_09 adds 242 work, from 37,459,238 to 37,459,480. These small total
+differences are not a claim of a large end-to-end speedup.
+
+Forty-eight final-JAR order/scheduling requests preserve every old positive
+and its existing work guard. The cb3_01 order97 variant remains unresolved in
+both serial and fixed-four-worker runs. Recipe order, worker mode and costs
+remain recorded individually rather than averaged into a stronger claim.
+
+For a deliberately repeated-price kernel, 4096 narrow evaluations change
+465920 -> 102400 charged work with unchanged allocation. Wide evaluations
+change 1003520 -> 348160 work and 174487872 -> 6060352 allocated bytes, with
+identical decisions. This measures only price-certificate reuse; several
+thread-CPU medians round to zero at the platform's clock resolution, so no
+CPU timing or host performance conclusion is drawn from them.
+
+Twenty-seven related programs pass before the final row-mapping guard; the
+three focused programs and ten actual-JAR programs pass with that guard.
+Fifteen deliberate faults are caught. Offline assemble, 1478 baseline API
+entries, source-JAR correspondence and packaging checks pass. The final
+production/test source fingerprints match the recorded artifact checks.
+All heavy processes share four logical CPUs. Neither the full historical
+corpus nor the complete standard execution-boundary inventory is rerun here.

@@ -43,11 +43,14 @@ bounds absolute activity before exact long summation. The parent then
 restores fixed exterior columns and checks its original BigInteger rows;
 the normal planner still verifies primitive execution, reservation and target.
 
-This retains bases within one proposed face. Its root LP is rebuilt after
-exterior substitution: it does not yet project the full-model basis, retain
-bases across orders, or exhaust the full external Boolean space. The current
-fractional branching rule also differs from the archived sensitivity variant.
-Unsuccessful local proposals keep the original whole-model outcome unknown.
+This retains bases within one proposed face. An eligible full-model parent
+basis can now also be projected after exterior substitution, provided all
+basic columns survive; the cold root remains the entry for declined shapes.
+See packing-lp-reuse.txt for scale conversion, ownership and validation.
+This does not retain bases across orders or exhaust the full external Boolean
+space. The fractional branching rule still differs from the archived
+sensitivity variant. Unsuccessful local proposals keep the original
+whole-model outcome unknown.
 
 Validation scope
 ----------------

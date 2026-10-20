@@ -24,9 +24,18 @@ final class CountPackingLpSearch implements AutoCloseable {
     private final Frame[] frames;
     private final long[] priceWeights, reducedCosts, rowMagnitudes;
     private final BigInteger[] weights, exactReducedCosts;
+    private long weightedRhs, priceBuilds, priceReuses;
+    private BigInteger exactWeightedRhs;
+    private int certificate;
     private long memory, assignment, nodes, pivots, refusals, implications, narrowBounds, wideBounds;
     private int depth;
-    private boolean initialized, complete, feasible;
+    private boolean initialized, complete, feasible, warm;
+
+    /** Borrowed only during construction. Identity binds the basis proposal to
+     * its paid projection and request; it is never a shared cut or proof. */
+    record Root(long[][] rows, long[] bounds, PlanningBudget budget,
+                double[][] tableau, double[] point, double[] cost, int[] basis,
+                double[] scales, double objectiveScale, int[] free, boolean[] seed) {}
 
     private static final class Frame {
         final double[][] tableau;
@@ -109,6 +118,87 @@ final class CountPackingLpSearch implements AutoCloseable {
             root.basic[n + at] = true; root.basis[at] = n + at;
             at++;
         }
+    }
+
+    boolean warm(Root source) {
+        if (initialized || complete || source == null || source.rows != rows ||
+                source.bounds != bounds || source.budget != budget ||
+                source.free.length != n || source.basis.length != m ||
+                source.tableau.length != m || source.scales.length != m) return false;
+        int width = source.seed.length;
+        if (width < n || source.point.length != width + m || source.cost.length != width + m ||
+                !Double.isFinite(source.objectiveScale) || source.objectiveScale <= 0) return false;
+        long bytes = 256L + 4L * width + 16L * total;
+        if (!budget.tryReserve(bytes)) return false;
+        try {
+            var mapping = new int[width];
+            budget.charge(width);
+            Arrays.fill(mapping, -1);
+            var factors = new double[total];
+            Arrays.fill(factors, 1);
+            for (int j = 0; j < n; j++) {
+                budget.check();
+                int column = source.free[j];
+                if (column < 0 || column >= width || mapping[column] >= 0) return false;
+                mapping[column] = j;
+            }
+            for (int r = 0; r < m; r++) {
+                budget.check();
+                // The parent capacities are the projection's leading rows.
+                // Equal row counts alone also admit a dropped empty row plus
+                // an added aggregate, which is a different relaxation.
+                if (capacity[r] != rows[r] || source.tableau[r].length != width + m ||
+                        !Double.isFinite(source.scales[r]) || source.scales[r] <= 0) return false;
+                factors[n + r] = scales[r] / source.scales[r];
+                if (!Double.isFinite(factors[n + r]) || factors[n + r] <= 0) return false;
+                int column = source.basis[r];
+                // Removing a basic column requires another factorization.
+                // Keep the cold entry for that structure, without guessing.
+                if (column < 0 || column >= width + m || column < width && mapping[column] < 0) return false;
+            }
+            // One spare depth is already reserved. Prepare there so an invalid
+            // numerical proposal cannot partially overwrite the cold root.
+            var next = frames[1];
+            if (next == null) next = frames[1] = new Frame(m, total);
+            Arrays.fill(next.basic, false);
+            for (int j = 0; j < total; j++) {
+                budget.check();
+                int from = j < n ? source.free[j] : width + j - n;
+                double point = source.point[from] / factors[j];
+                double cost = source.cost[from] * factors[j] * source.objectiveScale / objectiveScale;
+                if (!Double.isFinite(point) || !Double.isFinite(cost)) return false;
+                next.point[j] = point; next.cost[j] = cost;
+            }
+            for (int r = 0; r < m; r++) {
+                int from = source.basis[r], id = from < width ? mapping[from] : n + from - width;
+                if (next.basic[id]) return false;
+                next.basis[r] = id; next.basic[id] = true;
+                double point = source.point[from];
+                // Exterior substitutions use the actual proposed seed, including
+                // small numerical departures from a nonbasic bound.
+                for (int j = 0; j < width; j++) {
+                    budget.check();
+                    if (mapping[j] < 0)
+                        point -= source.tableau[r][j] * ((source.seed[j] ? 1 : 0) - source.point[j]);
+                }
+                point /= factors[id];
+                if (!Double.isFinite(point)) return false;
+                next.point[id] = point;
+                for (int j = 0; j < total; j++) {
+                    budget.check();
+                    int column = j < n ? source.free[j] : width + j - n;
+                    // Full and projected slacks may have different row scales.
+                    double value = source.tableau[r][column] * factors[j] / factors[id];
+                    if (!Double.isFinite(value)) return false;
+                    next.tableau[r][j] = value;
+                }
+            }
+            next.fixed = next.ones = 0;
+            next.branch = -1; next.turn = next.iterations = 0; next.first = false;
+            frames[1] = frames[0]; frames[0] = next;
+            initialized = warm = true;
+            return true;
+        } finally { budget.release(bytes); }
     }
 
     boolean step() {
@@ -253,13 +343,44 @@ final class CountPackingLpSearch implements AutoCloseable {
 
     private boolean possible(Frame frame) {
         // Any nonnegative prices give a valid upper bound over this fixed
-        // Boolean box. Round only the prices; rebuild the bound with integers.
+        // Boolean box. Round only the prices; build the certificate with integers.
         // No floating LP status, tableau value or reduced-cost tolerance proves it.
+        budget.charge(m);
         for (int r = 0; r < m; r++) {
             double price = -frame.cost[n + r] * objectiveScale / scales[r];
-            priceWeights[r] = Double.isFinite(price) && price > 0 ? Math.min(1_000_000_000_000L, Math.round(price * 65536)) : 0;
+            long weight = Double.isFinite(price) && price > 0 ? Math.min(1_000_000_000_000L, Math.round(price * 65536)) : 0;
+            if (priceWeights[r] != weight) { certificate = 0; priceWeights[r] = weight; }
         }
-        if (!narrowCertificate()) return possibleExact(frame);
+        // These products depend only on the immutable projection and the
+        // complete integer price vector, not on this node's fixed box. Keep
+        // them through implications/sibling handoffs; never keep the box gap
+        // or its inferred literals. Publish only after every product completes.
+        if (certificate == 0) {
+            if (narrowCertificate()) buildNarrowCertificate();
+            if (certificate == 0) buildExactCertificate();
+            priceBuilds++;
+        } else priceReuses++;
+        if (certificate == 2) return possibleExact(frame);
+        long upper = weightedRhs;
+        for (int j = 0; j < n; j++) {
+            budget.operation(PlanningBudget.Operation.SCAN, 64);
+            long reduced = reducedCosts[j];
+            if ((frame.fixed & (1L << j)) == 0 ? reduced > 0 : (frame.ones & (1L << j)) != 0)
+                upper = Math.addExact(upper, reduced);
+        }
+        long gap = Math.subtractExact(upper, Math.multiplyExact(target, 65536));
+        narrowBounds++;
+        if (gap < 0) return false;
+        for (int j = 0; j < n; j++) {
+            budget.operation(PlanningBudget.Operation.SCAN, 64);
+            if ((frame.fixed & (1L << j)) != 0) continue;
+            if (reducedCosts[j] > gap) { fix(frame, j, true); implications++; }
+            else if (reducedCosts[j] < -gap) { fix(frame, j, false); implications++; }
+        }
+        return true;
+    }
+
+    private void buildNarrowCertificate() {
         try {
             long upper = 0;
             for (int r = 0; r < m; r++) {
@@ -273,24 +394,13 @@ final class CountPackingLpSearch implements AutoCloseable {
                     reduced = Math.subtractExact(reduced, Math.multiplyExact(priceWeights[r], capacity[r][j]));
                 }
                 reducedCosts[j] = reduced;
-                if ((frame.fixed & (1L << j)) == 0 ? reduced > 0 : (frame.ones & (1L << j)) != 0)
-                    upper = Math.addExact(upper, reduced);
             }
-            long gap = Math.subtractExact(upper, Math.multiplyExact(target, 65536));
-            narrowBounds++;
-            if (gap < 0) return false;
-            for (int j = 0; j < n; j++) {
-                budget.operation(PlanningBudget.Operation.SCAN, 64);
-                if ((frame.fixed & (1L << j)) != 0) continue;
-                if (reducedCosts[j] > gap) { fix(frame, j, true); implications++; }
-                else if (reducedCosts[j] < -gap) { fix(frame, j, false); implications++; }
-            }
-            return true;
+            weightedRhs = upper; certificate = 1;
         } catch (ArithmeticException overflow) {
-            // No domain changes precede the checked gap. Retry the identical
-            // integer certificate at wider precision, never a saturated bound.
+            // No domain changes or reusable state have been published.
+            // Retry at wider precision, never with saturated/partial products.
+            certificate = 0;
         }
-        return possibleExact(frame);
     }
 
     private boolean narrowCertificate() {
@@ -308,8 +418,7 @@ final class CountPackingLpSearch implements AutoCloseable {
         return true;
     }
 
-    private boolean possibleExact(Frame frame) {
-        wideBounds++;
+    private void buildExactCertificate() {
         var upper = BigInteger.ZERO;
         for (int r = 0; r < m; r++) {
             budget.operation(PlanningBudget.Operation.INTEGER, 128);
@@ -322,9 +431,19 @@ final class CountPackingLpSearch implements AutoCloseable {
                 budget.operation(PlanningBudget.Operation.INTEGER, 128);
                 reduced = reduced.subtract(weights[r].multiply(BigInteger.valueOf(capacity[r][j])));
             }
+            exactReducedCosts[j] = reduced;
+        }
+        exactWeightedRhs = upper; certificate = 2;
+    }
+
+    private boolean possibleExact(Frame frame) {
+        wideBounds++;
+        var upper = exactWeightedRhs;
+        for (int j = 0; j < n; j++) {
+            budget.operation(PlanningBudget.Operation.INTEGER, 128);
+            var reduced = exactReducedCosts[j];
             if ((frame.fixed & (1L << j)) == 0 ? reduced.signum() > 0 : (frame.ones & (1L << j)) != 0)
                 upper = upper.add(reduced);
-            exactReducedCosts[j] = reduced;
         }
         var gap = upper.subtract(BigInteger.valueOf(target).multiply(PRICE_SCALE));
         if (gap.signum() < 0) return false;
@@ -369,12 +488,14 @@ final class CountPackingLpSearch implements AutoCloseable {
     }
     String statistics() {
         return "nodes=" + nodes + "; pivots=" + pivots + "; refusals=" + refusals +
-                "; implications=" + implications + "; narrow=" + narrowBounds + "; wide=" + wideBounds + "; witness=" + feasible;
+                "; implications=" + implications + "; narrow=" + narrowBounds + "; wide=" + wideBounds +
+                "; price_builds=" + priceBuilds + "; price_reuses=" + priceReuses + "; warm=" + warm + "; witness=" + feasible;
     }
 
     @Override public void close() {
         complete = true;
         Arrays.fill(frames, null); Arrays.fill(weights, null); Arrays.fill(exactReducedCosts, null);
+        certificate = 0; exactWeightedRhs = null;
         budget.release(memory); memory = 0;
     }
 }
