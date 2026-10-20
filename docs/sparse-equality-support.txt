@@ -296,3 +296,12 @@ changes by +0.061%, -0.010% and +0.010%. Earlier samples are retained separately
 not relabeled as passes. These headless samples support retention of the measured
 paths, not a universal speedup, whole-JVM memory reduction or live-game latency
 claim. Timing runs execute after the other CGSE tests, under the four-CPU cap.
+
+Word-workspace follow-up (0.1.6)
+-------------------------------
+The exact reachable-sum recurrence now reuses bounded unsigned-word matrices.
+It avoids per-value shifted BigInteger bitsets and allocates cache-owned result
+endpoints only when a domain changes. Input arithmetic remains exact; the old
+admission, support results, branch trajectories, reason semantics and work
+charges are retained. See equality-word-support.txt for independent tuple and
+fault tests, the 840-request comparison and allocation measurements.

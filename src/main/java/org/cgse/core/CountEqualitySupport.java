@@ -10,6 +10,7 @@ import java.util.function.IntConsumer;
 /** Exact bounded-sum supports borrowed by a private candidate search. */
 final class CountEqualitySupport implements AutoCloseable {
     private static final int MAX_TERMS = 12, MAX_WIDTH = 15, MAX_RANGE = 2048;
+    private static final int STRIDE = (MAX_RANGE >>> 6) + 1;
 
     /** Borrowed until the next call. All bounds describe the same input box. */
     record Result(int[] variables, BigInteger[] lower, BigInteger[] upper, boolean empty, int[] supports) {}
@@ -33,6 +34,15 @@ final class CountEqualitySupport implements AutoCloseable {
     }
 
     private final PlanningBudget budget;
+    // One private propagator is visited sequentially, including worker
+    // handoffs. The existing 64 KiB scratch reservation covers these arrays.
+    // Only exact result arrays escape; no equation cache borrows this scratch.
+    private long[] prefix = new long[(MAX_TERMS + 1) * STRIDE];
+    private long[] suffix = new long[(MAX_TERMS + 1) * STRIDE];
+    private int[] width = new int[MAX_TERMS], coefficient = new int[MAX_TERMS];
+    private int[] allowed = new int[MAX_TERMS], shifts = new int[MAX_TERMS];
+    private int[] minimum = new int[MAX_TERMS], maximum = new int[MAX_TERMS], supports = new int[MAX_TERMS];
+    private boolean[] negative = new boolean[MAX_TERMS];
     private Equation[] equations;
     private BigInteger[] anchors;
     private long memory, calls, changes, failures, expandedCalls;
@@ -146,9 +156,6 @@ final class CountEqualitySupport implements AutoCloseable {
             if (masks != null) equation.previousMasks[k] = masks[equation.ids[k]];
         }
         equation.previousMasked = masks != null;
-        int[] width = new int[n], coefficient = new int[n];
-        int[] allowed = masks == null ? null : new int[n], shifts = masks == null ? null : new int[n];
-        boolean[] negative = new boolean[n];
         BigInteger target = equation.row.upper(), gcd = BigInteger.ZERO;
         int free = 0;
         for (int k = 0; k < n; k++) {
@@ -191,41 +198,40 @@ final class CountEqualitySupport implements AutoCloseable {
             rhs = range - rhs;
             for (int k = 0; k < n; k++) negative[k] = !negative[k];
         }
-        var prefix = new BigInteger[n + 1];
-        var suffix = new BigInteger[n + 1];
-        prefix[0] = BigInteger.ONE;
-        suffix[n] = BigInteger.ONE.shiftLeft(rhs);
-        BigInteger mask = suffix[n].shiftLeft(1).subtract(BigInteger.ONE);
+        int words = (rhs >>> 6) + 1;
+        // Clear every active row, even when the preceding equation used a
+        // different arity/range or exited after finding an empty domain.
+        for (int k = 0; k <= n; k++) {
+            Arrays.fill(prefix, k * STRIDE, k * STRIDE + words, 0L);
+            Arrays.fill(suffix, k * STRIDE, k * STRIDE + words, 0L);
+        }
+        prefix[0] = 1;
+        suffix[n * STRIDE + (rhs >>> 6)] = 1L << (rhs & 63);
+        long lastMask = -1L >>> (63 - (rhs & 63));
         long wordWork = 1L + (range >>> 6);
         for (int k = 0; k < n; k++) {
-            BigInteger reachable = BigInteger.ZERO;
             for (int v = 0; v <= width[k]; v++) {
                 budget.charge(wordWork);
-                if (allowed != null && (allowed[k] & (1 << (negative[k] ? width[k] - v : v))) == 0) continue;
-                reachable = reachable.or(prefix[k].shiftLeft(coefficient[k] * v));
+                if (masks != null && (allowed[k] & (1 << (negative[k] ? width[k] - v : v))) == 0) continue;
+                left(k * STRIDE, (k + 1) * STRIDE, words, coefficient[k] * v);
             }
-            prefix[k + 1] = reachable.and(mask);
+            prefix[(k + 1) * STRIDE + words - 1] &= lastMask;
         }
-        if (!prefix[n].testBit(rhs)) return empty(equation);
+        if ((prefix[n * STRIDE + (rhs >>> 6)] & (1L << (rhs & 63))) == 0) return empty(equation);
         for (int k = n - 1; k >= 0; k--) {
-            BigInteger reachable = BigInteger.ZERO;
             for (int v = 0; v <= width[k]; v++) {
                 budget.charge(wordWork);
-                if (allowed != null && (allowed[k] & (1 << (negative[k] ? width[k] - v : v))) == 0) continue;
-                reachable = reachable.or(suffix[k + 1].shiftRight(coefficient[k] * v));
+                if (masks != null && (allowed[k] & (1 << (negative[k] ? width[k] - v : v))) == 0) continue;
+                right((k + 1) * STRIDE, k * STRIDE, words, coefficient[k] * v);
             }
-            suffix[k] = reachable;
         }
-        var resultLow = new BigInteger[n];
-        var resultHigh = new BigInteger[n];
-        int[] resultMasks = masks == null ? null : new int[n];
         boolean changed = false;
         for (int k = 0; k < n; k++) {
             int min = width[k] + 1, max = -1, support = 0;
             for (int v = 0; v <= width[k]; v++) {
                 budget.charge(wordWork);
-                if (allowed != null && (allowed[k] & (1 << (negative[k] ? width[k] - v : v))) == 0) continue;
-                if (prefix[k].and(suffix[k + 1].shiftRight(coefficient[k] * v)).signum() != 0) {
+                if (masks != null && (allowed[k] & (1 << (negative[k] ? width[k] - v : v))) == 0) continue;
+                if (intersects(k * STRIDE, (k + 1) * STRIDE, words, coefficient[k] * v)) {
                     int value = negative[k] ? width[k] - v : v;
                     min = Math.min(min, value);
                     max = Math.max(max, value);
@@ -233,18 +239,60 @@ final class CountEqualitySupport implements AutoCloseable {
                 }
             }
             if (max < 0) return empty(equation);
-            resultLow[k] = low[equation.ids[k]].add(BigInteger.valueOf(min));
-            resultHigh[k] = low[equation.ids[k]].add(BigInteger.valueOf(max));
+            minimum[k] = min;
+            maximum[k] = max;
+            supports[k] = support;
             changed |= min > 0 || max < width[k];
-            if (masks != null) {
-                int span = ((1 << (width[k] + 1)) - 1) << shifts[k];
-                resultMasks[k] = (masks[equation.ids[k]] & ~span) | (support << shifts[k]);
-                changed |= support != allowed[k];
-            }
+            if (masks != null) changed |= support != allowed[k];
         }
         if (!changed) return null;
+        // Most propagations make no deletion. Allocate exact, cache-owned
+        // endpoints only after finding a change, preserving earlier results
+        // when another equation overwrites the reusable word workspace.
+        var resultLow = new BigInteger[n];
+        var resultHigh = new BigInteger[n];
+        int[] resultMasks = masks == null ? null : new int[n];
+        for (int k = 0; k < n; k++) {
+            resultLow[k] = low[equation.ids[k]].add(BigInteger.valueOf(minimum[k]));
+            resultHigh[k] = low[equation.ids[k]].add(BigInteger.valueOf(maximum[k]));
+            if (masks != null) {
+                int span = ((1 << (width[k] + 1)) - 1) << shifts[k];
+                resultMasks[k] = (masks[equation.ids[k]] & ~span) | (supports[k] << shifts[k]);
+            }
+        }
         changes++;
         return equation.previousResult = new Result(equation.ids, resultLow, resultHigh, false, resultMasks);
+    }
+
+    /** OR an unsigned left shift into a different prefix row, truncated to words. */
+    private void left(int from, int to, int words, int shift) {
+        int whole = shift >>> 6, bits = shift & 63;
+        for (int i = whole; i < words; i++) {
+            long value = prefix[from + i - whole] << bits;
+            if (bits != 0 && i > whole) value |= prefix[from + i - whole - 1] >>> (64 - bits);
+            prefix[to + i] |= value;
+        }
+    }
+
+    /** OR an unsigned right shift into a different suffix row. */
+    private void right(int from, int to, int words, int shift) {
+        int whole = shift >>> 6, bits = shift & 63;
+        for (int i = 0; i + whole < words; i++) {
+            long value = suffix[from + i + whole] >>> bits;
+            if (bits != 0 && i + whole + 1 < words) value |= suffix[from + i + whole + 1] << (64 - bits);
+            suffix[to + i] |= value;
+        }
+    }
+
+    /** Tests P & (S >>> shift) without constructing either temporary bitset. */
+    private boolean intersects(int before, int after, int words, int shift) {
+        int whole = shift >>> 6, bits = shift & 63;
+        for (int i = 0; i + whole < words; i++) {
+            long value = suffix[after + i + whole] >>> bits;
+            if (bits != 0 && i + whole + 1 < words) value |= suffix[after + i + whole + 1] << (64 - bits);
+            if ((prefix[before + i] & value) != 0) return true;
+        }
+        return false;
     }
 
     private Result empty(Equation equation) {
@@ -258,6 +306,9 @@ final class CountEqualitySupport implements AutoCloseable {
                 "; expanded_calls=" + expandedCalls);
         equations = null;
         anchors = null;
+        prefix = suffix = null;
+        width = coefficient = allowed = shifts = minimum = maximum = supports = null;
+        negative = null;
         budget.release(memory);
         memory = 0;
     }

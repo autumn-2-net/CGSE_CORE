@@ -1,0 +1,122 @@
+Reusable word workspace for exact equality supports (0.1.6)
+==========================================================
+
+Review d540c900 section 3 leaves both compound equality search and its
+propagation/explanation costs open. This change addresses the repeated
+reachable-sum work inside the existing private support arms. It does not
+replace branching, strengthen a domain, alter a request cap or add a new arm.
+
+CountEqualitySupport previously constructed immutable BigInteger bitsets
+for each shift, union and support intersection. Even an unchanged domain
+allocated prefix/suffix arrays, candidate endpoints and intermediate bitsets.
+The admitted normalized sum range is already bounded by 2048, after exact
+offset and coefficient-GCD reduction. The reachable sums therefore fit in
+a small fixed workspace without narrowing any input arithmetic.
+
+Implementation and ownership
+----------------------------
+The same exact prefix and reverse-suffix recurrence now uses unsigned long
+words. Left shifts carry into the next word; right shifts use unsigned
+shifts and carry from the following word. Whole-word shifts have an explicit
+zero-bit case because Java shifts by 64 wrap to zero. Support tests intersect
+a prefix with a shifted suffix directly, without allocating the shifted set.
+The original target complement, signed coefficients, allowed masks, domain
+offsets, admission limits and cache key are unchanged.
+
+One propagator owns two word matrices and bounded primitive scratch arrays,
+within its existing 64 KiB scratch allowance. All active rows are cleared
+before a new DP, including after an empty-box return and when the next row
+uses a different arity or sum range. Sequential scheduler handoffs retain the
+same owner; no static workspace or cross-request cache is introduced.
+
+Exact result endpoints and masks are allocated only when propagation changes
+the domain. They belong to the equation cache and never borrow the scratch
+arrays. Another equation, an opposite-row wakeup or a backtrack cannot mutate
+an earlier result. Closing the owner releases the reservation and drops its
+word and primitive arrays.
+
+The existing budget charges are preserved at every tested value, including
+masked-out values. Thus the optimization is intended to preserve reported
+work, private lifetime limits and search trajectories as well as mathematical
+supports. It does not describe the new implementation as additional free
+search. Original-coordinate validation and primitive execution replay still
+decide whether a candidate is an executable plan.
+
+Validation and limits
+---------------------
+CountEqualityWordTest enumerates original integer tuples, rather than using
+another bitset recurrence as its oracle. It covers partial/whole-word shifts,
+bit 63, carries through bit 1024, the exact 2048 range limit, large signed
+offsets and common factors, masked and hull-only calls, narrowed/restored
+boxes, empty results and two equations sharing a workspace. It also retains
+an earlier result while a different row overwrites the scratch storage.
+The new test is automatically discovered by the existing regression runner.
+
+The new test checks 1788 boxes and 166839 literal tuples, and passes against
+both implementations. The existing wide test checks another 962 boxes and
+2128594 tuples; the domain-learning test checks 1152 searches and 3588 recorded
+explanations against its original-model oracle. Nine deliberately injected
+faults are caught: missing left/right/intersection carries, signed right shifts
+in propagation and intersection, zero-bit carry handling, missing prefix or
+suffix reset, and publishing borrowed scratch as a cached result.
+
+The complete count-model comparison uses three historical corpus orders and
+eighteen generated requests: 840 paired requests, with 798 PASS, 24 unresolved
+and eighteen unsupported in each engine. All verdicts and all reported work
+are identical. A separate 22-input private-support comparison preserves six
+positives and sixteen unknowns, also with identical work. These are overlapping
+family/candidate scopes, not additional canonical solved cases.
+
+All eight related programs also pass on the actual built 0.1.6 library.
+Java 17 assemble, the 1478-entry baseline API, integrated Forge/AE dump
+packaging and source-JAR correspondence pass. The canonical backlog remains
+155 (149 packing, four equality, two allocation). This is not a new complete
+historical regression or a live-host test.
+
+The historical n144-s1 SCIP witness has been checked again against all original
+variable bounds and 144 inequality rows. Its 72 opposite-row pairs have
+rank 72: full modular row rank gives the lower bound, and the number of pairs
+gives the matching upper bound. The 144-variable model therefore retains a
+72-dimensional rational kernel. This optimization does not resolve that
+integer search problem or turn a private unsuccessful search into a proof.
+
+Measured costs
+--------------
+Sequential baseline/candidate/candidate/baseline runs use the archived and
+actual newly built libraries after the correctness campaigns, within four
+logical CPUs. Each engine has twelve measured samples per input, with four
+warmups per kernel process and six per main-pipeline process.
+
+For 4608 repeated support calls, cumulative caller-thread allocation changes:
+
+  hull kernel, four variables:    73,170,240 -> 12,856,320 bytes (-82.43%)
+  masked kernel, twelve variables:229,928,640 -> 40,219,008 bytes (-82.51%)
+
+The corresponding caller-CPU medians are 31.25 -> 15.625 ms and
+93.75 -> 31.25 ms. These are component samples with coarse Windows CPU-clock
+resolution, not complete crafting-request speedups. Exact raw result digests,
+all work samples and reserved peaks agree across engines.
+
+At the main pipeline, the successful generated 257-variable case allocates
+970,005,292 -> 964,824,044 bytes (-0.53%); n144-s1 allocates
+2,220,455,772 -> 2,176,787,960 bytes (-1.97%). Their caller-CPU medians change
+781.25 -> 765.625 ms and 3015.625 -> 3000 ms, respectively. The latter's wall
+median increases 0.20%, so this is not evidence of a substantial whole-request
+speedup. It still reaches the same 39,995,027 work without a witness.
+
+Two ordinary controls retain work/peak and show allocation differences of
+-0.0043% and +0.0073%; caller-CPU medians change by +7.8125 and -15.625 ms.
+These small control differences are reported rather than relabeled as gains.
+Cumulative allocation is not retained heap or RSS, reserved peak is unchanged,
+and caller CPU excludes other JVM threads. No live-game performance claim is
+made from these headless samples.
+
+Local evidence: .local/cases/equality-word-support-20261020/manifest.json.
+It retains the preceding b99fe6f8 JAR, ordered inputs, commands, budgets,
+original native evidence and separate validation/cost runs. The first new
+test generator exceeded existing admission limits and is retained with its
+failure record; the corrected test also passes on the preceding engine.
+The initial corpus reporting script assumed unsupported records included work;
+the completed 840-request logs were preserved and reanalyzed in a new run
+after correcting that assumption, without rerunning or relabeling the tests.
+No player evidence, GTLCore change, version bump or remote push is included.
