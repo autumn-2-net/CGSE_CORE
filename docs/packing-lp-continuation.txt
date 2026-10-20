@@ -1,0 +1,91 @@
+Retained LP candidate search after packing repair (0.1.6)
+
+Problem and service ownership
+-----------------------------
+The old warm-LP prototype could find local witnesses, but replacing the wide
+exchange or consuming its unused grant immediately displaced successful PB
+repairs. Merely keeping the same total cap did not preserve those outcomes.
+
+CountPackingCore now remembers a completed, unsuccessful wide exchange's
+projection and unused allowance. The PB repair receives its original service
+first. Only when inconclusive PB hands back to the retained enumeration can
+the saved projection receive one LP candidate attempt. The enumeration stack,
+private conflict snapshot and original exterior remain available afterward.
+
+The first attempt in this campaign still ran LP before PB completion: it
+recovered mknapcb3_01_bks but lost mknapcb2_03_bks. That scheduling variant
+remains private evidence and is not the shipped behavior.
+
+No request, core or repair cap increases. Only a completed wide exchange with
+at least 262144 unused work can enqueue the extra method. Its remaining
+allowance is captured once and deferred; repeated slices, observations and
+worker changes cannot refill it. Expiry or optional memory refusal returns to
+the original enumeration. No native solver is a runtime dependency.
+
+Candidate algorithm and exact boundary
+--------------------------------------
+CountPackingLpSearch admits at most 64 Boolean columns and 35 input rows.
+It builds a bounded primal relaxation from positive capacity rows and one
+negative profit demand. Fractional branching then retains a parent basis and
+uses dual reoptimization after fixing a coordinate. A depth's tableau,
+primal point, reduced costs and basis buffers are reused for later siblings.
+The bounded worst-case depth workspace is reserved before allocation.
+
+LP prices propose an upper bound only. Nonnegative integer price weights
+reconstruct it with BigInteger over the current fixed Boolean box. Arbitrary
+finite prices are permitted; LP optimality is not a premise of that bound.
+Floating point statuses, iteration limits and unsuccessful branches are
+never exposed as face infeasibility or a global proof.
+
+Every proposed bit mask is checked against every original projected row,
+including mixed-sign rows omitted from the numerical relaxation. Admission
+bounds absolute activity before exact long summation. The parent then
+restores fixed exterior columns and checks its original BigInteger rows;
+the normal planner still verifies primitive execution, reservation and target.
+
+This retains bases within one proposed face. Its root LP is rebuilt after
+exterior substitution: it does not yet project the full-model basis, retain
+bases across orders, or exhaust the full external Boolean space. The current
+fractional branching rule also differs from the archived sensitivity variant.
+Unsuccessful local proposals keep the original whole-model outcome unknown.
+
+Validation scope
+----------------
+The maintained CountPackingLpSearchTest independently enumerates 192 small
+original domains: all 128 positive controls retain exact witnesses. Arbitrary
+price vectors across 1536 fixed boxes yield 306 exact prunes, each checked
+against every original Boolean assignment. It also covers row scaling,
+values beyond double's exact-integer range, signed bit 63, additional mixed
+rows, worker handoffs, optional refusal, interrupted allocation, reusable
+sibling buffers and the owning core's deferred service contract.
+
+The actual 0.1.6 library, compared with eb5589ea on all 296 canonical packing
+inputs at 40M work, 256MiB and no wall timeout, improves 146 -> 147 positives
+and 150 -> 149 unresolved, without losing an old positive. The newly recovered
+mknapcb3_01_bks returns a fully checked plan at 38,862,924 reported work.
+It has 500 choices and five capacities. Its reserved peak is 95,601,171 bytes;
+the previous unresolved request peaked at 39,930,404 bytes. Solving and restoring
+the whole plan is not a claim of lower memory than the former budget exit.
+
+Of the 146 old positives, 145 retain identical work. mknapcb6_09_bks increases
+from 36,124,022 to 37,459,325 work and still satisfies its existing 38M guard.
+Old-positive aggregate work rises 0.124%, and every old-positive reserved peak
+is unchanged. This is additional solving capacity, not a universal speedup.
+
+Three cases, eight recipe orders, serial/fixed-four-worker scheduling and both
+libraries give 96 comparative requests. All 32 old positive requests remain
+positive. The new case improves in seven of eight orders in each mode; order97
+remains unresolved in both. The 14 verified new requests are mandatory in
+execution-boundaries.json at 40M with a 39M observed-work guard; this raises its
+required request inventory from 733 to 747 without duplicating source data.
+
+Twenty-five related maintained programs, eight deliberate fault injections,
+the actual-library checks, offline assemble, 1478 ABI entries, source-JAR
+correspondence and Forge/AE-dump packaging pass. All process trees use the
+same four logical CPUs. Some validation jobs overlap, so their wall times
+are not used as isolated performance measurements.
+
+These results and all unsuccessful prototypes are retained in the local case
+registry. This increment is not a fresh execution of all 20927 historical
+records, all 747 execution boundaries or a new native-solver run. Historical
+native witnesses and unrelated equality/allocation statuses retain their scopes.

@@ -35,6 +35,9 @@ final class CountPackingCore implements CountContinuation {
     private long scoutLimit, scoutAt, flexibleLimit, flexibleAt, flexibleAllowance;
     private long roundingStart, failedRoundingWork, stepStart = -1;
     private boolean scoutAttempted, wideScoutAttempted, wideScout;
+    private boolean lpScout;
+    private Frontier lpFace;
+    private long lpAllowance;
     private long wideScoutAt, wideScoutStart, wideScoutWork, repairLimit;
     private Frontier scoutBase, enumerationBase;
     private record Frontier(CountPackingNeighborhood search, int[] free, int size, int compiledSize,
@@ -154,7 +157,11 @@ final class CountPackingCore implements CountContinuation {
                 if (valid(candidate)) { counts = candidate; return finish("verified_candidate"); }
                 return finish("candidate_rejected");
             }
-            if (scouting) { if (!scheduleFlexibleScout() && !beginAsymmetricScout()) endScout(); return false; }
+            if (scouting) {
+                rememberLpScout();
+                if (!scheduleFlexibleScout() && !beginAsymmetricScout()) endScout();
+                return false;
+            }
             if (enumerationBase != null) {
                 // A declined PB workspace is not a closed face. Resume the
                 // original search; only a scoped proof can retire it early.
@@ -200,6 +207,7 @@ final class CountPackingCore implements CountContinuation {
         restoreSearch(enumerationBase); enumerationBase = null;
         phase = Phase.RESUMED_ENUMERATION;
         budget.note("count_packing_core", "resume_enumeration; free=" + coreSize + "; work=" + work);
+        beginLpScout();
     }
 
     private boolean prepare() {
@@ -278,6 +286,28 @@ final class CountPackingCore implements CountContinuation {
         beginCore();
     }
 
+    private void rememberLpScout() {
+        if (!wideScout || lpScout || scoutLimit - measuredWork() < 262144) return;
+        // The old exchange has completed without a witness. Retain its
+        // projection and unused owned allowance, not its completed index.
+        // PB still receives its original sample before this extra method.
+        lpFace = new Frontier(null, free, coreSize, compiledSize, coreCoefficients, coreBounds, corePreferred);
+        lpAllowance = scoutLimit - measuredWork();
+    }
+
+    private void beginLpScout() {
+        if (lpFace == null || maximumWork - measuredWork() < 262144) return;
+        scoutBase = parkSearch();
+        restoreSearch(lpFace); lpFace = null;
+        lpScout = scouting = wideScout = true;
+        wideScoutStart = work;
+        // Defer the unused service rather than extending it. This happens
+        // once after the PB handoff, under the original local/request caps.
+        scoutLimit = Math.min(maximumWork, measuredWork() + lpAllowance);
+        beginCore();
+        budget.note("count_packing_lp", "begin; remaining=" + (scoutLimit - measuredWork()));
+    }
+
     private boolean beginFlexibleScout() {
         if (wideScout || flexibleScout || fractional == 0 || work >= scoutLimit) return false;
         // Fractional coordinates lead the ranking; alternating its positions
@@ -353,7 +383,7 @@ final class CountPackingCore implements CountContinuation {
         if (flexibleScout) failedRoundingWork += Math.max(0, measuredWork() - roundingStart);
         if (search != null) search.close();
         if (wideScout) wideScoutWork += work - wideScoutStart;
-        scouting = wideScout = flexibleScout = asymmetricScout = rotateAsymmetric = false;
+        lpScout = scouting = wideScout = flexibleScout = asymmetricScout = rotateAsymmetric = false;
         restoreSearch(scoutBase); scoutBase = null;
         budget.note("count_packing_core", "resume_original; free=" + coreSize + "; work=" + work);
     }
@@ -379,7 +409,8 @@ final class CountPackingCore implements CountContinuation {
         // The parent reserves the bounded 35-by-64 coefficients, threshold
         // masks, suffix maxima and retained activity stack together. PB owns
         // its separate, optional reconstruction and conflict-learning storage.
-        var mode = asymmetricScout ? CountPackingNeighborhood.Mode.EXCHANGE_ASYMMETRIC : wideScout ? CountPackingNeighborhood.Mode.EXCHANGE_FOUR :
+        var mode = lpScout ? CountPackingNeighborhood.Mode.RELAXATION :
+                asymmetricScout ? CountPackingNeighborhood.Mode.EXCHANGE_ASYMMETRIC : wideScout ? CountPackingNeighborhood.Mode.EXCHANGE_FOUR :
                 scouting ? CountPackingNeighborhood.Mode.EXCHANGE :
                 phase == Phase.CONFLICT_REPAIR ? CountPackingNeighborhood.Mode.LEARNING : CountPackingNeighborhood.Mode.PROPAGATION;
         long flexible = 0;
@@ -484,6 +515,7 @@ final class CountPackingCore implements CountContinuation {
         if (enumerationBase != null) enumerationBase.search().close();
         enumerationBase = null;
         scoutBase = null;
+        lpFace = null;
         search = null;
         coreCoefficients = null; coreBounds = null;
         budget.release(memory); memory = 0;

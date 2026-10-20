@@ -13,6 +13,10 @@ The full run confirms the asymmetric-exchange campaign's canonical backlog of 15
   150 Boolean multidimensional resource/profit selections;
     4 sparse integer equality count models (144 or 257 variables);
     2 source/fuel allocations (96 or 128 groups, 9 dimensions).
+The later 0.1.6 deferred-LP family comparison recovers one canonical packing
+case, giving an incremental backlog of 155 = 149 packing + 4 equalities +
+2 allocations. That is an update to the ledger, not another full-corpus run;
+the release baseline and its original 156 unresolved records remain above.
 There is also one unresolved direct allocation seed31. The separate set of 72
 long manufactured-tool/wear variants now passes, as described below. All 1536
 normalized refill-quality variants now reach their scoped feed bound at the
@@ -90,6 +94,19 @@ sufficient reproduction inputs have separate statuses, not UNSAT or PASS.
    families are not rerun in this increment; the ledger remains 156.
    See packing-conflict-reuse.txt. Runtime implications are complementary
    search progress, not new canonical witnesses or a whole-model proof.
+
+   A subsequent deferred LP continuation preserves the wide exchange and PB
+   sample before using the exchange's unused service for fractional branching.
+   It reuses bases and depth buffers, certifies price bounds with integers,
+   checks every projected row and retains the original whole-model frontier.
+   The 296-case actual-library comparison improves 146 -> 147 positives and
+   150 -> 149 unresolved at the same 40M cap: mknapcb3_01_bks now passes.
+   All old positives remain; 145 keep identical work, and one adds 3.7%.
+   Old-positive aggregate work adds 0.124%; all their reserved peaks stay equal.
+   Seven of the new case's eight tested orders pass in both serial and fixed
+   four-worker scheduling. Order97 remains unresolved, separately archived;
+   fourteen verified requests become mandatory regressions. See
+   packing-lp-continuation.txt for exact coverage, service and numerical limits.
 
 3. Integer equalities and source/fuel allocation: distinct algebraic services
 

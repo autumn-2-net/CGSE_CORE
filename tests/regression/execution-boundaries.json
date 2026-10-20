@@ -3821,6 +3821,44 @@
       "evidence": "Existing canonical packing SAT oracle. Every returned plan is independently replayed against the original primitive inputs/outputs, reservation, final target and seeds. The canonical order exhausted the same40M cap before this change; complementary asymmetric integer exchange restores a witness without importing a native solution or increasing the allowance. Only verified successful orders are registered here.",
       "workers": 4,
       "expanded_budget": false
+    },
+    {
+      "name": "mknapcb3_01_bks/deferred-lp",
+      "source": "cases/graph/76/76cbc16ced8692e56eb446fb39e822f9875501f06e4d3ae496e307bb139b2dba.json",
+      "sha256_lf": "2134e4f45a8879cedec5f6e893e401d523c047bfe2756c3f07e23358d59ef109",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 39000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle, independently replayed primitive execution, reservation and final target. Previously exhausted the unchanged40M cap. Deferred LP branching uses a completed exchange's unused service only after PB receives its original opportunity; all old frontiers and exact validation remain. Only verified successful orders are required here; order97 remains unresolved in both serial and fixed four-worker runs, retained separately as an unclaimed variant."
+    },
+    {
+      "name": "mknapcb3_01_bks/deferred-lp/four-workers-fixed",
+      "source": "cases/graph/76/76cbc16ced8692e56eb446fb39e822f9875501f06e4d3ae496e307bb139b2dba.json",
+      "sha256_lf": "2134e4f45a8879cedec5f6e893e401d523c047bfe2756c3f07e23358d59ef109",
+      "orders": [
+        0,
+        1,
+        2,
+        3,
+        17,
+        31,
+        1009
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 39000000,
+      "expected": "SAT",
+      "evidence": "Existing canonical SAT oracle, independently replayed primitive execution, reservation and final target. Previously exhausted the unchanged40M cap. Deferred LP branching uses a completed exchange's unused service only after PB receives its original opportunity; all old frontiers and exact validation remain. Only verified successful orders are required here; order97 remains unresolved in both serial and fixed four-worker runs, retained separately as an unclaimed variant.",
+      "workers": 4,
+      "expanded_budget": false
     }
   ]
 }

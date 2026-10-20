@@ -229,6 +229,23 @@ Twenty-two related programs, independent clause/continuation oracles,
 deliberate fault injections, the actual JAR, ABI and packaging checks pass.
 This is a complete packing-family comparison, not a full historical rerun.
 
+Implemented next: deferred LP branching after packing repair
+------------------------------------------------------------
+A completed wide exchange can now defer its unused service until the private
+PB repair has received its original opportunity. The candidate method retains
+LP bases through fractional branches, reuses sibling buffers and checks
+integer price bounds and all projected rows exactly. It preserves the old
+enumeration and original whole-model checks, within the same local/request
+caps. See packing-lp-continuation.txt for service ownership and scope.
+The actual-JAR 296-case comparison retains all 146 old positives and recovers
+mknapcb3_01_bks. Packing backlog becomes 149; the inherited equality/allocation
+backlog is unchanged, so the canonical incremental ledger becomes 155.
+Twenty-five related programs and eight deliberate fault checks pass. The
+96-request ordering/scheduling comparison retains every old positive and
+recovers 14 variants; order97 of the new case still exhausts the budget in
+both modes. Verified variants are now required regressions. This is a family
+update with explicit cost/coverage limits, not a fresh full-corpus run.
+
 Remaining review work
 ---------------------
 Exact equality supports: broader compound search and explanation costs remain
@@ -236,10 +253,12 @@ research directions. The historic full-model SCIP witness for n144-s1 is still
 a positive oracle; short solver timeouts never supersede that evidence.
 
 Packing: retain the existing asymmetric exchanges and successful old samples.
-Persistent LP/core experiments must account for preparation and service costs;
-the previously unsuccessful warm-LP integration remains disabled. The new
-same-face conflict handoff does not implement persistent LP bases or solve the
-remaining 150 cases.
+Persistent LP/core experiments must account for preparation and service costs.
+The failed replacement and eager LP integrations remain disabled; a deferred
+candidate method now retains bases within one proposed face. Projecting the
+full-model basis, expandable-core interfaces and stronger scoped cuts remain
+open. Private conflict handoff and private LP continuation cannot turn a
+restricted-face miss into a full-model proof.
 
 Vector allocation: cross-block residual interfaces remain separate research.
 Candidate exhaustion cannot prove that every first-block choice is impossible.
