@@ -14,26 +14,29 @@ public final class CountSupportedSearchTest {
     public static void main(String[] args) throws Exception {
         var worker = Executors.newSingleThreadExecutor();
         try {
+            for (boolean domains : new boolean[] {false, true})
             for (int n : new int[] {8, 48, 144, 256}) for (int seed = 0; seed < 4; seed++) {
                 Model m = model(n, seed);
-                BigInteger[] whole = solve(m, 1_048_576, null);
-                BigInteger[] sliced = solve(m, 1, worker);
+                BigInteger[] whole = solve(m, 1_048_576, null, domains);
+                BigInteger[] sliced = solve(m, 1, worker, domains);
                 check(Arrays.equals(whole, m.witness) && Arrays.equals(whole, sliced), "Lost unique constructive witness");
                 var reordered = new ArrayList<>(m.rows); Collections.shuffle(reordered, new Random(73100 + seed));
-                check(Arrays.equals(solve(new Model(reordered, m.low, m.high, m.witness), 113, null), whole), "Order changed unique solution");
+                check(Arrays.equals(solve(new Model(reordered, m.low, m.high, m.witness), 113, null, domains), whole), "Order changed unique solution");
                 reordered.add(new ExactLinearProgram.Constraint(Map.of(0, BigInteger.ONE), whole[0].subtract(BigInteger.ONE)));
-                check(solve(new Model(reordered, m.low, m.high, null), 71, null) == null, "Ignored original side row");
+                check(solve(new Model(reordered, m.low, m.high, null), 71, null, domains) == null, "Ignored original side row");
             }
         } finally { worker.shutdownNow(); }
-        limits();
-        boundedHardSearch();
-        System.out.println("Supported search: 64 positive/negative continuations; original rows, offsets, orders, worker handoff and proof isolation passed");
+        for (boolean domains : new boolean[] {false, true}) {
+            limits(domains);
+            boundedHardSearch(domains);
+        }
+        System.out.println("Supported search: 128 positive/negative continuations; hull/masks, original rows, offsets, orders, worker handoff and proof isolation passed");
     }
 
-    private static BigInteger[] solve(Model m, long quantum, ExecutorService worker) throws Exception {
+    private static BigInteger[] solve(Model m, long quantum, ExecutorService worker, boolean domains) throws Exception {
         var budget = new PlanningBudget(0, 4_000_000, 64L << 20, () -> false, System::nanoTime);
         BigInteger[] result;
-        try (var search = CountSupportedSearch.create(m.rows, m.low, m.high, budget, 4096)) {
+        try (var search = CountSupportedSearch.create(m.rows, m.low, m.high, budget, 4096, domains)) {
             check(search != null && search.matches(m.rows, m.low, m.high), "Scope missing");
             var other = m.high.clone(); other[0] = other[0].add(BigInteger.ONE);
             check(!search.matches(m.rows, m.low, other), "Changed stock reused");
@@ -77,16 +80,16 @@ public final class CountSupportedSearchTest {
         return new Model(rows, low, high, witness);
     }
 
-    private static void limits() {
+    private static void limits(boolean domains) {
         Model m = model(144, 1);
         var budget = new PlanningBudget(0, 4_000_000, 1, () -> false, System::nanoTime);
-        check(CountSupportedSearch.create(m.rows, m.low, m.high, budget, 4096) == null && budget.reservedBytes() == 0, "Memory refusal leaked");
+        check(CountSupportedSearch.create(m.rows, m.low, m.high, budget, 4096, domains) == null && budget.reservedBytes() == 0, "Memory refusal leaked");
         budget = new PlanningBudget(0, 4_000_000, 64L << 20, () -> false, System::nanoTime);
         var journal = new CountProof.Journal(1L << 20); budget.proofJournal(journal);
-        check(CountSupportedSearch.create(m.rows, m.low, m.high, budget, 4096) == null && budget.reservedBytes() == 0, "Private support entered proof export");
+        check(CountSupportedSearch.create(m.rows, m.low, m.high, budget, 4096, domains) == null && budget.reservedBytes() == 0, "Private support entered proof export");
         var cancelled = new AtomicBoolean();
         budget = new PlanningBudget(0, 4_000_000, 64L << 20, cancelled::get, System::nanoTime);
-        try (var search = CountSupportedSearch.create(m.rows, m.low, m.high, budget, 4096)) {
+        try (var search = CountSupportedSearch.create(m.rows, m.low, m.high, budget, 4096, domains)) {
             search.resume(4096); search.step(); cancelled.set(true);
             try { search.step(); throw new AssertionError("Ignored cancellation"); }
             catch (CancellationException expected) {}
@@ -94,7 +97,7 @@ public final class CountSupportedSearchTest {
         check(budget.reservedBytes() == 0, "Cancellation leaked");
     }
 
-    private static void boundedHardSearch() throws Exception {
+    private static void boundedHardSearch(boolean domains) throws Exception {
         int n = 144;
         var random = new Random(2026102023);
         var low = new BigInteger[n]; var high = new BigInteger[n]; var planted = new BigInteger[n];
@@ -110,7 +113,7 @@ public final class CountSupportedSearchTest {
             rows.addAll(CountEqualitySupportTest.pair(terms, rhs));
         }
         var budget = new PlanningBudget(0, 4_000_000, 64L << 20, () -> false, System::nanoTime);
-        try (var search = CountSupportedSearch.create(rows, low, high, budget, 4096)) {
+        try (var search = CountSupportedSearch.create(rows, low, high, budget, 4096, domains)) {
             while (true) {
                 if (search.paused()) search.resume(137);
                 if (search.step() && !search.paused()) break;
@@ -126,7 +129,7 @@ public final class CountSupportedSearchTest {
         check(budget.reservedBytes() == 0, "Local cutoff retained workspace");
         budget = new PlanningBudget(0, 20000, 64L << 20, () -> false, System::nanoTime);
         boolean exhausted = false;
-        try (var search = CountSupportedSearch.create(rows, low, high, budget, 4096)) {
+        try (var search = CountSupportedSearch.create(rows, low, high, budget, 4096, domains)) {
             while (true) {
                 if (search.paused()) search.resume(137);
                 if (search.step() && !search.paused()) break;

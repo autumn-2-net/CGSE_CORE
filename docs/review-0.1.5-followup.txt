@@ -171,12 +171,31 @@ Regression, paired comparison and build share identical production/test source
 hashes. This is targeted validation, not a rerun of the full historical corpus
 or the native game host. Version remains 0.1.5.
 
+Implemented next: private interior equality domains
+--------------------------------------------------
+The short-equality DP can now return and consume exact sixteen-value masks.
+LCG retains interior deletions with their conditional bound explanations,
+restores them on backtracking, and accounts for previously consumed holes
+when an implication crosses equations. Endpoints keep the old bound trail.
+Both masks and bounds enter exact cache reuse. A separate late, bounded
+candidate preserves the existing hull frontier; proof-mode tasks decline it.
+See docs/sparse-equality-support.txt for limits, ownership and validation.
+This closes the report's interior-domain representation gap. It does not by
+itself establish recovery of the four canonical sparse-equality hard cases.
+Validation passes all 353 standard programs, the final six support/domain
+checks on sources and the built JAR, and deliberate reason/undo/cache fault
+injections. The 822-request count campaign, 256 sparse/order requests and
+eighteen generated requests retain every previous success with identical
+charged work. Overlapping orders are not new canonical cases. Main-path
+timing controls retain CPU/allocation behavior within the measured noise;
+build, 1478 ABI entries and Forge/AE-dump packaging pass. No full 20,927-case
+rerun or live host test is claimed; version remains 0.1.5.
+
 Remaining review work
 ---------------------
-Exact equality supports: CountEqualitySupport still returns interval hulls.
-Interior unsupported values can be lost even when both endpoints survive.
-A private small-domain mask arm needs its own rollback/reason-scope tests and
-paired sparse-equality comparisons before integration.
+Exact equality supports: broader compound search and explanation costs remain
+research directions. The historic full-model SCIP witness for n144-s1 is still
+a positive oracle; short solver timeouts never supersede that evidence.
 
 Packing: retain the existing asymmetric exchanges and successful old samples.
 Persistent LP/core experiments must account for preparation and service costs;

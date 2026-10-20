@@ -11,12 +11,14 @@ final class CountEqualitySupport implements AutoCloseable {
     private static final int MAX_TERMS = 12, MAX_WIDTH = 15, MAX_RANGE = 2048;
 
     /** Borrowed until the next call. All bounds describe the same input box. */
-    record Result(int[] variables, BigInteger[] lower, BigInteger[] upper, boolean empty) {}
+    record Result(int[] variables, BigInteger[] lower, BigInteger[] upper, boolean empty, int[] supports) {}
 
     private static final class Equation {
         final ExactLinearProgram.Constraint row;
         final int[] ids;
         final BigInteger[] coefficients, previousLow, previousHigh;
+        final int[] previousMasks;
+        boolean previousMasked;
         Result previousResult;
 
         Equation(ExactLinearProgram.Constraint row) {
@@ -25,11 +27,13 @@ final class CountEqualitySupport implements AutoCloseable {
             coefficients = row.terms().values().toArray(BigInteger[]::new);
             previousLow = new BigInteger[ids.length];
             previousHigh = new BigInteger[ids.length];
+            previousMasks = new int[ids.length];
         }
     }
 
     private final PlanningBudget budget;
     private Equation[] equations;
+    private BigInteger[] anchors;
     private long memory, calls, changes, failures;
 
     private CountEqualitySupport(PlanningBudget budget, long memory) {
@@ -59,6 +63,7 @@ final class CountEqualitySupport implements AutoCloseable {
                 if (before == null || row.upper().compareTo(rows.get(before).upper()) < 0) known.put(row.terms(), r);
             }
             result.equations = new Equation[rows.size()];
+            result.anchors = low.clone();
             int pairs = 0;
             for (int r = 0; r < rows.size(); r++) {
                 budget.check();
@@ -92,16 +97,24 @@ final class CountEqualitySupport implements AutoCloseable {
     }
 
     Result propagate(int rowId, BigInteger[] low, BigInteger[] high) {
+        return propagate(rowId, low, high, null);
+    }
+
+    /** Optional masks use the original lower-bound offsets, not the current
+     * hull. Both holes and bounds are part of the exact cache key. The caller
+     * owns their scoped explanations and restores masks on backtracking. */
+    Result propagate(int rowId, BigInteger[] low, BigInteger[] high, int[] masks) {
         // The parent may append certified rows later. Only the immutable,
         // originally paired equations participate in this private analysis.
         if (rowId >= equations.length || equations[rowId] == null) return null;
         Equation equation = equations[rowId];
         int n = equation.ids.length;
-        boolean same = true;
+        boolean same = equation.previousMasked == (masks != null);
         for (int k = 0; k < n; k++) {
             budget.check();
             int i = equation.ids[k];
             same &= low[i].equals(equation.previousLow[k]) && high[i].equals(equation.previousHigh[k]);
+            if (masks != null) same &= masks[i] == equation.previousMasks[k];
         }
         if (same) return equation.previousResult;
         equation.previousResult = null;
@@ -109,8 +122,11 @@ final class CountEqualitySupport implements AutoCloseable {
         for (int k = 0; k < n; k++) {
             equation.previousLow[k] = low[equation.ids[k]];
             equation.previousHigh[k] = high[equation.ids[k]];
+            if (masks != null) equation.previousMasks[k] = masks[equation.ids[k]];
         }
+        equation.previousMasked = masks != null;
         int[] width = new int[n], coefficient = new int[n];
+        int[] allowed = masks == null ? null : new int[n], shifts = masks == null ? null : new int[n];
         boolean[] negative = new boolean[n];
         BigInteger target = equation.row.upper(), gcd = BigInteger.ZERO;
         int free = 0;
@@ -121,6 +137,14 @@ final class CountEqualitySupport implements AutoCloseable {
             negative[k] = a.signum() < 0;
             target = target.subtract(a.multiply(negative[k] ? high[i] : low[i]));
             width[k] = high[i].subtract(low[i]).intValueExact();
+            if (masks != null) {
+                BigInteger offset = low[i].subtract(anchors[i]);
+                if (offset.signum() < 0 || offset.compareTo(BigInteger.valueOf(MAX_WIDTH)) > 0 ||
+                        width[k] < 0 || width[k] + offset.intValue() > MAX_WIDTH) return null;
+                shifts[k] = offset.intValue();
+                allowed[k] = (masks[i] >>> shifts[k]) & ((1 << (width[k] + 1)) - 1);
+                if (allowed[k] == 0) return empty(equation);
+            }
             if (width[k] > 0 && a.signum() != 0) { gcd = gcd.gcd(a); free++; }
         }
         // Interval propagation is cheaper while many coordinates are free.
@@ -154,6 +178,7 @@ final class CountEqualitySupport implements AutoCloseable {
             BigInteger reachable = BigInteger.ZERO;
             for (int v = 0; v <= width[k]; v++) {
                 budget.charge(wordWork);
+                if (allowed != null && (allowed[k] & (1 << (negative[k] ? width[k] - v : v))) == 0) continue;
                 reachable = reachable.or(prefix[k].shiftLeft(coefficient[k] * v));
             }
             prefix[k + 1] = reachable.and(mask);
@@ -163,42 +188,52 @@ final class CountEqualitySupport implements AutoCloseable {
             BigInteger reachable = BigInteger.ZERO;
             for (int v = 0; v <= width[k]; v++) {
                 budget.charge(wordWork);
+                if (allowed != null && (allowed[k] & (1 << (negative[k] ? width[k] - v : v))) == 0) continue;
                 reachable = reachable.or(suffix[k + 1].shiftRight(coefficient[k] * v));
             }
             suffix[k] = reachable;
         }
         var resultLow = new BigInteger[n];
         var resultHigh = new BigInteger[n];
+        int[] resultMasks = masks == null ? null : new int[n];
         boolean changed = false;
         for (int k = 0; k < n; k++) {
-            int min = width[k] + 1, max = -1;
+            int min = width[k] + 1, max = -1, support = 0;
             for (int v = 0; v <= width[k]; v++) {
                 budget.charge(wordWork);
+                if (allowed != null && (allowed[k] & (1 << (negative[k] ? width[k] - v : v))) == 0) continue;
                 if (prefix[k].and(suffix[k + 1].shiftRight(coefficient[k] * v)).signum() != 0) {
                     int value = negative[k] ? width[k] - v : v;
                     min = Math.min(min, value);
                     max = Math.max(max, value);
+                    support |= 1 << value;
                 }
             }
             if (max < 0) return empty(equation);
             resultLow[k] = low[equation.ids[k]].add(BigInteger.valueOf(min));
             resultHigh[k] = low[equation.ids[k]].add(BigInteger.valueOf(max));
             changed |= min > 0 || max < width[k];
+            if (masks != null) {
+                int span = ((1 << (width[k] + 1)) - 1) << shifts[k];
+                resultMasks[k] = (masks[equation.ids[k]] & ~span) | (support << shifts[k]);
+                changed |= support != allowed[k];
+            }
         }
         if (!changed) return null;
         changes++;
-        return equation.previousResult = new Result(equation.ids, resultLow, resultHigh, false);
+        return equation.previousResult = new Result(equation.ids, resultLow, resultHigh, false, resultMasks);
     }
 
     private Result empty(Equation equation) {
         failures++;
-        return equation.previousResult = new Result(equation.ids, null, null, true);
+        return equation.previousResult = new Result(equation.ids, null, null, true, null);
     }
 
     @Override public void close() {
         if (memory == 0) return;
         budget.note("count_equality_support", "calls=" + calls + "; changes=" + changes + "; empty_boxes=" + failures);
         equations = null;
+        anchors = null;
         budget.release(memory);
         memory = 0;
     }

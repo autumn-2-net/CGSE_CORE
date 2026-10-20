@@ -25,6 +25,11 @@ final class CountSupportedSearch implements CountContinuation {
 
     static CountSupportedSearch create(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower, BigInteger[] upper,
                                        PlanningBudget budget, long quantum) {
+        return create(rows, lower, upper, budget, quantum, false);
+    }
+
+    static CountSupportedSearch create(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower, BigInteger[] upper,
+                                       PlanningBudget budget, long quantum, boolean domains) {
         // Its private discrete explanations do not have an exported proof
         // format. Proof tasks retain the existing independently checked arms.
         if (budget.proofJournal() != null || quantum < 1024 || budget.remainingWork() < 16384) return null;
@@ -35,6 +40,7 @@ final class CountSupportedSearch implements CountContinuation {
             if (result.support == null) return null;
             result.search = new CountLcg(rows, lower, upper, budget, quantum);
             result.search.supportEqualities(result.support);
+            if (domains && !result.search.supportDomains()) { result.close(); return null; }
             result.allowance = Math.min(LIMIT, quantum);
             result.paused = true;
             return result;
