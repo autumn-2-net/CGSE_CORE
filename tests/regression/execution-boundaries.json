@@ -3836,7 +3836,7 @@
         1009
       ],
       "work": 40000000,
-      "maximum_observed_work": 39000000,
+      "maximum_observed_work": 38600000,
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle, independently replayed primitive execution, reservation and final target. Previously exhausted the unchanged40M cap. Deferred LP branching uses a completed exchange's unused service only after PB receives its original opportunity; all old frontiers and exact validation remain. Only verified successful orders are required here; order97 remains unresolved in both serial and fixed four-worker runs, retained separately as an unclaimed variant."
     },
@@ -3854,7 +3854,7 @@
         1009
       ],
       "work": 40000000,
-      "maximum_observed_work": 39000000,
+      "maximum_observed_work": 38600000,
       "expected": "SAT",
       "evidence": "Existing canonical SAT oracle, independently replayed primitive execution, reservation and final target. Previously exhausted the unchanged40M cap. Deferred LP branching uses a completed exchange's unused service only after PB receives its original opportunity; all old frontiers and exact validation remain. Only verified successful orders are required here; order97 remains unresolved in both serial and fixed four-worker runs, retained separately as an unclaimed variant.",
       "workers": 4,

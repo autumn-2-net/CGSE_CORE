@@ -108,6 +108,15 @@ sufficient reproduction inputs have separate statuses, not UNSAT or PASS.
    fourteen verified requests become mandatory regressions. See
    packing-lp-continuation.txt for exact coverage, service and numerical limits.
 
+   Exact price propagation subsequently fixes necessary values inside that
+   same retained LP box, with a checked long path and an absolute-magnitude
+   precheck for BigInteger fallback. All 296 canonical outcomes remain:
+   147 positives, 149 unresolved. mknapcb3_01_bks saves 450647 reported work
+   (-1.160%); one other positive saves 87, and 145 keep identical work.
+   All old-positive reserved peaks remain unchanged. The overall incremental
+   backlog remains 155, with no new canonical success claimed. See
+   packing-priced-propagation.txt for arithmetic scope and validation.
+
 3. Integer equalities and source/fuel allocation: distinct algebraic services
 
    The four equality models need integer-lattice/box reasoning, not Boolean

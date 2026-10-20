@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class CountPackingLpSearchTest {
     public static void main(String[] args) throws Exception {
         var worker = Executors.newSingleThreadExecutor();
-        int positives = 0, prunes = 0, reusedDepths = 0;
+        int positives = 0, prunes = 0, implications = 0, reusedDepths = 0;
         try {
             for (int trial = 0; trial < 192; trial++) {
                 var random = new Random(20261020L + trial);
@@ -41,7 +41,8 @@ public final class CountPackingLpSearchTest {
                 if (trial < 24) check(Objects.equals(direct, solve(a, b, worker)), "Worker handoff changed the LP tree");
 
                 // A price vector only proposes an integer certificate. Check
-                // every rejected fixed box against every original assignment.
+                // box rejection and every simultaneous fixing against original
+                // assignments, without trusting LP optimality or its point.
                 var budget = budget(40_000_000, 64L << 20, () -> false);
                 try (var search = CountPackingLpSearch.create(a, b, budget)) {
                     check(search != null, "Small exact domain declined");
@@ -58,23 +59,32 @@ public final class CountPackingLpSearchTest {
                             double price = box == 0 ? Double.NaN : box == 1 ? Double.POSITIVE_INFINITY : random.nextInt(9) / 2.0;
                             cost[n + r] = -price * scales[r] / objective;
                         }
-                        if ((boolean) possible.invoke(search, frame)) continue;
-                        prunes++;
-                        for (long x = 0; x < 1L << n; x++) if ((x & fixed) == ones)
-                            check(!fits(a, b, x, a.length), "Rounded numerical prices removed an original witness");
+                        boolean admitted = (boolean) possible.invoke(search, frame);
+                        long nextFixed = (long) get(frame, "fixed"), nextOnes = (long) get(frame, "ones");
+                        check((nextFixed & fixed) == fixed && (nextOnes & fixed) == ones,
+                                "Certificate changed an inherited box");
+                        check((nextOnes & ~nextFixed) == 0, "Certificate fixed a value outside its box");
+                        implications += Long.bitCount(nextFixed & ~fixed);
+                        if (!admitted) prunes++;
+                        for (long x = 0; x < 1L << n; x++) if ((x & fixed) == ones && fits(a, b, x, a.length))
+                            check(admitted && (x & nextFixed) == nextOnes,
+                                    "Integer pricing removed an original witness");
                     }
                 }
                 check(budget.reservedBytes() == 0, "Exact certificate scratch leaked");
             }
             check(positives == 128 && prunes >= 100, "Positive or exact-bound coverage disappeared");
+            check(implications >= 20, "Reduced-cost fixing was silently disabled");
             reusedDepths = reuseBuffers();
+            pricedBoundaries();
             boundaries(worker);
             scope();
             lifecycle();
             ownerHandoff(worker);
         } finally { worker.shutdownNow(); }
         System.out.println("Packing LP: 192 exhaustive domains, " + positives + " exact witnesses, " + prunes +
-                " checked box prunes, " + reusedDepths + " retained depth buffers; scope, budgets and handoffs passed");
+                " checked box prunes, " + implications + " checked fixings, " + reusedDepths +
+                " retained depth buffers; scope, budgets and handoffs passed");
     }
 
     private static Long solve(long[][] a, long[] b, ExecutorService worker) throws Exception {
@@ -139,6 +149,69 @@ public final class CountPackingLpSearchTest {
         check(solve(new long[][] {{rounded + 1}, {-rounded}}, new long[] {rounded + 1, -(rounded + 1)}, null) == null,
                 "Rounded doubles published an infeasible exact demand");
         check(budget.reservedBytes() == 0, "Admission refusal leaked");
+    }
+
+    private static void pricedBoundaries() throws Exception {
+        // Strict inequality is essential: a loss equal to the available gap
+        // still satisfies the requested target. Both singletons are feasible.
+        price(new long[][] {{1, 1}, {-10, -6}}, new long[] {2, -6}, new double[] {0}, 0, 0, false);
+        price(new long[][] {{1, 1}, {-10, -6}}, new long[] {2, -11}, new double[] {0}, 3, 3, false);
+        price(new long[][] {{1, 5}, {-3, -1}}, new long[] {1, -3}, new double[] {1}, 3, 1, false);
+        // The same certificate must survive overflow in multiplication, row
+        // accumulation, and the gap. It must never saturate or round the target.
+        long scale = 1L << 45;
+        price(new long[][] {{scale, scale}, {-10 * scale, -6 * scale}},
+                new long[] {2 * scale, -6 * scale}, new double[] {0}, 0, 0, true);
+        price(new long[][] {{scale, 5 * scale}, {-3 * scale, -scale}},
+                new long[] {scale, -3 * scale}, new double[] {1}, 3, 1, true);
+        price(new long[][] {{1, 1}, {-1, -1}}, new long[] {1L << 59, -1},
+                new double[] {1e12}, 0, 0, true);
+        price(new long[][] {{1, 1}, {1, 1}, {-1, -1}}, new long[] {1L << 46, 1L << 46, -1},
+                new double[] {1, 1}, 0, 0, true);
+        price(new long[][] {{1, 1}, {-1, -1}}, new long[] {1L << 46, 1L << 46},
+                new double[] {1}, 0, 0, true);
+        // Overflow may occur in a capacity product even when profit, target
+        // and bound products are tiny; wrapping 2^64 to zero loses this fixing.
+        price(new long[][] {{1L << 48, 0}, {0, -1}}, new long[] {0, -1},
+                new double[] {1}, 3, 2, true);
+        // The absolute envelope of Long.MIN_VALUE cannot fit a positive long.
+        // Widen it without abs()/negation overflow.
+        long half = 1L << 46;
+        price(new long[][] {{half, 0}, {half, 0}, {0, -1}}, new long[] {0, 0, -1},
+                new double[] {1, 1}, 3, 2, true);
+        // Arbitrary numerical prices are merely nonnegative integer proposals.
+        for (double value : new double[] {-1, Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY})
+            price(new long[][] {{1, 5}, {-3, -1}}, new long[] {1, -3}, new double[] {value}, 1, 1, false);
+    }
+
+    private static void price(long[][] a, long[] b, double[] prices, long expectedFixed,
+                              long expectedOnes, boolean wide) throws Exception {
+        var budget = budget(40_000_000, 64L << 20, () -> false);
+        try (var search = CountPackingLpSearch.create(a, b, budget)) {
+            check(search != null, "Priced boundary refused");
+            Object frame = ((Object[]) get(search, "frames"))[0];
+            double[] cost = (double[]) get(frame, "cost"), scales = (double[]) get(search, "scales");
+            int n = a[0].length; double objective = (double) get(search, "objectiveScale");
+            for (int r = 0; r < prices.length; r++) cost[n + r] = -prices[r] * scales[r] / objective;
+            var possible = CountPackingLpSearch.class.getDeclaredMethod("possible", frame.getClass());
+            possible.setAccessible(true);
+            check((boolean) possible.invoke(search, frame), "Valid priced box was rejected");
+            long fixed = (long) get(frame, "fixed"), ones = (long) get(frame, "ones");
+            check(fixed == expectedFixed && ones == expectedOnes, "Wrong exact reduced-cost implication");
+            check(((long) get(search, "wideBounds") > 0) == wide, "Overflow boundary used the wrong arithmetic");
+            // Changing a nonbasic bound must preserve the original capacity
+            // equations, even when its basic slack becomes temporarily negative.
+            var point = (double[]) get(frame, "point");
+            for (int r = 0; r < prices.length; r++) {
+                double activity = point[n + r], expected = b[r] / scales[r];
+                for (int j = 0; j < n; j++) activity += (a[r][j] / scales[r]) * point[j];
+                check(Math.abs(activity - expected) <= 1e-9 * Math.max(1, Math.abs(expected)),
+                        "Fixing a column broke its retained capacity equations");
+            }
+            for (long x = 0; x < 1L << n; x++) if (fits(a, b, x, a.length))
+                check((x & fixed) == ones, "Priced boundary removed a feasible assignment");
+        }
+        check(budget.reservedBytes() == 0, "Priced scratch leaked");
     }
 
     private static void scope() {

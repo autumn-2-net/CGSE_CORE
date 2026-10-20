@@ -279,3 +279,18 @@ recertifying bounds and cuts. No signature weakening, arbitrary state jumping,
 instantaneous-machine-capacity bound, or independent-slot substitution for a
 true tuple relation is introduced. Host integration and general temporal
 entity assignment remain distinct from portable core regression evidence.
+
+Implemented next: exact price propagation within the retained LP
+---------------------------------------------------------------
+The private packing LP now uses its integer price certificate to fix Boolean
+coordinates, retaining the basis for reoptimization. Checked long arithmetic
+avoids common BigInteger churn; an absolute-magnitude envelope routes large
+certificates directly to exact arithmetic. No request cap, PB service, original
+enumeration or whole-model proof boundary changes.
+
+The 296-input comparison against a95d0835 preserves 147 positives and 149
+unresolved cases. The latest recovered case saves 1.160% reported work;
+old-positive aggregate work falls 0.0403%, with identical reserved peaks.
+The canonical backlog remains 155. This improves the existing LP mechanism
+without claiming a new canonical witness. See packing-priced-propagation.txt
+for exact scope, fault checks, memory measurements and remaining limitations.

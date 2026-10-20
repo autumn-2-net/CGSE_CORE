@@ -1,0 +1,113 @@
+Exact price propagation in the retained packing LP (0.1.6)
+
+The deferred LP candidate arm already reconstructed an integer upper bound
+from numerical prices, but used it only to reject the entire current box.
+It now also fixes coordinates whose opposite value cannot reach the demand.
+The same certificate first uses checked primitive arithmetic, retrying the
+whole calculation with BigInteger if any intermediate value overflows.
+
+Certificate and scope
+---------------------
+For capacity rows A*x <= b, nonnegative integer prices y, profit p and scale
+q=65536, let r=q*p-y*A. Within the node's fixed Boolean box, an upper bound is
+
+    U = y*b + sum(fixed-one r[j]) + sum(free max(0,r[j])).
+
+The order requires q*p*x >= q*target. A negative gap U-q*target rejects this
+box. For a free coordinate, setting a positive r[j] to zero loses r[j];
+setting a negative r[j] to one loses -r[j]. A loss strictly greater than the
+gap forces the opposite value. Equality permits the value and must not prune
+it. All such fixings are individually necessary in the same original box,
+so they can be applied together. LP optimality and floating point tolerances
+are not premises: arbitrary nonnegative price proposals retain this property.
+
+This is the Boolean-box counterpart of exact reduced-cost reasoning, rather
+than a new objective cutoff for the general CountReducedCost proof service.
+The current face's demand and inherited fixed exterior are mandatory premises.
+No fixings or unsuccessful numerical search are exported to another face,
+view, order, or the whole-model infeasibility channel.
+
+The fixed mask lives in the existing depth frame. Fixing a nonbasic variable
+updates its basic coordinates to preserve capacity equations; the next step
+reoptimizes the retained basis before rounding or branching. Child frames
+inherit their parent, and reused sibling buffers reset to that parent.
+The original retained enumeration, PB sample, deferred grant and request cap
+are unchanged. Every candidate still passes all projected rows, restoration
+to original coordinates and primitive execution/reservation/target checks.
+
+Arithmetic and storage
+----------------------
+The common path keeps prices and reduced coefficients in reusable long
+arrays. A precomputed absolute objective magnitude and row activities give
+a cheap envelope for products, accumulated bounds, differences and the gap.
+Oversized certificates go directly to BigInteger; remaining primitive
+operations also use checked arithmetic. Overflow restarts the identical
+certificate before any domain change. It never saturates a bound or rounds
+a demand. Fixing a nonbasic coordinate already at the required value avoids
+an unchanged basis update, using exact equality rather than a tolerance.
+The additional arrays are covered by an 8KiB increase in the optional LP
+workspace reservation. The arrays belong to this request; there is no new
+cross-order cache, cache budget or runtime solver dependency.
+
+The first candidate tried narrow arithmetic and caught overflow on every
+large-number evaluation. A local kernel benchmark exposed the repeated
+exception cost. The absolute-envelope precheck removes that path before the
+final comparison. Both versions, and the independent arithmetic-only and
+propagation-only experiments, remain archived rather than overwriting evidence.
+
+Validation
+----------
+At the unchanged 40M search cap, 256MiB reservation limit and no wall timeout,
+the final library preserves all 147 positives in the complete 296-input
+packing comparison against a95d0835; 149 remain unresolved. This increment
+recovers no additional canonical case. The inherited backlog stays 155:
+149 packing, four sparse equality and two vector allocation cases.
+
+mknapcb3_01_bks falls from 38,862,924 to 38,412,277 reported work (-1.160%).
+Its retained LP uses 1707 nodes and 4835 pivots instead of 1863 and 6612;
+2317 exact implications are applied. mknapcb6_09_bks saves 87 work, while
+the other 145 old positives keep identical work. Old-positive aggregate work
+falls 0.0403%, and all 147 reserved peaks stay unchanged. This is a targeted
+improvement, not an across-the-board planner speedup.
+
+Forty-eight fresh order/scheduling requests, compared with completed
+a95d0835 results at identical frozen inputs and budgets, retain all 46
+positives. Order97 of mknapcb3_01_bks remains unresolved in both serial and
+fixed-four-worker execution. The other seven orders pass in both modes,
+at no more than 38,446,381 reported work. Their 14 existing mandatory guards
+are tightened from 39M to 38.6M; the suite inventory stays 747 requests.
+Other old ordered positives add at most 1247 work and retain their guards,
+so the canonical improvement is not a claim that every permutation is cheaper.
+The final canonical word also passes independent Python integer replay of
+all 148 primitive firings.
+
+The maintained LP test exhaustively checks 192 original Boolean domains,
+preserving all 128 SAT witnesses. Across 1536 arbitrary-price fixed boxes,
+306 rejected boxes and 1062 simultaneous fixings are checked against every
+original assignment. Boundaries include strict equality, products and sums
+outside long, an overflowing gap, Long.MIN_VALUE activity, values beyond
+double's exact range, original capacity equations after fixing, sibling
+restoration, mixed rows, cancellation, memory refusal and worker handoff.
+
+Twenty-five related maintained programs and eight final-library checks pass.
+Ten injected faults are caught by the final tests. The first two mutation
+runs were partial: they exposed missing coverage of a wrapping capacity
+product with tiny profit and an omitted basic-coordinate update. Both
+independent invariant checks are now maintained; those runs remain archived
+as partial, not reported as successful campaigns.
+
+The isolated certificate benchmark uses identical prices and boxes, ABBA
+library order, three warmup rounds and six measured rounds per process.
+For 4096 narrow evaluations, median thread allocation falls from 185,956,864
+to 98,304 bytes; the latter is reflection-call overhead in the driver.
+The wide control falls from 214,497,600 to 174,487,872 bytes. Wide reported
+work rises from 839,680 to 1,003,520 because fixing scans are additional work.
+The final wide thread-CPU median returns to the baseline's 31.25ms, versus
+140.625ms in the discarded exception-heavy variant. Windows thread-CPU
+resolution is too coarse to report a narrow-path speed ratio. These kernel
+measurements do not measure whole-planner or host performance.
+
+Offline assemble, all 1478 baseline ABI entries, source-JAR correspondence
+and the combined Forge/AE-dump artifact checks pass at version 0.1.6.
+The complete historical corpus and all 747 execution boundaries were not
+rerun. No new native-solver or live-host run is claimed.
