@@ -78,13 +78,15 @@ public final class RefillReallocationTest {
     }
     private static void productionEntries() {
         for (int depth : new int[]{64, 512}) for (long demand : new long[]{1, 3, 7})
-            for (int ordering = 0; ordering < 3; ordering++) {
+            for (int ordering = 0; ordering < 3; ordering++) for (String entry : List.of("main", "fallback")) {
                 var recipes = routes(depth, demand);
                 if (ordering == 1) Collections.reverse(recipes);
                 if (ordering == 2) Collections.shuffle(recipes, new Random(20261020));
                 var b = budget();
-                var answer = new GraphPlanner<>(new GraphCompiler<>(recipes)).plan("G", 1, Map.of(), false, true, b);
-                check(answer.missing().equals(Map.of("raw", demand)), "Main route " + depth + "/" + demand + "/" + ordering + ": " + answer.missing());
+                var compiler = new GraphCompiler<>(recipes);
+                var answer = entry.equals("main") ? new GraphPlanner<>(compiler).plan("G", 1, Map.of(), false, true, b) :
+                        GraphFallback.plan(compiler, "G", 1, Map.of(), Set.of(), Map.of(), false, true, b);
+                check(answer.missing().equals(Map.of("raw", demand)), entry + " route " + depth + "/" + demand + "/" + ordering + ": " + answer.missing());
                 check(b.reservedBytes() == 0, "Main workspace"); literal(answer, Map.of());
             }
         // A completed fallback word can bind multiple choices too. Run the

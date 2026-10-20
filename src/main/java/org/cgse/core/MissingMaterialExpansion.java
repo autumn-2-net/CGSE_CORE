@@ -14,7 +14,7 @@ import java.util.*;
 final class MissingMaterialExpansion<K> implements AutoCloseable {
     private static final int OPERATIONS_PER_STEP = 64;
     private static final long MIX_WORK_LIMIT = 8192;
-    private enum Phase { START, REQUIREMENTS, RECIPES, RANK, QUEUE, SELECT, SOURCE, FUNDING, SUPPORT, COMPARE, APPLY, STEPS, DEFICITS, PUBLISH, VERIFY, PRUNE, DONE }
+    private enum Phase { START, REQUIREMENTS, RECIPES, RANK, QUEUE, SELECT, SOURCE, PAIR, FUNDING, SUPPORT, COMPARE, APPLY, STEPS, DEFICITS, PUBLISH, VERIFY, PRUNE, DONE }
     private final GraphPlan<K> original;
     private final GraphCompiler<K> compiler;
     private final Map<K, Long> stock;
@@ -51,6 +51,10 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private boolean sourceSearchDone, sourceSearchEnabled = true;
     private RefillSourceSearch<K> reallocation;
     private boolean reallocationDone;
+    private RefillSourceSearch<K> jointSearch;
+    private boolean jointSearchDone, pairTried;
+    private RefillPairCounts.Choice<K> jointChoice;
+    private RefillPairCounts<K> pair;
     private boolean simpleSourcesOnly;
     private Map<K, String> preferredSources = Map.of();
     private Set<K> usedSourcePreferences = Set.of();
@@ -138,6 +142,14 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         work.simpleSourcesOnly = true;
         return work;
     }
+    static <K> MissingMaterialExpansion<K> jointAlternative(GraphCompiler<K> compiler, GraphPlan<K> goals, Map<K, Long> stock,
+            Set<K> external, Set<String> excluded, boolean force, boolean ignoreTargetStock, PlanningBudget budget,
+            RefillProducerOrder<K> order, BigInteger production, RefillPairCounts.Choice<K> choice) {
+        var work = sourceAlternative(compiler, goals, stock, external, excluded, force, ignoreTargetStock, budget,
+                order, production, Map.of(choice.key(), choice.first().id()));
+        work.jointChoice = choice;
+        return work;
+    }
     private static <K> boolean hasProducibleMissing(GraphCompiler<K> compiler, GraphPlan<K> plan) {
         // Only a cheap index lookup here. Source inspection belongs to the
         // budgeted continuation, including rejected/excluded alternatives.
@@ -156,6 +168,10 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         if (reallocation != null && !reallocationDone) {
             if (!reallocation.step()) return false;
             result = reallocation.result(); reallocationDone = true; return explainBoundary();
+        }
+        if (jointSearch != null && !jointSearchDone) {
+            if (!jointSearch.step()) return false;
+            result = jointSearch.result(); jointSearchDone = true; return explainBoundary();
         }
         if (cycleSearch != null) {
             if (!cycleSearch.step()) return false;
@@ -177,6 +193,19 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         if (phase == Phase.RANK) {
             if (!order.step()) return false;
             queueRequirements(); return false;
+        }
+        if (phase == Phase.PAIR) {
+            if (!pair.step()) return false;
+            var summary = pair.summary();
+            if (summary == null) { pair.close(); pair = null; phase = Phase.SOURCE; return false; }
+            BigInteger delta = targetDelta.add(summary.delta(original.target()));
+            BigInteger need = summary.required(expanding).max(required.getOrDefault(expanding, BigInteger.ZERO).subtract(summary.delta(expanding)));
+            if (deficit(expanding, need, delta).compareTo(deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta)) >= 0) {
+                pair.close(); pair = null; phase = Phase.SOURCE; return false;
+            }
+            proposal = new Proposal(pair, delta); pair = null;
+            keys = summary.delta().keySet().iterator(); outputSupport = true; phase = Phase.SUPPORT;
+            return false;
         }
         if (phase == Phase.VERIFY) {
             if (!verification.step()) return false;
@@ -201,8 +230,9 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         for (int i = 0; i < OPERATIONS_PER_STEP; i++) {
             budget.check();
             if (advance()) return true;
-            if (phase == Phase.RANK || phase == Phase.VERIFY || pruning != null || cycleSearch != null ||
-                    sourceSearch != null && !sourceSearchDone || reallocation != null && !reallocationDone || diagnostics != null) return false;
+            if (phase == Phase.RANK || phase == Phase.PAIR || phase == Phase.VERIFY || pruning != null || cycleSearch != null ||
+                    sourceSearch != null && !sourceSearchDone || reallocation != null && !reallocationDone ||
+                    jointSearch != null && !jointSearchDone || diagnostics != null) return false;
         }
         return false;
     }
@@ -247,7 +277,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                     if (deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta).signum() == 0) break;
                     var node = order.get(expanding);
                     if (node == null || node.sources.isEmpty()) break;
-                    sources = node.sources.iterator(); mayMix = false; mixing = false; partialOpportunity = false; phase = Phase.SOURCE;
+                    sources = node.sources.iterator(); mayMix = false; mixing = false; partialOpportunity = false; pairTried = false; phase = Phase.SOURCE;
                 }
             }
             case SOURCE -> {
@@ -260,11 +290,23 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                     // In particular, a later fully funded source must still win.
                     mixing = true; sources = order.get(expanding).sources.iterator();
                 } else if (selected != null && selected.funded || !sources.hasNext()) {
+                    if ((selected == null || !selected.funded) && !pairTried && jointChoice != null &&
+                            expanding.equals(jointChoice.key()) && preferred(expanding, jointChoice.first())) {
+                        pairTried = true;
+                        var first = jointChoice.first(); var second = jointChoice.second();
+                        if (!excluded.contains(first.id()) && !excluded.contains(second.id()) &&
+                                (recipes.get(first.id()) == null || recipes.get(first.id()).equals(first)) &&
+                                (recipes.get(second.id()) == null || recipes.get(second.id()).equals(second))) {
+                            pair = new RefillPairCounts<>(jointChoice,
+                                    key -> deficit(key, required.getOrDefault(key, BigInteger.ZERO), targetDelta), budget);
+                            phase = Phase.PAIR; break;
+                        }
+                    }
                     mixtureOpportunity |= partialOpportunity && (selected == null || !selected.funded);
                     sources = null; source = null;
                     if (selected == null) phase = Phase.SELECT;
                     else {
-                        reserve(160L + 128L * ((long) selected.recipe.inputs().size() + selected.recipe.outputs().size()));
+                        reserve(160L + 128L * selected.ports());
                         targetDelta = selected.delta; entries = selected.needs.entrySet().iterator(); phase = Phase.APPLY;
                     }
                 } else {
@@ -311,7 +353,10 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                         reserve(64); usedSourcePreferences.add(expanding);
                     }
                     recipes.put(selected.recipe.id(), selected.recipe);
-                    prefix.add(PlanStep.batch(selected.recipe.id(), selected.runs));
+                    if (selected.pair != null) {
+                        var second = selected.pair.choice().second();
+                        recipes.put(second.id(), second); prefix.add(selected.pair.word());
+                    } else prefix.add(PlanStep.batch(selected.recipe.id(), selected.runs));
                     selected.close(); selected = null; entries = null; phase = Phase.SELECT;
                 }
             }
@@ -383,6 +428,14 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             return false;
         }
         if (reallocation != null && reallocation.completedOrder() != null) diagnosticOrder = reallocation.completedOrder();
+        if (sourceSearchEnabled && jointSearch == null && sourceSearch != null &&
+                (sourceSearch.mayJoint() || reallocation != null && reallocation.mayJoint()) &&
+                result.alternatives().isEmpty() && budget.remainingWork() >= 512) {
+            jointSearch = RefillSourceSearch.joint(compiler, result, stock, external, excluded,
+                    forceCraft, ignoreTargetStock, budget, diagnosticOrder);
+            return false;
+        }
+        if (jointSearch != null && jointSearch.completedOrder() != null) diagnosticOrder = jointSearch.completedOrder();
         if (diagnosticOrder != null) {
             diagnostics = new RefillBoundaryDiagnostics<>(result, compiler, diagnosticOrder, budget);
             return false;
@@ -449,8 +502,9 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         if (!keys.hasNext()) { finishSupport(); return; }
         K input = keys.next();
         // Scan the ordered union without allocating an unbounded temporary set.
-        if (!outputSupport || !proposal.recipe.inputs().containsKey(input)) {
-            BigInteger need = before(proposal.recipe, input, proposal.runs);
+        if (proposal.pair != null || !outputSupport || !proposal.recipe.inputs().containsKey(input)) {
+            BigInteger need = proposal.pair == null ? before(proposal.recipe, input, proposal.runs) :
+                    proposal.pair.summary().required(input).max(required.getOrDefault(input, BigInteger.ZERO).subtract(proposal.pair.summary().delta(input)));
             proposal.needs.put(input, need);
             BigInteger previous = deficit(input, required.getOrDefault(input, BigInteger.ZERO), targetDelta);
             BigInteger next = deficit(input, need, proposal.delta);
@@ -480,6 +534,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                         .compareTo(deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta)) < 0)
             partialOpportunity = true;
         if (selected == null || proposal.funded && !selected.funded) finishComparison(true);
+        else if (!selected.funded && proposal.pair != null && preferred(expanding, proposal.recipe)) finishComparison(true);
         else if (!selected.funded && preferred(expanding, proposal.recipe) != preferred(expanding, selected.recipe))
             finishComparison(preferred(expanding, proposal.recipe));
         else if (forceCraft && proposal.delta.compareTo(selected.delta) < 0) finishComparison(false);
@@ -575,21 +630,30 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private final class Proposal implements AutoCloseable {
         final GraphRecipe<K> recipe;
         final BigInteger runs, delta;
+        final RefillPairCounts<K> pair;
         final Map<K, BigInteger> needs = new LinkedHashMap<>();
         boolean funded = true;
         BigInteger partialRuns;
         long bytes;
         Proposal(GraphRecipe<K> recipe, BigInteger runs, BigInteger delta) {
-            this.recipe = recipe; this.runs = runs; this.delta = delta;
+            this.recipe = recipe; this.runs = runs; this.delta = delta; pair = null;
             if (!allowMixed && mayMix && runs.compareTo(BigInteger.ONE) > 0) partialRuns = runs.subtract(BigInteger.ONE);
         }
+        Proposal(RefillPairCounts<K> pair, BigInteger delta) {
+            this.pair = pair; recipe = pair.choice().first(); runs = pair.firstCount(); this.delta = delta;
+        }
+        long ports() {
+            long size = (long) recipe.inputs().size() + recipe.outputs().size();
+            return pair == null ? size : size + pair.choice().second().inputs().size() + pair.choice().second().outputs().size();
+        }
         BigInteger need(K key) { return needs.getOrDefault(key, required.getOrDefault(key, BigInteger.ZERO)); }
-        @Override public void close() { budget.release(bytes); bytes = 0; }
+        @Override public void close() { if (pair != null) pair.close(); budget.release(bytes); bytes = 0; }
     }
 
     GraphPlan<K> result() {
         if (sourceSearch != null && !sourceSearchDone) return sourceSearch.result();
         if (reallocation != null && !reallocationDone) return reallocation.result();
+        if (jointSearch != null && !jointSearchDone) return jointSearch.result();
         return cycleSearch == null ? result : cycleSearch.result();
     }
     BigInteger prefixProduction() { return targetDelta; }
@@ -609,6 +673,8 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     @Override public void close() {
         releaseOriginalSummary();
         if (diagnostics != null) { diagnostics.close(); diagnostics = null; }
+        if (pair != null) { pair.close(); pair = null; }
+        if (jointSearch != null) { jointSearch.close(); jointSearch = null; }
         if (reallocation != null) { reallocation.close(); reallocation = null; }
         if (sourceSearch != null) { sourceSearch.close(); sourceSearch = null; }
         if (cycleSearch != null) { cycleSearch.close(); cycleSearch = null; }

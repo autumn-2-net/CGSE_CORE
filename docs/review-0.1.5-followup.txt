@@ -268,11 +268,12 @@ joint path/count optimization or a complete Pareto archive. Finite hint coverage
 rank refusals and quota exits do not certify a global minimum. Existing cycle
 frontiers are retained as-is rather than flattened into a new search.
 Both unused and already-bound source choices now have bounded positive arms.
-General mixtures needing intermediate firing counts, larger joint choices and
+Two-source coproduct mixtures now also propose intermediate counts from exact
+cover intersections. General integer mixtures, larger joint choices and
 combinations outside the hint window remain incomplete. The long depth-512
-fallback still retains its 300-raw incumbent at the first discovery/rank limit;
-it contains only one bound source, so it is not admitted to bound reallocation.
-This unchanged fallback is not reported as a recovered case.
+fallback's 300-raw incumbent is now improved to its executable 3-raw route;
+long unused-source analysis has the same structural allowance as bound-source
+analysis. See refill-joint-sources.txt for scope and measured costs.
 
 Compiler feedback/modeling: newly added producer columns still require
 recertifying bounds and cuts. No signature weakening, arbitrary state jumping,
@@ -294,3 +295,20 @@ old-positive aggregate work falls 0.0403%, with identical reserved peaks.
 The canonical backlog remains 155. This improves the existing LP mechanism
 without claiming a new canonical witness. See packing-priced-propagation.txt
 for exact scope, fault checks, memory measurements and remaining limitations.
+
+Implemented next: joint coproduct counts and long unused routes
+--------------------------------------------------------------
+Review section 2.2 now has a bounded positive candidate channel for two-source
+mixtures. It follows the existing unused/bound source opportunities and borrows
+their completed producer support. Exact rounded cover intersections propose
+both counts, then the ordinary backward expansion and complete verification
+check the two-batch word, its startup needs and its whole terminal supply.
+The old incumbent remains available throughout. No private failure is a
+full-model negative proof and no scalar material-price objective is introduced.
+
+The reproduced 3A+B / A+3B family improves from 3/7/38 raw to 2/6/34 raw for
+demands 4/12/68 of both outputs, through main and fallback entries and three
+catalog orders. Both source counts matter: simply switching the preferred
+source cannot express the first optimum. The 512-deep fallback also improves
+from 300 raw to 3. These are refill-quality recoveries, not new feasible
+canonical packing/equality/allocation witnesses; that backlog remains 155.

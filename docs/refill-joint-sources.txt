@@ -1,0 +1,101 @@
+Joint source counts and complete long-route analysis
+==================================================
+Review: d540c900 sections 2.1 and 2.2. Development baseline: 46b61089,
+version 0.1.6. Portable core only; no adapter or version change.
+
+Reproduced quality gaps
+----------------------
+The depth-512 X/Y route had an executable three-raw all-Y witness but fallback
+reported 300 raw. Its unused-source scan expired while inspecting bindings;
+the bound-source continuation could not help because the word used one source.
+
+A separate family has:
+  raw -> X; raw -> Y;
+  X -> 3 A + B; Y -> A + 3 B;
+  4q A + 4q B -> G.
+Empty-stock main and fallback previews used 3/7/38 raw at q=1/3/17 in each of
+three catalog orders. Exactly q of each source uses 2q raw. Primitive replay
+checks this witness; total A+B conservation gives the matching lower bound
+for this family. This is a sufficient-supply quality issue, not an invalid
+old plan or proof that the existing main solver cannot craft the funded goal.
+
+Candidate construction
+----------------------
+The existing unused and bound source trials keep their original priority.
+A following optional arm examines at most eight source hints and pairs only
+compatible producers of the same material with multiple outputs. It borrows
+complete producer support from the preceding arm when that scope is identical.
+
+For one pair, the current backward frontier supplies exact output deficits.
+Nonnegative net-output rows have the form a*x+b*y >= demand. Exact BigInteger
+intersections, positive-count boundaries and the four neighboring integer
+points provide a finite set of hints. Each point is checked against every
+original row. The fewest firings ranks these hints only; it is not a price
+for unlike materials or a global supply objective.
+
+Both actual batch orders are eligible trials. Their summaries retain input
+startup, returned tools, complete net deltas and physical recipe bindings.
+The ordinary backward expansion then supplies their inputs. The whole word
+must pass verification, preserve original forced-production credit and final
+seeds, and strictly improve the missing-supply vector component by component.
+Incomparable/equal bills retain the incumbent. A fully funded earlier source
+still has priority. One used preference consumes its finite rank exception.
+
+Bounds and limitations
+----------------------
+Pairs have at most 32 input/output incidences per recipe, 16 productive rows,
+and 4096-bit deficits. Cross-consumption with a negative output coefficient
+declines this arm. Per-push bindings, incompatible IDs and excluded sources
+remain guarded. Returned zero-net tools still have exact prefix requirements.
+Counts are never unrolled or narrowed to long.
+
+Whole-source alternatives still cover zero-count endpoints. Rounded corners
+are not all integer points; three-or-more-source interactions and arbitrary
+cyclic/temporal mixtures remain incomplete. Truncation, refusal and failure
+only keep the verified incumbent, never prove a global minimum or infeasibility.
+
+Unused-source analysis now shares the existing bound-source sizing formula:
+  min(remaining request work / 4,
+      min(65536, max(8192, 128 * bound recipe count))).
+Its long-word scan is bounded by min(8192, allowance/4), with the existing
+128 minimum and short-word 1024 limit. This changes a private quality allowance,
+not the request budget. Complete discovery can avoid a redundant bound-source
+scan on long single-source words. Work, memory and cancellation still apply
+to every continuation and to candidate verification.
+
+Validation scope
+----------------
+The maintained RefillJointSourceTest covers three production entries, counts,
+catalog permutations, returned tools with and without stock, exact 80-bit
+counts, forced production, seeds, incomparable bills, binding/exclusion scope,
+three-row exhaustive small-domain references, cancellation/limit publication
+and scheduled execution. RefillReallocationTest now includes the formerly
+unresolved long fallback orders alongside its main-planner counterparts.
+
+Against the frozen baseline artifact, 32 route requests retain every old bill
+or improve it. All 16 funded requests keep identical work. Twenty-eight of the
+32 keep identical work and all 32 keep identical reserved peaks. Two long
+single-source requests save 1024 work by avoiding repeated discovery; the long
+two-source main request spends 4200 extra work with the same three-raw bill.
+The recovered fallback spends 62271 -> 75816 work for 300 -> 3 raw.
+
+All 18 coupled-source requests improve their supply. Measured additional work
+is 782..1177 and the largest additional reserved peak is 9448 bytes. Tiny
+per-request ordering/peak differences are not a heap allocation or client
+latency benchmark. Seven injected faults are rejected: missing original-row
+checks, narrowed counts, signed rounding, lost forced credit, accepting an
+incomparable bill, missing startup entities and leaked pair workspace.
+
+Final validation: 357 standard check records PASS, including all 747 maintained
+execution-boundary requests with their existing work guards and worker modes.
+The built JAR passes eight refill programs; 1478 baseline API entries, source
+JAR correspondence and Forge packaging/artifact checks pass. All tested
+production/test source fingerprints remain unchanged through validation.
+Heavy processes share four logical CPUs. The complete historical corpus and
+native host are not rerun.
+
+Private original artifacts, drivers, immutable runs and result hashes are
+registered in .local/cases/refill-structured-routes-20261020. Player evidence
+is not needed for these synthetic cases and is not included in this change.
+This work does not change the canonical hard backlog of 155; it is not a
+new full historical-corpus or native-host run.

@@ -11,14 +11,14 @@ import java.util.*;
  */
 final class RefillSourceSearch<K> implements AutoCloseable {
     private enum Phase { BINDINGS, SCAN, PORTS, SOURCES, INPUTS, ORIGINAL, GOALS, MISSING, RANK, TRIAL, EXPAND, COMPARE, DONE }
-    private record Choice<K>(K key, String recipe) {}
+    private record Choice<K>(K key, GraphRecipe<K> source) {}
     private static final int MAX_CHOICES = 8;
     private final GraphPlan<K> original;
     private final GraphCompiler<K> compiler;
     private final Map<K, Long> stock;
     private final Set<K> external;
     private final Set<String> excluded;
-    private final boolean force, ignoreTargetStock, reallocate, borrowedOrder;
+    private final boolean force, ignoreTargetStock, reallocate, joint, borrowedOrder;
     private final PlanningBudget budget;
     private final long started, allowance, scanAllowance;
     private final String retainedFailure;
@@ -39,6 +39,8 @@ final class RefillSourceSearch<K> implements AutoCloseable {
     private boolean outputs, multihop;
     private boolean scanComplete, boundChoicesSeen, declined;
     private int boundSources;
+    private int jointSources, pairFirst, pairSecond = 1;
+    private boolean jointChoicesSeen, reversePair;
     private int next, accepted;
     private String previousPreference;
     private Choice<K> choice;
@@ -54,7 +56,7 @@ final class RefillSourceSearch<K> implements AutoCloseable {
     RefillSourceSearch(GraphCompiler<K> compiler, GraphPlan<K> original, Map<K, Long> stock,
                        Set<K> external, Set<String> excluded, boolean force, boolean ignoreTargetStock,
                        PlanningBudget budget) {
-        this(compiler, original, stock, external, excluded, force, ignoreTargetStock, budget, false, null);
+        this(compiler, original, stock, external, excluded, force, ignoreTargetStock, budget, false, false, null);
     }
 
     /** Runs after unused-source trials, so bound-source hints cannot displace
@@ -64,23 +66,32 @@ final class RefillSourceSearch<K> implements AutoCloseable {
             Set<K> external, Set<String> excluded, boolean force, boolean ignoreTargetStock,
             PlanningBudget budget, RefillProducerOrder<K> order) {
         return new RefillSourceSearch<>(compiler, original, stock, external, excluded, force, ignoreTargetStock,
-                budget, true, order);
+                budget, true, false, order);
+    }
+
+    /** Interior coproduct mixtures run only after the original source trials. */
+    static <K> RefillSourceSearch<K> joint(GraphCompiler<K> compiler, GraphPlan<K> original, Map<K, Long> stock,
+            Set<K> external, Set<String> excluded, boolean force, boolean ignoreTargetStock,
+            PlanningBudget budget, RefillProducerOrder<K> order) {
+        return new RefillSourceSearch<>(compiler, original, stock, external, excluded, force, ignoreTargetStock,
+                budget, false, true, order);
     }
 
     private RefillSourceSearch(GraphCompiler<K> compiler, GraphPlan<K> original, Map<K, Long> stock,
             Set<K> external, Set<String> excluded, boolean force, boolean ignoreTargetStock,
-            PlanningBudget budget, boolean reallocate, RefillProducerOrder<K> completedOrder) {
+            PlanningBudget budget, boolean reallocate, boolean joint, RefillProducerOrder<K> completedOrder) {
         this.compiler = compiler; this.original = result = original; this.stock = stock;
         this.external = external; this.excluded = excluded; this.force = force; this.ignoreTargetStock = ignoreTargetStock;
         this.budget = budget; started = budget.nodes(); retainedFailure = budget.failureDetail();
-        this.reallocate = reallocate; order = completedOrder; borrowedOrder = completedOrder != null;
+        this.reallocate = reallocate; this.joint = joint; order = completedOrder; borrowedOrder = completedOrder != null;
         ranked = borrowedOrder;
-        // Rebuilding a long mixed word includes both original verification and
-        // complete candidate verification. This separate bounded continuation
-        // uses remaining search work; it never enlarges the request budget.
-        long cap = reallocate ? Math.min(65536, Math.max(8192, 128L * original.recipes().size())) : 8192;
+        // Long unused routes owe the same original/candidate verification as
+        // bound mixtures. Size their complete analysis too; a fixed 1024 scan
+        // previously expired in bindings before even reaching source choices.
+        // These optional grants never enlarge the request's remaining budget.
+        long cap = Math.min(65536, Math.max(8192, 128L * original.recipes().size()));
         allowance = Math.min(cap, budget.remainingWork() / 4);
-        scanAllowance = Math.min(reallocate ? 8192 : 1024, Math.max(128, allowance / 4));
+        scanAllowance = Math.min(reallocate || cap > 8192 ? 8192 : 1024, Math.max(128, allowance / 4));
         recipes = original.recipes().values().iterator();
     }
 
@@ -154,12 +165,13 @@ final class RefillSourceSearch<K> implements AutoCloseable {
                 key = ports.next();
                 if (external.contains(key) || compiler.producers(key).size() < 2 || seen.contains(key)) break;
                 reserve(96); seen.add(key);
-                multihop = false; boundSources = 0; local.clear(); sources = compiler.producers(key).iterator(); phase = Phase.SOURCES;
+                multihop = false; boundSources = jointSources = 0; local.clear(); sources = compiler.producers(key).iterator(); phase = Phase.SOURCES;
             }
             case SOURCES -> {
                 if (!sources.hasNext()) {
                     boundChoicesSeen |= multihop && boundSources >= 2;
-                    if (multihop && (!reallocate || local.size() >= 2)) for (var option : local) {
+                    jointChoicesSeen |= jointSources >= 2;
+                    if ((joint ? local.size() >= 2 : multihop && (!reallocate || local.size() >= 2))) for (var option : local) {
                         if (choices.size() == MAX_CHOICES) break;
                         // The local list is constant-sized; charge retained hints.
                         reserve(96); choices.add(option);
@@ -172,11 +184,12 @@ final class RefillSourceSearch<K> implements AutoCloseable {
                 var binding = original.recipes().get(source.id());
                 if (binding != null && !binding.equals(source)) break;
                 if (binding != null) boundSources = Math.min(2, boundSources + 1);
+                if (source.outputs().size() > 1) jointSources = Math.min(2, jointSources + 1);
                 // Discovery of unused routes retains its old queue. A separate
                 // continuation revisits materials with multiple bound producers;
                 // a binding is a physical contract, not a fixed firing count.
-                if ((binding != null) == reallocate && local.size() < MAX_CHOICES)
-                    local.add(new Choice<>(key, source.id()));
+                if ((joint ? source.outputs().size() > 1 : (binding != null) == reallocate) && local.size() < MAX_CHOICES)
+                    local.add(new Choice<>(key, source));
                 inputs = source.inputs().keySet().iterator(); phase = Phase.INPUTS;
             }
             case INPUTS -> {
@@ -213,7 +226,15 @@ final class RefillSourceSearch<K> implements AutoCloseable {
             }
             case TRIAL -> {
                 if (result.feasible()) return finish();
-                if (reallocate) {
+                if (joint) {
+                    var pair = nextPair();
+                    if (pair == null) return finish();
+                    next++;
+                    expansion = MissingMaterialExpansion.jointAlternative(compiler, boundary, stock, external, excluded,
+                            force, ignoreTargetStock, budget, order, credit, pair);
+                    phase = Phase.EXPAND;
+                    break;
+                } else if (reallocate) {
                     // Rebuilding one coordinate can reset another incumbent
                     // mixture to a worse default. Compare small joint choices,
                     // not a greedy sequence that rejects every such tradeoff.
@@ -222,7 +243,7 @@ final class RefillSourceSearch<K> implements AutoCloseable {
                 } else {
                     if (next == choices.size()) return finish();
                     choice = choices.get(next++);
-                    previousPreference = preferred.put(choice.key(), choice.recipe());
+                    previousPreference = preferred.put(choice.key(), choice.source().id());
                 }
                 expansion = MissingMaterialExpansion.sourceAlternative(compiler, boundary, stock, external, excluded,
                         force, ignoreTargetStock, budget, order, credit, preferred);
@@ -249,7 +270,7 @@ final class RefillSourceSearch<K> implements AutoCloseable {
             result = candidate; accepted++;
             // The retained word still owns its builders after the child closes.
             memory += expansion.takeResultCharge();
-        } else if (!reallocate) {
+        } else if (!reallocate && !joint) {
             if (previousPreference == null) preferred.remove(choice.key());
             else preferred.put(choice.key(), previousPreference);
         }
@@ -277,14 +298,28 @@ final class RefillSourceSearch<K> implements AutoCloseable {
         }
         preferred.clear();
         for (int group = 0; group < groups; group++) {
-            var selected = choices.get(groupAt[group]); preferred.put(selected.key(), selected.recipe());
+            var selected = choices.get(groupAt[group]); preferred.put(selected.key(), selected.source().id());
         }
         return true;
     }
 
+    private RefillPairCounts.Choice<K> nextPair() {
+        while (pairFirst < choices.size() - 1) {
+            if (pairSecond == choices.size()) { pairSecond = ++pairFirst + 1; continue; }
+            var a = choices.get(pairFirst); var b = choices.get(pairSecond);
+            if (!a.key().equals(b.key())) { pairSecond++; continue; }
+            var pair = reversePair ? new RefillPairCounts.Choice<>(a.key(), b.source(), a.source()) :
+                    new RefillPairCounts.Choice<>(a.key(), a.source(), b.source());
+            if (reversePair) pairSecond++;
+            reversePair = !reversePair;
+            return pair;
+        }
+        return null;
+    }
+
     private boolean finish() {
         phase = Phase.DONE;
-        if (!choices.isEmpty()) budget.note(reallocate ? "refill_reallocate" : "refill_sources", "trials=" + next + "; accepted=" + accepted +
+        if (!choices.isEmpty()) budget.note(joint ? "refill_joint_sources" : reallocate ? "refill_reallocate" : "refill_sources", "trials=" + next + "; accepted=" + accepted +
                 "; work=" + (budget.nodes() - started));
         return true;
     }
@@ -293,6 +328,7 @@ final class RefillSourceSearch<K> implements AutoCloseable {
      * Recipes added by successful unused-source trials need not immediately
      * repeat those same choices. A truncated scan must remain inconclusive. */
     boolean mayReallocate() { return !declined && (!scanComplete || boundChoicesSeen); }
+    boolean mayJoint() { return !declined && jointChoicesSeen; }
     RefillProducerOrder<K> completedOrder() { return ranked ? order : null; }
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     @Override public void close() {
