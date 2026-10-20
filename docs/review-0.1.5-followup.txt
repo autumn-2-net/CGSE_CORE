@@ -209,6 +209,26 @@ programs, four deliberate fault checks, actual-library tests, ABI and Forge
 packaging pass. This is a bounded capability increment with no new canonical
 hard recovery; the full historical corpus is not repeated for this increment.
 
+Implemented next: scoped conflict handoff for packing
+----------------------------------------------------
+The retained packing DFS now consumes a bounded snapshot of its private PB
+repair's live clauses, including binary watch entries. Import requires the
+identical projection and budget; different fixed exteriors and distance rows
+cannot share those clauses. Incidence masks retain each depth's state and
+feed singleton implications into the existing exact row propagation. The
+remaining subtrees filter out wholly irrelevant snapshots before reuse.
+See packing-conflict-reuse.txt for the scope and ownership contract.
+
+At version 0.1.6 and the unchanged 40M cap, all 296 canonical packing inputs
+retain their previous results: 146 verified positives and 150 unresolved.
+Of the 146 old positives, 145 retain identical work; mknapcb6_09_bks adds
+3833 work, from 36,120,189 to 36,124,022. There is no new canonical recovery.
+Thirty retained runtime traces show imported implications/conflicts; these
+are evidence that the mechanism runs, not thirty newly solved models.
+Twenty-two related programs, independent clause/continuation oracles,
+deliberate fault injections, the actual JAR, ABI and packaging checks pass.
+This is a complete packing-family comparison, not a full historical rerun.
+
 Remaining review work
 ---------------------
 Exact equality supports: broader compound search and explanation costs remain
@@ -217,7 +237,9 @@ a positive oracle; short solver timeouts never supersede that evidence.
 
 Packing: retain the existing asymmetric exchanges and successful old samples.
 Persistent LP/core experiments must account for preparation and service costs;
-the previously unsuccessful warm-LP integration is not enabled by this change.
+the previously unsuccessful warm-LP integration remains disabled. The new
+same-face conflict handoff does not implement persistent LP bases or solve the
+remaining 150 cases.
 
 Vector allocation: cross-block residual interfaces remain separate research.
 Candidate exhaustion cannot prove that every first-block choice is impossible.

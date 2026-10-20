@@ -1,0 +1,86 @@
+Scoped conflict reuse when packing enumeration resumes
+
+The packing portfolio already retains its exact enumeration while a private
+Boolean conflict-learning repair searches the same face. Previously, an
+inconclusive repair discarded its clauses before resuming that enumeration.
+The preserved DFS stack therefore could not use implications learned during
+the repair. This change carries a bounded selection into that same stack.
+
+Identity is the scope contract: the two neighborhoods must share the original
+coefficient array, bound array and budget. These arrays include the column
+order, proposed fixed exterior and any distance restriction. A different
+projection, even one with the same dimensions or equal entries, is declined.
+Nothing is published as a whole-model exclusion, and no full search allowance
+or phase deadline is renewed. The existing original-model verifier remains
+responsible for returned candidates.
+
+The snapshot includes live learned clauses from the repair's current database
+and binary implications from its watch lists. Reading only the first 128
+externally reported conflicts misses later useful clauses; reading only the
+clause database misses binaries stored directly in the watches. Selection
+prefers short clauses and then low decision-level counts/recent use. At most
+64 conjunctions are retained, with an 8192-work selection scan plus bounded
+domain checks and extraction. Only literal zero/one domains are accepted.
+Offset integer domains cannot silently become Boolean bit coordinates.
+
+The receiver reserves its bounded selection scratch, incidence arrays and
+per-depth state before importing. It compares the clauses with the remaining
+DFS subtrees, including unvisited siblings. Clauses incompatible with every
+remaining subtree are discarded. A wholly irrelevant or refused snapshot
+leaves the original enumeration in place without a clause-checking workspace.
+
+Two incidence masks per variable remove all clauses contradicted by a chosen
+value together. Each DFS level has its own remaining-clause mask. Propagation
+checks only those clauses: a completed forbidden conjunction closes the local
+branch, while one remaining literal forces its opposite. Those implications
+feed the existing exact row activities. Backtracking selects the saved parent
+state; it neither replays nor reallocates clauses. No temporary collections are
+allocated per search node. The original suffix index and exact DFS choices are
+retained, and source disposal cannot invalidate the copied masks.
+
+CountPackingConflictTest independently enumerates the original Boolean models
+to check every exported conjunction and the resumed solver's status/witness.
+It also covers high bit 63, sibling restoration, offset-domain refusal, the
+bounded snapshot scan, binary-watch storage, existing DFS states, irrelevant
+remaining subtrees, strict projection identity, worker movement, memory refusal,
+repeated import, cancellation and work exhaustion. Deliberate faults exercise
+polarity, binary omission, scope leakage, sibling state, implication disposal
+and the residual-subtree admission check.
+
+This is communication between existing complementary searches, not a new LP
+basis algorithm or a completeness claim for multidimensional packing. Local
+conflict reuse need not solve a canonical hard input to be useful; its full
+family results and measured costs must remain explicit.
+
+Validation at 0.1.6 against 27672879, unchanged 40M work
+
+All 296 canonical packing inputs preserve their previous outcomes: 146
+verified positives and 150 unresolved. Of the old positives, 145 have exactly
+the same reported work; mknapcb6_09_bks rises from 36,120,189 to 36,124,022.
+Their total rises from 1,077,498,255 to 1,077,502,088. No canonical hard case
+is newly solved. Thirty retained final diagnostic traces contain imported
+conflicts/implications; those counts may revisit the same consequence and
+are not distinct solutions or an explanation of every remaining limit.
+
+Twenty-two targeted programs pass. The new exhaustive check includes 256
+retained continuations, 113 nonempty snapshots and 232 conjunctions checked
+against every original Boolean witness. It checks the real owner's handoff
+as well as the standalone receiver. Seven deliberate faults are detected.
+Offline assembly, 1478 ABI entries, source/JAR correspondence and Forge
+packaging with embedded AE dump pass.
+Three historical inputs (the affected passing control, a native-solver
+positive and an unresolved control) also retain every outcome under recipe
+orders 0, 1, 17 and 97, both serially and with four workers at the same cap.
+That paired comparison executes 48 requests; it adds no canonical recovery.
+
+A balanced A/B/B/A kernel comparison uses 16 warmups and 12 measured rounds
+per process, without other CGSE tests running. Its 400,000-step samples keep
+the exact frontier hash, 592,834 work and 1216-byte peak reserved index storage.
+Median wall time is 10.8017 -> 11.0210 ms; quantized caller CPU medians are both
+15.625 ms. Cumulative thread allocation is 16,592 -> 16,624 bytes (four search
+objects), with no per-node clause allocation. This small isolated measurement
+does not establish whole-request or live-server latency, heap size or RSS.
+
+The canonical ledger remains 150 packing + 4 sparse equalities + 2 source/fuel
+allocations. This increment does not rerun the entire historical corpus,
+the other hard families, native solvers or the live host.

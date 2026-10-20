@@ -12,6 +12,8 @@ final class CountPackingNeighborhood implements AutoCloseable {
     enum Mode { PROPAGATION, LEARNING, EXCHANGE, EXCHANGE_FOUR, EXCHANGE_ASYMMETRIC }
 
     private final PlanningBudget budget;
+    private final long[][] sourceRows;
+    private final long[] sourceBounds;
     private CountPackingSearch propagation;
     private CountPackingExchange exchange;
     private CountCdcl learning;
@@ -27,6 +29,7 @@ final class CountPackingNeighborhood implements AutoCloseable {
     }
     CountPackingNeighborhood(long[][] coefficients, long[] bounds, long seed, PlanningBudget budget, Mode mode, long flexible) {
         this.budget = budget;
+        sourceRows = coefficients; sourceBounds = bounds;
         if (mode == Mode.EXCHANGE_ASYMMETRIC) {
             exchange = new CountPackingExchange(coefficients, bounds, seed, budget, 1, flexible, 4);
             return;
@@ -86,6 +89,15 @@ final class CountPackingNeighborhood implements AutoCloseable {
         }
         complete = true;
         return true;
+    }
+
+    /** Identity includes the column order, fixed exterior and any distance row.
+     * Even equal dimensions or a different projection of the same model do not
+     * authorize sharing the private repair's clauses. */
+    void reuse(CountPackingNeighborhood source) {
+        if (propagation != null && source.learning != null && budget == source.budget &&
+                sourceRows == source.sourceRows && sourceBounds == source.sourceBounds)
+            propagation.reuse(source.learning);
     }
 
     boolean feasible() { return exchange != null ? exchange.feasible() : propagation != null ? propagation.feasible() : feasible; }

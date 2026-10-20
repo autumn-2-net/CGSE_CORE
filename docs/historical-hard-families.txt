@@ -83,6 +83,14 @@ sufficient reproduction inputs have separate statuses, not UNSAT or PASS.
    ledger is now 156 (150 packing + 4 equalities + 2 allocation). See
    asymmetric-packing-exchange.txt for native evidence and coverage limits.
 
+   A subsequent 0.1.6 comparison reuses private PB clauses in the identical
+   retained enumeration. All 296 canonical packing outcomes stay unchanged:
+   146 positives, 150 unresolved. Of the old positives, 145 keep identical
+   work and one adds 3833 work at the unchanged 40M cap. The other two hard
+   families are not rerun in this increment; the ledger remains 156.
+   See packing-conflict-reuse.txt. Runtime implications are complementary
+   search progress, not new canonical witnesses or a whole-model proof.
+
 3. Integer equalities and source/fuel allocation: distinct algebraic services
 
    The four equality models need integer-lattice/box reasoning, not Boolean

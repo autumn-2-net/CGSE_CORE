@@ -193,7 +193,10 @@ final class CountPackingCore implements CountContinuation {
     }
 
     private void resumeEnumeration() {
-        if (search != null) { forcedValues += search.forcedValues(); search.close(); }
+        if (search != null) {
+            enumerationBase.search().reuse(search);
+            forcedValues += search.forcedValues(); search.close();
+        }
         restoreSearch(enumerationBase); enumerationBase = null;
         phase = Phase.RESUMED_ENUMERATION;
         budget.note("count_packing_core", "resume_enumeration; free=" + coreSize + "; work=" + work);

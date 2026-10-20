@@ -25,6 +25,14 @@ final class CountPackingSearch implements AutoCloseable {
     private CountPackingTail tail;
     private long tailWork;
     private boolean tailAttempted, tailActive, tailQuery;
+    private CountPackingConflicts conflicts;
+    private long[] conflictForces;
+
+    void reuse(CountCdcl source) {
+        if (complete || conflicts != null) return;
+        conflicts = CountPackingConflicts.create(source, size, depth, seed, undecided, selected, choices, budget);
+        if (conflicts != null) conflictForces = new long[2];
+    }
 
     /** Takes ownership of coefficients. All row activities must fit below 2^60. */
     CountPackingSearch(long[][] coefficients, long[] bounds, long seed, PlanningBudget budget) {
@@ -177,6 +185,7 @@ final class CountPackingSearch implements AutoCloseable {
             slacks[depth + 1][r] = slacks[depth][r] - loss;
             if (loss != 0) pendingRows |= 1L << r;
         }
+        if (conflicts != null) conflicts.branch(depth, variable, value);
         undecided[depth + 1] = undecided[depth] & ~bit;
         selected[depth + 1] = selected[depth] | (value ? bit : 0);
         depth++;
@@ -218,6 +227,11 @@ final class CountPackingSearch implements AutoCloseable {
                 forceOne |= forced & negative[r];
                 if ((forceZero & forceOne) != 0) return false;
             }
+            if (conflicts != null) {
+                conflictForces[0] = forceZero; conflictForces[1] = forceOne;
+                if (!conflicts.propagate(depth, undecided[depth], conflictForces)) return false;
+                forceZero = conflictForces[0]; forceOne = conflictForces[1];
+            }
             long forced = forceZero | forceOne;
             if (forced == 0) return true;
             forcedValues += Long.bitCount(forced);
@@ -232,6 +246,7 @@ final class CountPackingSearch implements AutoCloseable {
                     slacks[depth][r] -= Math.abs(coefficients[r][variable]);
                 }
             }
+            if (conflicts != null) conflicts.assign(depth, forceZero, forceOne);
             selected[depth] |= forceOne;
             undecided[depth] &= ~forced;
         }
@@ -244,6 +259,8 @@ final class CountPackingSearch implements AutoCloseable {
     }
     long forcedValues() { return forcedValues; }
     @Override public void close() {
+        if (conflicts != null) conflicts.close();
+        conflicts = null; conflictForces = null;
         if (tail != null) tail.close();
         tail = null;
         buckets = null; shifts = null;
