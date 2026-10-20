@@ -213,3 +213,86 @@ All local evidence, intermediate experiments and reproduction commands remain
 in the case registry. This is not a rerun of all 20,927 historical records or
 a live-game test. GTLCore and the public host ABI are unchanged; version stays
 0.1.5. The four canonical sparse cases remain unresolved at the original cap.
+
+Staged expansion by exact sum range (0.1.6, 2026-10-20)
+------------------------------------------------------
+The initial four-free-coordinate threshold is deliberately retained. Simply
+running the same support DP on every admitted equation changed successful
+trajectories: a direct 40M-work experiment lost one previously solved generated
+model. A faster elapsed run that exhausts its work before finding the witness
+is not an improvement in fixed-budget solving.
+
+The masked companion instead strengthens the same retained LCG after 262,144
+of its own work units, one quarter of its existing lifetime allowance. At that
+point it admits up to twelve unfixed coordinates under the existing finite
+width, exact normalization and 2048-sum-range limits. Prefix/suffix bitsets
+compute supports without enumerating the Cartesian product of the domains.
+The pre-reserved workspace already covers the twelve-term DP; no additional
+arm, dense lattice, exported root bound or expanded request budget is introduced.
+
+Expansion retains the current trail, conditional holes, reasons, learned
+clauses and branch position. Both directions of every paired equation are
+woken, including unchanged boxes previously refused by the shorter threshold.
+The transition invalidates the cached boxes once, so a cached refusal cannot
+conceal the newly enabled analysis. Hull-only callers retain the old threshold even
+when the shared support object has expanded. No conclusion escapes the
+private model, and proof-journal tasks still decline this arm.
+
+The transition uses owned work, including preparation and explanation costs.
+Another portfolio arm cannot advance it, and tiny grants or worker handoffs
+cannot renew its allowance. Strengthening and all subsequent analysis remain
+inside the original 1,048,576 private lifetime, with the existing bounded
+atomic-operation overshoot. The normal 40M request cap is unchanged.
+Phase checks run at resume, outside the common atomic step. The first grant
+is capped at the transition, so even one large grant observes strengthening.
+The ordinary step remains source-identical to the preceding implementation;
+exact-box cache hits do not pay for a propagation-phase comparison.
+
+CountEqualityWideTest exhausts 2,128,594 original tuples over 962 boxes,
+including five through twelve unfixed coordinates, the sixteen-value limit,
+signed coefficients, large exact offsets/factors, opposite-row reuse, restored
+domains and both sides of the sum-range boundary. It checks the new supports
+against literal tuples rather than another DP implementation.
+The extended learning test checks 1,152 original-model searches (738 SAT and
+414 UNSAT), including conditional holes consumed after expansion, explanations
+across equations and backtracking into the other branch. Continuation checks
+retain the same search object across strengthening and worker handoff, inject
+unrelated charged work, and check the original lifetime and proof boundaries.
+
+The twenty-two-model direct bounded comparison retains all six prior successes
+and their identical aggregate work of 582,617. The paired main-pipeline
+campaign covers 822 historical count requests in three orders and eighteen
+generated requests. Both engines return 798 PASS, 24 unresolved and eighteen
+unsupported; every old success retains identical charged work, 639,728,994 in
+total. No canonical hard case is newly recovered.
+
+A note-only trace of the historic SCIP-positive n144-s1 case confirms actual
+strengthening at request work 25,885,082 and 1,469 expanded support evaluations.
+The domain companion receives 244 scheduling slices and exits without a
+candidate at its unchanged private allowance. Instrumented and normal builds
+both report 39,995,027 total work. The historical complete SCIP witness is
+rechecked against all original bounds and rows; it remains a positive oracle.
+
+All twelve related maintained programs pass. Deliberate stale-phase cache,
+missing wakeup, global-clock and missing-antecedent faults are each caught by
+the maintained tests. Seven support/domain programs also pass on the actual
+0.1.6 library. Java 17 assemble, 1478 baseline API entries, integrated Forge/AE
+dump artifacts and source-JAR correspondence pass. Production hashes match
+the paired campaigns and built artifact. This is targeted regression, not a
+rerun of the full historical corpus or a native-host test.
+
+Performance sampling also changed the implementation. A first version checked
+the phase on every atomic step and on every exact-box cache lookup. In a longer
+warmed comparison, one old successful generated case showed a 17% caller-CPU
+increase. That run and its artifact remain archived. The final implementation
+moves the transition to resume and invalidates boxes once, retaining the old
+atomic step rather than keeping those additional hot-path checks.
+
+The final balanced baseline/candidate/candidate/baseline sample uses eight
+warmups and six measured calls per process, twelve samples per engine/model.
+Three controls retain identical caller-CPU medians: 312.5, 203.125 and 718.75 ms.
+Charged work and reserved peaks are identical; cumulative thread allocation
+changes by +0.061%, -0.010% and +0.010%. Earlier samples are retained separately,
+not relabeled as passes. These headless samples support retention of the measured
+paths, not a universal speedup, whole-JVM memory reduction or live-game latency
+claim. Timing runs execute after the other CGSE tests, under the four-CPU cap.

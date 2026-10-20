@@ -5,6 +5,7 @@ package org.cgse.core;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.function.IntConsumer;
 
 /** Exact bounded-sum supports borrowed by a private candidate search. */
 final class CountEqualitySupport implements AutoCloseable {
@@ -34,7 +35,8 @@ final class CountEqualitySupport implements AutoCloseable {
     private final PlanningBudget budget;
     private Equation[] equations;
     private BigInteger[] anchors;
-    private long memory, calls, changes, failures;
+    private long memory, calls, changes, failures, expandedCalls;
+    private boolean expanded;
 
     private CountEqualitySupport(PlanningBudget budget, long memory) {
         this.budget = budget;
@@ -100,6 +102,25 @@ final class CountEqualitySupport implements AutoCloseable {
         return propagate(rowId, low, high, null);
     }
 
+    /** Strengthen the same private model after its initial search opportunity.
+     * Cached refusals must be reconsidered, including equations whose bounds
+     * did not change. This changes propagation, not the domain or proof scope. */
+    void expandDomains(IntConsumer wake) {
+        if (expanded) return;
+        expanded = true;
+        for (int r = 0; r < equations.length; r++) {
+            budget.check();
+            if (equations[r] != null) {
+                // Invalidate once at the transition rather than adding a
+                // phase comparison to every ordinary exact-box cache hit.
+                equations[r].previousLow[0] = null;
+                equations[r].previousResult = null;
+                wake.accept(r);
+            }
+        }
+        budget.note("count_equality_expansion", "bounded_sum_range=" + MAX_RANGE + "; max_terms=" + MAX_TERMS);
+    }
+
     /** Optional masks use the original lower-bound offsets, not the current
      * hull. Both holes and bounds are part of the exact cache key. The caller
      * owns their scoped explanations and restores masks on backtracking. */
@@ -147,9 +168,10 @@ final class CountEqualitySupport implements AutoCloseable {
             }
             if (width[k] > 0 && a.signum() != 0) { gcd = gcd.gcd(a); free++; }
         }
-        // Interval propagation is cheaper while many coordinates are free.
-        // A short residual is where exact holes can strengthen its endpoints.
-        if (free < 2 || free > 4 || gcd.signum() == 0) return null;
+        // Keep the initial short-residual path. The later masked phase admits
+        // up to twelve coordinates by their bounded sum range, never by
+        // enumerating the Cartesian product of their sixteen-value domains.
+        if (free < 2 || free > 4 && (!expanded || masks == null) || gcd.signum() == 0) return null;
         calls++;
         if (target.signum() < 0 || target.mod(gcd).signum() != 0) return empty(equation);
         target = target.divide(gcd);
@@ -164,6 +186,7 @@ final class CountEqualitySupport implements AutoCloseable {
         }
         if (rhs > range) return empty(equation);
         if (range > MAX_RANGE) return null;
+        if (free > 4) expandedCalls++;
         if (rhs > range / 2) {
             rhs = range - rhs;
             for (int k = 0; k < n; k++) negative[k] = !negative[k];
@@ -231,7 +254,8 @@ final class CountEqualitySupport implements AutoCloseable {
 
     @Override public void close() {
         if (memory == 0) return;
-        budget.note("count_equality_support", "calls=" + calls + "; changes=" + changes + "; empty_boxes=" + failures);
+        budget.note("count_equality_support", "calls=" + calls + "; changes=" + changes + "; empty_boxes=" + failures +
+                "; expanded_calls=" + expandedCalls);
         equations = null;
         anchors = null;
         budget.release(memory);

@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Bounded private LCG search with exact short-equality supports. No proof export. */
 final class CountSupportedSearch implements CountContinuation {
-    private static final long LIMIT = 1_048_576;
+    private static final long LIMIT = 1_048_576, EXPAND_AFTER = LIMIT / 4;
     private final List<ExactLinearProgram.Constraint> rows;
     private final BigInteger[] lower, upper;
     private final PlanningBudget budget;
@@ -16,7 +16,7 @@ final class CountSupportedSearch implements CountContinuation {
     private CountLcg search;
     private BigInteger[] counts;
     private long work, allowance;
-    private boolean complete, paused;
+    private boolean complete, paused, expandPending;
 
     private CountSupportedSearch(List<ExactLinearProgram.Constraint> rows, BigInteger[] lower, BigInteger[] upper,
                                  PlanningBudget budget) {
@@ -41,6 +41,7 @@ final class CountSupportedSearch implements CountContinuation {
             result.search = new CountLcg(rows, lower, upper, budget, quantum);
             result.search.supportEqualities(result.support);
             if (domains && !result.search.supportDomains()) { result.close(); return null; }
+            result.expandPending = domains;
             result.allowance = Math.min(LIMIT, quantum);
             result.paused = true;
             return result;
@@ -70,7 +71,17 @@ final class CountSupportedSearch implements CountContinuation {
     @Override public boolean paused() { return paused; }
     @Override public void resume(long quantum) {
         if (!paused || complete) throw new IllegalStateException("Support search is not paused");
-        allowance = Math.min(LIMIT, CountContinuation.deadline(work, quantum, budget));
+        // Strengthen only at a handoff, after this frontier's initial owned
+        // work. Keep phase checks out of the common atomic step. Capping the
+        // first grant also makes one large grant observe the same transition.
+        if (expandPending && work >= EXPAND_AFTER) {
+            long before = budget.threadWork();
+            try {
+                expandPending = false;
+                search.expandEqualityDomains();
+            } finally { work += budget.threadWork() - before; }
+        }
+        allowance = Math.min(expandPending ? EXPAND_AFTER : LIMIT, CountContinuation.deadline(work, quantum, budget));
         paused = false;
     }
     @Override public BigInteger[] counts() { return counts == null ? null : counts.clone(); }

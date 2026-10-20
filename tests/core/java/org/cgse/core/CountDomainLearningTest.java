@@ -18,12 +18,14 @@ public final class CountDomainLearningTest {
     private static long explanations;
     public static void main(String[] args) throws Exception {
         allocationRefusal();
-        crossEquationReason();
+        crossEquationReason(false);
+        crossEquationReason(true);
         long deleted = 0, restored = 0;
         int sat = 0, unsat = 0, cases = 0;
         var random = new Random(2026102043L);
-        for (int seed = 0; seed < 256; seed++) {
-            int n = 5 + seed % 2;
+        for (int seed = 0; seed < 384; seed++) {
+            boolean expanded = seed >= 256;
+            int n = 5 + seed % (expanded ? 3 : 2);
             BigInteger offset = seed % 7 == 0 ? BigInteger.ONE.shiftLeft(90).negate() : BigInteger.valueOf(-2);
             var lo = new BigInteger[n]; var hi = new BigInteger[n]; var planted = new BigInteger[n];
             Arrays.fill(lo, offset); Arrays.fill(hi, offset.add(BigInteger.valueOf(3)));
@@ -31,7 +33,7 @@ public final class CountDomainLearningTest {
             var rows = new ArrayList<ExactLinearProgram.Constraint>();
             for (int r = 0; r < 3; r++) {
                 var terms = new LinkedHashMap<Integer, BigInteger>();
-                while (terms.size() < 3 + seed % 2) {
+                while (terms.size() < (expanded ? n : 3 + seed % 2)) {
                     int a = random.nextInt(11) - 5;
                     if (a != 0) terms.put(random.nextInt(n), BigInteger.valueOf(a));
                 }
@@ -57,6 +59,7 @@ public final class CountDomainLearningTest {
                     check(support != null, "No support admitted");
                     search.supportEqualities(support);
                     check(search.supportDomains(), "No domains admitted");
+                    if (expanded) search.expandEqualityDomains();
                     var seen = Collections.newSetFromMap(new IdentityHashMap<>());
                     while (true) {
                         if (search.paused()) search.resume(order == 0 ? 4096 : 1);
@@ -115,16 +118,22 @@ public final class CountDomainLearningTest {
         }
         check(budget.reservedBytes() == 0, "Refused domain workspace leaked");
     }
-    private static void crossEquationReason() throws Exception {
+    private static void crossEquationReason(boolean expanded) throws Exception {
         // At t=0, A removes x=2 without changing x's hull. B cannot see t,
         // but consumes that hole to force x=0. Its reason MUST retain t=0:
         // the original model also has the witness (x,y,z,t,u,v)=(2,1,0,1,0,0).
-        BigInteger[] lo = new BigInteger[6], hi = new BigInteger[6];
+        int n = expanded ? 8 : 6;
+        BigInteger[] lo = new BigInteger[n], hi = new BigInteger[n];
         Arrays.fill(lo, BigInteger.ZERO); Arrays.fill(hi, BigInteger.ONE); hi[0] = BigInteger.valueOf(3);
         var rows = new ArrayList<ExactLinearProgram.Constraint>();
         rows.addAll(CountEqualitySupportTest.pair(Map.of(0, BigInteger.ONE, 1, BigInteger.TWO,
                 2, BigInteger.valueOf(3), 3, BigInteger.ONE.negate()), BigInteger.valueOf(3)));
-        rows.addAll(CountEqualitySupportTest.pair(Map.of(0, BigInteger.ONE, 4, BigInteger.TWO, 5, BigInteger.valueOf(3)), BigInteger.TWO));
+        var second = new LinkedHashMap<>(Map.of(0, BigInteger.ONE, 4, BigInteger.TWO, 5, BigInteger.valueOf(3)));
+        if (expanded) {
+            second.put(6, BigInteger.valueOf(4));
+            second.put(7, BigInteger.valueOf(4));
+        }
+        rows.addAll(CountEqualitySupportTest.pair(second, BigInteger.TWO));
         Constructor<?> literal = LITERAL.getDeclaredConstructor(int.class, boolean.class, BigInteger.class);
         literal.setAccessible(true);
         Method tighten = CountLcg.class.getDeclaredMethod("tighten", LITERAL, List.class);
@@ -142,13 +151,14 @@ public final class CountDomainLearningTest {
             tighten.invoke(search, literal.newInstance(3, false, BigInteger.ZERO), null);
             propagate.invoke(search, 0);
             check(((List<?>) HOLES.get(search)).size() == 1, "Missing conditional interior hole");
+            if (expanded) search.expandEqualityDomains();
             propagate.invoke(search, 2);
             check(((List<?>) trail.get(search)).size() > 1, "Missing propagated bound using the hole");
             int checked = 0;
-            for (int encoded = 0; encoded < 128; encoded++) {
-                BigInteger[] point = new BigInteger[6];
+            for (int encoded = 0; encoded < (1 << (n + 1)); encoded++) {
+                BigInteger[] point = new BigInteger[n];
                 point[0] = BigInteger.valueOf(encoded & 3);
-                for (int i = 1; i < 6; i++) point[i] = BigInteger.valueOf((encoded >>> (i + 1)) & 1);
+                for (int i = 1; i < n; i++) point[i] = BigInteger.valueOf((encoded >>> (i + 1)) & 1);
                 if (!valid(rows, point)) continue;
                 checked++;
                 for (Object item : (List<?>) trail.get(search)) {

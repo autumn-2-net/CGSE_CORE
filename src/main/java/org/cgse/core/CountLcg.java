@@ -972,6 +972,16 @@ final class CountLcg implements AutoCloseable {
         return this;
     }
 
+    void expandEqualityDomains() {
+        if (domainMasks == null) throw new IllegalStateException("Expansion requires private equality domains");
+        long before = budget.threadWork();
+        try { equalitySupport.expandDomains(this::enqueue); }
+        finally {
+            workTicks += (budget.threadWork() - before) * PlanningBudget.WORK_SCALE;
+            work = PlanningBudget.units(workTicks);
+        }
+    }
+
     boolean supportDomains() {
         if (equalitySupport == null || differenceChecked || domainMasks != null)
             throw new IllegalStateException("Domains require a fresh private support search");

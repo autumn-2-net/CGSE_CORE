@@ -28,7 +28,8 @@ public final class CountSupportedSearchTest {
         } finally { worker.shutdownNow(); }
         for (boolean domains : new boolean[] {false, true}) {
             limits(domains);
-            boundedHardSearch(domains);
+            boundedHardSearch(domains, 137);
+            boundedHardSearch(domains, 1_048_576);
         }
         System.out.println("Supported search: 128 positive/negative continuations; hull/masks, original rows, offsets, orders, worker handoff and proof isolation passed");
     }
@@ -97,7 +98,7 @@ public final class CountSupportedSearchTest {
         check(budget.reservedBytes() == 0, "Cancellation leaked");
     }
 
-    private static void boundedHardSearch(boolean domains) throws Exception {
+    private static void boundedHardSearch(boolean domains, long quantum) throws Exception {
         int n = 144;
         var random = new Random(2026102023);
         var low = new BigInteger[n]; var high = new BigInteger[n]; var planted = new BigInteger[n];
@@ -113,11 +114,32 @@ public final class CountSupportedSearchTest {
             rows.addAll(CountEqualitySupportTest.pair(terms, rhs));
         }
         var budget = new PlanningBudget(0, 4_000_000, 64L << 20, () -> false, System::nanoTime);
+        var worker = Executors.newSingleThreadExecutor();
         try (var search = CountSupportedSearch.create(rows, low, high, budget, 4096, domains)) {
+            Object retained = value(search, "search"), support = value(search, "support");
+            // Simulate work spent by another portfolio arm: it must neither
+            // strengthen this search early nor renew its private allowance.
+            budget.charge(300000);
+            boolean changedWorker = false, expanded = false;
             while (true) {
-                if (search.paused()) search.resume(137);
-                if (search.step() && !search.paused()) break;
+                long before = search.work();
+                boolean done;
+                if (!changedWorker && before >= 262144 && search.paused()) {
+                    done = worker.submit(() -> { search.resume(quantum); return search.step(); }).get(30, TimeUnit.SECONDS);
+                    changedWorker = true;
+                } else {
+                    if (search.paused()) search.resume(quantum);
+                    done = search.step();
+                }
+                if ((boolean) value(support, "expanded") && !expanded) {
+                    check(domains && before >= 262144, "Competing work triggered early expansion");
+                    check(value(search, "search") == retained, "Expansion discarded the paid search trail");
+                    expanded = true;
+                }
+                if (done && !search.paused()) break;
             }
+            check((changedWorker || !domains && quantum == 1_048_576) && expanded == domains,
+                    "Missing owned-work expansion/handoff coverage");
             // Constructive SAT is retained even when the local scout has no
             // witness. Repeated grants cannot buy another million work units.
             check(search.counts() == null && search.work() >= 1_048_576 && search.work() < 1_081_344, "Hard local cutoff not exercised");
@@ -125,7 +147,7 @@ public final class CountSupportedSearchTest {
             check(search.step() && budget.searchWork() == before, "Completed scout restarted");
             try { search.resume(4096); throw new AssertionError("Renewed completed scout"); }
             catch (IllegalStateException expected) {}
-        }
+        } finally { worker.shutdownNow(); }
         check(budget.reservedBytes() == 0, "Local cutoff retained workspace");
         budget = new PlanningBudget(0, 20000, 64L << 20, () -> false, System::nanoTime);
         boolean exhausted = false;
@@ -136,6 +158,9 @@ public final class CountSupportedSearchTest {
             }
         } catch (PlanningBudget.Exhausted expected) { exhausted = true; }
         check(exhausted && budget.reservedBytes() == 0, "Request cutoff leaked or became an empty proof");
+    }
+    private static Object value(Object target, String name) throws Exception {
+        var field = target.getClass().getDeclaredField(name); field.setAccessible(true); return field.get(target);
     }
     private static void check(boolean condition, String message) { if (!condition) throw new AssertionError(message); }
 }

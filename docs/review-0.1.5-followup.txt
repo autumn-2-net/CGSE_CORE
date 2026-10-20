@@ -1,6 +1,7 @@
 CGSE 0.1.5 review follow-up
 =========================
-Review baseline: d540c900, 2026-10-20. Version remains 0.1.5.
+Review baseline: d540c900, 2026-10-20. Follow-up development is now 0.1.6;
+the preceding 0.1.5 build has already been produced in the cloud.
 The review combines source observations, isolated-class tests and research
 suggestions. A suggested search gap is not an invalid-plan or global-UNSAT bug.
 
@@ -190,6 +191,23 @@ charged work. Overlapping orders are not new canonical cases. Main-path
 timing controls retain CPU/allocation behavior within the measured noise;
 build, 1478 ABI entries and Forge/AE-dump packaging pass. No full 20,927-case
 rerun or live host test is claimed; version remains 0.1.5.
+
+Implemented next: staged bounded-sum expansion
+----------------------------------------------
+The private masked search now strengthens its propagation after 262,144 of
+its own work units. It admits equations with five through twelve unfixed
+coordinates when their exact normalized sum range fits the existing 2048
+limit. It keeps the same bounds, holes, explanations, learned clauses and
+search trail, within the same 1,048,576 lifetime allowance.
+The initial hull and masked paths keep their previous admission. An eager
+unconditional expansion prototype lost a formerly solved direct comparison;
+it is retained as evidence, not substituted for those established paths.
+See docs/sparse-equality-support.txt for the staged scope and validation.
+The 840-request main comparison retains all 798 prior successes with identical
+work; unresolved and unsupported counts also remain unchanged. Twelve related
+programs, four deliberate fault checks, actual-library tests, ABI and Forge
+packaging pass. This is a bounded capability increment with no new canonical
+hard recovery; the full historical corpus is not repeated for this increment.
 
 Remaining review work
 ---------------------
