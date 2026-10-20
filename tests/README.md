@@ -1435,3 +1435,13 @@ that handoff. The longer cases are no longer accepted as unresolved boundaries.
 guard retained exact enumeration across PB repair and nested exchange scouts.
 They distinguish scoped infeasibility from workspace refusal and check a repair
 grant measured from actual entry without renewing request or local limits.
+
+`CountEqualitySupportTest` exhausts 1536 finite equation boxes and independently
+checks their supported endpoints, including signed large offsets, GCDs,
+opposite rows, restored boxes, memory limits and cancellation.
+`CountSupportedSearchTest` exercises private support explanations with retained
+LCG search, worker handoffs, original side rows and nonrenewable local/request
+limits. `CountSupportedPipelineTest` pins the generated 257-variable model in
+`core/data/supported-sparse-257.txt`, including its planted integer oracle,
+primitive execution validation and an 11M observed-work guard at the unchanged
+40M request cap. All three programs are automatically discovered.

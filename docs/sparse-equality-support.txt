@@ -1,0 +1,112 @@
+Short equality supports in a retained candidate search (2026-10-20)
+=================================================================
+
+The remaining large sparse equality models spend their allowance in integer
+bound propagation and conflict learning. A box can overlap a linear equation
+without containing any integer support at one or both endpoints. Interval
+propagation alone cannot remove those holes. Expanding the admission of the
+dense affine lattice is a different, potentially expensive operation.
+
+CountEqualitySupport pairs exact opposite rows in one immutable model view.
+When a row has two through four unfixed nonzero coordinates, it shifts the
+current box to nonnegative contributions, divides by the exact coefficient
+GCD, and optionally complements the target. Prefix and suffix reachable-sum
+bitsets identify the supported minimum and maximum of each original variable.
+All arithmetic and acceptance are exact. Interior holes inform these endpoint
+tests; they are not represented as a new public noninterval domain.
+
+Admission limits are at most 512 variables, 2048 rows, 16384 terms, twelve
+terms per equation, domain width fifteen, and normalized sum range 2048. Large
+offsets and common coefficient factors are handled before range conversion.
+Wide/unbounded domains and oversized ranges decline this optional analysis;
+they are not expanded into unit variables or classified as infeasible.
+
+Both directions of a paired equation share its last exact box and result.
+Restoring a previous box after a backtrack recomputes it when necessary.
+Cached positive hulls and empty boxes are reapplied only to identical bounds.
+There is no cross-request cache, numerical acceptance, recipe deletion or
+global proof based on an unsuccessful candidate search.
+
+Composition and ownership
+-------------------------
+CountSupportedSearch owns a private retained CountLcg and its support analysis.
+The existing bound-literal learning, backjumping, restarts and interval
+propagation remain available. Discrete consequences use a conservative
+explanation containing both pre-update bounds of every equation coordinate.
+The parent retains all its existing frontiers and can keep using them.
+
+The companion starts from the selected compiler view and its current certified
+root bounds. It is considered only after 4,194,304 work in the view portfolio,
+for sparse, non-allocation views with 129 through 512 variables. The later
+admission preserves the cheap established trajectories. Construction and
+search together have a lifetime limit of 1,048,576 work, inside the unchanged
+request cap. Atomic propagation can cross a local deadline. Tiny grants and
+worker handoffs cannot renew the lifetime limit or discard its owned state.
+
+The wrapper exposes only original-coordinate candidates. Its local conflicts,
+root bounds, learned clauses and infeasibility conclusion are not published
+into other views. Proof-only tasks and proof-journal requests decline this
+unexported explanation format. The normal original-count restoration and
+primitive execution verification still decide whether a plan may be returned.
+Workspace is reserved before pairing/DP construction and released on every
+terminal, memory-refusal, cancellation and request-limit path.
+The cache allowance includes both pre-update and supported endpoints up to
+1024 bits, which can remain distinct after a backtrack releases the LCG trail.
+
+Validation scope
+----------------
+CountEqualitySupportTest exhausts original integer tuples in 1536 boxes,
+including signed coefficients, large offsets/factors, opposite wakeups,
+backtracking, unsupported domains and cancellation. CountSupportedSearchTest
+checks unique constructive solutions, side-row rejection, original scope,
+one-unit continuations, worker handoffs and local/request cutoffs. The private
+candidate explanation format is explicitly excluded from proof journals.
+
+CountSupportedPipelineTest preserves a generated 257-variable input, its
+independently planted witness and all original equations. The ordinary main
+count pipeline must independently verify an executable plan below an 11M
+observed-work guard at the unchanged 40M request cap. At the development
+baseline 720a8141 this input takes 11,539,612 work; the supported completion
+takes 10,279,682. Its returned candidate actually originates in the new arm.
+The other five successful inputs in the eighteen-model construction campaign
+retain their work; no old positive is lost. The twelve unresolved inputs in
+that campaign remain explicitly unresolved.
+
+The four canonical sparse equality hard cases are still UNKNOWN. Direct
+CP-SAT 9.15.6755 comparisons also reach their separate ten-second, single-worker limit
+on all four; their archived constructive witnesses still establish SAT. That
+comparison does not establish solver equivalence or convert a timeout into a
+negative oracle. Binary encoding, plain support propagation and conflict-directed
+support enumeration trials are retained locally as separate experiments.
+
+The complete count-model comparison covers 822 requests in three corpus orders:
+all 792 prior conclusions retain identical observed work, with the same twelve
+unresolved and eighteen unsupported records. The sparse family's separate eight
+orders cover 256 requests: all 224 prior positives retain identical work, and
+32 variants of the four hard models remain unresolved. These two campaigns
+overlap and must not be added together as distinct canonical cases.
+
+A balanced baseline/candidate/candidate/baseline headless timing sample, with
+two warmups and three measured calls in each process, also checks the new
+257-variable completion and two ordinary controls. For the supported completion,
+median caller CPU changes from 820.31 to 750.00 ms (-8.57%), cumulative thread
+allocation from 1,034,612,556 to 971,504,564 bytes (-6.10%), and peak reserved
+workspace remains 40,884,658 bytes. The controls retain exact work/peak; their
+CPU medians change by +2.44% and +3.45%, with overlapping sample ranges. Both
+differences are 7.8125 ms, half a Windows CPU-clock quantum. Do not describe
+this as a universal speedup. These are caller-thread samples on a shared host,
+not whole-JVM CPU, live-game latency, RSS or a reduction in peak memory. An
+earlier sample overlapped standard regression and is retained separately;
+the figures above use the final built engine after that suite completed.
+
+The complete standard suite passes all 347 test programs. These results and
+the paired corpus campaigns precede a final conservative cache-reservation
+increase; the arithmetic and search remain unchanged. The three maintained
+support tests were repeated after that adjustment, also exercising 900-bit
+offsets. The final offline build, source-jar correspondence, 1478-entry ABI
+check and Forge/AE dump packaging pass. This is not a new run of all 20,927
+historical records, and no live-game replay is claimed.
+
+Local snapshots contain paired results, exact recipe/row orders, source and
+binary versions, budgets and reproduction commands. This work does not change
+GTLCore, the public host ABI, the 0.1.4 version or the total request budget.

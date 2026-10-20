@@ -210,6 +210,9 @@ final class CountLcg implements AutoCloseable {
     }
 
     private final PlanningBudget budget;
+    // Borrowed only by CountSupportedSearch; its consequences never leave that
+    // candidate owner as proof rows, root bounds or learned clauses.
+    private CountEqualitySupport equalitySupport;
     private List<ExactLinearProgram.Constraint> rows;
     private final BigInteger[] rootLow, rootHigh, low, high;
     private final BigInteger[] levelZeroLow, levelZeroHigh;
@@ -474,6 +477,7 @@ final class CountLcg implements AutoCloseable {
                     long before = work;
                     int beforeTrail = trail.size();
                     propagate(id);
+                    if (conflict == null && equalitySupport != null) propagateSupport(id);
                     if (rowPool != null) rowPool.observed(id, trail.size() - beforeTrail + (conflict == null ? 0 : low.length), work - before, decisions);
                 }
                 return false;
@@ -935,6 +939,37 @@ final class CountLcg implements AutoCloseable {
                 cached.add(a, delta);
             }
             enqueue(rowId);
+        }
+    }
+
+    CountLcg supportEqualities(CountEqualitySupport support) {
+        if (retainProof || differenceChecked || equalitySupport != null) throw new IllegalStateException("Support requires a fresh private candidate search");
+        equalitySupport = Objects.requireNonNull(support);
+        return this;
+    }
+
+    private void propagateSupport(int rowId) {
+        long before = budget.threadWork();
+        CountEqualitySupport.Result result;
+        try { result = equalitySupport.propagate(rowId, low, high); }
+        finally {
+            workTicks += (budget.threadWork() - before) * PlanningBudget.WORK_SCALE;
+            work = PlanningBudget.units(workTicks);
+        }
+        if (result == null) return;
+        var why = new ArrayList<Literal>();
+        // Capture both endpoints BEFORE applying any result. This deliberately
+        // broad explanation is valid for holes as well as interval conflicts.
+        for (int i : result.variables()) {
+            charge();
+            why.add(new Literal(i, true, low[i]));
+            why.add(new Literal(i, false, high[i]));
+        }
+        if (result.empty()) { conflict = why; return; }
+        for (int k = 0; k < result.variables().length && conflict == null; k++) {
+            int i = result.variables()[k];
+            tighten(new Literal(i, true, result.lower()[k]), why);
+            tighten(new Literal(i, false, result.upper()[k]), why);
         }
     }
 
@@ -1737,6 +1772,7 @@ final class CountLcg implements AutoCloseable {
 
     @Override
     public void close() {
+        equalitySupport = null;
         finiteHint = null;
         if (finiteHintSession != null) finiteHintSession.close();
         if (lockScores != null) lockScores.close();

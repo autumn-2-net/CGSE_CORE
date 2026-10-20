@@ -76,6 +76,16 @@ sufficient reproduction inputs have separate statuses, not UNSAT or PASS.
    algorithm to these models. Their latest results are inherited from the
    earlier family campaigns; this increment does not freshly solve all six.
 
+   A subsequent sparse-equality campaign confirms the four equality limits at
+   40M on 720a8141. Their retained LCG searches learn many conflicts but do not
+   converge. A bounded companion now combines exact short-row sum supports
+   with integer conflict learning, starting from the compiler view's certified
+   root bounds. Original search frontiers remain available. It does not expand
+   a high-dimensional dense lattice or export its private negative conclusions.
+   See sparse-equality-support.txt. The four canonical limits remain UNKNOWN;
+   the new companion is retained for verified complementary capability and
+   bounded costs, not advertised as four newly solved canonical cases.
+
 4. Refill quality, unsupported conversion and unconfirmed reports
 
    The refill group already had executable, verified bills. Runtime tracing

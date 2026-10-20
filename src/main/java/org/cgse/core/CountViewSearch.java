@@ -29,6 +29,7 @@ final class CountViewSearch implements AutoCloseable {
     private boolean groupedPartitionAttempted;
     private boolean relaxationNeighborhoodAttempted;
     private boolean packingCoreAttempted;
+    private boolean equalitySupportAttempted;
     private final Set<CountModelViews.View> partitionViews = Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<CountModelViews.View> wideAllocationViews = Collections.newSetFromMap(new IdentityHashMap<>());
     private long commonWork, reportedCommonWork, restorationWork;
@@ -204,6 +205,7 @@ final class CountViewSearch implements AutoCloseable {
         GROUPED_PARTITION,
         RELAXATION_NEIGHBORHOOD,
         PACKING_CORE,
+        EQUALITY_SUPPORT,
         DOMAIN,
         DIAGRAM,
         BOOLEAN,
@@ -620,6 +622,7 @@ final class CountViewSearch implements AutoCloseable {
                     added = addIntegerLp();
                     if (!added) added = addRelaxationNeighborhood();
                     if (!added) added = addPackingCore();
+                    if (!added) added = addEqualitySupport();
                 }
                 finally {
                     integerScoutWork = budget.threadWork() - scoutStarted;
@@ -662,6 +665,28 @@ final class CountViewSearch implements AutoCloseable {
                 }
             }
         }
+    }
+
+    private boolean addEqualitySupport() {
+        if (equalitySupportAttempted || !models.compiledAlternatives() ||
+                work < 4_194_304 || policy.mode() == CountPortfolioPolicy.Mode.PROOF || budget.proofJournal() != null) return false;
+        equalitySupportAttempted = true;
+        // The smaller affine/finite representations retain their established
+        // path. This companion addresses sparse narrow domains above their
+        // ambient admission, without constructing a dense high-rank lattice.
+        var views = new ArrayList<>(models.available());
+        views.sort(Comparator.comparingLong(view -> view.shape().cost()));
+        for (var view : views) {
+            if (view.shape().variables() <= 128 || view.shape().variables() > 512 ||
+                    view.shape().terms() > 12L * view.shape().variables() || view.shape().vectorAllocation()) continue;
+            var domains = models.domains(view);
+            var search = CountSupportedSearch.create(view.rows(), domains.lower(), domains.upper(), budget, CountPortfolioPolicy.MIN_QUANTUM);
+            if (search == null) continue;
+            Search arm = new Search(view, policy.add(view.shape().cost(), Engine.EQUALITY_SUPPORT), Engine.EQUALITY_SUPPORT);
+            arm.scope = domains; arm.specialist = search; searches.add(arm);
+            return true;
+        }
+        return false;
     }
 
     private boolean addRelaxationNeighborhood() {
