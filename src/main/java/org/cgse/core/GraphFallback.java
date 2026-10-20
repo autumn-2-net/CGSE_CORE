@@ -33,8 +33,10 @@ public final class GraphFallback {
         // Returned-input batches cannot use the fused port loop. Each port and
         // each scale/merge key takes a separate fold step: Expansion+fold charge
         // twice, and Expansion+verifier+fold three times. max bounds the union.
+        // A singleton word now forwards the batch fold directly: its material
+        // keys are scaled, but need not be merged into another sequence frame.
         long keys = Math.max(recipe.inputs().size(), recipe.outputs().size());
-        return 4 + 5 * (ports + 2 * keys);
+        return 4 + 5 * (ports + keys);
     }
 
     public static <K> GraphPlan<K> plan(GraphCompiler<K> compiler, K target, long amount,

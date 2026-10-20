@@ -155,7 +155,18 @@ public final class RefillWordBlocksTest {
                     case "memory" -> { held = b.availableBytes(); b.reserve(held); }
                     case "cancel" -> cancel.set(true);
                 }
-                try { while (!work.step()) {} check(!mode.equals("cancel") && work.result() == accepted, "Lost completed incumbent"); }
+                try {
+                    while (!work.step()) {}
+                    var result = work.result();
+                    // A completed index can release its scratch and fund more
+                    // quality work after the injected memory pressure. Accept
+                    // that only with a fully executable dominating bill; a work
+                    // or time cutoff must still preserve the exact incumbent.
+                    check(!mode.equals("cancel") && (result == accepted || mode.equals("memory")), "Lost completed incumbent");
+                    result.initialExact().forEach((k, n) -> check(n.compareTo(accepted.initialExact().getOrDefault(k, BigInteger.ZERO)) <= 0, "Increased cutoff withdrawal"));
+                    result.missingExact().forEach((k, n) -> check(n.compareTo(accepted.missingExact().getOrDefault(k, BigInteger.ZERO)) <= 0, "Increased cutoff shortage"));
+                    RefillWordPruningTest.literalVerify(result, Map.of(), Set.of());
+                }
                 catch (CancellationException expected) { check(mode.equals("cancel"), "Unexpected cancellation"); }
                 finally { b.release(held); }
             }

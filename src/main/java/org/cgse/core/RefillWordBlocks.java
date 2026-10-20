@@ -135,7 +135,10 @@ final class RefillWordBlocks implements AutoCloseable {
                     var key = new BatchKey(b.recipe(), b.runs()); ring[slot] = key;
                     batches.put(key, batches.getOrDefault(key, 0) | bit);
                 } else { ring[slot] = atom; composites.put(atom, composites.getOrDefault(atom, 0) | bit); }
-                return false;
+                // The final inserted atom completes the window. Its caller can
+                // inspect the fixed-size mask now; no empty readiness turn is
+                // needed. Filling/expiring each other atom still takes a visit.
+                return end == limit;
             }
             return true;
         }

@@ -878,8 +878,20 @@ Known boundaries after the refill review at 224e9172:
   share the original quota, with no recursive restart or cache budget use.
   The 96 former alternating-partition boundaries now reach their feed bound in
   the existing 8192 allowance, as do 256 additional two/three/four-round variants.
-  Of the 1536 prior normalized-word variants, 1462 reach their scoped bound;
-  74 still need the diagnostic 16384 quota. This is not global supply optimality.
+  All 1536 normalized-word variants now reach their scoped bound at 8192;
+  the 74 former diagnostic-16384 cases no longer need a larger quota. Exact
+  identity-wrapper forwarding avoids copying every material vector at each
+  singleton sequence/repeat. Nonadjacent equal spans share their immutable unit
+  after exact dispatch comparison, so its already retained fold can be reused
+  by pruning and final verification under the same binding. All prefix, target,
+  seed and force-credit checks remain. Completed grouping borrows its owner's
+  original fold regardless of elapsed work; a faster traversal cannot turn off
+  that reuse. Saturated-quality cursors and completed short-index windows omit
+  empty handoffs, without skipping atom/port visits or increasing the quota.
+  The fallback finishing-work lower bound accounts for singleton forwarding too.
+  Total quality work on this family falls 5696230 -> 4188094, maximum reserved
+  memory 201056 -> 136608 bytes. Prior bound supplies/counts are identical and
+  none increases work or reserved peak. This is not global supply optimality.
   Distances hidden by other eligible anchors, general algebraic equivalence,
   unrecognized repeat interiors and scans stopped by the original optional cap
   remain incomplete.

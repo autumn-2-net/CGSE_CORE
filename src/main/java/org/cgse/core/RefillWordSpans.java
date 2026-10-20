@@ -15,12 +15,12 @@ final class RefillWordSpans implements AutoCloseable {
     private final long started, allowance;
     private Map<BatchKey, Integer> batches = new HashMap<>();
     private Map<PlanStep, Integer> composites = new IdentityHashMap<>();
-    private List<PlanStep> body;
-    private PlanStep span, result;
+    private List<PlanStep> body, previousBody;
+    private PlanStep span, previousSpan, result;
     private Phase phase = Phase.FIND;
     private int scan, committed, start, period, matched, next;
-    private long memory, anchorBytes;
-    private boolean allocated, changed;
+    private long memory, anchorBytes, bodyBytes;
+    private boolean allocated, changed, reuseSpan;
 
     RefillWordSpans(List<PlanStep> reverse, PlanningBudget budget, long allowance) {
         this.reverse = reverse; this.budget = budget; this.allowance = allowance; started = budget.nodes();
@@ -58,14 +58,32 @@ final class RefillWordSpans implements AutoCloseable {
                 }
                 case PREFIX -> {
                     if (next < start) emit(reverse.get(next++));
-                    else { reserve(64); body = new ArrayList<>(); next = matched; phase = Phase.BODY; }
+                    else {
+                        reserve(64); bodyBytes = 64; body = new ArrayList<>(); next = matched;
+                        reuseSpan = previousBody != null && previousBody.size() == matched;
+                        phase = Phase.BODY;
+                    }
                 }
                 case BODY -> {
-                    if (next > 0) { reserve(32); body.add(reverse.get(start + --next)); }
+                    if (next > 0) {
+                        var atom = reverse.get(start + --next);
+                        if (reuseSpan) reuseSpan = same(previousBody.get(body.size()), atom);
+                        reserve(32); bodyBytes += 32; body.add(atom);
+                    }
                     else {
                         // Use the raw constructor: Repeat(Sequence,1) is a unit
                         // boundary for the pruning cursor, not a merged batch.
-                        reserve(128); span = new PlanStep.Repeat(FrozenPlanSteps.owned(body), 1); body = null;
+                        // Compare during the existing charged body walk. Equal
+                        // spans on either side of unrelated gaps can share their
+                        // immutable unit, letting pruning and verification reuse
+                        // its exact fold. No occurrence or gap moves or vanishes.
+                        if (reuseSpan) {
+                            span = previousSpan; budget.release(bodyBytes); memory -= bodyBytes;
+                        } else {
+                            reserve(128); span = new PlanStep.Repeat(FrozenPlanSteps.owned(body), 1);
+                            previousSpan = span; previousBody = body;
+                        }
+                        body = null; bodyBytes = 0;
                         phase = Phase.EMIT_FIRST;
                     }
                 }
@@ -96,5 +114,8 @@ final class RefillWordSpans implements AutoCloseable {
     private void reserve(long bytes) { budget.reserve(bytes); memory += bytes; }
     private void reserveAnchor() { reserve(128); anchorBytes += 128; }
     PlanStep result() { return result; }
-    @Override public void close() { budget.release(memory); memory = 0; anchorBytes = 0; }
+    @Override public void close() {
+        previousBody = body = null; previousSpan = span = null;
+        budget.release(memory); memory = 0; anchorBytes = bodyBytes = 0;
+    }
 }

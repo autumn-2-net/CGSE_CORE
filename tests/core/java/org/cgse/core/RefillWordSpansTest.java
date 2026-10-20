@@ -27,7 +27,7 @@ public final class RefillWordSpansTest {
         var body = new PlanStep.Repeat(new PlanStep.Batch("a", 2), Long.MAX_VALUE);
         var opaque = List.<PlanStep>of(body, new PlanStep.Batch("b", 1), new PlanStep.Batch("gap", 1), body, new PlanStep.Batch("b", 1));
         check(run(opaque, 100000, 64L << 20) != null, "Unfolded opaque repeated body");
-        cutoffs();
+        sharedUnits(); cutoffs();
         System.out.println("RefillWordSpansTest: assertions=" + checks);
     }
     private static void sameTrace(List<PlanStep> reverse, PlanStep result) {
@@ -41,6 +41,24 @@ public final class RefillWordSpansTest {
             word.add(new PlanStep.Batch("gap" + k, 1));
         }
         return word;
+    }
+    private static void sharedUnits() {
+        var input = sample(); var result = run(input, 100000, 64L << 20);
+        sameTrace(input, result);
+        var units = Collections.newSetFromMap(new IdentityHashMap<PlanStep, Boolean>());
+        int occurrences = 0;
+        for (var step : ((PlanStep.Sequence) result).children()) if (step instanceof PlanStep.Repeat) {
+            units.add(step); occurrences++;
+        }
+        check(occurrences == 30 && units.size() == 1, "Rebuilt the same unit across independent gaps");
+        // Equal lengths alone do not establish equal dispatches. Each pair has
+        // its own run count, including two separately allocated equal batches.
+        input = new ArrayList<>();
+        for (int pair = 0; pair < 5; pair++) for (int copy = 0; copy < 2; copy++) {
+            input.add(new PlanStep.Batch("a", pair + 1)); input.add(new PlanStep.Batch("b", 1));
+            input.add(new PlanStep.Batch("gap" + pair + ":" + copy, 1));
+        }
+        sameTrace(input, run(input, 100000, 64L << 20));
     }
     private static void cutoffs() {
         for (long cap : new long[]{0, 1, 31, 63, 64, 65, 128, 512}) check(run(sample(), cap, 64L << 20) == null, "Published partial spans");

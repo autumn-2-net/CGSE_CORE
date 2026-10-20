@@ -6,14 +6,15 @@ family campaigns reconcile that inventory; they do not constitute a new full
 corpus run. Order/quantity/force variants, quality goals and unconfirmed player
 reports must not be added together as if they were canonical solver failures.
 
-At e4ebf301 the documented canonical backlog is 162:
-  156 Boolean multidimensional resource/profit selections;
+After 03f971e4 the documented canonical backlog is 161:
+  155 Boolean multidimensional resource/profit selections;
     4 sparse integer equality count models (144 or 257 variables);
     2 source/fuel allocations (96 or 128 groups, 9 dimensions).
-There is also one unresolved direct allocation seed31, a separate set of 72
-long manufactured-tool/wear variants, and 74/1536 refill-quality variants whose
-valid bills have not reached the scoped feed bound at the default 8192 cap.
-The 74 reach that bound at a diagnostic 16384 cap; they are not failed plans.
+There is also one unresolved direct allocation seed31. The separate set of 72
+long manufactured-tool/wear variants now passes, as described below. All 1536
+normalized refill-quality variants now reach their scoped feed bound at the
+default 8192 cap, including the 74 former diagnostic-only cases. Those already
+had valid bills: this improves quality, not the canonical feasibility count.
 Six unsupported finite-domain test conversions and player reports without
 sufficient reproduction inputs have separate statuses, not UNSAT or PASS.
 
@@ -77,10 +78,24 @@ sufficient reproduction inputs have separate statuses, not UNSAT or PASS.
 
 4. Refill quality, unsupported conversion and unconfirmed reports
 
-   The refill group already has executable, verified bills. Its next target is
-   reducing repeated word/period analysis at the original quality allowance.
-   Preserve that scoped quality goal separately from feasibility and from a
-   global minimum-supply proof. Unsupported conversion needs a representation
+   The refill group already had executable, verified bills. Runtime tracing
+   exposed repeated material folds through singleton wrappers, independently
+   rebuilt equal spans, and final verification that did not borrow the pruning
+   pass's already owned unit summary. Exact identity peeling and span sharing
+   now remove those costs without unrolling loops or moving intervening steps.
+   A completed grouping also borrows its original verifier by identity/lifetime,
+   rather than waiting for an elapsed-work threshold. Short-window analysis and
+   saturated-quality cursors omit empty handoffs while still charging traversal.
+
+   The same 1536 inputs improve 1462 -> 1536 scoped-bound results at 8192 work;
+   total quality work falls 5,696,230 -> 4,188,094, peak reservation 201,056 ->
+   136,608 bytes. Every prior bound result has identical supplies/counts, with no
+   per-case work or peak-reservation increase. These are headless quality-pass
+   measurements, not live-host latency or a global minimum-supply proof. The
+   74 recovered variants are mandatory in RefillNormalizedWordTest. Arbitrary
+   longer words and very small allowances remain bounded and incomplete.
+
+   Unsupported conversion needs a representation
    change; reports without sufficient input need reproducible evidence. Neither
    should inflate the numerical solver backlog or acquire an invented oracle.
 

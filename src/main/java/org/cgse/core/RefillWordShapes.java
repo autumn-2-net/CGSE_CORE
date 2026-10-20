@@ -10,6 +10,7 @@ import java.util.*;
 final class RefillWordShapes implements AutoCloseable {
     private record BatchKey(String recipe, long runs) {}
     private record RepeatKey(int body, long times) {}
+    private record SingletonKey(int child) {}
     private record SequenceKey(int tail) {}
     private record Link(int child, int tail) {}
     private record Entry(int id, PlanStep representative) {}
@@ -63,7 +64,13 @@ final class RefillWordShapes implements AutoCloseable {
                     else complete(frame, new RepeatKey(child.id(), r.times()));
                 } else {
                     var children = ((PlanStep.Sequence) step).children();
-                    if (frame.next < 0) complete(frame, new SequenceKey(frame.tail));
+                    // Preserve the exact singleton boundary, but do not build a
+                    // one-element linked signature and then look it up again.
+                    if (children.size() == 1) {
+                        PlanStep child = children.get(0); Entry entry = known.get(child);
+                        if (entry == null) push(child);
+                        else complete(frame, new SingletonKey(entry.id()));
+                    } else if (frame.next < 0) complete(frame, new SequenceKey(frame.tail));
                     else {
                         PlanStep child = children.get(frame.next); Entry entry = known.get(child);
                         if (entry == null) push(child);

@@ -242,8 +242,16 @@ public final class RefillCycleCompletionTest {
             var future = scheduler.submit(new PlanningScheduler.Work<Boolean>() {
                 boolean started;
                 public boolean advance(PlanningScheduler.Slice slice) {
-                    if (!started) { started = true; entered.countDown(); try { if (!release.await(5, TimeUnit.SECONDS)) throw new AssertionError("Gate"); }
-                        catch (InterruptedException e) { throw new AssertionError(e); } }
+                    if (!started) {
+                        started = true; entered.countDown();
+                        try { if (!release.await(5, TimeUnit.SECONDS)) throw new AssertionError("Gate"); }
+                        catch (InterruptedException e) { throw new AssertionError(e); }
+                        // Yield a still-incomplete computation explicitly. A
+                        // faster fold may otherwise finish before the queued
+                        // cancellation marker, which cannot cancel a past result.
+                        check(!completion.step(), "Expected suspended completion");
+                        return false;
+                    }
                     while (slice.nextUncharged()) if (completion.step()) return true; return false;
                 }
                 public Boolean result() { return !completion.actions().isEmpty(); }

@@ -49,7 +49,7 @@ public final class SummaryBatchContinuationTest {
         var exact = compute(huge, large, budget()); var squared = BigInteger.valueOf(Long.MAX_VALUE).pow(2);
         check(exact.required("raw").equals(squared) && exact.delta("product").equals(squared) && exact.peak("mid").equals(squared), "Narrowed wide prefix");
         check(exact.required("mid").signum() == 0 && exact.delta("mid").signum() == 0, "Invented intermediate shortage");
-        limits();
+        identityWrappers(); limits();
         System.out.println("SummaryBatchContinuationTest: cases=" + cases + "; assertions=" + checks);
     }
 
@@ -84,6 +84,43 @@ public final class SummaryBatchContinuationTest {
 
     private static SequenceSummary<String> compute(PlanStep word, Map<String, GraphRecipe<String>> recipes, PlanningBudget budget) {
         try (var computation = new SummaryComputation<>(word, recipes, budget)) { while (!computation.step()) {} return computation.result(); }
+    }
+
+    private static void identityWrappers() {
+        var recipes = chain(96);
+        PlanStep body = new PlanStep.Sequence(recipes.keySet().stream().map(id -> (PlanStep) new PlanStep.Batch(id, 1)).toList());
+        var baseBudget = budget(); compute(body, recipes, baseBudget);
+        for (int depth : new int[]{1, 2, 17, 257, 8192}) {
+            PlanStep wrapped = body;
+            for (int i = 0; i < depth; i++) wrapped = i % 2 == 0 ? new PlanStep.Repeat(wrapped, 1) : new PlanStep.Sequence(List.of(wrapped));
+            var b = budget(); var summary = compute(wrapped, recipes, b);
+            check(b.nodes() <= baseBudget.nodes() + depth, "Recomputed material vectors at identity wrappers");
+            check(b.peakBytes() == baseBudget.peakBytes() && b.reservedBytes() == 0, "Identity-only fold retained duplicate vectors");
+            check(summary.required("k0").equals(BigInteger.ONE) && summary.delta("k96").equals(BigInteger.ONE), "Changed wrapped chain");
+            // Memoization still refers to the original immutable subtree after
+            // peeling, including reuse below a nontrivial repeat.
+            var repeated = new PlanStep.Sequence(List.of(wrapped, wrapped, new PlanStep.Repeat(wrapped, 3)));
+            b = budget(); summary = compute(repeated, recipes, b);
+            check(summary.required("k0").equals(BigInteger.valueOf(5)) && summary.delta("k96").equals(BigInteger.valueOf(5)), "Changed reused identity word");
+            for (int i = 1; i < 96; i++) check(summary.required("k" + i).signum() == 0 && summary.delta("k" + i).signum() == 0 && summary.peak("k" + i).equals(BigInteger.ONE), "Lost transient prefix key");
+            check(b.nodes() < depth + 5000 && b.reservedBytes() == 0, "Refolded deep shared subtree/leaked");
+        }
+        var returned = Map.of("tool", recipe("tool", Map.of("tool", 1L, "raw", 2L), Map.of("tool", 1L, "product", 1L)));
+        for (int runs = 0; runs < 4; runs++) for (int shape = 0; shape < 3; shape++) {
+            PlanStep word = new PlanStep.Batch("tool", runs);
+            for (int i = 0; i < 8; i++) word = i % 2 == 0 ? new PlanStep.Repeat(word, 1) : new PlanStep.Sequence(List.of(word));
+            if (shape > 0) word = new PlanStep.Repeat(word, shape == 1 ? 0 : 3);
+            verify(word, returned); // independent literal execution, including zero and returned inputs
+        }
+        PlanStep deep = body;
+        for (int i = 0; i < 10000; i++) deep = new PlanStep.Repeat(deep, 1);
+        var b = budget();
+        try (var work = new SummaryComputation<>(deep, recipes, b)) {
+            for (int i = 0; i < 8; i++) { long before = b.nodes(); check(!work.step() && b.nodes() - before == 1, "Uncharged/unbounded wrapper traversal"); }
+            b.cancel();
+            try { work.step(); throw new AssertionError("Ignored wrapper cancellation"); } catch (CancellationException expected) { checks++; }
+        }
+        check(b.reservedBytes() == 0, "Cancelled wrapper fold leaked");
     }
 
     private static void limits() {

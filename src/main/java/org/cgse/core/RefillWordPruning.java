@@ -79,6 +79,10 @@ final class RefillWordPruning<K> implements AutoCloseable {
         this.original = original; this.result = original; this.stock = stock; this.external = external;
         this.forceCraft = forceCraft; this.ignoreTargetStock = ignoreTargetStock; this.budget = budget;
         this.allowance = allowance; started = budget.nodes(); retainedFailure = budget.failureDetail();
+        // The saturated quality pass has already been granted its full quota;
+        // it need not spend 2048 units before fusing empty cursor handoffs.
+        // Smaller work-scaled passes retain their previous admission schedule.
+        compactCursors = allowance >= 8192;
         summary = verified; verifiedOriginal = verified;
         recipes = original.recipes().values().iterator();
     }
@@ -119,7 +123,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
             }
             if (phase == Phase.BLOCKS) {
                 if (!blocks.step()) return false;
-                if (blocks.result() != null) return pruneBlocks(blocks.result(), normalTried);
+                if (blocks.result() != null) return pruneBlocks(blocks.result());
                 // Keep the original short-period pass and every completed bill
                 // first. An unsuccessful scan may spend leftover quota on
                 // anchor hints; an unproductive short grouping can continue
@@ -132,7 +136,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
             }
             if (phase == Phase.ANCHORS) {
                 if (!anchors.step()) return false;
-                return anchors.result() == null ? finishGrouping() : pruneBlocks(anchors.result(), true);
+                return anchors.result() == null ? finishGrouping() : pruneBlocks(anchors.result());
             }
             if (phase == Phase.SHAPES) {
                 if (!shapes.step()) return false;
@@ -154,7 +158,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
             }
             if (phase == Phase.SPANS) {
                 if (!spans.step()) return false;
-                return spans.result() == null ? finish() : pruneBlocks(spans.result(), true);
+                return spans.result() == null ? finish() : pruneBlocks(spans.result());
             }
             if (phase == Phase.BLOCK_PRUNE) {
                 if (!blockPruning.step()) return false;
@@ -477,8 +481,10 @@ final class RefillWordPruning<K> implements AutoCloseable {
         reserve(bytes); return bytes;
     }
     private PlanVerification<K> verify(GraphPlan<K> plan) {
-        return PlanVerification.refill(GraphPlan.ownedRefill(plan, plan.steps(), plan.recipes(), plan.initialExact(), Map.of(),
-                GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL, budget.nodes()), budget);
+        var funded = GraphPlan.ownedRefill(plan, plan.steps(), plan.recipes(), plan.initialExact(), Map.of(),
+                GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL, budget.nodes());
+        return lastUnitSummary == null ? PlanVerification.refill(funded, budget) :
+                PlanVerification.refillFolded(funded, budget, lastUnit, lastUnitSummary);
     }
     private void push(List<PlanStep> children) { reserve(64); stack.push(new Cursor(children)); }
     private static final class Cursor {
@@ -542,7 +548,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
                 longerOnly ? RefillWordBlocks.MAX_PERIOD + 1 : 2);
         phase = Phase.ANCHORS; return false;
     }
-    private boolean pruneBlocks(PlanStep word, boolean reuseOriginal) {
+    private boolean pruneBlocks(PlanStep word) {
         regrouped = GraphPlan.ownedRefill(result, word, result.recipes(), result.initialExact(), result.missingExact(),
                 result.result(), budget.nodes());
         // Exact grouping preserves every batch boundary and its order. The
@@ -550,9 +556,10 @@ final class RefillWordPruning<K> implements AutoCloseable {
         var known = verification != null && result == candidate ? verification.summary() : null;
         // When the original word is unchanged, its external verifier still
         // owns the borrowed fold throughout this continuation. Exact grouping
-        // changes no execution or binding. Small passes retain old scheduling.
+        // changes no execution or binding. Reuse depends on that ownership,
+        // not how much work the preceding traversal happened to consume.
         boolean scheduledFloor = budget.nodes() - started >= 2048;
-        if (known == null && (reuseOriginal || scheduledFloor) && result == original) known = verifiedOriginal;
+        if (known == null && result == original) known = verifiedOriginal;
         blockPruning = new RefillWordPruning<>(regrouped, stock, external, forceCraft, ignoreTargetStock, budget,
                 allowance - (budget.nodes() - started), known);
         // This is the same quality pass, not a fresh work-scaled preview. The
@@ -562,7 +569,7 @@ final class RefillWordPruning<K> implements AutoCloseable {
         // and admitted this unchanged execution trace. Only grouping differs;
         // a repeated binding/feedback scan adds no information. The child still
         // verifies all resulting supplies, force credit, delivery and seeds.
-        blockPruning.inheritedStructure = scheduledFloor && result == original;
+        blockPruning.inheritedStructure = result == original;
         // A newly exposed pair shares its immutable body. Retain just its last
         // computed fold across intervening flat steps, in this binding/pass.
         // It replaces the normal unit lease, has no preparation quota, and is

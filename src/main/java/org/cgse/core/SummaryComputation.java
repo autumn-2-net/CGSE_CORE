@@ -53,6 +53,19 @@ public final class SummaryComputation<K> implements AutoCloseable {
             complete(frame.cached);
             return result != null;
         }
+        // Identity wrappers preserve the complete prefix/delta/peak fold. Peel
+        // one per charged continuation instead of copying all material vectors
+        // on the way back up. The original node remains the memoization key.
+        // Keep the existing ordinary-batch sequence fold: it is already cheaper
+        // than a standalone batch frame and does not copy a child summary.
+        PlanStep identity = frame.step instanceof PlanStep.Repeat r && r.times() == 1 ? r.body() :
+                frame.step instanceof PlanStep.Sequence s && s.children().size() == 1 ? s.children().get(0) : null;
+        if (identity != null && (frame.step instanceof PlanStep.Repeat || !ordinaryBatch(identity))) {
+            frame.step = identity;
+            SequenceSummary<K> previous = shared == null ? null : shared.get(identity);
+            frame.cached = previous == null ? known.get(identity) : previous;
+            return false;
+        }
         if (frame.ordinary != null) {
             int operations = 0;
             while (operations < 32) {
@@ -189,6 +202,12 @@ public final class SummaryComputation<K> implements AutoCloseable {
         return true;
     }
 
+    private boolean ordinaryBatch(PlanStep step) {
+        if (!(step instanceof PlanStep.Batch b) || b.runs() == 0) return false;
+        var recipe = recipes.get(b.recipe());
+        return recipe != null && !recipe.hasInputReturns();
+    }
+
     private void complete(SequenceSummary<K> complete) {
         Frame finished = stack.pop();
         if (stack.isEmpty()) {
@@ -197,12 +216,12 @@ public final class SummaryComputation<K> implements AutoCloseable {
             budget.release(sharedBytes);
             sharedBytes = 0;
         } else {
-            if (!(finished.step instanceof PlanStep.Batch) && (shared == null || !shared.containsKey(finished.step))) {
+            if (!(finished.original instanceof PlanStep.Batch) && (shared == null || !shared.containsKey(finished.original))) {
                 long bytes = 128L + 128L * (complete.required().size() + complete.delta().size() + complete.peak().size());
                 budget.reserve(bytes);
                 sharedBytes += bytes;
                 if (shared == null) shared = new IdentityHashMap<>();
-                shared.put(finished.step, complete);
+                shared.put(finished.original, complete);
             }
             Frame parent = stack.peek();
             parent.pending = complete;
@@ -263,8 +282,9 @@ public final class SummaryComputation<K> implements AutoCloseable {
 
     private final class Frame {
 
-        private final PlanStep step;
-        private final SequenceSummary<K> cached;
+        private final PlanStep original;
+        private PlanStep step;
+        private SequenceSummary<K> cached;
         private final Map<K, BigInteger> need, change, peak;
         private Iterator<Map.Entry<K, Long>> entries;
         private Iterator<K> keys;
@@ -278,7 +298,7 @@ public final class SummaryComputation<K> implements AutoCloseable {
         private long repeat = 1;
 
         private Frame(PlanStep step) {
-            this.step = step;
+            this.original = this.step = step;
             SequenceSummary<K> previous = shared == null ? null : shared.get(step);
             cached = previous == null ? known.get(step) : previous;
             // A flat sequence never shares a composite child. A cached frame

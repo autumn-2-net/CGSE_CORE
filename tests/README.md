@@ -1368,20 +1368,30 @@ through sequence association, singleton identities and nested repeats. It guards
 batch sizes, order, hash collisions, zero/empty nodes, deep/shared structures,
 overflow counts and bounded work/memory/cancellation. `RefillWordSpansTest`
 checks 240 separated-span words with distinct mandatory gaps and preserves the
-entire dispatch trace before any pruning is attempted.
+entire dispatch trace before any pruning is attempted. Repeated equal spans
+share one immutable unit across their gaps; changed run counts stay distinct.
 
 `RefillNormalizedWordTest` covers 1,536 normalized, ragged-partition and flat
 cyclic words in both catalog orders, plus 72 resource-dependent gap variants
 and 96 ordinary expansion paths to terminal supplies. Independent primitive
 replay checks enablement, final seeds and supply ceilings. Conservation gives
-scoped feed bounds, not global optimality. The original 8,192 quality cap is
-retained; a separate 16,384 diagnostic distinguishes remaining cap exits from
-recognition limits. The 96 alternating partitions that previously stopped after
-a partial reduction now reach the scoped bound at the unchanged default cap.
+scoped feed bounds, not global optimality. All 1,536 must now reach those bounds
+at the original 8,192 quality cap, including the 74 former diagnostic-only cases
+and the earlier 96 alternating partitions. A separate 16,384 diagnostic may
+explain a failed assertion, but cannot substitute for the default-cap result.
 Forced production,
 consumed configuration, external supply, incomplete coverage, all new suspended
 phases and worker ownership transfer are guarded too. All three test programs
 are included through automatic discovery in `standard`.
+
+`SummaryBatchContinuationTest` also covers up to 8,192 identity wrappers,
+original-subtree memoization beneath repeated words, independent literal
+returned-tool/zero-count execution, bounded traversal and cancellation. It
+guards against copying all material vectors at each identity wrapper.
+`FallbackCompactRefillTest` checks its finishing-work bound against actual
+summary/verification work, including singleton forwarding. The completion
+scheduler test explicitly yields an incomplete task before cancellation, so
+faster arithmetic cannot turn that check into a race with a completed result.
 
 `RefillUnitPeriodsTest` independently compares dispatch traces for exact period
 factorization, including identity wrappers, opaque nested atoms, hash collisions,

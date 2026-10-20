@@ -38,6 +38,16 @@ public final class PlanVerification<K> implements AutoCloseable {
         return new PlanVerification<>(funded, budget, null, false);
     }
 
+    /** The pruning pass retains the exact unit fold under these same bindings
+     * until this verifier closes. Only arithmetic is shared; all funded prefix,
+     * target and final-seed checks still run against the shortened word. */
+    static <K> PlanVerification<K> refillFolded(GraphPlan<K> funded, PlanningBudget budget,
+                                               PlanStep unit, SequenceSummary<K> summary) {
+        var known = new IdentityHashMap<PlanStep, SequenceSummary<K>>(1);
+        known.put(unit, summary);
+        return new PlanVerification<>(funded, budget, null, false, known);
+    }
+
     /** Expansion uses elapsed work to size later quality passes. Retain the old
      * metadata pass unless the mandatory fold/key checks already reach that
      * scheduling floor. Never remove the prefix/goal/seed checks themselves. */

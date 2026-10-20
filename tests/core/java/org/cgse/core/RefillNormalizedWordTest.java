@@ -81,7 +81,7 @@ public final class RefillNormalizedWordTest {
    for(var e:f.plan.patternTimesExact().entrySet())if(e.getKey().startsWith("side"))check(e.getValue().equals(result.patternTimesExact().get(e.getKey())),"Lost compulsory gap");
   }
   System.out.println("Normalized families: default bound="+atBound+"/"+total+", primary="+primaryAtBound+"/1152");
-  check(total==1536&&atBound>=1462&&primaryAtBound>=1078,"Default-budget quality regressed: "+atBound+"/"+total);
+  check(total==1536&&atBound==1536&&primaryAtBound==1152,"Default-budget quality regressed: "+atBound+"/"+total);
  }
  private static void bound(Fixture f,GraphPlan<String> p) {
   // Fixed startup A, feed per round, net A/joint growth and retained seeds
