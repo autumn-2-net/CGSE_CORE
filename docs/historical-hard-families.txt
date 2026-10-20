@@ -1,12 +1,15 @@
 Historical hard cases by mechanism (2026-10-20)
 
-Use distinct counting units. The last full corpus snapshot contains 20,927
-canonical records (20,727 PASS, 194 unresolved, 6 unsupported). Subsequent
-family campaigns reconcile that inventory; they do not constitute a new full
-corpus run. Order/quantity/force variants, quality goals and unconfirmed player
-reports must not be added together as if they were canonical solver failures.
+Use distinct counting units. The complete pre-release regression for 0.1.5
+freshly executes all 20,927 canonical records: 20,765 PASS, 156 unresolved and
+6 unsupported. All 20,727 positives from the previous full run remain passing;
+38 previously unresolved records now pass. See regression-0.1.5.txt for the
+command, coverage and explicitly unexecuted scopes. The family campaigns below
+record the preceding increments, rather than additional canonical failures.
+Order/quantity/force variants, quality goals and unconfirmed player reports
+must not be added together as if they were canonical solver failures.
 
-After the asymmetric-exchange family comparison the documented canonical backlog is 156:
+The full run confirms the asymmetric-exchange campaign's canonical backlog of 156:
   150 Boolean multidimensional resource/profit selections;
     4 sparse integer equality count models (144 or 257 variables);
     2 source/fuel allocations (96 or 128 groups, 9 dimensions).

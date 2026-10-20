@@ -1,0 +1,76 @@
+CGSE 0.1.5 regression record (2026-10-20)
+
+The complete maintained portable suite ran against
+2f0bf3cedeb87b6c7c3d52a8118c2f81f6346b41 before the requested version bump.
+Production and test source hashes remained unchanged throughout the run.
+The release changes the version from 0.1.4 to 0.1.5 and keeps compatibility=0.1.
+
+Command:
+  python tests/run.py --java-home <jdk17> --suite all --milliseconds 0
+    --work 40000000 --model-engine main-counts --timeout 900 --jobs 4
+    --classpath <test-only-classpath> --output <fresh-output-directory>
+
+The command is shown across lines for readability. Test-only dependencies:
+OR-Tools Java/Windows 9.15.6755, protobuf-java 4.33.1, JNA/JNA Platform 5.14.0
+and Gson 2.10.1. These are not engine dependencies or release contents.
+JDK: Temurin 17.0.19+10. CPU affinity limited the entire process tree to four
+logical CPUs, with BelowNormal priority and ActiveProcessorCount=4.
+The all runner used four corpus processes; other suite drivers ran serially.
+Elapsed time was 5130.35 seconds. Explicit per-test boundary budgets were kept.
+
+Results:
+  348 standard checks PASS, including 733 execution-boundary requests.
+  247 fixed fixtures x 3 deterministic order permutations: 741 PASS.
+  All 20,927 canonical records executed:
+    20,765 PASS
+       156 UNRESOLVED
+         6 UNSUPPORTED
+  54 captured-catalog requests verified FEASIBLE, including the named
+  serial/four-worker scenarios and complete catalog order/quantity variants.
+  Historical portable probes, benchmark, Python discovery, capture integrity
+  and AE dump migration checks completed without a new assertion/setup failure.
+  Manifest discovery found no omitted maintained Java entry or unregistered
+  canonical input.
+
+Comparison with the preceding complete corpus snapshot:
+  All 20,727 previously passing canonical records still pass.
+  38 previously unresolved canonical records now pass.
+  All 146 positives from the latest 296-input packing campaign still pass.
+  No previously passing non-corpus entry was lost.
+  No new non-corpus inconclusive result appeared.
+  The six unsupported conversions retain their original classification.
+
+Explicit limits:
+  The remaining 156 canonical cases are 150 Boolean packing selections,
+  four sparse integer equality models and two source/fuel allocations.
+  Their budget limits remain unresolved, not UNSAT and not PASS.
+  349 original argument/API-dependent historical programs were NOT_RUN.
+  Three host-dependent suites were NOT_RUN: adapter contracts, tool preview,
+  and live server. This run does not claim a Forge/server execution campaign.
+  Archived scenario inventories are preserved evidence, not executions of
+  every original native or parameterized campaign.
+
+Runner accounting:
+  1625 entries: 1130 PASS, 143 INCONCLUSIVE, 352 NOT_RUN.
+  Entries include 45 migration aliases and two helper compilations; they are
+  not 1625 distinct runtime programs. Corpus batch statuses are separate from
+  the per-record counts above. The runner correctly returns exit 2 for its
+  explicit known limits; it is not relabeled as an entirely passing exit 0.
+  The regression gate accepts preserved established positives and passing
+  maintained assertions while retaining those unresolved/unexecuted scopes.
+
+Release artifact checks:
+  Offline assemble succeeds with at most four Gradle workers.
+  All 1478 baseline binary API entries are preserved.
+  The Forge mod contains AE dump and the exact selectable 0.1.5 engine jar.
+  Library, sources, metadata, compatibility range and checksums validate.
+  All 824 library classes match the build output, and packaged production
+  sources match the sources used for the full regression.
+  Eight existing programs also pass with the built library first on the
+  classpath: GraphCoreTest, CountPackingAsymmetricTest, CountEqualitySupportTest,
+  FallbackCompactRefillTest, CapturedStateForcedWearTest, RefillNormalizedWordTest,
+  StateReturnRuntimeTest and StateReturnConcurrencyTest.
+
+Detailed inputs, source/dependency hashes, commands, logs and comparison
+results are retained in the local case registry. Player evidence and local
+incident archives are not part of the commit or release artifacts.
