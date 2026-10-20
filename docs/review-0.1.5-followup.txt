@@ -109,6 +109,68 @@ Production/test source hashes match between regression, build and final checks.
 The 20927-case canonical corpus and native game host were not rerun in this
 increment; the separately dated full 0.1.5 release record remains unchanged.
 
+Implemented follow-up: reallocate existing source counts
+--------------------------------------------------------
+The paired depth-64 and depth-512 main words already contained both X and Y.
+The unused-source filter therefore left 201 and 102 raw respectively, although
+the complete all-Y word consumes only 3 raw in each case. RefillReallocationTest
+now retains those inputs, source-order/quantity variants, and independent
+primitive all-Y witnesses. These are refill-quality cases; their old words
+were valid and their infeasibility status was not a false proof.
+
+A second RefillSourceSearch continuation admits multiple physically compatible
+bound producers of the same material. It runs after the existing unused-source
+trials, whose queue, quota and publications are preserved. A physical binding
+does not constrain a recipe to its old count. Each candidate reconstructs the
+complete prefix from the same delivery/seeds and original net production credit.
+The original scan also records whether multiple eligible producers were already
+bound. Complete discovery with no such choice skips reallocation; newly added
+bindings do not immediately repeat the just-completed unused-source trials.
+Incomplete discovery stays inconclusive, including long binding scans.
+
+Independent coordinate changes alone are insufficient. In a three-material
+case, rebuilding one route resets the other two mixtures to more expensive
+defaults, so every isolated change fails componentwise comparison. The new arm
+enumerates a bounded product of source preferences: at most eight retained hints
+and at most eighteen combinations. It does not add exclusions or learned cuts.
+Complete word verification and componentwise missing-supply improvement still
+guard every publication; equal or incomparable bills retain the previous word.
+This permits some joint route/count changes, not arbitrary count optimization.
+
+Complete producer support can be borrowed from the preceding source pass under
+the same compiler, roots and exclusions. Its owner remains alive until all
+borrowing children close. Incomplete support is never reused. The new arm has
+one lifetime search allowance:
+  min(remaining work / 4, min(65536, max(8192, 128 * bound recipe count))).
+Its discovery is capped at min(8192, max(128, allowance / 4)). Original
+verification, rank construction, all trials and comparisons share that quota.
+The global request budget and the separate cache-preparation account do not
+change. This is extra optional search for missing previews, not free reuse.
+The upper quota can overshoot by one existing bounded child turn.
+
+Already-feasible orders, nested seed subrequests and existing cycle frontiers
+keep their previous admission. Returned tools, useful coproducts, shared stock,
+physical binding conflicts, exclusions, final seeds, large exact counts,
+conditional coverage and force-production credit have maintained checks.
+Work/time/memory exits retain the last complete accepted word, including through
+the parent continuation and optional boundary annotation. Cancellation propagates.
+
+The 32-request comparison against 43611f38 retains every prior bill, improves
+the two mixed main bills, and leaves charged work identical on 27 requests
+(including all 16 funded requests). The two improvements cost an additional
+5362 and 33916 work. Three depth-512 requests retain their bill and spend
+2572..2613 extra discovery work. Reserved peak memory is unchanged on all 32.
+These are charged-work/estimated-residency observations, not a wall-time or
+heap benchmark. No general speedup or globally minimal refill claim follows.
+
+Follow-up validation with four logical CPUs: 38 related maintained programs and
+741 curated graph requests PASS. The actual built library passes all 757
+RefillReallocationTest assertions and the preceding 772 source-choice assertions.
+Java 17 assemble, artifact verification and 1478 baseline API entries PASS.
+Regression, paired comparison and build share identical production/test source
+hashes. This is targeted validation, not a rerun of the full historical corpus
+or the native game host. Version remains 0.1.5.
+
 Remaining review work
 ---------------------
 Exact equality supports: CountEqualitySupport still returns interval hulls.
@@ -127,11 +189,12 @@ Refill optimization: this bounded source-preference search is not exhaustive
 joint path/count optimization or a complete Pareto archive. Finite hint coverage,
 rank refusals and quota exits do not certify a global minimum. Existing cycle
 frontiers are retained as-is rather than flattened into a new search.
-Hints currently favor producers absent from the incumbent binding map. The
-paired depth-64/512 main plans already mix both sources and retain their bills;
-reallocating those existing source counts is still part of joint optimization.
-The long fallback can also retain its incumbent at the bounded discovery/rank
-limit. These unchanged samples are not reported as recovered hard cases.
+Both unused and already-bound source choices now have bounded positive arms.
+General mixtures needing intermediate firing counts, larger joint choices and
+combinations outside the hint window remain incomplete. The long depth-512
+fallback still retains its 300-raw incumbent at the first discovery/rank limit;
+it contains only one bound source, so it is not admitted to bound reallocation.
+This unchanged fallback is not reported as a recovered case.
 
 Compiler feedback/modeling: newly added producer columns still require
 recertifying bounds and cuts. No signature weakening, arbitrary state jumping,

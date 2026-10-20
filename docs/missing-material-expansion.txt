@@ -80,8 +80,17 @@ may cross that order once per preferred material, consuming the exception
 when it applies the prefix. Ordinary expansion keeps the original guard.
 Cycles cannot renew a consumed exception or turn a failed trial into a
 negative proof. Nested seed subrequests and existing cyclic archives decline
-this extra pass. See review-0.1.5-followup.txt for admission, costs, production
-and per-push restrictions, validation, and remaining joint-count limitations.
+this extra pass. After unused-source trials, a separate bounded continuation
+can redistribute counts between physically compatible bound producers.
+It evaluates a small Cartesian product of preferences, so changing one route
+need not reset other incumbent mixtures to worse defaults. At most eight
+retained hints form at most eighteen complete candidate words. Fully completed
+support may be reused; interrupted discovery cannot rule out a bound mixture.
+Complete discovery with no old bound alternatives skips this continuation.
+Both arms retain complete verified publications across limits and accept only
+strict componentwise improvements in missing supply. See
+review-0.1.5-followup.txt for quotas, costs, production and per-push restrictions,
+validation, and remaining joint-count limitations.
 
 RefillWordPruning optionally reduces excessive counts already in the completed
 word. It works backward from delivery and final seeds, tracking inventory at

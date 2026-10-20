@@ -49,6 +49,8 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private RefillSupplySearch<K> cycleSearch;
     private RefillSourceSearch<K> sourceSearch;
     private boolean sourceSearchDone, sourceSearchEnabled = true;
+    private RefillSourceSearch<K> reallocation;
+    private boolean reallocationDone;
     private boolean simpleSourcesOnly;
     private Map<K, String> preferredSources = Map.of();
     private Set<K> usedSourcePreferences = Set.of();
@@ -151,6 +153,10 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             if (!sourceSearch.step()) return false;
             result = sourceSearch.result(); sourceSearchDone = true; return explainBoundary();
         }
+        if (reallocation != null && !reallocationDone) {
+            if (!reallocation.step()) return false;
+            result = reallocation.result(); reallocationDone = true; return explainBoundary();
+        }
         if (cycleSearch != null) {
             if (!cycleSearch.step()) return false;
             result = cycleSearch.result(); cycleSearch.close(); cycleSearch = null; return explainBoundary();
@@ -196,7 +202,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             budget.check();
             if (advance()) return true;
             if (phase == Phase.RANK || phase == Phase.VERIFY || pruning != null || cycleSearch != null ||
-                    sourceSearch != null && !sourceSearchDone || diagnostics != null) return false;
+                    sourceSearch != null && !sourceSearchDone || reallocation != null && !reallocationDone || diagnostics != null) return false;
         }
         return false;
     }
@@ -370,6 +376,13 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             return false;
         }
         var diagnosticOrder = sourceSearch == null ? null : sourceSearch.completedOrder();
+        if (sourceSearchEnabled && reallocation == null && sourceSearch != null && sourceSearch.mayReallocate() &&
+                result.alternatives().isEmpty() && budget.remainingWork() >= 512) {
+            reallocation = RefillSourceSearch.reallocate(compiler, result, stock, external, excluded,
+                    forceCraft, ignoreTargetStock, budget, diagnosticOrder);
+            return false;
+        }
+        if (reallocation != null && reallocation.completedOrder() != null) diagnosticOrder = reallocation.completedOrder();
         if (diagnosticOrder != null) {
             diagnostics = new RefillBoundaryDiagnostics<>(result, compiler, diagnosticOrder, budget);
             return false;
@@ -576,6 +589,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
 
     GraphPlan<K> result() {
         if (sourceSearch != null && !sourceSearchDone) return sourceSearch.result();
+        if (reallocation != null && !reallocationDone) return reallocation.result();
         return cycleSearch == null ? result : cycleSearch.result();
     }
     BigInteger prefixProduction() { return targetDelta; }
@@ -595,6 +609,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     @Override public void close() {
         releaseOriginalSummary();
         if (diagnostics != null) { diagnostics.close(); diagnostics = null; }
+        if (reallocation != null) { reallocation.close(); reallocation = null; }
         if (sourceSearch != null) { sourceSearch.close(); sourceSearch = null; }
         if (cycleSearch != null) { cycleSearch.close(); cycleSearch = null; }
         if (pruning != null) { pruning.close(); pruning = null; }
