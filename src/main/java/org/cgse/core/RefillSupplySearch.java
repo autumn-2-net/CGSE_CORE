@@ -196,7 +196,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
                     optionAction = optionActions.next();
                     var summary = optionAction.summary(); BigInteger gain = summary.delta(root);
                     BigInteger gap = base.initialExact().getOrDefault(root, BigInteger.ZERO)
-                            .subtract(summary.required(root).max(BigInteger.valueOf(available(root))));
+                            .subtract(summary.required(root).max(available(root)));
                     if (gain.signum() <= 0 || gap.signum() <= 0 || force && summary.delta(base.target()).signum() < 0) {
                         optionAction = null; break;
                     }
@@ -330,7 +330,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             case SUPPLY -> {
                 if (ports.hasNext()) {
                     K key = ports.next();
-                    BigInteger have = BigInteger.valueOf(available(key)).add(key.equals(root) ? trialAmount : base.missingExact().getOrDefault(key, BigInteger.ZERO));
+                    BigInteger have = available(key).add(key.equals(root) ? trialAmount : base.missingExact().getOrDefault(key, BigInteger.ZERO));
                     BigInteger need = base.initialExact().getOrDefault(key, BigInteger.ZERO);
                     if (force && key.equals(base.target())) need = need.max(have);
                     supplied.put(key, have); goals.put(key, need);
@@ -370,7 +370,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
             case MISSING -> {
                 if (entries.hasNext()) {
                     var e = entries.next();
-                    BigInteger gap = external.contains(e.getKey()) ? BigInteger.ZERO : e.getValue().subtract(BigInteger.valueOf(available(e.getKey()))).max(BigInteger.ZERO);
+                    BigInteger gap = external.contains(e.getKey()) ? BigInteger.ZERO : e.getValue().subtract(available(e.getKey())).max(BigInteger.ZERO);
                     int comparison = gap.compareTo(base.missingExact().getOrDefault(e.getKey(), BigInteger.ZERO));
                     if (comparison > 0 && !trading) { rejectCandidate(); break; }
                     strict |= comparison < 0;
@@ -392,7 +392,7 @@ final class RefillSupplySearch<K> implements AutoCloseable {
         return false;
     }
 
-    private long available(K key) { return ignoreTargetStock && original.target().equals(key) ? 0 : stock.getOrDefault(key, 0L); }
+    private BigInteger available(K key) { return ignoreTargetStock && original.target().equals(key) ? BigInteger.ZERO : PlanningInventory.exactAmount(stock, key); }
     private void rejectCandidate() { if (resizing || trading) endTrial(); else endRoot(); }
     private void endTrial() {
         if (searching != null) { searching.close(); searching = null; }

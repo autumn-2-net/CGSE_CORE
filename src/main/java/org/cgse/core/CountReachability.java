@@ -99,7 +99,7 @@ final class CountReachability<K> implements AutoCloseable {
                 if (finite > 32 && model.goal(key).signum() == 0 &&
                         !(produced.contains(key) && consumed.contains(key))) continue;
                 keys.add(key);
-                initial.add(BigInteger.valueOf(model.stock.getOrDefault(key, 0L)));
+                initial.add(PlanningInventory.exactAmount(model.stock, key));
                 goal.add(model.goal(key));
             }
             if (keys.size() > 32) {

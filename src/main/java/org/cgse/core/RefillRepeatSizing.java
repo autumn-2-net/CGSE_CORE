@@ -38,7 +38,7 @@ final class RefillRepeatSizing<K> {
             }
             K key = keys.next();
             if (external.contains(key)) continue;
-            BigInteger available = BigInteger.valueOf(ignoreTargetStock && key.equals(plan.target()) ? 0 : stock.getOrDefault(key, 0L));
+            BigInteger available = ignoreTargetStock && key.equals(plan.target()) ? BigInteger.ZERO : PlanningInventory.exactAmount(stock, key);
             BigInteger limit = available.add(plan.missingExact().getOrDefault(key, BigInteger.ZERO));
             BigInteger required = word.required(key), delta = word.delta(key);
             BigInteger suffix = plan.initialExact().getOrDefault(key, BigInteger.ZERO);

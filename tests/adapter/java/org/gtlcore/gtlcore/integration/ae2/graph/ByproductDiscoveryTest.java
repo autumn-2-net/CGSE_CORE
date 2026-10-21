@@ -59,7 +59,8 @@ final class ByproductDiscoveryTest {
         tag.putString("variant", "one");
         AEKey tagged = AEFluidKey.of(Fluids.WATER, tag), plain = AEFluidKey.of(Fluids.WATER);
         var fluidBuild = new ByproductPatternIndex.Build(List.of(pattern(raw, new GenericStack(main, 1), new GenericStack(tagged, 1000))));
-        while (!fluidBuild.step(budget())) {}
+        var fluidBudget = budget();
+        while (!fluidBuild.step(fluidBudget)) {}
         check(fluidBuild.result().sources(tagged, List.of()).size() == 1 && fluidBuild.result().sources(plain, List.of()).isEmpty(), "fluid NBT identity retained");
 
         for (var proof : Arrays.asList(null, new GraphPlan.SeedOptimality(1, 3, false, false, true),

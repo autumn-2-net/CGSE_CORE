@@ -59,6 +59,8 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private Map<K, String> preferredSources = Map.of();
     private Set<K> usedSourcePreferences = Set.of();
     private RefillBoundaryDiagnostics<K> diagnostics;
+    private RefillPlanningSearch<K> boundarySearch;
+    private boolean boundarySearchDone;
     private boolean cycleSearchEnabled, cycleSearchTried;
     private long improvementStart, improvementWork;
     private String retainedFailure;
@@ -157,6 +159,11 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
         return false;
     }
     boolean step() {
+        if (boundarySearch != null && !boundarySearchDone) {
+            if (!boundarySearch.step()) return false;
+            result = boundarySearch.result(); boundarySearchDone = true;
+            return explainBoundary();
+        }
         if (diagnostics != null) {
             if (!diagnostics.step()) return false;
             result = diagnostics.result(); diagnostics.close(); diagnostics = null; return true;
@@ -232,7 +239,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             if (advance()) return true;
             if (phase == Phase.RANK || phase == Phase.PAIR || phase == Phase.VERIFY || pruning != null || cycleSearch != null ||
                     sourceSearch != null && !sourceSearchDone || reallocation != null && !reallocationDone ||
-                    jointSearch != null && !jointSearchDone || diagnostics != null) return false;
+                    jointSearch != null && !jointSearchDone || boundarySearch != null && !boundarySearchDone || diagnostics != null) return false;
         }
         return false;
     }
@@ -436,6 +443,11 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             return false;
         }
         if (jointSearch != null && jointSearch.completedOrder() != null) diagnosticOrder = jointSearch.completedOrder();
+        if (sourceSearchEnabled && boundarySearch == null && budget.remainingWork() >= 4096 && hasProducibleMissing(compiler, result)) {
+            boundarySearch = new RefillPlanningSearch<>(compiler, result, diagnosticOrder == null ? order : diagnosticOrder,
+                    stock, external, excluded, forceCraft, ignoreTargetStock, budget);
+            return false;
+        }
         if (diagnosticOrder != null) {
             diagnostics = new RefillBoundaryDiagnostics<>(result, compiler, diagnosticOrder, budget);
             return false;
@@ -578,10 +590,10 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
     private BigInteger missing(K key, BigInteger need) {
         if (external.contains(key)) return BigInteger.ZERO;
-        return need.subtract(BigInteger.valueOf(available(key))).max(BigInteger.ZERO);
+        return need.subtract(available(key)).max(BigInteger.ZERO);
     }
-    private long available(K key) {
-        return ignoreTargetStock && original.target().equals(key) ? 0 : stock.getOrDefault(key, 0L);
+    private BigInteger available(K key) {
+        return ignoreTargetStock && original.target().equals(key) ? BigInteger.ZERO : PlanningInventory.exactAmount(stock, key);
     }
     private BigInteger deficit(K key, BigInteger need, BigInteger prefixDelta) {
         BigInteger value = missing(key, need);
@@ -603,7 +615,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private BigInteger limitFunding(K key, BigInteger limit, BigInteger previous) {
         BigInteger delta = gain(source, key), loss = delta.negate();
         if (!external.contains(key)) {
-            BigInteger ceiling = BigInteger.valueOf(available(key)).add(previous);
+            BigInteger ceiling = available(key).add(previous);
             BigInteger input = BigInteger.valueOf(source.inputs().getOrDefault(key, 0L));
             if (input.compareTo(ceiling) > 0) return BigInteger.ZERO;
             if (loss.signum() > 0) {
@@ -617,8 +629,8 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
     /** Keep the old count too: its extra firings may supply a useful coproduct. */
     private BigInteger plateau(GraphRecipe<K> recipe, K key, BigInteger old) {
-        long input = recipe.inputs().getOrDefault(key, 0L), have = available(key);
-        if (input <= have) return old;
+        long input = recipe.inputs().getOrDefault(key, 0L);
+        if (BigInteger.valueOf(input).compareTo(available(key)) <= 0) return old;
         BigInteger delta = gain(recipe, key);
         BigInteger gap = required.getOrDefault(key, BigInteger.ZERO).subtract(BigInteger.valueOf(input)).max(BigInteger.ZERO);
         BigInteger runs = CheckedAmounts.ceilDiv(gap, delta).max(BigInteger.ONE);
@@ -651,6 +663,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
 
     GraphPlan<K> result() {
+        if (boundarySearch != null && !boundarySearchDone) return boundarySearch.result();
         if (sourceSearch != null && !sourceSearchDone) return sourceSearch.result();
         if (reallocation != null && !reallocationDone) return reallocation.result();
         if (jointSearch != null && !jointSearchDone) return jointSearch.result();
@@ -673,6 +686,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     @Override public void close() {
         releaseOriginalSummary();
         if (diagnostics != null) { diagnostics.close(); diagnostics = null; }
+        if (boundarySearch != null) { boundarySearch.close(); boundarySearch = null; }
         if (pair != null) { pair.close(); pair = null; }
         if (jointSearch != null) { jointSearch.close(); jointSearch = null; }
         if (reallocation != null) { reallocation.close(); reallocation = null; }

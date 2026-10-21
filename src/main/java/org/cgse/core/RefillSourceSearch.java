@@ -209,8 +209,8 @@ final class RefillSourceSearch<K> implements AutoCloseable {
             case MISSING -> {
                 if (entries.hasNext()) {
                     var e = entries.next();
-                    long have = ignoreTargetStock && original.target().equals(e.getKey()) ? 0 : stock.getOrDefault(e.getKey(), 0L);
-                    BigInteger gap = ((BigInteger) e.getValue()).subtract(BigInteger.valueOf(have));
+                    BigInteger have = ignoreTargetStock && original.target().equals(e.getKey()) ? BigInteger.ZERO : PlanningInventory.exactAmount(stock, e.getKey());
+                    BigInteger gap = ((BigInteger) e.getValue()).subtract(have);
                     if (gap.signum() > 0 && !external.contains(e.getKey())) missing.put(e.getKey(), gap);
                 } else {
                     entries = null;

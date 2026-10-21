@@ -93,7 +93,12 @@ public final class DumpManager {
         for (var r : completed) {
             synchronized (HISTORY) { HISTORY.addLast(r); prune(); }
             if (r.owner != null || r.autoExport() || r.request.get("engine").getAsString().equals("NETWORK_ONLY"))
-                LOG.info("Captured id={} engine={} result={} networkReady={} owner={}", r.id, r.request.get("engine"), r.result, r.network.isDone(), r.owner);
+                LOG.info("Captured id={} engine={} result={} target={} amount={} fallback={} phase={} work={} peakBytes={} failure={} networkReady={} owner={}",
+                        r.id, r.request.get("engine"), r.result, r.request.get("target_registry_id"), r.request.get("amount"),
+                        r.fallback, r.budget == null ? null : r.budget.get("phase"),
+                        r.budget == null ? null : r.budget.get("work"),
+                        r.budget == null ? null : r.budget.get("peak_bytes"),
+                        r.budget == null ? null : r.budget.get("failure_detail"), r.network.isDone(), r.owner);
             if (DumpConfig.autoErrors.get() && r.autoExport() && autoCount < DumpConfig.maxAuto.get()) {
                 autoCount++;
                 if (!export(r, "automatic", text -> notifyOwner(r.owner, text))) autoCount--;

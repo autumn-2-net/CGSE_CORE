@@ -130,6 +130,13 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         return this;
     }
 
+    /** Positive witness search for a proposed refill boundary; no recursive previews. */
+    static <K> GraphPlanningWork<K> refillView(GraphCompiler<K> compiler, GraphPlan<K> original, Map<K, Long> stock,
+            Set<K> supply, Set<String> excluded, boolean force, PlanningBudget budget) {
+        return new GraphPlanningWork<>(compiler, original.target(), original.amount(), stock, supply, original.seeds(),
+                original.preserveSeeds(), force, budget, excluded, 1).missingPreview(false);
+    }
+
     public GraphPlanningWork(GraphCompiler<K> compiler, K target, long amount, Map<K, Long> stock,
                              boolean preserve, boolean forceCraft, PlanningBudget budget) {
         this(compiler, target, amount, stock, Set.of(), Map.of(), preserve, forceCraft, budget, Set.of(), 0);
@@ -1465,7 +1472,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
         private final Iterator<Map.Entry<K, Long>> deficits;
         private final List<PlanStep> prefix = new ArrayList<>();
         private final Map<String, GraphRecipe<K>> recipes;
-        private final Map<K, Long> available = new LinkedHashMap<>(stock);
+        private final Map<K, BigInteger> available = new LinkedHashMap<>(PlanningInventory.exactAmounts(stock));
         private GraphPlanningWork<K> seedWork;
         private SummaryComputation<K> summary;
         private Iterator<K> updating;
@@ -1515,8 +1522,8 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 }
                 if (updating.hasNext()) {
                     K key = updating.next();
-                    BigInteger next = BigInteger.valueOf(available.getOrDefault(key, 0L)).add(summary.result().delta(key));
-                    if (next.signum() < 0 || next.compareTo(ExactAmounts.LONG_MAX) > 0) {
+                    BigInteger next = available.getOrDefault(key, BigInteger.ZERO).add(summary.result().delta(key));
+                    if (next.signum() < 0) {
                         // This speculative prefix cannot fit the bootstrap's
                         // inventory representation. It says nothing about an
                         // interleaved count witness or another source choice.
@@ -1525,7 +1532,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                         result = original;
                         return true;
                     }
-                    available.put(key, next.longValueExact());
+                    available.put(key, next);
                 } else {
                     summary.close();
                     summary = null;
@@ -1541,8 +1548,8 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 if (seed.feasible()) {
                     prefix.add(seed.steps());
                     recipes.putAll(seed.recipes());
-                    seed.initial().forEach((key, count) -> {
-                        if (external.contains(key)) available.merge(key, count, Math::max);
+                    seed.initialExact().forEach((key, count) -> {
+                        if (external.contains(key)) available.merge(key, count, BigInteger::max);
                     });
                     summary = new SummaryComputation<>(seed.steps(), seed.recipes(), budget);
                 } else if (seed.result() == GraphPlan.Result.SEARCH_LIMIT || seed.result() == GraphPlan.Result.GRAPH_LIMIT) {
@@ -1564,7 +1571,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
                 }
                 // Bootstrapping material is newly manufactured, not new stock that
                 // grants another allowance of extra catalysts during the tail solve.
-                restarted = new GraphSolve<>(graph, target, amount, available, external, requiredSeeds, preserve, forceCraft, budget, started, catalystPolicy, stock)
+                restarted = new GraphSolve<>(graph, target, amount, PlanningInventory.exactSnapshot(available), external, requiredSeeds, preserve, forceCraft, budget, started, catalystPolicy, stock)
                         .program(compiler.demandProgram(graph, budget))
                         .allowTargetSeedConsumption(triedTargetSeedConsumption);
                 return false;
@@ -1582,7 +1589,7 @@ public final class GraphPlanningWork<K> implements PlanningScheduler.Work<GraphP
             Set<String> banned = new HashSet<>(excluded);
             owner.recipes().forEach(recipe -> banned.add(recipe.id()));
             if (compiler.producers(deficit.getKey()).stream().noneMatch(recipe -> !banned.contains(recipe.id()))) return false;
-            seedWork = new GraphPlanningWork<>(compiler, deficit.getKey(), deficit.getValue(), available, external, Map.of(), false, true, budget, banned, nesting + 1);
+            seedWork = new GraphPlanningWork<>(compiler, deficit.getKey(), deficit.getValue(), PlanningInventory.exactSnapshot(available), external, Map.of(), false, true, budget, banned, nesting + 1);
             seedWork.missingPreview(missingPreview);
             return false;
         }

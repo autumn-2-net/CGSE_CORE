@@ -84,7 +84,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
             this.compiler = compiler;
             this.target = target;
             this.amount = amount;
-            this.stock = Map.copyOf(stock);
+            this.stock = PlanningInventory.snapshot(stock);
             this.seeds = Map.copyOf(seeds);
             this.external = Set.copyOf(external);
             this.preserve = preserve;
@@ -144,7 +144,7 @@ final class IntegerCountSearch<K> implements AutoCloseable {
         if (model == null || complete || stopped.get() || running != null || !dispatched.isEmpty() ||
                 this.proofs != null || proofs == null || !compileRecovery || this.budget != budget || this.started != started ||
                 !this.target.equals(target) || this.amount != amount || this.preserve != preserve || this.force != force ||
-                !this.stock.equals(stock) || !this.seeds.equals(seeds) || !this.external.equals(external)) return Handoff.DECLINED;
+                !PlanningInventory.sameAmounts(this.stock, stock) || !this.seeds.equals(seeds) || !this.external.equals(external)) return Handoff.DECLINED;
         // Equal dimensions or matching ids do not establish complete supply.
         // Check the destination's whole backward closure, including seed goals
         // and exclusions. Object identity also covers bindings and slot semantics.

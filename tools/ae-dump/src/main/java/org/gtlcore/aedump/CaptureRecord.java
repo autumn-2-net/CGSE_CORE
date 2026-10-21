@@ -37,6 +37,7 @@ public final class CaptureRecord {
         this.id = id; this.owner = owner;
         request = Data.object("schema", "ae-request-v1", "id", Long.toString(id), "created_at", Instant.ofEpochMilli(created).toString(),
                 "owner_uuid", owner == null ? null : owner.toString(), "engine", engine, "target", keys.id(target),
+                "target_registry_id", target == null ? null : target.getId().toString(),
                 "amount", Long.toString(amount), "strategy", strategy.name(), "replan", replan);
     }
     public void attach(Object work) {
@@ -56,8 +57,13 @@ public final class CaptureRecord {
                 "preserve_seeds", Reflect.get(work, "preserve"), "force_craft", Reflect.get(work, "checkpoint") == null && !Boolean.TRUE.equals(Reflect.get(solver, "directEmission")),
                 "catalysts", Reflect.get(work, "catalysts"));
         in.add("available", keys.amounts(available == null ? Map.of() : available));
+        try { in.add("available_exact", keys.amounts(PlanningInventory.exactAmounts(available == null ? Map.of() : available))); }
+        catch (LinkageError olderEngine) { /* Older engines expose bounded inputs only. */ }
         if (snapshot != null) {
-            in.add("stock", keys.amounts(HostAccess.<Map<AEKey, Long>>call(snapshot, "stock")));
+            Map<AEKey, Long> stock = HostAccess.call(snapshot, "stock");
+            in.add("stock", keys.amounts(stock));
+            try { in.add("stock_exact", keys.amounts(PlanningInventory.exactAmounts(stock))); }
+            catch (LinkageError olderEngine) { /* Preserve the original bounded capture. */ }
             in.add("external", keys.keys(HostAccess.call(snapshot, "emitable")));
             in.addProperty("cache_hit", HostAccess.<Boolean>call(snapshot, "cacheHit"));
             in.addProperty("epoch", Long.toString(HostAccess.call(snapshot, "epoch")));
@@ -121,6 +127,15 @@ public final class CaptureRecord {
         var o = Data.object("result", p.result().name(), "target", keys.id(p.target()), "amount", Long.toString(p.amount()),
                 "preserve_seeds", p.preserveSeeds(), "initial", keys.amounts(p.initialExact()), "seeds", keys.amounts(p.seeds()),
                 "missing", keys.amounts(p.missingExact()), "seed_optimality", p.seedOptimality());
+        // These describe source coverage, not necessity or minimum refill quantities.
+        var sources = new JsonObject();
+        try {
+            p.missingExact().keySet().forEach(key -> sources.addProperty(keys.id(key), p.missingBoundary(key).source().name()));
+        } catch (LinkageError olderEngine) {
+            // Standalone AEDUMP can still observe hosts predating boundary annotations.
+            p.missingExact().keySet().forEach(key -> sources.addProperty(keys.id(key), "UNASSESSED"));
+        }
+        o.add("missing_sources", sources);
         var recipes = new JsonArray(); p.recipes().values().forEach(r -> recipes.add(recipe(r))); o.add("recipes", recipes);
         var ids = new IdentityHashMap<PlanStep, Integer>(); var list = new ArrayList<PlanStep>();
         if (p.steps() != null) { ids.put(p.steps(), 0); list.add(p.steps()); }

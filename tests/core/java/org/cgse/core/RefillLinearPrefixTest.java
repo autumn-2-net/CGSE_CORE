@@ -47,7 +47,9 @@ public final class RefillLinearPrefixTest {
                     // the existing A0/B4 bill. Retain every old coordinate.
                     if (length == 3 && feed == 6 && seed == 1)
                         check(p.missing().keySet().equals(Set.of("B")) && p.missing().get("B") <= 4, "Reintroduced an eliminated deficit");
-                    if (feed == 0) check(!p.missing().containsKey("feed"), "Traded startup for missing feed");
+                    if (feed == 0) check(!p.missing().containsKey("feed"), "Traded startup for missing feed: length=" + length +
+                            "; seed=" + seed + "; reverse=" + reverse + "; missing=" + p.missing() + "; alternatives=" +
+                            p.alternatives().stream().map(GraphPlan::missingExact).toList() + "; trace=" + b.diagnostics());
                 } finally { work.close(); }
                 check(b.reservedBytes() == 0, "Main workspace");
             }

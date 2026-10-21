@@ -351,8 +351,8 @@ final class RefillWordPruning<K> implements AutoCloseable {
                 if (entries.hasNext()) {
                     var e = entries.next(); K key = e.getKey(); BigInteger need = e.getValue();
                     if (need.compareTo(original.initialExact().getOrDefault(key, BigInteger.ZERO)) > 0) return finish();
-                    long have = ignoreTargetStock && key.equals(original.target()) ? 0 : stock.getOrDefault(key, 0L);
-                    BigInteger deficit = external.contains(key) ? BigInteger.ZERO : need.subtract(BigInteger.valueOf(have)).max(BigInteger.ZERO);
+                    BigInteger have = ignoreTargetStock && key.equals(original.target()) ? BigInteger.ZERO : PlanningInventory.exactAmount(stock, key);
+                    BigInteger deficit = external.contains(key) ? BigInteger.ZERO : need.subtract(have).max(BigInteger.ZERO);
                     if (deficit.compareTo(original.missingExact().getOrDefault(key, BigInteger.ZERO)) > 0) return finish();
                     if (deficit.signum() > 0) put(missing, key, deficit);
                 } else {

@@ -76,8 +76,8 @@ public final class GraphFallback {
             initial.merge(target, BigInteger.valueOf(amount), BigInteger::add);
             for (var e : initial.entrySet()) {
                 budget.check();
-                long have = force && target.equals(e.getKey()) ? 0 : stock.getOrDefault(e.getKey(), 0L);
-                BigInteger gap = e.getValue().subtract(BigInteger.valueOf(have));
+                BigInteger have = force && target.equals(e.getKey()) ? BigInteger.ZERO : PlanningInventory.exactAmount(stock, e.getKey());
+                BigInteger gap = e.getValue().subtract(have);
                 if (gap.signum() > 0 && !external.contains(e.getKey())) missing.put(e.getKey(), gap);
             }
             var boundary = new GraphPlan<>(target, amount, preserve, new PlanStep.Sequence(List.of()), Map.of(), initial, seeds, missing,
@@ -166,7 +166,7 @@ public final class GraphFallback {
         }
 
         private BigInteger available(K key) {
-            return inventory.getOrDefault(key, BigInteger.valueOf(forceCraft && target.equals(key) ? 0 : stock.getOrDefault(key, 0L)));
+            return inventory.getOrDefault(key, forceCraft && target.equals(key) ? BigInteger.ZERO : PlanningInventory.exactAmount(stock, key));
         }
 
         private void reserve(long bytes) {
@@ -259,7 +259,7 @@ public final class GraphFallback {
                     if (need.signum() > 0) {
                         reserve(192);
                         initial.put(key, need);
-                        BigInteger have = BigInteger.valueOf(forceCraft && target.equals(key) ? 0 : stock.getOrDefault(key, 0L));
+                        BigInteger have = forceCraft && target.equals(key) ? BigInteger.ZERO : PlanningInventory.exactAmount(stock, key);
                         if (!external.contains(key) && need.compareTo(have) > 0) missing.put(key, need.subtract(have));
                     }
                     return false;

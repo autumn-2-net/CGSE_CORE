@@ -10,7 +10,7 @@ final class RefillProducerOrder<K> implements AutoCloseable {
 
     abstract class Vertex {
         final int increment;
-        int rank = -1, index = -1, low, edge;
+        int rank = -1, index = -1, low, edge, componentId = -1;
         boolean onStack, cycle, selfLoop;
         Vertex(int increment) { this.increment = increment; }
         abstract List<? extends Vertex> dependencies();
@@ -229,6 +229,7 @@ final class RefillProducerOrder<K> implements AutoCloseable {
         } else if (memberAt < members.size()) {
             Vertex member = members.get(memberAt++);
             member.cycle = members.size() > 1 || closing.selfLoop;
+            member.componentId = closing.index;
             // Recipe-only components add no material level. A cyclic component
             // has one shared rank above its outside material feedstocks, just
             // like the unfactored material graph; AND edges add no fake depth.

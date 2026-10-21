@@ -234,7 +234,7 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         if (captureStock.hasNext()) {
             budget.compilationCheck();
             var value = captureStock.next();
-            if (rememberKey(value.getKey())) free.put(value.getKey(), BigInteger.valueOf(value.getValue()));
+            if (rememberKey(value.getKey())) free.put(value.getKey(), PlanningInventory.exactAmount(stock, value.getKey()));
         } else if (captureExternal.hasNext()) {
             budget.compilationCheck(); rememberKey(captureExternal.next());
         } else if (captureSource < entries.size()) {
@@ -380,8 +380,8 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
     }
 
     private void beginProposal(Map<String, BigInteger> previous) {
-        var available = new LinkedHashMap<Key<K>, Long>();
-        stock.forEach((key, count) -> available.put(Key.physical(key), count));
+        var available = new LinkedHashMap<Key<K>, BigInteger>();
+        stock.forEach((key, count) -> available.put(Key.physical(key), PlanningInventory.exactAmount(stock, key)));
         var required = new LinkedHashMap<Key<K>, Long>();
         for (var seed : seeds.entrySet()) {
             // Activation removes a physical key only in the proposal. Its exact
@@ -399,10 +399,10 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         entityUnionFloors.forEach((group, count) -> required.put(Key.entities(group), count));
         var emitted = new LinkedHashSet<Key<K>>();
         external.forEach(key -> emitted.add(Key.physical(key)));
-        proposalRepair = CapturedProposalRepair.create(auxiliary, previous, Key.physical(target), amount, available, emitted,
+        proposalRepair = CapturedProposalRepair.create(auxiliary, previous, Key.physical(target), amount, PlanningInventory.exactSnapshot(available), emitted,
                 required, preserve, force, budget);
         if (proposalRepair != null) return;
-        planning = new CapturedCatalog<>(auxiliary, false).begin(Key.physical(target), amount, available, emitted,
+        planning = new CapturedCatalog<>(auxiliary, false).begin(Key.physical(target), amount, PlanningInventory.exactSnapshot(available), emitted,
                 required, preserve, force, budget);
     }
 
@@ -1108,15 +1108,15 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
             }
             entityFloors.forEach((id, count) -> required.put(Key.entities(id), count));
             entityUnionFloors.forEach((group, count) -> required.put(Key.entities(group), count));
-            var available = new LinkedHashMap<Key<K>, Long>(); var emitted = new LinkedHashSet<Key<K>>();
+            var available = new LinkedHashMap<Key<K>, BigInteger>(); var emitted = new LinkedHashSet<Key<K>>();
             for (var key : physical) {
                 if (budget.nodes() - start >= limit) return false;
                 budget.check(); long count = stock.getOrDefault(key.physical(), 0L);
-                if (count > 0) available.put(key, count);
+                if (count > 0) available.put(key, PlanningInventory.exactAmount(stock, key.physical()));
                 if (external.contains(key.physical())) emitted.add(key);
             }
             supportDeadline = Math.addExact(start, share);
-            supportRepair = CapturedProposalRepair.create(view, lower, Key.physical(target), amount, available, emitted,
+            supportRepair = CapturedProposalRepair.create(view, lower, Key.physical(target), amount, PlanningInventory.exactSnapshot(available), emitted,
                     required, preserve, force, budget, (supportDeadline - budget.nodes()) / 2);
             if (supportRepair == null) return false;
             supportMemory = bytes; retained = true;
@@ -1377,16 +1377,16 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
         long transientBytes = 128L + 128L * ports;
         if (!budget.tryReserve(transientBytes)) return false;
         try {
-            var available = new LinkedHashMap<Key<K>, Long>();
+            var available = new LinkedHashMap<Key<K>, BigInteger>();
             var supplied = new LinkedHashSet<Key<K>>();
             for (String id : proposed.patternTimesExact().keySet()) for (var key : proposed.recipes().get(id).inputs().keySet()) {
                 budget.check();
                 if (key.family() != null) continue;
                 long count = stock.getOrDefault(key.physical(), 0L);
-                if (count > 0) available.put(key, count);
+                if (count > 0) available.put(key, PlanningInventory.exactAmount(stock, key.physical()));
                 if (external.contains(key.physical())) supplied.add(key);
             }
-            orderRepair = StateScheduleRepair.create(proposed.recipes(), proposed.patternTimesExact(), available,
+            orderRepair = StateScheduleRepair.create(proposed.recipes(), proposed.patternTimesExact(), PlanningInventory.exactSnapshot(available),
                     supplied, blocked.id(), budget);
         } finally { budget.release(transientBytes); }
         if (orderRepair == null) return false;
@@ -1664,17 +1664,17 @@ final class CapturedStatePlanning<K> implements AutoCloseable {
 
     private void restoreInitialFree() {
         if (!replayOnly) {
-            for (var value : stock.entrySet()) { budget.check(); free.put(value.getKey(), BigInteger.valueOf(value.getValue())); }
+            for (var value : stock.entrySet()) { budget.check(); free.put(value.getKey(), PlanningInventory.exactAmount(stock, value.getKey())); }
             return;
         }
         // A bounded replay must not scan/copy the unrelated captured stock.
         for (var count : proposed.patternTimesExact().entrySet()) for (var slot : proposed.recipes().get(count.getKey()).slots()) {
             budget.check();
-            if (slot.key().family() == null) free.put(slot.key().physical(), BigInteger.valueOf(stock.getOrDefault(slot.key().physical(), 0L)));
+            if (slot.key().family() == null) free.put(slot.key().physical(), PlanningInventory.exactAmount(stock, slot.key().physical()));
         }
         for (String id : replayAdditional.keySet()) {
             budget.check(); K state = activations.get(id).state();
-            free.put(state, BigInteger.valueOf(stock.getOrDefault(state, 0L)));
+            free.put(state, PlanningInventory.exactAmount(stock, state));
         }
     }
 

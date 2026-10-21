@@ -733,7 +733,7 @@ public final class CapturedCatalog<K> {
                 }
                 BigInteger needed = BigInteger.valueOf(amount);
                 if (!forceCraft) needed = needed.add(BigInteger.valueOf(requiredSeeds.getOrDefault(target, 0L)))
-                        .subtract(BigInteger.valueOf(stock.getOrDefault(target, 0L))).max(BigInteger.ONE);
+                        .subtract(PlanningInventory.exactAmount(stock, target)).max(BigInteger.ONE);
                 allocationFirings = output.signum() > 0 ? needed.subtract(BigInteger.ONE).divide(output).add(BigInteger.ONE).min(BigInteger.valueOf(Long.MAX_VALUE)).longValueExact() : 1;
                 allocation = new CapturedInputAllocation<>(recipe, allocating.domain, stock, external, allocationFirings, budget);
             } else if (!flowTried && allocationRecipes.isEmpty()) {

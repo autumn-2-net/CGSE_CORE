@@ -60,7 +60,7 @@ public final class CountChainScheduleTest {
                 if (pending == 0) check(entry.witness() == null, "stale prefix survived inventory change");
                 else {
                     var after = entry.entryStock();
-                    check(after.get("C") == pending && after.get("P") == 0 && after.get("U") == 100,
+                    check(after.get("C") == pending && after.getOrDefault("P", 0L) == 0 && after.get("U") == 100,
                             "entry spent an unfunded raw route or reused stale inventory");
                     verify(entry.witness(), recipes, stock, Map.of("return", BigInteger.valueOf(pending)));
                 }
