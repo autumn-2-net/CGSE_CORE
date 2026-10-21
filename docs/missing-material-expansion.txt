@@ -7,6 +7,20 @@ forward preview could stop at a depth/alternative limit, or borrow an earlier
 input after a later sibling consumed it. Verification accepted those loans
 because they funded the word, leaving craftable intermediates in the UI.
 
+Completed previews also survive the outer CatalystPlanningWork policy retries.
+Each retry shares the original request budget, so later minimal/stock-only
+policies may have less room for boundary expansion than the first policy. A
+completed raw-only bill must not be replaced by a later cyclic/intermediate
+loan, or by an empty limit result that would restart ordinary fallback. One
+request-local preview is retained; a currently executable plan always wins.
+RefillPreviewSelection compares exact per-key deficits in bounded 64-operation
+steps. Fully terminal bills take precedence over incomplete source boundaries;
+within a class, a componentwise worse bill cannot replace the incumbent. Equal
+or incomparable bills retain the existing later-policy priority, without pricing
+unrelated items and fluids. A limit during comparison keeps the old publication;
+cancellation still propagates. This is quality preservation, not a minimum-supply
+proof or a cross-request result cache.
+
 MissingMaterialExpansion refines the selected, verified witness in both main
 planning and ordinary fallback. Its prefix phase preserves the execution suffix,
 recipe bindings and final seed obligations. For a prepended batch of n firings,
