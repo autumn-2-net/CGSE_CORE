@@ -18,8 +18,11 @@ final class RefillPlanningSearch<K> implements AutoCloseable {
     private final long started, allowance;
     private final String failure;
     private final Set<K> terminal = new LinkedHashSet<>();
+    private final Set<K> produced = new HashSet<>();
     private final Map<Integer, List<K>> components = new LinkedHashMap<>();
     private Iterator<GraphRecipe<K>> recipes;
+    private Iterator<Map.Entry<K, Long>> outputs;
+    private GraphRecipe<K> producing;
     private Iterator<K> inputs, missing;
     private Iterator<List<K>> groups;
     private Set<K> supplied;
@@ -73,7 +76,7 @@ final class RefillPlanningSearch<K> implements AutoCloseable {
                             // new stock and cannot justify another supply solve.
                             if (node != null && !node.sources.isEmpty()) {
                                 originalProduced++;
-                                if (node != null && node.cycle) {
+                                if (node.cycle) {
                                     reserve(96);
                                     components.computeIfAbsent(node.componentId, ignored -> new ArrayList<>()).add(key);
                                 }
@@ -82,9 +85,25 @@ final class RefillPlanningSearch<K> implements AutoCloseable {
                         else phase = 1;
                     }
                     case 1 -> {
+                        // Returning a tool does not manufacture another tool.
+                        // Index positive net outputs once, with bounded steps,
+                        // including excluded sources so they are not mislabelled
+                        // as true terminal materials.
+                        if (outputs != null && outputs.hasNext()) {
+                            var entry = outputs.next();
+                            if (entry.getValue() > producing.inputs().getOrDefault(entry.getKey(), 0L) && !produced.contains(entry.getKey())) {
+                                reserve(64); produced.add(entry.getKey());
+                            }
+                        } else if (recipes.hasNext()) {
+                            producing = recipes.next(); outputs = producing.outputs().entrySet().iterator();
+                        } else {
+                            producing = null; outputs = null; recipes = compiler.catalog().iterator(); phase = 5;
+                        }
+                    }
+                    case 5 -> {
                         if (inputs != null && inputs.hasNext()) {
                             K key = inputs.next();
-                            if (!external.contains(key) && !terminal.contains(key) && compiler.producers(key).isEmpty()) {
+                            if (!external.contains(key) && !terminal.contains(key) && !produced.contains(key)) {
                                 reserve(96); terminal.add(key);
                             }
                         } else if (recipes.hasNext()) inputs = recipes.next().inputs().keySet().iterator();
@@ -122,7 +141,7 @@ final class RefillPlanningSearch<K> implements AutoCloseable {
                                 if (!supplied.contains(key)) throw new IllegalStateException("Unfunded refill boundary witness");
                                 deficits.put(key, gap);
                                 proposedTotal = proposedTotal.add(gap);
-                                if (!compiler.producers(key).isEmpty()) proposedProduced++;
+                                if (produced.contains(key)) proposedProduced++;
                             }
                         } else {
                             // Prefer full expansion to purchased leaves. A cyclic

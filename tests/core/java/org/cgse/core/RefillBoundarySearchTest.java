@@ -21,6 +21,12 @@ public final class RefillBoundarySearchTest {
         result = improve(recipes, original, Map.of("a", 1L, "ore", 1L));
         check(result.feasible() && result.missingExact().isEmpty(), "a cycle alone cannot establish a shortage"); verify(result, Map.of("a", 1L, "ore", 1L));
 
+        var tools = List.of(r("ab", Map.of("a", 1L, "ore", 1L, "tool", 1L), Map.of("a", 1L, "b", 1L, "tool", 1L)),
+                recipes.get(1), recipes.get(2));
+        result = improve(tools, suffix(tools, Map.of("c", BigInteger.ONE)), stock);
+        check(result.missingExact().equals(Map.of("ore", BigInteger.ONE, "tool", BigInteger.ONE)),
+                "a returned tool without a manufacturing route is a purchasable leaf"); verify(result, stock);
+
         var loop = List.of(r("ab", Map.of("a", 1L, "fuel", 1L), Map.of("b", 1L)),
                 r("ba", Map.of("b", 1L), Map.of("a", 2L)), r("finish", Map.of("a", 1L, "b", 1L), Map.of("g", 1L)));
         original = suffix(loop, Map.of("a", BigInteger.ONE, "b", BigInteger.ONE));
