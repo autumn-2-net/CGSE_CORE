@@ -34,6 +34,45 @@ final class ByproductDiscoveryTest {
         check(index.sources(side, List.of(joint)).equals(List.of(joint)), "already registered secondary not duplicated");
         check(index.sources(main, List.of()).isEmpty(), "primary lookup remains AE-owned");
         check(index.sources(raw, List.of()).isEmpty(), "inputs are not fabricated output sources");
+        build.close();
+        check(budget.reservedBytes() == 0, "finished index ownership released");
+        for (int i = 0; i < 64; i++) try (var abandoned = new ByproductPatternIndex.Build(List.of(joint, direct))) {
+            abandoned.step(budget);
+        }
+        check(budget.reservedBytes() == 0, "abandoned revision indexes accumulate reservations");
+
+        var registered = new RegisteredPatternIndex();
+        registered.changed(joint, true);
+        var first = registered.view();
+        var replacement = pattern(raw, new GenericStack(main, 1), new GenericStack(side, 1));
+        check(joint != replacement && joint.equals(replacement), "equal replacement control");
+        for (int i = 0; i < 128; i++) {
+            registered.changed(joint, false); registered.changed(replacement, true);
+            check(registered.view() == first, "immutable processing refresh rebuilt output index");
+        }
+        check(first.sources(side, List.of(replacement)).size() == 1, "equal refreshed source duplicated");
+        registered.changed(direct, true);
+        boolean stale = false;
+        try { first.sources(side, List.of()); } catch (IllegalStateException expected) { stale = true; }
+        check(stale, "stale byproduct view was reusable after a registry mutation");
+        registered.changed(joint, false);
+        check(registered.view().sources(side, List.of(direct)).equals(List.of(direct)), "removed byproduct source retained");
+
+        var dynamicOutputs = new GenericStack[][] { joint.getOutputs() };
+        var dynamic = (IPatternDetails) java.lang.reflect.Proxy.newProxyInstance(IPatternDetails.class.getClassLoader(),
+                new Class<?>[] { IPatternDetails.class }, (self, method, arguments) -> switch (method.getName()) {
+                    case "hashCode" -> System.identityHashCode(self);
+                    case "equals" -> self == arguments[0];
+                    case "getOutputs" -> dynamicOutputs[0];
+                    default -> method.invoke(joint, arguments);
+                });
+        registered.changed(dynamic, true);
+        check(registered.view().sources(side, List.of()).equals(List.of(dynamic)), "custom source missing");
+        registered.changed(dynamic, false);
+        dynamicOutputs[0] = new GenericStack[] { new GenericStack(main, 1), new GenericStack(raw, 2) };
+        registered.changed(dynamic, true);
+        check(registered.view().sources(side, List.of()).isEmpty() && registered.view().sources(raw, List.of()).equals(List.of(dynamic)),
+                "equal custom definition retained stale outputs");
 
         var normalize = GtlPatternCatalog.class.getDeclaredMethod("normalize", IPatternDetails.class, String.class, KeyCounter.class, Level.class);
         normalize.setAccessible(true);
@@ -62,6 +101,7 @@ final class ByproductDiscoveryTest {
         var fluidBudget = budget();
         while (!fluidBuild.step(fluidBudget)) {}
         check(fluidBuild.result().sources(tagged, List.of()).size() == 1 && fluidBuild.result().sources(plain, List.of()).isEmpty(), "fluid NBT identity retained");
+        fluidBuild.close();
 
         for (var proof : Arrays.asList(null, new GraphPlan.SeedOptimality(1, 3, false, false, true),
                 new GraphPlan.SeedOptimality(2, 2, true, true, false),

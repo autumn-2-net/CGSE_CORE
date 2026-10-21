@@ -162,9 +162,28 @@ public final class GraphAeIntegrationTest {
         recipe = new GraphRecipe<>("wide", "wide", List.of(new GraphRecipe.Slot<>(input, 32)), Map.of(output, 1L));
         graph = new GraphPlanner<>(new GraphCompiler<>(List.of(recipe))).plan(output, Long.MAX_VALUE,
                 Map.of(input, Long.MAX_VALUE), true, true, new PlanningBudget(5000, 10000, () -> false));
-        view = new AeGraphPlan(graph, Map.of("wide", pattern), Set.of(), Map.of(input, Long.MAX_VALUE));
+        for (boolean fallback : List.of(false, true)) {
+            boolean refused = false;
+            try {
+                new AeGraphPlan(graph, Map.of("wide", pattern), Set.of(), Map.of(input, Long.MAX_VALUE), fallback);
+            } catch (GraphPlanningFailure failure) {
+                if (!failure.detail().equals(GraphPlanningFailure.INVENTORY_PRECISION_LIMIT)) throw failure;
+                refused = true;
+            }
+            if (!refused) throw new AssertionError("A saturated counter alone cannot establish an exact deficit");
+        }
+        // This synthetic inventory contains exactly MAX, not an unknown capped
+        // counter. Explicit precision lets the host publish its real deficit.
+        view = new AeGraphPlan(graph, Map.of("wide", pattern), Set.of(), Map.of(input, Long.MAX_VALUE), false, null, Set.of());
         if (!view.simulation() || view.usedItems().get(input) != Long.MAX_VALUE || view.missingItems().get(input) != Long.MAX_VALUE)
             throw new AssertionError("Missing view must subtract exact totals before bounding display");
+        var exactStock = PlanningInventory.exactSnapshot(Map.of(input, java.math.BigInteger.valueOf(Long.MAX_VALUE).multiply(java.math.BigInteger.valueOf(32))));
+        var exactPlan = new GraphPlanner<>(new GraphCompiler<>(List.of(recipe))).plan(output, Long.MAX_VALUE,
+                exactStock, true, true, new PlanningBudget(5000, 10000, () -> false));
+        var exactView = new AeGraphPlan(exactPlan, Map.of("wide", pattern), Set.of(), exactStock);
+        if (!exactPlan.feasible() || exactView.simulation() || !exactView.missingItems().isEmpty() ||
+                !exactPlan.initialExact().get(input).equals(PlanningInventory.exactAmount(exactStock, input)))
+            throw new AssertionError("Exact wide stock was converted back into a saturated-counter shortage");
         var emittedGraph = new GraphPlan<>(output, Long.MAX_VALUE, true, graph.steps(), graph.recipes(), graph.initialExact(), graph.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
         var emissionView = new AeGraphPlan(emittedGraph, Map.of("wide", pattern), Set.of(input), Map.of());
         if (emissionView.usedItems().get(input) != 0 || emissionView.emittedItems().get(input) != Long.MAX_VALUE)

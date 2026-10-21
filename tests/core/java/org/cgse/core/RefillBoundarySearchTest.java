@@ -16,6 +16,10 @@ public final class RefillBoundarySearchTest {
         var result = improve(recipes, original, stock);
         check(result.missingExact().equals(Map.of("ore", BigInteger.ONE)), "existing seed enables base-only purchase");
         verify(result, stock);
+        var fallback = GraphFallback.plan(new GraphCompiler<>(recipes), "g", 1, stock, Set.of(), Map.of(), false, true,
+                new PlanningBudget(0, 8_000_000, 128L << 20, () -> false, System::nanoTime));
+        check(fallback.missingExact().equals(Map.of("ore", BigInteger.ONE)), "fallback expands a seeded cycle to its base input");
+        verify(fallback, stock);
         var oldMissing = original.missingExact();
         check(result.alternatives().stream().anyMatch(p -> p.missingExact().equals(oldMissing)), "retain old verified tradeoff");
         result = improve(recipes, original, Map.of("a", 1L, "ore", 1L));

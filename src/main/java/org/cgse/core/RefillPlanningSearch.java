@@ -41,7 +41,14 @@ final class RefillPlanningSearch<K> implements AutoCloseable {
         this.compiler = compiler; this.original = result = original; this.order = order; this.stock = stock;
         this.external = external; this.excluded = excluded; this.force = force; this.ignoreTargetStock = ignoreTargetStock;
         this.budget = budget; started = budget.nodes(); failure = budget.failureDetail();
-        allowance = Math.min(8_000_000, budget.remainingWork() / 2);
+        // This is an optional quality pass over an already verified bill.
+        // Scale it to the work that found that bill and the catalog size:
+        // a full-catalog solve needs room even when the first bill was cheap.
+        // Granting every small proven-infeasible order eight million more
+        // operations overwhelms the fast state-closure proofs. Use a quarter
+        // of completed work; large catalogs retain the full search allowance.
+        long modelAllowance = Math.max(32768, 2048L * compiler.catalog().size());
+        allowance = Math.min(Math.min(8_000_000, Math.max(modelAllowance, started / 4)), budget.remainingWork() / 2);
         trialStock = ignoreTargetStock && stock.containsKey(original.target()) ?
                 PlanningInventory.withAmount(stock, original.target(), BigInteger.ZERO) : stock;
         recipes = compiler.catalog().iterator(); missing = original.missingExact().keySet().iterator();

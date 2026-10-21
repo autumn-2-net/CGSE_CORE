@@ -111,11 +111,19 @@ public final class GraphUiRegressionTest {
         check(view.page(0).rows().stream().filter(r->r.kind()==GraphRingView.Kind.REFERENCE).count()==80,"Missing program references");
         var buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {
-            GraphRingView.write(view.page(0), buffer);
+            var page = view.page(0);
+            var rows = new ArrayList<>(page.rows());
+            var first = rows.get(0);
+            int cycleMask = 1 << GraphPlan.MissingSource.CYCLE_BOUNDARY.ordinal();
+            rows.set(0, new GraphRingView.Row(first.kind(), first.id(), first.icon(), first.count(), first.seed(),
+                    first.missing(), first.inputs(), first.outputs(), first.parent(), cycleMask));
+            page = new GraphRingView.Page(page.id(), page.target(), page.preserve(), page.offset(), page.total(), page.graphRows(), rows);
+            GraphRingView.write(page, buffer);
             var decoded = GraphRingView.read(buffer);
-            check(decoded.equals(view.page(0)),"Big integer/shared program packet roundtrip");
+            check(decoded.equals(page),"Big integer/shared program packet roundtrip");
             check(decoded.rows().get(0).count().equals(huge),"Exact initial amount clipped to long");
             check(decoded.rows().get(0).missing().equals(huge.subtract(java.math.BigInteger.ONE)),"Exact missing amount clipped");
+            check(decoded.rows().get(0).missingSourceMask() == cycleMask, "Cycle boundary annotation lost in ring packet");
             check(decoded.rows().get(1).count().equals(java.math.BigInteger.ONE.shiftLeft(80)),"Shared recipe count clipped");
         } finally { buffer.release(); }
         var proof=new GraphPlan.SeedOptimality(0,1,false,false,false,true);

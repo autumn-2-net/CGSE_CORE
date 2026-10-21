@@ -47,8 +47,20 @@ public final class PlanReuseTest {
                     "successful refresh belongs to end-to-end candidate metrics");
         }
         var missing = budget();
-        run(COMPILER, PLAN, "product", 8, Map.of("fuel", 100L), Set.of(), Map.of(), true, true, missing);
-        check(!accepted(missing) && missing.diagnostics().contains("reason=stock"), "lost startup seed must invalidate");
+        missing.enableMetrics();
+        var withoutSeed = Map.of("fuel", 100L);
+        // Check the reason before subsequent refill searches rotate the bounded
+        // diagnostic ring, then check the retained candidate counts/end result.
+        var checkBudget = budget();
+        try (var refresh = new PlanReuseVerification<>(PLAN, COMPILER, "product", 8, withoutSeed,
+                Set.of(), Map.of(), true, true, checkBudget, 0)) {
+            while (!refresh.step()) {}
+            check(checkBudget.diagnostics().contains("reason=stock"), "lost startup seed must reject at funding validation");
+        }
+        var missingPlan = run(COMPILER, PLAN, "product", 8, withoutSeed, Set.of(), Map.of(), true, true, missing);
+        var reuse = missing.candidates().origins().get(PlanningBudget.CandidateOrigin.PLAN_REUSE);
+        check(!missingPlan.feasible() && missingPlan.missingExact().getOrDefault("seed", BigInteger.ZERO).signum() > 0 &&
+                reuse != null && reuse.rejected() == 1 && reuse.accepted() == 0, "lost startup seed must invalidate");
         var restored = budget();
         check(run(COMPILER, PLAN, "product", 8, STOCK, Set.of(), Map.of(), true, true, restored).feasible() && accepted(restored),
                 "a failed refresh cannot poison later inventory");
