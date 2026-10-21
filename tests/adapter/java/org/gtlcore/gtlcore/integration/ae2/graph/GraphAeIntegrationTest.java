@@ -361,6 +361,7 @@ public final class GraphAeIntegrationTest {
 
     private static void graphRingViews(AEKey input, AEKey output, AEKey water) {
         GraphUiRegressionTest.packets(input, output);
+        GraphUiRegressionTest.cyclePreview(input, output, water);
         long amount = 9_007_199_254_740_993L;
         var recipe = new GraphRecipe<AEKey>("recover", "recover", List.of(new GraphRecipe.Slot<>(input, 1)), Map.of(input, 1L, output, 1L));
         var steps = new PlanStep.Repeat(new PlanStep.Batch("recover", 1), amount);

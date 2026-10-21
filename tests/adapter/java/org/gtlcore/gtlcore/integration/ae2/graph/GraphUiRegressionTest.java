@@ -7,7 +7,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import io.netty.buffer.Unpooled;
 import java.util.*;
 
-/** Local-only geometry and wire regression matrix; never distribute this fixture. */
+/** Synthetic geometry and wire regression matrix, maintained with the CGSE adapter suite. */
 public final class GraphUiRegressionTest {
     private static int checks;
     private static void check(boolean condition, String why) {
@@ -124,11 +124,60 @@ public final class GraphUiRegressionTest {
             check(decoded.rows().get(0).count().equals(huge),"Exact initial amount clipped to long");
             check(decoded.rows().get(0).missing().equals(huge.subtract(java.math.BigInteger.ONE)),"Exact missing amount clipped");
             check(decoded.rows().get(0).missingSourceMask() == cycleMask, "Cycle boundary annotation lost in ring packet");
+            var projected = GraphRingProjection.of(decoded.rows(), output);
+            check(projected.rows().get(0).missingSourceMask() == cycleMask, "Cycle boundary annotation lost in projection");
+            var mergedRows = new ArrayList<>(decoded.rows());
+            int terminalMask = 1 << GraphPlan.MissingSource.TERMINAL_UNDER_CURRENT_COVERAGE.ordinal();
+            mergedRows.add(new GraphRingView.Row(first.kind(), first.id(), first.icon(), java.math.BigInteger.ZERO, 0,
+                    java.math.BigInteger.ZERO, List.of(), List.of(), first.parent(), terminalMask));
+            check(GraphRingProjection.of(mergedRows, output).rows().get(0).missingSourceMask() == (cycleMask | terminalMask),
+                    "Grouped resource dropped one source annotation");
             check(decoded.rows().get(1).count().equals(java.math.BigInteger.ONE.shiftLeft(80)),"Shared recipe count clipped");
         } finally { buffer.release(); }
         var proof=new GraphPlan.SeedOptimality(0,1,false,false,false,true);
         var contents=(TranslatableContents)GraphSeedStatus.tooltip(proof).get(0).getContents();
         check(contents.getKey().equals("gtlcore.ae.graph.seed_types_unproven"),"Displayed vacuous zero lower bound as evidence");
         System.out.println("UI packet: "+checks+" checks passed; 80 shared levels => 163 rows; exact 2^120+1 amounts");
+    }
+
+    public static void cyclePreview(AEKey a, AEKey b, AEKey target) {
+        var recipes = List.of(new GraphRecipe<AEKey>("finish", "finish", List.of(new GraphRecipe.Slot<>(a, 2)), Map.of(target, 1L)),
+                new GraphRecipe<AEKey>("a", "a", List.of(new GraphRecipe.Slot<>(b, 1)), Map.of(a, 1L)),
+                new GraphRecipe<AEKey>("b", "b", List.of(new GraphRecipe.Slot<>(a, 1)), Map.of(b, 1L)));
+        for (boolean fallback : List.of(false, true)) {
+            var compiler = new GraphCompiler<>(recipes);
+            var budget = new PlanningBudget(0, 4_000_000, 64L << 20, () -> false, System::nanoTime);
+            var plan = fallback ? GraphFallback.plan(compiler, target, Long.MAX_VALUE, Map.of(), Set.of(), Map.of(), false, true, budget) :
+                    new GraphPlanner<>(compiler).plan(target, Long.MAX_VALUE, Map.of(), false, true, budget);
+            var originalCounts = plan.patternTimesExact(); var originalMissing = plan.missingExact();
+            var view = new GraphRingView(UUID.randomUUID(), plan, plan.patternTimes());
+            var rows = new ArrayList<GraphRingView.Row>();
+            int offset = 0;
+            do {
+                var page = view.page(offset); var buffer = new FriendlyByteBuf(Unpooled.buffer());
+                try { GraphRingView.write(page, buffer); rows.addAll(GraphRingView.read(buffer).rows()); }
+                finally { buffer.release(); }
+                offset += page.rows().size();
+            } while (offset < view.page(0).total());
+            var projection = GraphRingProjection.of(rows, target);
+            var selected = new ArrayList<GraphRecipe<AEKey>>(); int references = 0;
+            for (var row : projection.rows()) if (row.kind() == GraphRingView.Kind.RECIPE) {
+                var slots = row.inputs().stream().map(v -> new GraphRecipe.Slot<>(v.what(), v.amount())).toList();
+                var outputs = new LinkedHashMap<AEKey, Long>(); row.outputs().forEach(v -> outputs.put(v.what(), v.amount()));
+                selected.add(new GraphRecipe<>(row.id(), row.id(), slots, outputs));
+                if (row.count().signum() == 0) references++;
+            }
+            check(references > 0, "Missing cycle source recipe in native view");
+            var topology = new PlanTopology<>(selected);
+            for (var key : plan.missingExact().keySet()) {
+                var node = topology.nodes().stream().filter(n -> key.equals(n.resource())).findFirst().orElseThrow();
+                check(topology.groups().get(topology.groupOf(node.id())).cyclic(), "Cycle lost between planner and rendered topology");
+                var row = projection.rows().stream().filter(r -> r.kind() == GraphRingView.Kind.RESOURCE && key.equals(r.icon().what())).findFirst().orElseThrow();
+                check((row.missingSourceMask() & (1 << GraphPlan.MissingSource.CYCLE_BOUNDARY.ordinal())) != 0, "Refill mask lost after packet and grouping");
+            }
+            check(plan.patternTimesExact().equals(originalCounts) && plan.missingExact().equals(originalMissing), "View changed native execution/bill");
+            check(budget.reservedBytes() == 0, "Native view test workspace leaked");
+        }
+        System.out.println("UI refill cycles: main/fallback Long.MAX_VALUE packet, projection and topology passed");
     }
 }
