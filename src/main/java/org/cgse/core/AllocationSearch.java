@@ -679,6 +679,15 @@ final class AllocationSearch<K> {
                     for (GraphRecipe<K> recipe : producers.getOrDefault(key, List.of())) for (K input : recipe.inputs().keySet()) {
                         budget.check();
                         if (input.equals(checkingKey)) {
+                            // A batched cycle can borrow more than one seed
+                            // ledger can represent even when a different order
+                            // needs only a small startup. Reject this proposal,
+                            // not the request; never truncate its preservation
+                            // obligation or turn it into an infeasibility proof.
+                            if (summary.required(checkingKey).compareTo(ExactAmounts.LONG_MAX) > 0) {
+                                budget.note("allocation_seed", "candidate_declined; reason=seed_capacity");
+                                return true;
+                            }
                             seeds.merge(checkingKey, CheckedAmounts.amount(summary.required(checkingKey)), Math::max);
                             checkingKey = null;
                             todo.clear();

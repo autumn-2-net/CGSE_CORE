@@ -256,8 +256,24 @@ public final class RegionSelection<K> implements AutoCloseable {
                 if (count.signum() > 0 && region.cyclic() && preserve && keys.hasNext()) {
                     K key = keys.next();
                     if (summary.delta(key).signum() >= 0 && summary.required(key).signum() > 0) {
-                        long seed = CheckedAmounts.amount(summary.required(key));
-                        if (recipes.size() == 1) seed = CheckedAmounts.multiply(seed, workingCopies);
+                        BigInteger requiredSeed = summary.required(key);
+                        if (recipes.size() == 1 && workingCopies > 1)
+                            requiredSeed = requiredSeed.multiply(BigInteger.valueOf(workingCopies));
+                        if (requiredSeed.compareTo(ExactAmounts.LONG_MAX) > 0) {
+                            // Extra parallel working stock is optional. Retry
+                            // this order with one copy before trying a different
+                            // ratio/order; an oversized proposal is not a limit
+                            // on the entire request's exact material ledger.
+                            if (workingCopies > 1) {
+                                workingCopies = 1;
+                                body = children.size() == 1 ? children.get(0) : new PlanStep.Sequence(children);
+                                computation.close();
+                                computation = new SummaryComputation<>(body, byId, budget);
+                                phase = 3;
+                            } else nextTrial();
+                            return complete();
+                        }
+                        long seed = requiredSeed.longValueExact();
                         reserve.put(key, seed);
                         if (summary.delta(key).signum() > 0) {
                             BigInteger gap = demand.getOrDefault(key, BigInteger.ZERO).add(BigInteger.valueOf(seed))

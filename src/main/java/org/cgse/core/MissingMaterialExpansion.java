@@ -56,6 +56,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     private RefillPairCounts.Choice<K> jointChoice;
     private RefillPairCounts<K> pair;
     private boolean simpleSourcesOnly;
+    private boolean protectProductionCredit;
     private Map<K, String> preferredSources = Map.of();
     private Set<K> usedSourcePreferences = Set.of();
     private RefillBoundaryDiagnostics<K> diagnostics;
@@ -206,8 +207,12 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
             var summary = pair.summary();
             if (summary == null) { pair.close(); pair = null; phase = Phase.SOURCE; return false; }
             BigInteger delta = targetDelta.add(summary.delta(original.target()));
+            if (protectProductionCredit && delta.signum() < 0) {
+                pair.close(); pair = null; phase = Phase.SOURCE; return false;
+            }
             BigInteger need = summary.required(expanding).max(required.getOrDefault(expanding, BigInteger.ZERO).subtract(summary.delta(expanding)));
-            if (deficit(expanding, need, delta).compareTo(deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta)) >= 0) {
+            if (!restoringProduction() && deficit(expanding, need, delta)
+                    .compareTo(deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta)) >= 0) {
                 pair.close(); pair = null; phase = Phase.SOURCE; return false;
             }
             proposal = new Proposal(pair, delta); pair = null;
@@ -276,6 +281,16 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                         // do not publish the partially expanded word or abort
                         // the already verified incumbent.
                         if (simpleSourcesOnly) { result = original; phase = Phase.DONE; return true; }
+                        if (!protectProductionCredit) {
+                            // Material ranks may stop at a cycle boundary, but
+                            // supplying target stock cannot repay production
+                            // spent by this prefix. Allow one target-production
+                            // repair across that rank, then forbid reopening
+                            // its debt. Its new cyclic inputs remain real loans.
+                            protectProductionCredit = true;
+                            enqueue(original.target());
+                            if (!pending.isEmpty()) break;
+                        }
                         throw new IllegalStateException("Refill lost verified production credit");
                     }
                     steps = new ArrayList<>(); prefixIndex = prefix.size(); phase = Phase.STEPS;
@@ -500,8 +515,9 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
     private void beginProposal(BigInteger runs) {
         BigInteger nextDelta = targetDelta.add(gain(source, original.target()).multiply(runs));
+        if (protectProductionCredit && nextDelta.signum() < 0) return;
         BigInteger old = deficit(expanding, required.getOrDefault(expanding, BigInteger.ZERO), targetDelta);
-        if (deficit(expanding, before(source, expanding, runs), nextDelta).compareTo(old) >= 0) return;
+        if (!restoringProduction() && deficit(expanding, before(source, expanding, runs), nextDelta).compareTo(old) >= 0) return;
         proposal = new Proposal(source, runs, nextDelta);
         long bytes = 192L + 128L * ((long) source.inputs().size() + source.outputs().size());
         budget.reserve(bytes); proposal.bytes = bytes;
@@ -529,7 +545,7 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
                 // After applying it, every later expansion of that key again
                 // obeys the old rank guard. Finite preferences cannot turn a
                 // cyclic choice into an endlessly renewable rank exception.
-                if (order.rank(input) >= order.rank(expanding) && !preferred(expanding, proposal.recipe)) {
+                if (order.rank(input) >= order.rank(expanding) && !preferred(expanding, proposal.recipe) && !restoringProduction()) {
                     finishComparison(false); return;
                 }
             }
@@ -582,6 +598,9 @@ final class MissingMaterialExpansion<K> implements AutoCloseable {
     }
     private boolean preferred(K key, GraphRecipe<K> recipe) {
         return recipe.id().equals(preferredSources.get(key)) && !usedSourcePreferences.contains(key);
+    }
+    private boolean restoringProduction() {
+        return protectProductionCredit && expanding.equals(original.target()) && targetDelta.signum() < 0;
     }
     private void enqueue(K key) {
         var node = order.get(key);
