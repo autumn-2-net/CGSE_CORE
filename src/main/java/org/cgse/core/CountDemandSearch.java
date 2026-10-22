@@ -86,9 +86,12 @@ final class CountDemandSearch<K> implements AutoCloseable {
                 scheduleCounts();
                 return false;
             }
-            // Give both deterministic producer orders room. Existing source
-            // search already tries the preferred order, so scout its opposite first.
-            if (work - attemptStarted >= allowance / 2) return nextAttempt();
+            // Reserve half the shared scout quota for reversible allocation.
+            // Two stalled feedback closures must not consume that strategy's
+            // entire turn. Completed counts still reach physical verification.
+            // Existing source search tries the preferred order, so scout its
+            // opposite first; unused propagation quota remains available later.
+            if (work - attemptStarted >= allowance / 4) return nextAttempt();
             for (int visit = 0; visit < 32; visit++) {
                 budget.check();
                 if (pending.isEmpty()) {

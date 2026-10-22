@@ -1036,13 +1036,21 @@ the captured per-material producer order is retained. Coproduct credits update
 every affected row. No durability state enumeration or floating-point quantity
 conversion is introduced.
 
+Each uniform propagation order receives at most a quarter of the shared scout
+allowance, leaving room for source allocation even when both orders follow
+unproductive feedback. Completed counts still proceed to physical verification.
 When both simple orders fail and the same scout allowance still has room, a
 request-local capacity allocator propagates integer lower and upper bounds over
 the sparse material rows. Terminal capacities enter first. Different materials
 can select different sources; a finite source supplies only its available share.
 Joint outputs receive credit against every current debt. A bounded reversible
 trail can reduce an earlier source allocation instead of discarding that recipe
-entirely. Bounds, choices and inventories are never cached between requests.
+entirely. Repeated tightenings of the same bound within one decision retain only
+its entry value; undo restores both that value and its previous decision depth.
+This bounds retained history by changed variables rather than propagation rounds
+without changing which source allocations can be explored. The depth arrays are
+charged to the request budget. Bounds, choices and inventories are never cached
+between requests.
 
 These additional count candidates also get a sparse recipe/material SCC order.
 An upstream component completes its proposed counts before exporting its startup
@@ -1070,7 +1078,10 @@ ratios, competing raw inputs, coproducts, crafted startup seeds and coupled loop
 with shuffled recipe order and chains up to 1024 steps. Known oracle words and
 returned words are independently token-executed. Reused-compiler tests remove
 and restore feed, seeds and routes; tiny bounded count systems are additionally
-checked against exhaustive enumeration. These are tested families, not a
+checked against exhaustive enumeration. A separate joint-source regression
+rejects starvation behind two unseeded feedback routes. Nested rollback tests
+cover repeated tightening, sibling decisions, cancellation and memory refusal.
+These are tested families, not a
 completeness guarantee for all feedback networks or all missing-material bills.
 
 Short multi-row propagation cuts retain the prior pair-cut history window.
