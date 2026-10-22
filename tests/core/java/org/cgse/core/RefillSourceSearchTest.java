@@ -70,7 +70,7 @@ public final class RefillSourceSearchTest {
         return result;
     }
     public static void main(String[] args) throws Exception {
-        paths(); combinedChoices(); restrictions(); nestedScope(); cyclicPreferences(); exactCounts(); randomPaths(); lifecycle(); publishedLimits(); scheduler(false); scheduler(true);
+        paths(); externalConfigurations(); combinedChoices(); restrictions(); nestedScope(); cyclicPreferences(); exactCounts(); randomPaths(); lifecycle(); publishedLimits(); scheduler(false); scheduler(true);
         System.out.println("RefillSourceSearchTest: assertions=" + checks);
     }
     private static void paths() {
@@ -103,6 +103,23 @@ public final class RefillSourceSearchTest {
             for (int i = 1; i < depth; i++) unequal.add(r("Y" + i,
                     Map.of(i + 1 == depth ? "raw" : "Y" + (i + 1), 1L), Map.of("Y" + i, 1L)));
             check(solve(unequal, Map.of(), entry).missing().equals(Map.of("raw", 3L)), "First-ready rank hid deeper route: " + entry + "/" + depth);
+        }
+    }
+    private static void externalConfigurations() {
+        for (boolean reusable : List.of(false, true)) for (boolean externalConfig : List.of(false, true)) {
+            var recipes = routes(1, 3, false, false, false);
+            var configured = recipes.get(0);
+            var slots = new ArrayList<>(configured.slots());
+            slots.add(new GraphRecipe.Slot<>("configuration", 1, 1, true, reusable));
+            var outputs = new LinkedHashMap<>(configured.outputs());
+            if (reusable) outputs.put("configuration", 1L);
+            recipes.set(0, new GraphRecipe<>(configured.id(), configured.binding(), slots, outputs));
+            var original = oldPlan(recipes, Map.of("configuration", 3L));
+            var result = refine(recipes, original, Map.of("configuration", 3L),
+                    externalConfig ? Set.of("configuration") : Set.of(), Set.of(), true);
+            if (externalConfig || reusable)
+                check(result.missingExact().equals(Map.of("raw", BigInteger.valueOf(3))), "External/read-only configuration blocked a valid source improvement");
+            else check(result == original, "Finite per-push configuration lost its guarded scope");
         }
     }
     private static void restrictions() {

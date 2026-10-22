@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class RefillBoundarySearchTest {
     public static void main(String[] args) {
+        canonicalContinuesBoundarySearch();
+        coordinatePrefixes();
         var recipes = List.of(r("ab", Map.of("a", 1L, "ore", 1L), Map.of("a", 1L, "b", 1L)),
                 r("bc", Map.of("b", 1L), Map.of("c", 1L)), r("finish", Map.of("c", 1L), Map.of("a", 1L, "g", 1L)));
         var stock = Map.of("a", 1L);
@@ -54,6 +56,60 @@ public final class RefillBoundarySearchTest {
         }
         check(budget.reservedBytes() == 0, "support charge leaked");
         System.out.println("RefillBoundarySearchTest PASS: base-only, funded cycle, concentrated cycle and cancellation");
+    }
+
+    private static void coordinatePrefixes() {
+        for (boolean reverse : List.of(false, true)) for (boolean damaged : List.of(false, true, false)) {
+            var recipes = new ArrayList<>(List.of(r("a", Map.of("a", 1L, "ore", 1L), Map.of("x", 1L)),
+                    r("return-a", Map.of("x", 1L), Map.of("a", 2L)),
+                    r("b", Map.of("b", 1L, "ore", 1L), Map.of("y", 1L)),
+                    r("return-b", Map.of("y", 1L), Map.of("b", 2L))));
+            if (damaged) recipes.removeIf(r -> r.id().equals("return-b"));
+            for (int i = 0; i < 200; i++) recipes.add(r("other-" + i, Map.of("ore-" + i, 1L), Map.of("other-" + i, 1L)));
+            var finish = r("finish", Map.of("a", 10L, "b", 10L), Map.of("g", 1L));
+            recipes.add(finish);
+            if (reverse) Collections.reverse(recipes);
+            var original = new GraphPlan<String>("g", 1, false, new PlanStep.Batch("finish", 1), Map.of("finish", finish),
+                    Map.of("a", BigInteger.TEN, "b", BigInteger.TEN), Map.of(),
+                    Map.of("a", BigInteger.valueOf(9), "b", BigInteger.valueOf(9)), GraphPlan.Result.MISSING_INPUT, 0, 0);
+            var stock = Map.of("a", 1L, "b", 1L);
+            var result = improve(recipes, original, stock);
+            var expected = damaged ? Map.of("b", BigInteger.valueOf(9), "ore", BigInteger.valueOf(9)) :
+                    Map.of("ore", BigInteger.valueOf(18));
+            check(result.missingExact().equals(expected), "Coordinate prefix / damaged producer: " + result.missingExact());
+            verify(result, stock);
+        }
+    }
+
+    private static void canonicalContinuesBoundarySearch() {
+        // The goal constructor can complete a cyclic seed bill while a
+        // terminal-funded execution needs only ore. Completing that candidate
+        // must not skip the established terminal-boundary solver afterwards.
+        var values = List.of(r("make", Map.of("A", 1L, "ore", 1L), Map.of("B", 1L)),
+                r("return", Map.of("B", 1L), Map.of("A", 2L)),
+                r("finish", Map.of("A", 10L), Map.of("g", 1L)));
+        for (boolean reverse : List.of(false, true)) {
+            var recipes = new ArrayList<>(values); if (reverse) Collections.reverse(recipes);
+            var initial = Map.of("A", BigInteger.TEN);
+            var original = new GraphPlan<>("g", 1, false, new PlanStep.Batch("finish", 1),
+                    Map.of("finish", values.get(2)), initial, Map.of(), Map.of("A", BigInteger.valueOf(9)),
+                    GraphPlan.Result.MISSING_INPUT, 0, 0);
+            var compiler = new GraphCompiler<>(recipes);
+            var b = new PlanningBudget(0, 1_000_000, 8L << 20, () -> false, System::nanoTime);
+            try (var order = new RefillProducerOrder<>(compiler, initial.keySet(), Set.of(), Set.of(), b)) {
+                while (!order.step()) {}
+                try (var search = new RefillPlanningSearch<>(compiler, original, order, Map.of("A", 1L),
+                        Set.of(), Set.of(), true, false, b).retainTrades(true)) {
+                    while (!search.step()) {}
+                    check(search.result().missingExact().equals(Map.of("ore", BigInteger.valueOf(9))),
+                            "Canonical candidate skipped the terminal-funded solve: " + search.result().missingExact());
+                    check(search.result().alternatives().stream().anyMatch(p -> p.missingExact().equals(original.missingExact())),
+                            "Canonical reconstruction discarded the incomparable original supply option");
+                    RefillWordPruningTest.literalVerify(search.result(), Map.of("A", 1L), Set.of());
+                }
+            }
+            check(b.reservedBytes() == 0, "Canonical continuation leaked");
+        }
     }
 
     private static GraphPlan<String> improve(List<GraphRecipe<String>> recipes, GraphPlan<String> original, Map<String, Long> stock) {

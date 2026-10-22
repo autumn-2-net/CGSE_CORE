@@ -21,6 +21,79 @@ unrelated items and fluids. A limit during comparison keeps the old publication;
 cancellation still propagates. This is quality preservation, not a minimum-supply
 proof or a cross-request result cache.
 
+Independent preview requests receive fresh budgets, even when the first preview
+was never submitted. They may reuse immutable compiler structure. Cache hits
+change local search costs and can change the last policy's bounded candidate;
+they do not transfer spent work from the preceding request. A 25-link regression
+keeps inventory, ordering, policy and budget fixed: the old cold preview requested
+only raw, while subsequent previews also requested the last intermediate. Each
+request now keeps its own verified raw-only candidate across those policy trials.
+This regression does not establish identical results for every bounded search,
+nor does it attribute a player session without the corresponding captured inputs.
+
+The same retention rule applies inside the main solver at its complete-model
+shortage handoff. It keeps the source/count candidate and incumbent and passes
+the selected word to funded verification and the common backward expansion.
+If no word exists, main and ordinary fallback use the same fromRequest goal
+constructor. The old AllocationSearch preview mode, synthetic one-unit stock,
+DemandExpansion supplementation, and depth/refinement-limited forward completion
+are removed. Ordinary allocation remains an executable-only search. A budget
+exit cannot create a missing-material boundary; only a completed verified bill
+may survive optional refinements. There is no fresh quota for an old generator.
+
+Within backward expansion, two ordinary single-output sources that consume the
+same material can share an exact batch-count calculation. Whole downstream
+requirements select the batches, including mixed bulk runs and their remainder.
+Only the expensive source's residues within one output exchange period need
+enumeration. At most 128 residues are admitted, independent of requested count;
+otherwise normal backward proposals remain available, with no leaf/proof learned.
+Counts use exact integers and the pair still receives normal rank, binding,
+requirement-vector and verification checks. The finite two-count oracle covers
+3200 cost/output/order combinations. Seven units now need 7 raw instead of the
+old 101; with a 2-raw single recipe and 100-raw/64-output bulk recipe, 65 units
+use a mixture requiring 102 raw rather than two bulk runs requiring 200.
+An exact same-input pair cannot be displaced by a locally funded partial batch
+that makes the remaining whole demand more expensive. Single-hop alternatives
+also participate in source discovery. Ordinary one-input/one-output words first
+receive one whole-demand normalization with funded mixtures, under the original
+request budget; the optional source-hint quota does not truncate this pass.
+Preferred-source trials retain their existing smaller allowance. The 4/16/64
+stock-split regressions retain their one-unit terminal shortage up to long-sized
+requests, without enumerating every requested item or unrelated inventory key.
+
+Unfunded optional parallel seeds can be rescheduled using the solver's existing
+bound recipes and finite raw refill. This is an executable-only witness search;
+it never fabricates intermediate inventory. Required seeds, production credit
+and componentwise supply checks still govern acceptance. The cyclic boundary
+portfolio likewise compares complete vectors before replacing a primary bill,
+and can retain bounded incomparable alternatives on the main-planning path.
+Preview phases live in separate methods so the hot coordinator stays eligible
+for JVM compilation. The compiled-bytecode regression catches this performance
+boundary even when reported search work and memory are unchanged.
+The finite reschedule funds only terminal deficits, not artificial intermediate
+loans from the old word. If its support has a single terminal, one additional
+unit of that terminal may be tried as a fixed hypothesis. It must produce and
+verify a complete executable word before replacing the incumbent. This retains
+the 24/40/60-level nested-return cases with one missing raw unit. Interruption
+during either attempt retains the previous completed bill and releases scratch.
+
+For cyclic bills, the boundary portfolio can rebuild the whole delivery through
+the same backward constructor instead of only prepending to a fixed suffix.
+This can undo an upstream seed/feed tradeoff or move a boundary through a linear
+chain. Source/boundary recursion is disabled inside that reconstruction. Final
+seed rounding can then try a finite bill with one fewer unit, using the existing
+executable DemandExpansion with a root-delivery reserve for other final goals.
+Internal production can still borrow and return those goals. Exact candidate
+verification and a complete componentwise shortage comparison gate acceptance;
+incomparable supply options use the existing bounded frontier. This optional
+pass has no refill/loan mode and cannot publish its hypothesis on failure.
+Reconstruction completing does not finish the surrounding boundary portfolio:
+the established terminal-funded solve still receives its turn. A three-recipe
+regression with one stocked cycle seed needs only nine ore; an early return
+incorrectly stopped at five purchased cycle intermediates. Incomparable old
+bills also enter the bounded verified frontier rather than disappearing when
+the reconstructed candidate selects another cycle entry.
+
 MissingMaterialExpansion refines the selected, verified witness in both main
 planning and ordinary fallback. Its prefix phase preserves the execution suffix,
 recipe bindings and final seed obligations. For a prepended batch of n firings,
@@ -41,6 +114,11 @@ the same rank for all members of a cycle. An ordinary prefix must reduce the
 selected deficit and can increase only strictly lower-ranked deficits. This
 prevents alternating loans around a cycle. A real startup seed can remain;
 an ordinary item downstream of that cycle is expanded to the actual seed.
+Goal construction additionally permits a selected path into its cyclic
+component, recording crossed materials and refusing to reopen them. Thus an
+initial delivery can reach its feedback boundary without endlessly rotating
+through the same component. This structural guard never uses budget exhaustion
+as evidence that a material is terminal.
 An available raw escape route is expanded even if another producer cycles.
 Productive cycles may reduce seed loans while expanding their feedstocks.
 
@@ -785,91 +863,82 @@ cap, independent budget accounts, and real one-worker scheduler handoffs. Existi
 continuation tests check that annotation retains the unchanged witness/maps.
 This is additive engine diagnostic metadata; host UI display is separate.
 
-Ordinary fallback under a tight request budget
----------------------------------------------
+Ordinary fallback shares the backward constructor
+------------------------------------------------
 
-The initial funded search still runs first. Its positive witnesses and the
-separate witnessByCost entry keep their old path. If funded search fails,
-the forward material tree can repeat a shared dependency thousands of times
-before finishing its first summary, second verification fold and count pass.
-Backward refill cannot repair a tree that has already spent the whole budget.
+Actual-inventory witness search still runs first. Its separate witnessByCost
+entry produces positive executable witnesses only. Failure does not inject
+stock or generate a bill. Both ordinary fallback and a main-planner handoff
+without a word then call the same fromRequest constructor: delivery plus
+explicit final seeds become backward requirements under the original budget.
+The former material tree, forward loans, depth cutoff and tree-finishing
+admission path have been removed.
 
-Expansion tracks a reference lower bound for the original unshared pipeline.
-Ordinary batches require both port scans and the count traversal. Returned-input
-batches additionally require separate key scaling and parent merging; compact
-long-overflow repeats still contain at least one fresh positive batch per emitted
-step. If that bound reaches a quarter of the remaining work, the first fold also
-records calling-thread work. Small previews avoid enabling per-charge thread
-accounting just for this optional measurement. Once that fold completes, it supplies
-a stronger reference bound for the identical second fold, including its caller
-checkpoints. These describe the unshared pipeline; they are not lower bounds for
-the accelerated path below. Work performed by another budget-sharing worker
-cannot inflate the measured fold.
+Forced requests establish an explicit net-production floor. Once established,
+ordinary goal expansion cannot repeatedly spend that credit around a closed
+component and reopen the target. It leaves the cyclic supply boundary for
+the existing executable cycle/source strategies. Private source trials retain
+their one-use rank exceptions and reject a word that cannot repay production;
+they do not abort a valid incumbent. Exact prefix, target and seed verification
+still precedes publication. An unfinished constructor has no bill to publish;
+only already completed witnesses survive optional optimization limits.
 
-Only when that reference bound exceeds the remaining request work does fallback
-discard the unfinished tree. It then starts backward expansion directly from
-delivery plus explicit final seeds. The empty word is funded by those goals;
-no synthetic recipe or forward loan supplies production. Forced requests add
-an explicit net-production floor, so a supplied target startup seed cannot
-count toward newly crafted output. The complete resulting word is verified
-against its exact starting supplies, target and final seeds before publication.
-The original remaining budget is used; there is no fresh allowance or retry
-after exhaustion. All abandoned tree workspace is released first.
+FallbackCompactRefillTest retains shared dependencies through 20 levels, both
+catalog/input orders, returned tools, explicit seeds, forced target stock and
+leaf totals beyond long. Primitive replay and exact conservation/prefix checks
+remain, as do cancellation, work and memory exits. The historical finishing
+bound is now test-local; it no longer routes production work.
 
-Completed material trees with at least 256 emitted steps reuse their already
-computed immutable summary in the first funded verifier. This verifier still
-checks every prefix requirement, delivery and final seed. Its caller only reads
-the checked summary, so it omits the otherwise unused gross production/count
-pass. Funded search witnesses, witnessByCost, public verification and the existing
-force/source guards retain their previous behavior. Small material trees retain
-their previous work-scaled refinement scheduling too.
+The immutable suffix-summary reuse helper remains available to verified-word
+refinement, with exact plan/binding identity, optional charged ownership and
+normal prefix verification. Goal construction has no prior suffix to reuse.
+FallbackSummaryReuseTest retains its independent checks for repeated suffixes,
+returns, counts beyond long, changed seeds/prefixes/bindings, reservation refusal,
+limits, cancellation and scheduler ownership transfer. These are helper coverage,
+not a claim that the removed material-tree path still runs.
 
-The same completed word can then lend its summary to backward expansion. The
-borrow requires the exact original plan object, and prefix assembly preserves
-its recipe bindings, rejecting conflicting IDs. Summary lookup uses word identity;
-equal but different words cannot reuse another binding's arithmetic. The new
-prefix is folded normally, then the complete word's prefix requirements, target
-and seeds are verified against its new supplies. This is local immutable suffix
-reuse, with no stock/recipe cache across requests.
-
-Retained vectors require an optional reservation of at most one sixteenth of the
-available workspace. Refusal uses ordinary folding; completion, limits and
-cancellation release the lease. At publication, reuse is also declined unless
-mandatory preparation has already reached the 2048-work quality-scheduling
-floor. This avoids shrinking later work-scaled quality allowances for small
-refinements. The old unshared routing reference is deliberately retained so the
-optimization does not divert already successful compact-goal previews.
-
-FallbackCompactRefillTest covers repeated shared dependencies through 20 levels,
-catalog/input reversal, returned tools, explicit seeds, existing target stock,
-forced production, and leaf totals beyond long. Small words receive independent
-primitive replay; large words have exact conservation and prefix checks. It
-checks the admission bound against actual full folds/count verification and
-exercises work/memory/cancellation exits. Existing completed high-budget results
-are compared separately with the pre-change engine.
-
-FallbackSummaryReuseTest covers large repeated suffixes, returned tools, counts
-beyond long, changed goals/seeds/prefixes and binding identity, ordinary versus
-summary-only verification, optional reservation refusal, work/time/cancellation,
-and scheduler ownership transfer. Small refinements preserve their old work
-counts; independently replayed larger words preserve primitive input enabling,
-target delivery and final seeds. Missing metadata cannot be read as force credit.
-
-In two archived fallback requests, the original 262144-work limit now completes
-at 202714/197045 work. Their 131072 successes and generous-budget words/bills are
-unchanged. A paired sweep of 94 case/cap combinations from 131072 through 393216,
-plus 1048576, completes all sampled requests: 32 formerly stopped, 62 already
-complete and unchanged. Accounted peaks do not increase in these samples.
-
-This admission rule is deliberately conservative. It does not estimate every
-later source-ranking/expansion cost. The sampled discontinuities are fixed, but
-this does not establish general monotonic success for every possible work cap.
-Other trees can still expire in later refinement. The replacement bill may
-choose different incomparable supplies from an
-old run given a larger budget. It is a verified refill witness, not a minimum
-supply certificate or a proof of infeasibility under the original stock.
+Earlier 94-case tree-admission comparisons remain archived evidence for the
+previous implementation; they are not measurements of this replacement. A
+completed bill proves finite execution under its listed supplies, not global
+minimum supply or infeasibility under the original inventory.
 
 Known boundaries after the refill review at 224e9172:
+
+Native supply-boundary compilation and damaged-loop coverage:
+
+- Ordinary fallback never invokes the native cyclic supply search. It first
+  gives a small bounded turn to the cheap priority search, then constructs and
+  verifies a complete backward bill. Optional search may retain that completed
+  bill on exhaustion; an interrupted construction cannot become missing items.
+- Explicit external supplies are not represented by a large finite inventory
+  sentinel. Executable demand expansion exempts those ports from finite ledger
+  restrictions while retaining their original physical recipe requirements.
+- The native refill owner can compile a private supply view with supplied input
+  and output dependencies removed. It retains original IDs, bindings and source
+  priority. Every proposed execution is restored against the original physical
+  recipes before publication, including returns, configuration inputs, final
+  seeds and forced production. View failures are not original-model proofs.
+- A large completed bill can try replacing one cyclic purchase at a time.
+  This reserves the existing suffix's other finite inputs and asks the native
+  solver for a prefix producing the replaced input. Prefix plus suffix then
+  undergo complete original-model verification. The incumbent and its verified
+  alternatives survive failed or interrupted trials. Later proposals compare
+  against the current incumbent, not an earlier, weaker bill. Targets beyond
+  long are never clamped for this optional prefix API; the exact whole-word
+  path remains available. This is bounded improvement, not a minimum-purchase
+  certificate or a complete search of all intermediate supply frontiers.
+- Explicit seed demand already present in the graph is credited when a region
+  discovers its startup seeds. Discovery adds only the uncredited amount.
+  DamagedCycleTest checks intact cycles, missing feed, removed seed/producer,
+  restored recipes and both recipe orders with independently known outcomes.
+- The integer search retains exact positive row combinations for short feedback
+  contradictions. A bounded structural compiler also contracts monotone feedback
+  components inside a stalled medium-sized sparse kernel. The original model
+  and proof ancestry remain intact; only substantial bound jumps or conflicts
+  are admitted. Very large catalog views keep their existing trajectory because
+  broader admission increased work without helping the measured player cases.
+  A separate small-live-domain split prevents long finite propagation walks.
+  All of these are search aids; a declined or interrupted aid proves nothing.
 
 - Optional verified whole-word reduction now removes dominated firings already
   selected upstream, including the complete main-solver growth example (1001
@@ -924,7 +993,7 @@ Known boundaries after the refill review at 224e9172:
   original fold regardless of elapsed work; a faster traversal cannot turn off
   that reuse. Saturated-quality cursors and completed short-index windows omit
   empty handoffs, without skipping atom/port visits or increasing the quota.
-  The fallback finishing-work lower bound accounts for singleton forwarding too.
+  The historical test-local finishing bound accounts for singleton forwarding too.
   Total quality work on this family falls 5696230 -> 4188094, maximum reserved
   memory 201056 -> 136608 bytes. Prior bound supplies/counts are identical and
   none increases work or reserved peak. This is not global supply optimality.
@@ -956,3 +1025,54 @@ Known boundaries after the refill review at 224e9172:
   operation in the entire planning pipeline has bounded latency.
 - Per-material reasons are optional scoped facts, not per-item necessity proofs.
   Unvisited/rebuilt bills may remain UNASSESSED; host display is not changed here.
+
+Large feedback feasibility scout
+-------------------------------
+An unresolved selected component above the regional count-model limit also gets
+a bounded sparse demand-count search. It propagates exact material deficits over
+the full allowed source closure, increasing integer recipe counts in batches.
+Two deterministic producer orders complement the already selected source graph;
+the captured per-material producer order is retained. Coproduct credits update
+every affected row. No durability state enumeration or floating-point quantity
+conversion is introduced.
+
+When both simple orders fail and the same scout allowance still has room, a
+request-local capacity allocator propagates integer lower and upper bounds over
+the sparse material rows. Terminal capacities enter first. Different materials
+can select different sources; a finite source supplies only its available share.
+Joint outputs receive credit against every current debt. A bounded reversible
+trail can reduce an earlier source allocation instead of discarding that recipe
+entirely. Bounds, choices and inventories are never cached between requests.
+
+These additional count candidates also get a sparse recipe/material SCC order.
+An upstream component completes its proposed counts before exporting its startup
+stock downstream. A resource-indexed ready queue wakes affected recipes when a
+material returns, avoiding repeated scans of the whole catalog. This is only a
+proposed offline execution word: it adds no restriction to the runtime executor
+or to independent crafting orders. The original count scheduler remains available
+if the proposed ordering fails. Batch-sensitive recipes keep the existing path.
+
+The state equation is only a candidate. CountSchedule must construct a physical
+execution, and the shared candidate/plan checks must verify its finite startup
+inventory, configuration inputs, preserved seeds and forced production before
+publication. An unseeded but balanced loop is rejected. Excluded recipes and
+fresh exact stock belong to this request; only explicit external supplies are
+unbounded. Counts and intermediate deficits remain arbitrary-precision integers.
+
+The scout shares the existing request budget, with at most 2M work and one eighth
+of the then-remaining work, plus charged sparse workspace. Oversized arithmetic,
+an unproductive producer order or exhausted optional workspace returns no
+candidate and retains the existing solver strategies. It proves neither
+infeasibility nor minimum missing materials. Ordinary fallback remains acyclic.
+
+Generated regressions cover mixed/middle sources, finite split feeds, unequal
+ratios, competing raw inputs, coproducts, crafted startup seeds and coupled loops,
+with shuffled recipe order and chains up to 1024 steps. Known oracle words and
+returned words are independently token-executed. Reused-compiler tests remove
+and restore feed, seeds and routes; tiny bounded count systems are additionally
+checked against exhaustive enumeration. These are tested families, not a
+completeness guarantee for all feedback networks or all missing-material bills.
+
+Short multi-row propagation cuts retain the prior pair-cut history window.
+Additional chain cuts enter only when they close a conflict or make a substantial
+bound jump; correct but weak cuts must not displace an effective retained search.

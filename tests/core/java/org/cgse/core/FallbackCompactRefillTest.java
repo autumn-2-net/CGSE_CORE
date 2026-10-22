@@ -70,6 +70,18 @@ public final class FallbackCompactRefillTest {
 
     /** Compare the admission bound with actual folds/count work, including
      * fused ordinary batches and nested counts. No timing estimate is a proof. */
+    private static long historicalFinishingWorkLowerBound(GraphRecipe<?> recipe) {
+        long ports = (long) recipe.inputs().size() + recipe.outputs().size();
+        if (!recipe.hasInputReturns()) return 4 + 2 * ports;
+        // Returned-input batches cannot use the fused port loop. Each port and
+        // each scale/merge key takes a separate fold step: Expansion+fold charge
+        // twice, and Expansion+verifier+fold three times. max bounds the union.
+        // A singleton word now forwards the batch fold directly: its material
+        // keys are scaled, but need not be merged into another sequence frame.
+        long keys = Math.max(recipe.inputs().size(), recipe.outputs().size());
+        return 4 + 5 * (ports + keys);
+    }
+
     private static void finishingBound() {
         var random = new Random(202610192L);
         for (int trial = 0; trial < 180; trial++) {
@@ -82,7 +94,7 @@ public final class FallbackCompactRefillTest {
                 }
                 var recipe = r("r" + i, in, out); recipes.put(recipe.id(), recipe);
                 var runs = trial % 7 == 0 ? BigInteger.valueOf(Long.MAX_VALUE).pow(2).add(ONE) : BigInteger.valueOf(1 + random.nextInt(10));
-                steps.add(PlanStep.batch(recipe.id(), runs)); lower += GraphFallback.unsharedFinishingWorkLowerBound(recipe);
+                steps.add(PlanStep.batch(recipe.id(), runs)); lower += historicalFinishingWorkLowerBound(recipe);
             }
             var word = new PlanStep.Sequence(steps); var b = budget(1_000_000, 32L << 20);
             try (var fold = new SummaryComputation<>(word, recipes, b)) {

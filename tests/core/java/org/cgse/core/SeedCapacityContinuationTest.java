@@ -114,9 +114,21 @@ public final class SeedCapacityContinuationTest {
                         plan = work.result();
                     } finally { work.close(); }
                 }
-                check(plan.feasible() != missing, "request lost expected feasibility: " + plan.result());
-                check(plan.missingExact().equals(missing ? Map.of("raw", BigInteger.ONE) : Map.of()),
-                        "wide refill changed the one-item raw deficit: " + plan.missingExact());
+                if (!fallback) {
+                    check(plan.feasible() != missing, "request lost expected feasibility: " + plan.result());
+                    check(plan.missingExact().equals(missing ? Map.of("raw", BigInteger.ONE) : Map.of()),
+                            "wide refill changed the one-item raw deficit: " + plan.missingExact());
+                } else {
+                    // Alternating S/T amplification is primary solver work.
+                    // Ordinary fallback retains a verified cycle-boundary bill
+                    // instead of recursively invoking the full cyclic solver.
+                    check(!plan.missingExact().isEmpty() || !missing, "Unfunded fallback became feasible");
+                    check(!budget.diagnostics().contains("source_search@"), "Ordinary fallback invoked native cycle search");
+                    for (var e : plan.initialExact().entrySet())
+                        check(plan.missingExact().getOrDefault(e.getKey(), BigInteger.ZERO).equals(e.getValue()
+                                .subtract(PlanningInventory.exactAmount(stock, e.getKey())).max(BigInteger.ZERO)),
+                                "Incorrect ordinary cycle-boundary funding");
+                }
                 check(plan.seeds().getOrDefault("S", 0L) >= 5, "request lost mandatory reserve");
                 funded(plan, stock);
                 check(budget.reservedBytes() == 0, "request retained workspace");

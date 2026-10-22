@@ -29,20 +29,27 @@ public final class RequestCoverageTest {
     }
 
     private static void naturalCounterexample() throws Exception {
-        // With 256 search units this public request completes the captured
-        // impossibility proof, but cannot finish constructing a refill program.
+        // Sweep the proof/preview handoff instead of depending on one exact
+        // instruction count. Faster refill construction may finish at 256 now.
         // A legal omitted producer is independently shown feasible below.
         var recipes = chain();
-        var b = budget(256);
-        var request = request(recipes, Map.of("funded", 1L), false, true, b, report -> {});
-        try {
-            run(request, b);
-            throw new AssertionError("Restricted proof unexpectedly became a plan");
-        } catch (ExecutionException failure) {
-            check(PlanningFailure.result(failure) == GraphPlan.Result.INCOMPLETE_MODEL,
-                    "Natural restricted proof escaped as " + PlanningFailure.result(failure));
-            check(b.failureDetail().contains("captured_result=INFEASIBLE"), "Natural proof path was not exercised");
+        boolean proof = false, preview = false;
+        PlanningBudget b;
+        for (long cap = 192; cap <= 320; cap += 16) {
+            b = budget(cap);
+            var request = request(recipes, Map.of("funded", 1L), false, true, b, report -> {});
+            try {
+                run(request, b);
+                throw new AssertionError("Restricted proof unexpectedly became a plan");
+            } catch (ExecutionException failure) {
+                check(PlanningFailure.result(failure) == GraphPlan.Result.INCOMPLETE_MODEL,
+                        "Natural restricted proof escaped as " + PlanningFailure.result(failure));
+                proof |= b.failureDetail().contains("captured_result=INFEASIBLE");
+                preview |= b.failureDetail().contains("captured_result=MISSING_INPUT");
+            }
+            check(b.reservedBytes() == 0, "Natural handoff leaked ownership");
         }
+        check(proof && preview, "Natural proof/preview boundary was not exercised");
         var complete = new ArrayList<>(recipes);
         complete.add(recipe("omitted", "funded", "x0"));
         for (boolean reverse : new boolean[]{false, true}) {
@@ -258,7 +265,9 @@ public final class RequestCoverageTest {
         }
         var catalog = new CapturedCatalog<>(entries);
         boolean proofSeen = false, resourceLimitSeen = false;
-        for (int allowance = 64; allowance <= 768; allowance += 32) {
+        // The faster shared constructor leaves a 24-unit proof-only window;
+        // a 32-unit stride can skip it entirely while all outcomes are correct.
+        for (int allowance = 64; allowance <= 768; allowance += 8) {
             var b = budget(allowance);
             var request = domainRequest(chain(), catalog, 1, Map.of(), Set.of(), null, false, b);
             try {

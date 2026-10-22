@@ -95,7 +95,7 @@ public final class RefillTradeoffTest {
             var f = fixture(length, 0, true, false, false, Map.of()); if (reverse) Collections.reverse(f.recipes);
             var b = budget(); var compiler = new GraphCompiler<>(f.recipes);
             var p = new GraphPlanner<>(compiler).plan("G", amount, Map.of(), false, true, b);
-            verify(p, Map.of(), Set.of()); check(!p.alternatives().isEmpty(), "Main planner omitted archive");
+            verify(p, Map.of(), Set.of()); check(!p.alternatives().isEmpty(), "Main planner omitted archive: length=" + length + "; amount=" + amount + "; reverse=" + reverse + "; missing=" + p.missingExact() + "; diagnostics=" + b.diagnostics());
             check(b.reservedBytes() == 0, "Main workspace");
             b = budget(); p = GraphFallback.plan(compiler, "G", amount, Map.of(), Set.of(), Map.of(), false, true, b);
             check(p.alternatives().isEmpty() && !b.diagnostics().contains("refill_supply"), "Fallback entered cyclic portfolio");

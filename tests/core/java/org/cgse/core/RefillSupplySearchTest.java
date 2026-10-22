@@ -193,9 +193,9 @@ public final class RefillSupplySearchTest {
             for (int i = 0; accepted == null; i++) {
                 check(i < 100_000 && !work.step(), "No completed intermediate improvement");
                 Object expansion = field(work, "missingExpansion"); if (expansion == null) continue;
-                Object search = field(expansion, "cycleSearch"); if (search == null) continue;
-                @SuppressWarnings("unchecked") var s = (RefillSupplySearch<String>) search;
-                if (s.result() != field(search, "original")) accepted = s.result();
+                @SuppressWarnings("unchecked") var value = ((MissingMaterialExpansion<String>) expansion).result();
+                if (value != null && value.missing().containsKey("B") && value.missing().get("B") < 6 &&
+                        value.missing().getOrDefault("feed", 0L) == 0) accepted = value;
             }
             b.charge(b.remainingWork());
             while (!work.step()) {}

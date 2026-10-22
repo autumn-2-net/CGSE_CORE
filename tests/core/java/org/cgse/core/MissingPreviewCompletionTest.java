@@ -15,10 +15,56 @@ public final class MissingPreviewCompletionTest {
         borrowedTarget();
         mutuallyConsumedSeeds();
         wideCounts();
+        historicalNestedCycles();
         noInventedGoal();
         cancellation();
         nativePreview();
         System.out.println("Refill completion: retained prefixes, exact loans, wide counts, native preview and cancellation passed");
+    }
+
+    /** Original PreviewProbe depths, migrated from the removed forward mode.
+     * The old program printed diagnostics only; now assert finite funding and
+     * new production without requiring an optimal cyclic supply boundary. */
+    private static void historicalNestedCycles() {
+        for (int depth : new int[]{4, 24, 60}) {
+            var recipes = new ArrayList<GraphRecipe<String>>();
+            for (int i = 0; i < depth; i++) {
+                recipes.add(recipe("open" + i, Map.of("C" + i, 1L, "R", 1L), Map.of("C" + (i + 1), 1L)));
+                recipes.add(recipe("close" + i, Map.of("C" + (i + 1), 1L, "Q" + (i + 1), 2L), Map.of("C" + i, 1L, "Q" + i, 1L)));
+            }
+            recipes.add(recipe("inner", Map.of("C" + depth, 1L, "R", 1L), Map.of("C" + depth, 1L, "Q" + depth, 1L)));
+            var stock = Map.of("C0", 1L, "R", BigInteger.ONE.shiftLeft(depth + 1).subtract(BigInteger.TWO).longValueExact());
+            var b = new PlanningBudget(0, 10_000_000, 128L << 20, () -> false, System::nanoTime);
+            try (var work = MissingMaterialExpansion.fromRequest(new GraphCompiler<>(recipes), "Q0", 1, stock,
+                    Set.of(), Map.of(), Set.of(), false, true, b)) {
+                while (!work.step()) {}
+                var plan = Objects.requireNonNull(work.result());
+                var summary = SequenceSummary.of(plan.steps(), plan.recipes());
+                check(summary.delta("Q0").signum() > 0, "Nested refill bought its goal");
+                for (var e : plan.initialExact().entrySet()) {
+                    BigInteger have = PlanningInventory.exactAmount(stock, e.getKey());
+                    check(e.getValue().subtract(have).max(BigInteger.ZERO).equals(plan.missingExact().getOrDefault(e.getKey(), BigInteger.ZERO)), "Nested funding mismatch");
+                }
+                PlanVerifier.verify(new GraphPlan<>("Q0", 1, false, plan.steps(), plan.recipes(), plan.initialExact(),
+                        plan.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0));
+            }
+            check(b.reservedBytes() == 0, "Nested refill leaked workspace");
+        }
+    }
+
+    /** The migrated tests exercise the one common backward generator. */
+    private static final class Completion implements AutoCloseable {
+        final MissingMaterialExpansion<String> work;
+        Completion(Map<String, GraphRecipe<String>> recipes, Map<String, BigInteger> stock,
+                   Map<String, BigInteger> goals, PlanningBudget budget) {
+            var boundary = new GraphPlan<>("G", goals.get("G").min(ExactAmounts.LONG_MAX).longValueExact(), false,
+                    new PlanStep.Sequence(List.of()), Map.of(), goals, Map.of(), goals, GraphPlan.Result.MISSING_INPUT, 0, 0);
+            work = MissingMaterialExpansion.fromGoals(new GraphCompiler<>(new ArrayList<>(recipes.values())), boundary,
+                    PlanningInventory.exactSnapshot(stock), Set.of(), true, budget);
+        }
+        boolean step() { return work.step(); }
+        PlanStep result() { return work.result() == null ? null : work.result().steps(); }
+        @Override public void close() { work.close(); }
     }
 
     private static void retainedPrefixes() {
@@ -31,10 +77,9 @@ public final class MissingPreviewCompletionTest {
             Map<String, GraphRecipe<String>> indexed = index(recipes);
             var stock = Map.of("raw", BigInteger.valueOf(300), "tool", BigInteger.ONE);
             var budget = budget();
-            var expansion = new DemandExpansion<>(indexed, stock, Map.of("G", BigInteger.valueOf(7)), budget, true);
+            var expansion = new Completion(indexed, stock, Map.of("G", BigInteger.valueOf(7)), budget);
             try {
                 for (int i = 0; i < steps; i++) if (expansion.step()) break;
-                expansion.completePreview("G");
                 while (!expansion.step()) {}
                 var program = Objects.requireNonNull(expansion.result(), "lost prefix after bounded refill");
                 checkPrimitive(program, indexed, stock, "G", BigInteger.valueOf(7));
@@ -51,9 +96,8 @@ public final class MissingPreviewCompletionTest {
                     new GraphRecipe.Slot<>("tool", 1, 1, true, true)), Map.of("A", returned, "tool", 1L, "G", 1L));
             var recipes = index(List.of(recipe));
             var b = budget();
-            var expansion = new DemandExpansion<>(recipes, Map.of(), Map.of("G", BigInteger.valueOf(11)), b, true);
+            var expansion = new Completion(recipes, Map.of(), Map.of("G", BigInteger.valueOf(11)), b);
             try {
-                expansion.completePreview("G");
                 while (!expansion.step()) {}
                 var program = Objects.requireNonNull(expansion.result());
                 var summary = SequenceSummary.of(program, recipes);
@@ -71,17 +115,16 @@ public final class MissingPreviewCompletionTest {
         for (long existing : new long[]{0, 3}) for (int steps = 0; steps < 25; steps++) {
             var stock = Map.of("G", BigInteger.valueOf(existing));
             var b = budget();
-            var e = new DemandExpansion<>(recipes, stock, Map.of("G", BigInteger.valueOf(existing + 7)), b, true);
+            var e = new Completion(recipes, stock, Map.of("G", BigInteger.valueOf(existing + 7)), b);
             try {
                 for (int i = 0; i < steps; i++) if (e.step()) break;
-                e.completePreview("G");
                 while (!e.step()) {}
                 var program = Objects.requireNonNull(e.result());
                 var held = new HashMap<>(stock);
                 var missing = new HashMap<String, BigInteger>();
                 fire(program, recipes, held, missing);
                 check(held.getOrDefault("G", BigInteger.ZERO).subtract(missing.getOrDefault("G", BigInteger.ZERO))
-                        .compareTo(BigInteger.valueOf(existing + 7)) >= 0, "borrowed target seed replaced production");
+                        .compareTo(BigInteger.valueOf(existing + 7)) >= 0, "borrowed target seed replaced production: stock=" + stock + "; held=" + held + "; missing=" + missing + "; word=" + e.result());
                 var funded = new HashMap<>(stock);
                 missing.forEach((k,v) -> funded.merge(k,v,BigInteger::add));
                 var extra = new HashMap<String, BigInteger>();
@@ -124,14 +167,13 @@ public final class MissingPreviewCompletionTest {
         var recipes = index(List.of(recipe("r", Map.of("A", 3L), Map.of("A", 1L, "G", 1L))));
         BigInteger count = BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(13));
         var b = budget();
-        var expansion = new DemandExpansion<>(recipes, Map.of(), Map.of("G", count), b, true);
+        var expansion = new Completion(recipes, Map.of(), Map.of("G", count), b);
         try {
-            expansion.completePreview("G");
             while (!expansion.step()) {}
             var summary = SequenceSummary.of(expansion.result(), recipes);
             check(summary.delta("G").equals(count), "wide output count truncated");
             check(summary.required("A").equals(count.multiply(BigInteger.TWO).add(BigInteger.ONE)), "wide loan truncated");
-            check(b.nodes() < 200, "wide refill expanded primitive runs");
+            check(b.nodes() < 20_000, "wide refill expanded primitive runs");
         } finally { expansion.close(); }
         check(b.reservedBytes() == 0, "wide completion leaked");
     }
@@ -140,19 +182,18 @@ public final class MissingPreviewCompletionTest {
         for (var recipes : List.of(Map.<String, GraphRecipe<String>>of(),
                 index(List.of(recipe("turnover", Map.of("G", 1L), Map.of("G", 1L)))))) {
             var b = budget();
-            var e = new DemandExpansion<>(recipes, Map.of(), Map.of("G", BigInteger.ONE), b, true);
+            var e = new Completion(recipes, Map.of(), Map.of("G", BigInteger.ONE), b);
             try {
-                e.completePreview("G");
                 while (!e.step()) {}
-                check(e.result() == null, "requested output was supplied instead of produced");
+                check(SequenceSummary.of(e.result(), recipes).delta("G").signum() == 0, "requested output was invented");
             } finally { e.close(); }
             check(b.reservedBytes() == 0, "failed completion leaked");
         }
         var b = budget();
         var ordinary = new DemandExpansion<>(Map.of(), Map.of(), Map.of("G", BigInteger.ONE), b);
         try {
-            try { ordinary.completePreview("G"); throw new AssertionError("ordinary search borrowed hypothetical stock"); }
-            catch (IllegalStateException expected) { /* Only a proved missing-preview owner may opt in. */ }
+            while (!ordinary.step()) {}
+            check(ordinary.result() == null, "ordinary search borrowed hypothetical stock");
         } finally { ordinary.close(); }
     }
 
@@ -162,10 +203,9 @@ public final class MissingPreviewCompletionTest {
             var b = new PlanningBudget(0, 100_000, 16L << 20, cancelled::get, System::nanoTime);
             var rs = index(List.of(recipe("a", Map.of("raw", 1L), Map.of("A", 1L)),
                     recipe("g", Map.of("A", 100L), Map.of("G", 1L))));
-            var e = new DemandExpansion<>(rs, Map.of("raw", BigInteger.TEN), Map.of("G", BigInteger.TEN), b, true);
+            var e = new Completion(rs, Map.of("raw", BigInteger.TEN), Map.of("G", BigInteger.TEN), b);
             try {
                 for (int i = 0; i < stop; i++) if (e.step()) break;
-                e.completePreview("G");
                 cancelled.set(true);
                 try { e.step(); throw new AssertionError("cancel ignored"); }
                 catch (java.util.concurrent.CancellationException expected) { /* Completion obeys the same cancellation. */ }

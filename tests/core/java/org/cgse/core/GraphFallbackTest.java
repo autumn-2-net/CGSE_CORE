@@ -86,7 +86,10 @@ public final class GraphFallbackTest {
                 for(int j=0;j<1+random.nextInt(2);j++)out.merge("k"+random.nextInt(6),1L+random.nextInt(3),Long::sum);
                 recipes.add(r("r"+i,in,out));
             }
-            p=plan(recipes,"k0",1+random.nextInt(6),stock);verify(p);
+            int quantity=1+random.nextInt(6);
+            try { p=plan(recipes,"k0",quantity,stock); }
+            catch (PlanningBudget.Exhausted limit) { throw new AssertionError("trial="+trial+"; amount="+quantity+"; stock="+stock+"; recipes="+recipes,limit); }
+            verify(p);
             for(var e:p.initialExact().entrySet()) {
                 var have=BigInteger.valueOf(e.getKey().equals("k0")?0:stock.getOrDefault(e.getKey(),0L));
                 check(p.missingExact().getOrDefault(e.getKey(),BigInteger.ZERO).equals(e.getValue().subtract(have).max(BigInteger.ZERO)),"incorrect shortage");

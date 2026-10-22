@@ -28,6 +28,17 @@ public abstract class RequestWorkMixin {
     private void aedump$limited(CallbackInfoReturnable<?> cir) {
         if (aedump$record != null && aedump$record.trace != null) aedump$record.trace.limited = true;
     }
+    @Inject(method = "close", at = @At("HEAD"))
+    private void aedump$closing(CallbackInfo ci) {
+        // The scheduler closes work before completing its failed future. The
+        // later logFailure callback runs after detach, so capture the compiled
+        // input and exact availability while this request is still attached.
+        if (aedump$record != null) DumpManager.guard(() -> {
+            // Successful finish() already captured the same immutable input.
+            if (!aedump$record.input.has("complete") || !aedump$record.input.get("complete").getAsBoolean())
+                aedump$record.workState(this);
+        });
+    }
     @Inject(method = "close", at = @At("RETURN"))
     private void aedump$detach(CallbackInfo ci) {
         Object budget = Reflect.get(this, "budget");

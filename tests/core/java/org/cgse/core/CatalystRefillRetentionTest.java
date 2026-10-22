@@ -12,9 +12,46 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class CatalystRefillRetentionTest {
     private static int checks;
     public static void main(String[] args) throws Exception {
-        if (args.length > 0) repeatedRequests(args[0]);
-        else { comparison(); repeatedRequests(""); retryLimits(); cancellation(); fundedRetry(); }
+        if (args.length > 0 && args[0].equals("separate")) separatePreviews();
+        else if (args.length > 0) repeatedRequests(args[0]);
+        else { comparison(); repeatedRequests(""); separatePreviews(); retryLimits(); cancellation(); fundedRetry(); }
         System.out.println("CatalystRefillRetentionTest PASS: " + checks + " checks");
+    }
+
+    private static void separatePreviews() throws Exception {
+        // First preview is never submitted. A fresh request has its own full
+        // budget but reuses the compiler and scheduler, as the host does.
+        // At this boundary the old code was correct cold, then purchased b24
+        // as well as raw on the second and third independent requests.
+        var recipes = new ArrayList<GraphRecipe<String>>();
+        var startInputs = new LinkedHashMap<String, Long>();
+        startInputs.put("a", 1L); startInputs.put("raw", 1L);
+        var startOutputs = new LinkedHashMap<String, Long>();
+        startOutputs.put("a", 1L); startOutputs.put("b0", 1L);
+        recipes.add(recipe("start", startInputs, startOutputs));
+        for (int i = 1; i < 25; i++) recipes.add(recipe("link" + i, Map.of("b" + (i - 1), 1L), Map.of("b" + i, 1L)));
+        recipes.add(recipe("finish", Map.of("b24", 1L), Map.of("a", 1L, "G", 1L)));
+        var available = Map.of("a", 1L);
+        for (int workers : new int[] {1, 4}) {
+            var compiler = new GraphCompiler<>(recipes);
+            try (var scheduler = new PlanningScheduler(workers, 8, 128, 1_000_000)) {
+                for (int repetition = 0; repetition < 3; repetition++) {
+                    var budget = budget(17500);
+                    check(budget.nodes() == 0, "new preview inherited spent work");
+                    var work = new RequestPlanningWork<>(compiler, "G", 1, available, Set.of(), null,
+                            false, false, "REPORT_MISSING_ITEMS", new CatalystPolicy(16, 10), false, false,
+                            budget, () -> false, report -> { throw new AssertionError("unexpected fallback"); });
+                    var plan = scheduler.submit(work, budget).get(20, TimeUnit.SECONDS);
+                    check(plan.missingExact().equals(Map.of("raw", BigInteger.ONE)),
+                            "separate preview regressed: repeat=" + repetition + ", missing=" + plan.missingExact());
+                    var funded = new HashMap<>(Map.of("a", BigInteger.ONE, "raw", BigInteger.ONE));
+                    execute(plan.steps(), plan.recipes(), funded);
+                    check(funded.getOrDefault("G", BigInteger.ZERO).equals(BigInteger.ONE), "refill did not deliver G");
+                    check(available.equals(Map.of("a", 1L)), "preview changed available stock");
+                    check(budget.reservedBytes() == 0 && compiler.cacheMetrics().activeSearches() == 0, "preview leaked state");
+                }
+            }
+        }
     }
 
     private static void repeatedRequests(String mode) throws Exception {

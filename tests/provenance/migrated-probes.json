@@ -423,6 +423,15 @@
       "migration": "Preserve every 4/16/64-source long-sized request, exact one-unit shortage, rescued request, 256/8192-deep alternative and 24/40/60-depth nested case. Inline the same fixture generators and original inventory/recipe validation; add runtime verification.",
       "source_artifact_sha256": "9c1c7e18600b500cb3b0f80e4a5b423aa7351c41b2bc8de5ea1e83f8cf5a06cf",
       "original_sha256_lf": "8607a7aec4d3aefd285f44823a5eba72d9dc7c9a210ea1e20e4fbfd8557ee1af"
+    },
+    {
+      "id": "PreviewProbe-63485eed4826",
+      "original_path": "probes/java/dispatch-regression/PreviewProbe-63485eed4826/PreviewProbe.java",
+      "replacement": "core/java/org/cgse/core/MissingPreviewCompletionTest.java",
+      "class": "org.cgse.core.MissingPreviewCompletionTest",
+      "migration": "Preserve nested depths 4/24/60, ratio 2 and one-unit raw shortage through the unified backward constructor. Assert finite funding, positive target production, exact whole-word verification and released workspace; original forward-mode reflection diagnostics remain archived.",
+      "source_artifact_sha256": "63485eed4826615c9c37b072c761c7444de85e51af18bbcb1394da0ece3ac269",
+      "original_sha256_lf": "ef14536430cf9f714709716ffc0da2b734d46b79ddcc5f696f3f94a25ef4c31b"
     }
   ]
 }

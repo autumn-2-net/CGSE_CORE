@@ -157,9 +157,11 @@ public final class RefillRepeatSizingTest {
             for (int i = 0; accepted == null; i++) {
                 check(i < 100_000 && !work.step(), "No retained sizing result");
                 var expansion = field(work, "missingExpansion"); if (expansion == null) continue;
-                var search = field(expansion, "cycleSearch"); if (search == null || !(boolean) field(search, "resizing")) continue;
-                @SuppressWarnings("unchecked") var value = ((RefillSupplySearch<String>) search).result();
-                if (value.missing().equals(m("B", 5))) accepted = value;
+                // The common constructor can be nested below boundary search.
+                // Interrupt after its completed result reaches the owning
+                // expansion, rather than depending on the old child layout.
+                @SuppressWarnings("unchecked") var value = ((MissingMaterialExpansion<String>) expansion).result();
+                if (value != null && value.missing().equals(m("B", 5))) accepted = value;
             }
             b.charge(b.remainingWork()); while (!work.step()) {}
             check(work.result() == accepted, "Parent discarded completed sizing"); RefillWordPruningTest.literalVerify(accepted, stock, Set.of());
