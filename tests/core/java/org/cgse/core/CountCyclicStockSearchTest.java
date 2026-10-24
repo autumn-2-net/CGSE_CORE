@@ -20,6 +20,8 @@ public final class CountCyclicStockSearchTest {
         actualShortage();
         retentionIsOptional();
         largeCyclePrecheck();
+        wideStockFrontier();
+        quantityPivotBoundary();
         configurations();
         limits();
         System.out.println("CountCyclicStockSearchTest PASS: checks=" + checks + "; witnesses=" + witnesses);
@@ -237,6 +239,81 @@ public final class CountCyclicStockSearchTest {
                 }
                 check(budget.reservedBytes() == 0, "Large-cycle request retained workspace");
             }
+        }
+    }
+
+    private static void wideStockFrontier() {
+        // Most branches can be supplied from inventory, so their lower count
+        // bounds stay zero. They must not crowd a funded active loop out of the
+        // projected candidate. One left/right pair grows the first branch;
+        // every other branch already has enough stock for delivery and a seed.
+        for (int chains : new int[]{258, 400}) for (int order = 0; order < 3; order++) {
+            var recipes = new ArrayList<GraphRecipe<String>>();
+            var stock = new LinkedHashMap<String, Long>();
+            var delivery = new LinkedHashMap<String, Long>();
+            for (int i = 0; i < chains; i++) {
+                recipes.add(recipe("left" + i, Map.of("a" + i, 1L), Map.of("b" + i, 2L)));
+                recipes.add(recipe("right" + i, Map.of("b" + i, 1L), Map.of("a" + i, 2L)));
+                stock.put("a" + i, i == 0 ? 2L : 33L);
+                stock.put("b" + i, i == 0 ? 0L : 1L);
+                delivery.put("a" + i, 1L);
+            }
+            recipes.add(recipe("finish", delivery, Map.of("goal", 1L)));
+            if (order == 1) Collections.reverse(recipes);
+            if (order == 2) Collections.shuffle(recipes, new Random(20261024));
+            var compiler = new GraphCompiler<>(recipes);
+            for (long amount : new long[]{4, 16}) {
+                var budget = budget(16_000_000, 128L << 20);
+                try (var search = new CountCyclicStockSearch<>(compiler, "goal", amount, stock, Set.of(),
+                        Map.of(), Set.of(), true, true, budget, System.nanoTime())) {
+                    while (!search.step()) {}
+                    var plan = search.result();
+                    check(plan != null, "Stock-supported free frontier lost a funded word: " + chains + "/" + order + "/" + amount);
+                    var terminal = verify(plan, recipes, stock, Set.of());
+                    for (int i = 0; i < chains; i++) check(terminal.getOrDefault("a" + i, BigInteger.ZERO)
+                            .add(terminal.getOrDefault("b" + i, BigInteger.ZERO)).signum() > 0,
+                            "A stock-supported branch lost every startup token");
+                    check(budget.diagnostics().contains("projected=" + (2 * chains - 2)),
+                            "Wide control no longer exercises the intended free coordinates");
+                    witnesses++;
+                }
+                check(budget.reservedBytes() == 0, "Wide projection retained workspace");
+            }
+            // Widening a numerical proposal does not invent the missing first
+            // token, revive a removed producer, or override memory admission.
+            var emptySeed = new LinkedHashMap<>(stock); emptySeed.put("a0", 0L);
+            check(solve(compiler, 4, emptySeed, Set.of(), Map.of(), Set.of(), true,
+                    16_000_000, 128L << 20) == null, "Wide projection invented an absent startup seed");
+            check(solve(compiler, 4, stock, Set.of(), Map.of(), Set.of("left0"), true,
+                    16_000_000, 128L << 20) == null, "Wide projection used an excluded return path");
+            check(solve(compiler, 4, stock, Set.of(), Map.of(), Set.of(), true,
+                    16_000_000, 4096) == null, "Wide projection bypassed its memory account");
+        }
+    }
+
+    private static void quantityPivotBoundary() {
+        var recipes = new ArrayList<>(List.of(
+                recipe("makeA", Map.of("C", 1L), Map.of("A", 5L)),
+                recipe("makeB", Map.of("D", 2L), Map.of("B", 5L)),
+                recipe("makeC", Map.of("A", 3L), Map.of("C", 5L)),
+                recipe("makeD", Map.of("ore", 1L), Map.of("D", 3L)),
+                recipe("finish", Map.of("A", 3L, "B", 4L, "C", 3L, "D", 2L), Map.of("goal", 1L))));
+        var stock = Map.of("A", 29L, "D", 26L, "ore", 128L);
+        for (int order = 0; order < 3; order++) {
+            if (order == 1) Collections.reverse(recipes);
+            if (order == 2) Collections.shuffle(recipes, new Random(20261024));
+            var compiler = new GraphCompiler<>(recipes);
+            for (long amount : new long[]{4, 6, 8, 12}) {
+                var plan = solve(compiler, amount, stock, Set.of(), Map.of(), Set.of(), true, 2_000_000, 32L << 20);
+                check(plan != null, "Intermediate amount lost its funded cyclic route: " + amount + "/" + order);
+                var terminal = verify(plan, recipes, stock, Set.of());
+                check(terminal.getOrDefault("A", BigInteger.ZERO).add(terminal.getOrDefault("C", BigInteger.ZERO)).signum() > 0,
+                        "Changing projection equalities spent the last startup token");
+            }
+            check(solve(compiler, 6, Map.of("D", 26L, "ore", 128L), Set.of(), Map.of(), Set.of(),
+                    true, 2_000_000, 32L << 20) == null, "Repivot invented an absent cyclic seed");
+            check(solve(compiler, 6, stock, Set.of(), Map.of(), Set.of("makeA"),
+                    true, 2_000_000, 32L << 20) == null, "Repivot restored an excluded producer");
         }
     }
 

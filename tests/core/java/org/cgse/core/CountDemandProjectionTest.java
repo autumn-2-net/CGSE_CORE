@@ -57,6 +57,8 @@ public final class CountDemandProjectionTest {
         var impossible = List.of(row(Map.of(0, -1, 1, -1), -10), row(Map.of(0, 1), 3), row(Map.of(1, 1), 3));
         check(solve(2, impossible, 2_000_000, 16L << 20) == null, "Contradictory capacities fabricated a candidate");
         exactCapacityRestoration();
+        wideNumericAdmission();
+        pivotStockBoundary();
         cancellation();
         System.out.println("CountDemandProjectionTest PASS: checks=" + checks);
     }
@@ -101,6 +103,116 @@ public final class CountDemandProjectionTest {
             check(actualFirst.equals(first) && counts[columns.get(length + 1)].equals(second), "Restoration changed a proven integer capacity");
             for (int i = 0; i < length; i++) check(counts[columns.get(i)].equals(demand), "Restored chain lost its exact demand");
         }
+    }
+
+    private static void wideNumericAdmission() {
+        int variables = 768;
+        var rows = new ArrayList<ExactLinearProgram.Constraint>();
+        for (int i = 0; i < variables; i++) rows.add(row(Map.of(i, 1), 3));
+        for (int i = 0; i < variables; i++) rows.add(row(Map.of(i, -1), i == 0 ? -1 : 0));
+        var objective = new BigInteger[variables]; Arrays.fill(objective, BigInteger.ZERO);
+        // More than a million cells, but below the separate wide projection's
+        // cap. The 10 MiB case fits a cold tableau but cannot retain its matrix.
+        for (long bytes : new long[]{10L << 20, 32L << 20}) {
+            var budget = new PlanningBudget(0, 8_000_000, bytes, () -> false, System::nanoTime);
+            check(CountNumericRelaxation.solve(variables, rows, objective, budget, 2_000_000) == null,
+                    "Wide projection changed ordinary branch admission");
+            try (var session = new CountNumericRelaxation.Session(true, true)) {
+                for (int demand : new int[]{1, 2}) {
+                    rows.set(variables, row(Map.of(0, -1), -demand));
+                    CountNumericRelaxation.Result proposal;
+                    do { proposal = session.solve(variables, rows, objective, budget, 2_000_000); }
+                    while (proposal == null && session.pending());
+                    check(proposal != null && proposal.point() != null && !proposal.phaseOneInfeasible(),
+                            "Funded wide tableau or its cold fallback was declined");
+                    var exact = new BigInteger[variables];
+                    for (int i = 0; i < variables; i++) exact[i] = java.math.BigDecimal.valueOf(proposal.point()[i]).toBigIntegerExact();
+                    check(valid(rows, exact), "Wide proposal failed the original exact integer rows");
+                }
+            }
+            check(budget.reservedBytes() == 0 && budget.peakBytes() <= bytes, "Wide tableau escaped its memory account");
+        }
+        var denied = new PlanningBudget(0, 8_000_000, 4096, () -> false, System::nanoTime);
+        try (var session = new CountNumericRelaxation.Session(true, true)) {
+            check(session.solve(variables, rows, objective, denied, 2_000_000) == null && !session.pending(),
+                    "Memory refusal retained a wide numeric continuation");
+        }
+        check(denied.reservedBytes() == 0, "Refused wide tableau retained memory");
+        var oversized = new ArrayList<ExactLinearProgram.Constraint>();
+        for (int i = 0; i < 2048; i++) oversized.add(row(Map.of(i % 1024, 1), 3));
+        var largeObjective = new BigInteger[1024]; Arrays.fill(largeObjective, BigInteger.ZERO);
+        var cap = new PlanningBudget(0, 8_000_000, 128L << 20, () -> false, System::nanoTime);
+        try (var session = new CountNumericRelaxation.Session(true, true)) {
+            check(session.solve(1024, oversized, largeObjective, cap, 2_000_000) == null && !session.pending(),
+                    "Wide projection bypassed its total cell cap");
+        }
+        check(cap.peakBytes() == 0, "Rejected dimensions allocated a tableau");
+    }
+
+    private static void pivotStockBoundary() {
+        // Integer lower bounds require one run of A's producer at amount 6,
+        // but making both material inequalities tight fixes it at -1/22.
+        // Freeing that optional equality must preserve the original inequalities.
+        for (int copies : new int[]{1, 4}) for (int amount : new int[]{4, 6, 8, 12}) for (int order = 0; order < 3; order++) {
+            var rows = pivotRows(copies, amount);
+            if (order == 1) Collections.reverse(rows);
+            if (order == 2) Collections.shuffle(rows, new Random(20261024));
+            var known = new BigInteger[5 * copies];
+            for (int i = 0; i < copies; i++) {
+                known[5 * i] = known[5 * i + 2] = BigInteger.valueOf(10L * amount);
+                known[5 * i + 1] = known[5 * i + 3] = known[5 * i + 4] = BigInteger.valueOf(amount);
+            }
+            check(valid(rows, known), "Synthetic boundary lost its independent feasible count witness");
+            var budget = new PlanningBudget(0, 2_000_000, 16L << 20, () -> false, System::nanoTime);
+            try (var projection = new CountDemandProjection(known.length, rows, budget, 100_000, 512, true)) {
+                while (!projection.step()) {}
+                check(projection.result() != null && valid(rows, projection.result()),
+                        "Optional equality discarded funded integer rows: " + copies + "/" + amount + "/" + order);
+                if (amount == 6) check(budget.diagnostics().contains("count_demand_repivot"), "Control skipped the conflicting equality");
+            }
+            check(budget.reservedBytes() == 0, "Repivoted projection retained workspace");
+        }
+        var rows = pivotRows(4, 6);
+        for (long cap : new long[]{100, 300, 600}) {
+            var budget = new PlanningBudget(0, 2_000_000, 16L << 20, () -> false, System::nanoTime);
+            try (var projection = new CountDemandProjection(20, rows, budget, cap, 512, true)) {
+                while (!projection.step()) {}
+                check(projection.result() == null, "Tiny projection allowance fabricated complete counts");
+                check(projection.work() <= cap + 1, "Repivot replenished its work allowance");
+            }
+            check(budget.reservedBytes() == 0, "Bounded repivot retained workspace");
+        }
+        for (long bytes : new long[]{1, 4096, 8192, 32768, 65536}) {
+            var budget = new PlanningBudget(0, 2_000_000, bytes, () -> false, System::nanoTime);
+            try (var projection = new CountDemandProjection(20, rows, budget, 100_000, 512, true)) {
+                while (!projection.step()) {}
+                check(projection.result() == null || valid(rows, projection.result()), "Memory refusal published invalid counts");
+            }
+            check(budget.reservedBytes() == 0 && budget.peakBytes() <= bytes, "Repivot escaped memory accounting");
+        }
+        var cancelled = new AtomicBoolean();
+        var budget = new PlanningBudget(0, 2_000_000, 16L << 20, cancelled::get, System::nanoTime);
+        try (var projection = new CountDemandProjection(20, rows, budget, 100_000, 512, true)) {
+            while (!budget.diagnostics().contains("count_demand_repivot")) check(!projection.step(), "Repivot cancellation control ended early");
+            cancelled.set(true);
+            try { projection.step(); throw new AssertionError("Repivot swallowed cancellation"); }
+            catch (java.util.concurrent.CancellationException expected) { checks++; }
+            check(projection.result() == null, "Cancelled repivot published incomplete counts");
+        }
+        check(budget.reservedBytes() == 0, "Cancelled repivot retained workspace");
+    }
+
+    private static ArrayList<ExactLinearProgram.Constraint> pivotRows(int copies, int amount) {
+        var rows = new ArrayList<ExactLinearProgram.Constraint>();
+        for (int i = 0; i < copies; i++) {
+            int a = 5 * i, b = a + 1, c = a + 2, d = a + 3, target = a + 4;
+            rows.add(row(Map.of(target, -1), -amount));
+            rows.add(row(Map.of(a, -5, c, 3, target, 3), 29));
+            rows.add(row(Map.of(b, -5, target, 4), 0));
+            rows.add(row(Map.of(a, 1, c, -5, target, 3), 0));
+            rows.add(row(Map.of(b, 2, d, -3, target, 2), 26));
+        }
+        return rows;
     }
 
     private static List<ExactLinearProgram.Constraint> chain(int length, BigInteger amount) {
