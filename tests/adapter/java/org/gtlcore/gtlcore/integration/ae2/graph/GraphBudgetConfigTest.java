@@ -81,6 +81,7 @@ final class GraphBudgetConfigTest {
                   ae2GraphDiagnosticLogging: false
                 """;
         var mixed = load("mixed", migrate(old));
+        check(mixed.ae.ae2GraphIntelligentScheduling, "Existing YAML did not enable intelligent scheduling by default");
         check(mixed.ae.ae2GraphPlannerMaxSteps == 91000 && mixed.ae.ae2GraphPlannerThreads == 3 &&
                 mixed.ae.ae2GraphPlannerMaxRequests == 17 && mixed.ae.ae2GraphPlannerParallelWorkBudget &&
                 mixed.ae.ae2GraphPlannerTimeoutMs == 1900 && mixed.ae.ae2GraphPlannerMemoryMiB == 256 &&
@@ -98,6 +99,10 @@ final class GraphBudgetConfigTest {
         check(load("alone", alone).ae.ae2GraphPlannerMaxSteps == Integer.MAX_VALUE, "Large migrated work truncated");
         String current = "ae:\r\n  ae2GraphCompilerMaxSteps: 32000\r\n  ae2GraphCachePreparationMaxSteps: 0\r\n";
         check(migrate(current).equals(current), "Current config needlessly rewritten");
+        check(!load("intelligent-disabled", "ae:\n  ae2GraphIntelligentScheduling: false\n").ae.ae2GraphIntelligentScheduling,
+                "Intelligent scheduling cannot be disabled in YAML");
+        check(!load("intelligent-migrated", migrate("ae2GraphIntelligentScheduling: false\n")).ae.ae2GraphIntelligentScheduling,
+                "Explicit flat scheduling policy lost during migration");
         var clamped = load("invalid", """
                 ae:
                   ae2GraphCompilerMaxSteps: -1
