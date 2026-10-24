@@ -13,7 +13,7 @@ public final class RefillUnitTraversalTest {
     private static final BigInteger ZERO = BigInteger.ZERO, ONE = BigInteger.ONE;
 
     public static void main(String[] args) {
-        boundedWideWords(); repeatedWords(); exactPorts(); mixedUnits(); interruptions();
+        boundedWideWords(); preservedWideWord(); repeatedWords(); exactPorts(); mixedUnits(); interruptions();
         System.out.println("RefillUnitTraversalTest: assertions=" + checks);
     }
 
@@ -37,7 +37,31 @@ public final class RefillUnitTraversalTest {
         var word = new ArrayList<PlanStep>();
         for (int i = 0; i < copies; i++) word.add(new PlanStep.Batch("grow", 1));
         word.add(new PlanStep.Batch("finish", 1));
-        return RefillWordPruningTest.literalPlan(recipes, new PlanStep.Sequence(word), Map.of("tool", 1L), Map.of(), Set.of());
+        // This port-traversal oracle consumes A and retains only the explicit
+        // tool. Automatic growth preservation is tested separately below.
+        return RefillWordPruningTest.preservation(RefillWordPruningTest.literalPlan(recipes,
+                new PlanStep.Sequence(word), Map.of("tool", 1L), Map.of(), Set.of()), false);
+    }
+    private static void preservedWideWord() {
+        for (boolean reverse : List.of(false, true)) for (int copies : new int[] {12, 32}) {
+            var ordinary = wide(32, copies, reverse);
+            var original = RefillWordPruningTest.literalPlan(new ArrayList<>(ordinary.recipes().values()),
+                    ordinary.steps(), Map.of("tool", 1L, "A", 10L), Map.of(), Set.of());
+            var b = budget(100_000, 8L << 20);
+            var result = reduce(original, b, 8192, SequenceSummary.of(original.steps(), original.recipes()), true);
+            // Twelve wide firings reach the exact preserving bound within
+            // the existing allowance. Both the old and new pruning pass can
+            // exhaust that allowance on 32 firings; its safe incumbent must
+            // survive without charging more work or consuming the seed.
+            if (copies == 12) check(result.patternTimesExact().equals(Map.of("grow", BigInteger.valueOf(11), "finish", ONE)),
+                    "Wide PRESERVE word missed its exact funded bound");
+            var summary = SequenceSummary.of(result.steps(), result.recipes());
+            var finalA = result.initialExact().get("A").add(summary.delta("A"));
+            check(finalA.compareTo(BigInteger.TEN) >= 0 && (copies != 12 || finalA.equals(BigInteger.TEN)),
+                    "Wide PRESERVE word lost its actual growth startup");
+            check(b.nodes() <= 8192 + 64, "Wide PRESERVE exceeded its unchanged allowance");
+            check(b.reservedBytes() == 0, "Wide PRESERVE workspace leaked");
+        }
     }
 
     private static void boundedWideWords() {
@@ -98,7 +122,8 @@ public final class RefillUnitTraversalTest {
         var recipes = List.of(recipe("grow", Map.of("A", max - 1, "raw", max, "tool", max), Map.of("A", max, "tool", max)),
                 recipe("finish", Map.of("A", max), Map.of("G", 1L)));
         var word = new PlanStep.Sequence(List.of(new PlanStep.Batch("grow", 3), new PlanStep.Batch("finish", 1)));
-        var p = RefillWordPruningTest.literalPlan(recipes, word, Map.of("tool", max), Map.of(), Set.of());
+        var p = RefillWordPruningTest.preservation(
+                RefillWordPruningTest.literalPlan(recipes, word, Map.of("tool", max), Map.of(), Set.of()), false);
         check(p.missingExact().get("raw").compareTo(BigInteger.valueOf(max)) > 0, "Not an exact oversized fixture");
         var b = budget(100_000, 8L << 20); p = reduce(p, b, 8192, null, true);
         check(p.patternTimesExact().equals(Map.of("grow", ONE, "finish", ONE)), "Exact port subtraction or counts overflowed");

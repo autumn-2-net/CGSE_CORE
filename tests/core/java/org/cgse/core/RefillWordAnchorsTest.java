@@ -17,6 +17,12 @@ public final class RefillWordAnchorsTest {
     }
     record Fixture(List<GraphRecipe<String>> recipes, GraphPlan<String> plan, Map<String, Long> stock, long needed) {}
     static Fixture fixture(int length, long goal, long seed, long joint, boolean reverse, int shape) {
+        return fixture(length, goal, seed, joint, reverse, shape, true);
+    }
+    static Fixture fixture(int length, long goal, long seed, long joint, boolean reverse, int shape, boolean preserve) {
+        long rounds = Math.max(goal + seed, joint) + 4;
+        // The growth cycle needs three A to start again after delivery.
+        if (preserve) seed = Math.max(seed, 3);
         var recipes = new ArrayList<GraphRecipe<String>>(); var word = new ArrayList<PlanStep>();
         long needed = Math.max(goal + seed, joint);
         for (int i = 0; i < length; i++) {
@@ -29,7 +35,7 @@ public final class RefillWordAnchorsTest {
         var finish = new LinkedHashMap<String, Long>(); finish.put("A", 3 + goal); if (joint > 0) finish.put("joint", joint);
         recipes.add(MissingMaterialExpansionTest.recipe("finish", finish, Map.of("G", 1L)));
         if (reverse) Collections.reverse(recipes);
-        for (int j = 0; j < needed + 4; j++) {
+        for (int j = 0; j < rounds; j++) {
             var body = new ArrayList<PlanStep>();
             for (int i = 0; i < length; i++) body.add(new PlanStep.Batch("r" + i, 1));
             if (shape == 0) word.addAll(body); else word.add(new PlanStep.Sequence(List.of(new PlanStep.Sequence(body))));
@@ -37,16 +43,18 @@ public final class RefillWordAnchorsTest {
         word.add(new PlanStep.Batch("finish", 1));
         var seeds = new LinkedHashMap<String, Long>(); seeds.put("tool", 1L); if (seed > 0) seeds.put("A", seed);
         var stock = Map.of("feed", 2L, "tool", 1L);
-        return new Fixture(recipes, RefillWordPruningTest.literalPlan(recipes, new PlanStep.Sequence(word), seeds, stock, Set.of()), stock, needed);
+        var plan = RefillWordPruningTest.literalPlan(recipes, new PlanStep.Sequence(word), seeds, stock, Set.of());
+        if (!preserve) plan = RefillWordPruningTest.preservation(plan, false);
+        return new Fixture(recipes, plan, stock, needed);
     }
     public static void main(String[] args) throws Exception {
-        families(); contracts(); traces(); opaque(); limits(); ownership();
+        families(false); families(true); implicitStartup(); contracts(); traces(); opaque(); limits(); ownership();
         System.out.println("RefillWordAnchorsTest: assertions=" + checks);
     }
-    private static void families() {
+    private static void families(boolean preserve) {
         for (int length : new int[] {17, 24, 32}) for (long goal : new long[] {1, 3}) for (long seed : new long[] {0, 3})
         for (long joint : new long[] {0, 5}) for (boolean reverse : List.of(false, true)) for (int shape = 0; shape < 2; shape++) {
-            var f = fixture(length, goal, seed, joint, reverse, shape);
+            var f = fixture(length, goal, seed, joint, reverse, shape, preserve);
             var b = budget(100_000); GraphPlan<String> result;
             // A real verifier owns the borrowed vectors throughout child work.
             try (var owner = owner(f.plan, b)) {
@@ -63,16 +71,38 @@ public final class RefillWordAnchorsTest {
         // Exercise the shared production refinement entry, including a finite
         // upstream chain for feed. Its work-scaled allowance remains unchanged.
         for (int length : new int[] {17, 24, 32}) {
-            var f = fixture(length, 1, 0, 0, false, 0); var recipes = new ArrayList<>(f.recipes);
+            var f = fixture(length, 1, 0, 0, false, 0, preserve); var recipes = new ArrayList<>(f.recipes);
             for (int i = 0; i < 16; i++) recipes.add(MissingMaterialExpansionTest.recipe("feed" + i,
                     Map.of(i == 15 ? "raw" : "f" + (i + 1), 1L), Map.of(i == 0 ? "feed" : "f" + i, 1L)));
             var b = budget(100_000);
             try (var work = new MissingMaterialExpansion<>(new GraphCompiler<>(recipes), f.plan, f.stock, Set.of(), Set.of(), true, false, b)) {
                 while (!work.step()) {}
                 var result = work.result(); RefillWordPruningTest.literalVerify(result, f.stock, Set.of());
-                check(result.missingExact().equals(Map.of("A", BigInteger.valueOf(3))), "Retained unnecessary feed/raw shortage");
+                var expected = new LinkedHashMap<String, BigInteger>(); expected.put("A", BigInteger.valueOf(3));
+                if (f.needed > f.stock.get("feed")) expected.put("raw", BigInteger.valueOf(f.needed - f.stock.get("feed")));
+                check(result.missingExact().equals(expected), "Retained unnecessary feed/raw shortage");
             }
             check(b.reservedBytes() == 0, "Expanded prefix leaked");
+        }
+    }
+    private static BigInteger finalA(GraphPlan<String> plan) {
+        return plan.initialExact().getOrDefault("A", BigInteger.ZERO).add(SequenceSummary.of(plan.steps(), plan.recipes()).delta("A"));
+    }
+    private static void implicitStartup() {
+        for (int shape = 0; shape < 2; shape++) {
+            var f = fixture(24, 1, 0, 0, false, shape, false);
+            var ordinary = prune(f.plan, f.stock, Set.of(), true);
+            check(ordinary.initialExact().get("feed").equals(BigInteger.ONE) && finalA(ordinary).signum() == 0,
+                    "Ordinary exact oracle no longer consumes its startup");
+            var audit = budget(100_000);
+            try (var guard = new SeedStartupGuard<>(ordinary.recipes().values(), SequenceSummary.of(ordinary.steps(), ordinary.recipes()),
+                    ordinary.initial(), ordinary.seeds(), Set.of(), ordinary.target(), ordinary.amount(), audit)) {
+                while (!guard.step()) {}
+                check(guard.lost().getOrDefault("A", 0L) >= 3, "Legacy oracle incorrectly called restartable");
+            }
+            check(audit.reservedBytes() == 0, "Implicit audit leaked");
+            var safe = prune(RefillWordPruningTest.preservation(f.plan, true), f.stock, Set.of(), true);
+            check(finalA(safe).compareTo(BigInteger.valueOf(3)) >= 0, "Implicit preservation destroyed loop startup");
         }
     }
     private static void contracts() {
@@ -94,7 +124,7 @@ public final class RefillWordAnchorsTest {
 
         original = RefillWordPruningTest.literalPlan(f.recipes, f.plan.steps(), f.plan.seeds(), f.stock, Set.of("feed"));
         var supplied = prune(original, f.stock, Set.of("feed"), true);
-        check(!supplied.missingExact().containsKey("feed") && supplied.initialExact().get("feed").equals(BigInteger.ONE), "External supply/ordered loop contract");
+        check(!supplied.missingExact().containsKey("feed") && supplied.initialExact().get("feed").equals(BigInteger.valueOf(f.needed)), "External supply/ordered loop contract");
     }
     private static GraphPlan<String> prune(GraphPlan<String> original, Map<String, Long> stock, Set<String> external, boolean force) {
         var b = budget(100_000); GraphPlan<String> result;
@@ -211,7 +241,7 @@ public final class RefillWordAnchorsTest {
                         public void close() { work.close(); }
                     }, b);
                     var p = future.get(10, TimeUnit.SECONDS); verify(f, p);
-                    check(p.initialExact().get("feed").equals(BigInteger.ONE), "Lost scheduled refinement");
+                    check(p.initialExact().get("feed").equals(BigInteger.valueOf(f.needed)), "Lost scheduled refinement");
                 }
             }
         }
@@ -222,6 +252,7 @@ public final class RefillWordAnchorsTest {
         result.initialExact().forEach((k,n) -> check(n.compareTo(f.plan.initialExact().getOrDefault(k, BigInteger.ZERO)) <= 0, "Increased withdrawal"));
         result.missingExact().forEach((k,n) -> check(n.compareTo(f.plan.missingExact().getOrDefault(k, BigInteger.ZERO)) <= 0, "Increased shortage"));
         check(result.seeds().equals(f.plan.seeds()), "Changed final seeds");
+        if (result.preserveSeeds()) check(finalA(result).compareTo(BigInteger.valueOf(3)) >= 0, "Preserved word cannot restart its loop");
     }
     private static PlanningBudget budget(long work) { return MissingMaterialExpansionTest.budget(work); }
     private static void check(boolean value, String message) { checks++; if (!value) throw new AssertionError(message); }

@@ -15,7 +15,7 @@ public final class RefillAcceptedPeriodsTest {
     static Fixture fixture(int length, int period, long goal, long seed, long joint, boolean reverse, boolean wrappers) {
         var base = RefillNormalizedWordTest.fixture(length / 2, 2, 1, goal, seed, joint, false, reverse, 3);
         var word = new ArrayList<PlanStep>();
-        long rounds = period * ((base.needed() + period - 1) / period + 2);
+        long rounds = period * ((Math.max(goal + seed, joint) + period - 1) / period + 2);
         for (int round = 0; round < rounds; round++) {
             int cut = 1 + round % period;
             for (int part = 0; part < 2; part++) {
@@ -61,7 +61,7 @@ public final class RefillAcceptedPeriodsTest {
                 check(b.reservedBytes() == 0, "Diagnostic workspace");
             }
             // Each round costs one feed and grows A/joint by one. The final
-            // order and retained seed impose max(goal+seed,joint) rounds.
+            // order and restart reserve impose max(goal+max(seed,3),joint).
             check(result.initialExact().get("feed").equals(BigInteger.valueOf(f.needed)),
                     "Missed period bound " + length + "/" + period + "/" + goal + "/" + seed + "/" + joint + "/" + wrappers);
             check(result.initialExact().get("A").equals(BigInteger.valueOf(3)), "Startup seed changed");
@@ -72,38 +72,40 @@ public final class RefillAcceptedPeriodsTest {
         check(total == 256 && atBound == total, "Default period quality regressed");
     }
     private static void contracts() throws Exception {
-        var f = fixture(4, 2, 1, 0, 0, false, false);
+        // Five required rounds round up to six in the period-2 incumbent;
+        // the period pass must still improve it while retaining three A.
+        var f = fixture(4, 2, 2, 2, 0, false, false);
         var original = f.plan; var b = budget();
         try (var owner = owner(original, b)) {
             while (!owner.step()) {}
             try (var work = new RefillWordPruning<>(original, f.stock, Set.of(), true, false, b, 8192, owner.summary())) {
                 reach(work, "PERIODS");
-                check(work.result().initialExact().get("feed").equals(BigInteger.TWO), "No completed partial reduction");
+                check(work.result().initialExact().get("feed").equals(BigInteger.valueOf(6)), "No completed partial reduction");
                 run(work, b);
-                check(work.result().initialExact().get("feed").equals(BigInteger.ONE), "Follow-up did not improve accepted word");
+                check(work.result().initialExact().get("feed").equals(BigInteger.valueOf(5)), "Follow-up did not improve accepted word");
                 verify(original, work.result(), f.stock, Set.of());
             }
         }
         check(b.reservedBytes() == 0, "Accepted leases");
-        var integral = fixture(4, 2, 2, 0, 0, false, false); b = budget();
+        var integral = fixture(4, 2, 1, 0, 0, false, false); b = budget();
         try (var owner = owner(integral.plan, b)) {
             while (!owner.step()) {}
             try (var work = new RefillWordPruning<>(integral.plan, integral.stock, Set.of(), true, false, b, 8192, owner.summary())) {
                 while (!work.step()) check(!phase(work).startsWith("PERIOD"), "Integral active bound admitted extra work");
-                check(work.result().initialExact().get("feed").equals(BigInteger.TWO), "Integral supply bound");
+                check(work.result().initialExact().get("feed").equals(BigInteger.valueOf(4)), "Integral supply bound");
             }
         }
         check(b.reservedBytes() == 0, "Integral leases");
 
         original = RefillWordPruningTest.literalPlan(new ArrayList<>(f.plan.recipes().values()), f.plan.steps(), f.plan.seeds(), f.stock, Set.of("feed"));
         b = budget(); var result = reduce(original, f.stock, Set.of("feed"), true, false, b, 8192, null);
-        check(!result.missingExact().containsKey("feed") && result.initialExact().get("feed").equals(BigInteger.ONE), "External follow-up supply");
+        check(!result.missingExact().containsKey("feed") && result.initialExact().get("feed").equals(BigInteger.valueOf(5)), "External follow-up supply");
         check(b.reservedBytes() == 0, "External leases");
 
         original = new GraphPlan<>(f.plan.target(), f.plan.amount(), f.plan.preserveSeeds(), f.plan.steps(), f.plan.recipes(),
                 f.plan.initialExact(), f.plan.seeds(), f.plan.missingExact(), GraphPlan.Result.INCOMPLETE_MODEL, 0, 0);
         b = budget(); result = reduce(original, f.stock, Set.of(), true, false, b, 8192, null);
-        check(result.result() == GraphPlan.Result.INCOMPLETE_MODEL && result.initialExact().get("feed").equals(BigInteger.ONE), "Promoted incomplete coverage");
+        check(result.result() == GraphPlan.Result.INCOMPLETE_MODEL && result.initialExact().get("feed").equals(BigInteger.valueOf(5)), "Promoted incomplete coverage");
         check(b.reservedBytes() == 0, "Incomplete leases");
 
         var recipes = new ArrayList<>(f.plan.recipes().values());
@@ -114,6 +116,8 @@ public final class RefillAcceptedPeriodsTest {
         check(result.patternTimesExact().equals(original.patternTimesExact()), "Lost forced target surplus");
         check(b.reservedBytes() == 0, "Forced credit leases");
         b = budget(); result = reduce(original, f.stock, Set.of(), false, false, b, 8192, null);
+        // The loop itself supplies G, so ordinary mode can omit finish while
+        // retaining A=4 after one round (above the restart reserve of three).
         check(result.initialExact().get("feed").equals(BigInteger.ONE), "Kept unrequested surplus");
         check(b.reservedBytes() == 0, "Ordinary credit leases");
 
@@ -125,7 +129,7 @@ public final class RefillAcceptedPeriodsTest {
         check(b.reservedBytes() == 0, "Configuration leases");
     }
     private static void interruptions() throws Exception {
-        var f = fixture(4, 2, 1, 0, 0, false, false);
+        var f = fixture(4, 2, 2, 2, 0, false, false);
         for (String at : List.of("PERIODS", "PERIOD_PRUNE")) for (String mode : List.of("work", "time", "memory", "cancel")) {
             var time = new AtomicLong(); var cancelled = new AtomicBoolean();
             var b = new PlanningBudget(1, 100000, 64L << 20, cancelled::get, time::get);
@@ -134,7 +138,7 @@ public final class RefillAcceptedPeriodsTest {
                 while (!owner.step()) {} long ownerBytes = b.reservedBytes();
                 try (var work = new RefillWordPruning<>(f.plan, f.stock, Set.of(), true, false, b, 8192, owner.summary())) {
                     reach(work, at); var accepted = work.result();
-                    check(accepted != f.plan && accepted.initialExact().get("feed").equals(BigInteger.TWO), "Missing accepted partial bill");
+                    check(accepted != f.plan && accepted.initialExact().get("feed").equals(BigInteger.valueOf(6)), "Missing accepted partial bill");
                     switch (mode) {
                         case "work" -> b.charge(b.remainingWork());
                         case "time" -> time.set(2000000);
@@ -158,7 +162,7 @@ public final class RefillAcceptedPeriodsTest {
         }
     }
     private static void handoff() throws Exception {
-        var f = fixture(4, 2, 1, 0, 0, false, false);
+        var f = fixture(4, 2, 2, 2, 0, false, false);
         for (String at : List.of("PERIODS", "PERIOD_PRUNE")) {
             var b = budget();
             try (var owner = owner(f.plan, b)) {
@@ -172,7 +176,7 @@ public final class RefillAcceptedPeriodsTest {
                             public void close() { work.close(); }
                         }, b);
                         var result = task.get(10, TimeUnit.SECONDS); verify(f.plan, result, f.stock, Set.of());
-                        check(result.initialExact().get("feed").equals(BigInteger.ONE), "Worker lost accepted period");
+                        check(result.initialExact().get("feed").equals(BigInteger.valueOf(5)), "Worker lost accepted period");
                     }
                 }
                 check(b.reservedBytes() == held, "Transferred borrowed owner");

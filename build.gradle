@@ -27,12 +27,17 @@ sourceSets {
     }
 }
 
+def coreTestData = tasks.register('prepareCoreTestData', Copy) {
+    from('tests/core/data')
+    into(layout.buildDirectory.dir('core-tests/tests/core/data'))
+}
+
 def coreChecks = []
 fileTree('tests/core/java').matching { include '**/*.java' }.files.sort().each { source ->
     if (source.name != 'GraphBenchmark.java' && (source.text =~ /public\s+static\s+void\s+main\s*\(/).find()) {
         coreChecks.add(tasks.register('run' + source.name.replace('.java', ''), JavaExec) {
             group = 'verification'
-            dependsOn testClasses
+            dependsOn testClasses, coreTestData
             classpath = sourceSets.test.runtimeClasspath
             mainClass = 'org.cgse.core.' + source.name.replace('.java', '')
             jvmArgs '-ea', '-Xmx2g'

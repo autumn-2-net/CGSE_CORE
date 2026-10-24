@@ -94,7 +94,20 @@ public final class RefillMixtureTest {
         check(plan.missing().equals(Map.of("R", 2L)) && plan.seeds().equals(Map.of("R", 2L)), "Mix spent a final seed");
         var grow = List.of(r("one", ordered("A", 2, "R", 1), Map.of("A", 3L)),
                 r("two", ordered("A", 2, "S", 1), Map.of("A", 3L)), r("finish", Map.of("A", 8L), Map.of("G", 1L)));
-        check(solve(grow, Map.of("A", 2L, "R", 3L, "S", 3L)).feasible(), "Stock-funded growth mixture");
+        var growthStock = Map.of("A", 2L, "R", 3L, "S", 3L);
+        var ordinary = MissingMaterialExpansionTest.expand(grow,
+                MissingMaterialExpansionTest.partial(grow.get(2), growthStock, false), growthStock);
+        check(ordinary.feasible(), "Ordinary stock-funded growth mixture");
+        // Six fed growth firings deliver eight A but leave zero. PRESERVE
+        // needs two further net A; do not call the exhausting word feasible.
+        var preserved = solve(grow, growthStock);
+        check(!preserved.feasible() && !preserved.missingExact().isEmpty(), "Growth mixture consumed its last startup");
+        var finalA = SequenceSummary.of(preserved.steps(), preserved.recipes()).delta("A")
+                .add(BigInteger.valueOf(growthStock.get("A")))
+                .add(preserved.missingExact().getOrDefault("A", BigInteger.ZERO));
+        check(finalA.compareTo(BigInteger.TWO) >= 0, "Funded mixture cannot restart");
+        check(solve(grow, Map.of("A", 2L, "R", 5L, "S", 3L)).feasible(),
+                "A fully funded mixture failed to retain its startup");
     }
     private static void protectWholeBill() throws Exception {
         // Taking a stock-funded partial joint source first creates an extra

@@ -21,6 +21,10 @@ public final class RefillWordBlocksTest {
     }
     private record Fixture(List<GraphRecipe<String>> recipes, GraphPlan<String> plan, long needed) {}
     private static Fixture fixture(int length, long gain, long seed, long joint, int shape, boolean reverse, Map<String, Long> stock) {
+        return fixture(length, gain, seed, joint, shape, reverse, stock, true);
+    }
+    private static Fixture fixture(int length, long gain, long seed, long joint, int shape, boolean reverse,
+                                   Map<String, Long> stock, boolean preserve) {
         var recipes = new ArrayList<GraphRecipe<String>>(); var body = new ArrayList<PlanStep>();
         for (int i = 0; i < length; i++) {
             var in = new LinkedHashMap<String, Long>(); in.put(i == 0 ? "A" : "m" + i, i == 0 ? 3L : 2L);
@@ -29,21 +33,42 @@ public final class RefillWordBlocksTest {
             if (i == length - 1) { out.put("tool", 1L); out.put("joint", 1L); }
             recipes.add(MissingMaterialExpansionTest.recipe("r" + i, in, out)); body.add(new PlanStep.Batch("r" + i, 1));
         }
-        long demand = 3 + 4 * gain, needed = Math.max((demand + seed - 3 + gain - 1) / gain, joint);
+        // Completing only the delivery can leave A=0. A PRESERVE word must
+        // also retain the three A needed to start another literal cycle.
+        long retained = preserve ? Math.max(seed, 3) : seed;
+        long demand = 3 + 4 * gain, needed = Math.max((demand + retained - 3 + gain - 1) / gain, joint);
+        long originalNeeded = Math.max((demand + seed - 3 + gain - 1) / gain, joint);
         var in = new LinkedHashMap<String, Long>(); in.put("A", demand); if (joint > 0) in.put("joint", joint);
         recipes.add(MissingMaterialExpansionTest.recipe("finish", in, Map.of("G", 1L)));
         var word = new ArrayList<PlanStep>(); var shared = new PlanStep.Sequence(body);
-        for (int j = 0; j < needed + 4; j++) {
+        for (int j = 0; j < originalNeeded + 4; j++) {
             if (shape == 0) for (int i = 0; i < length; i++) word.add(new PlanStep.Batch("r" + i, 1));
             else word.add(shape == 1 ? shared : new PlanStep.Sequence(List.of(new PlanStep.Sequence(body))));
         }
         word.add(new PlanStep.Batch("finish", 1)); if (reverse) Collections.reverse(recipes);
-        var seeds = new LinkedHashMap<String, Long>(); seeds.put("tool", 1L); if (seed > 0) seeds.put("A", seed);
-        return new Fixture(recipes, RefillWordPruningTest.literalPlan(recipes, new PlanStep.Sequence(word), seeds, stock, Set.of()), needed);
+        var seeds = new LinkedHashMap<String, Long>(); seeds.put("tool", 1L); if (retained > 0) seeds.put("A", retained);
+        return new Fixture(recipes, RefillWordPruningTest.preservation(
+                RefillWordPruningTest.literalPlan(recipes, new PlanStep.Sequence(word), seeds, stock, Set.of()), preserve), needed);
     }
     public static void main(String[] args) throws Exception {
-        families(); exactRegrouping(); contracts(); cutoffs(); scheduler(false); scheduler(true);
+        families(); preservationModes(); exactRegrouping(); contracts(); cutoffs(); scheduler(false); scheduler(true);
         System.out.println("RefillWordBlocksTest: assertions=" + checks);
+    }
+    private static void preservationModes() {
+        for (int length : new int[] {2, 8}) for (long gain : new long[] {1, 2}) for (long seed : new long[] {0, 3}) {
+            var ordinary = fixture(length, gain, seed, 0, 0, false, Map.of(), false);
+            var result = prune(ordinary.plan, Map.of(), Set.of(), true, 8192);
+            check(result.patternTimesExact().get("r0").longValueExact() == ordinary.needed,
+                    "Ordinary consumption lost the original exact feed bound");
+            if (seed != 0) continue;
+            // The same original word has enough surplus for a restart even
+            // without an explicit A reserve. Pruning must not erase it.
+            var implicit = RefillWordPruningTest.preservation(ordinary.plan, true);
+            result = prune(implicit, Map.of(), Set.of(), true, 8192);
+            var summary = SequenceSummary.of(result.steps(), result.recipes());
+            check(result.initialExact().get("A").add(summary.delta("A")).compareTo(BigInteger.valueOf(3)) >= 0,
+                    "Implicit startup was removed by block pruning");
+        }
     }
     private static void families() {
         for (int length : new int[] {2, 3, 5, 8}) for (long gain : new long[] {1, 2}) for (long seed : new long[] {0, 3})

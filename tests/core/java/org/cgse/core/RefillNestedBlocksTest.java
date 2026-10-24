@@ -12,6 +12,9 @@ public final class RefillNestedBlocksTest {
  private static int checks;
  record Fixture(GraphPlan<String> plan,Map<String,Long> stock,long needed){}
  static Fixture fixture(int length,int inner,long goal,long seed,long joint,boolean reverse,int shape) {
+  return fixture(length,inner,goal,seed,joint,reverse,shape,true);
+ }
+ static Fixture fixture(int length,int inner,long goal,long seed,long joint,boolean reverse,int shape,boolean preserve) {
   var recipes=new ArrayList<GraphRecipe<String>>();var cycle=new ArrayList<PlanStep>();
   for(int i=0;i<length;i++) {
    var in=new LinkedHashMap<String,Long>();var out=new LinkedHashMap<String,Long>();
@@ -27,16 +30,31 @@ public final class RefillNestedBlocksTest {
   var end=new LinkedHashMap<String,Long>();end.put("A",3+goal);if(joint>0)end.put("joint",joint);
   recipes.add(MissingMaterialExpansionTest.recipe("finish",end,Map.of("G",1L)));
   if(reverse)Collections.reverse(recipes);
-  long needed=Math.max(goal+seed,joint);var word=new ArrayList<PlanStep>();
-  for(int i=0;i<needed+3;i++)if(shape==0)word.addAll(cycle);else word.add(new PlanStep.Sequence(List.of(new PlanStep.Sequence(cycle))));
-  word.add(new PlanStep.Batch("finish",1));var seeds=new LinkedHashMap<String,Long>();seeds.put("tool",1L);if(seed>0)seeds.put("A",seed);
+  long retained=preserve?Math.max(seed,3):seed;
+  long needed=Math.max(goal+retained,joint);var word=new ArrayList<PlanStep>();
+  // Keep the original word size; its existing surplus already funds startup.
+  for(int i=0;i<Math.max(goal+seed,joint)+3;i++)if(shape==0)word.addAll(cycle);else word.add(new PlanStep.Sequence(List.of(new PlanStep.Sequence(cycle))));
+  word.add(new PlanStep.Batch("finish",1));var seeds=new LinkedHashMap<String,Long>();seeds.put("tool",1L);if(retained>0)seeds.put("A",retained);
   var stock=Map.of("feed",1L,"innerFeed",(long)inner,"tool",1L);
-  return new Fixture(RefillWordPruningTest.literalPlan(recipes,new PlanStep.Sequence(word),seeds,stock,Set.of()),stock,needed);
+  return new Fixture(RefillWordPruningTest.preservation(RefillWordPruningTest.literalPlan(recipes,new PlanStep.Sequence(word),seeds,stock,Set.of()),preserve),stock,needed);
  }
 
  public static void main(String[] args) throws Exception {
-  families(); contracts(); exactTraces(); cutoffs(); ownership();
+  families(); preservationModes(); contracts(); exactTraces(); cutoffs(); ownership();
   System.out.println("RefillNestedBlocksTest: assertions="+checks);
+ }
+ private static void preservationModes() {
+  for(int length:new int[]{8,24}) for(int inner:new int[]{2,4}) for(long seed:new long[]{0,2}) {
+   var f=fixture(length,inner,3,seed,0,false,0,false);var b=budget();
+   var result=reduce(f.plan,f.stock,Set.of(),true,b,8192,SequenceSummary.of(f.plan.steps(),f.plan.recipes()));
+   bound(f,result,inner);check(b.reservedBytes()==0,"Ordinary mode leaked");
+   if(seed!=0)continue;
+   var implicit=RefillWordPruningTest.preservation(f.plan,true);b=budget();
+   result=reduce(implicit,f.stock,Set.of(),true,b,8192,SequenceSummary.of(implicit.steps(),implicit.recipes()));
+   var summary=SequenceSummary.of(result.steps(),result.recipes());
+   check(result.initialExact().get("A").add(summary.delta("A")).compareTo(BigInteger.valueOf(3))>=0,"Implicit nested startup was pruned");
+   check(b.reservedBytes()==0,"Implicit mode leaked");
+  }
  }
  private static void families() {
   for(int length:new int[]{8,16,24,32})for(int inner:new int[]{2,3,4})for(long goal:new long[]{1,3})

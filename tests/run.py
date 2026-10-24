@@ -25,8 +25,8 @@ def main():
     parser.add_argument('--fixture-dir', type=Path, default=BASE / 'regression/fixtures', help='Curated or generated graph fixtures')
     parser.add_argument('--permutations', type=int, default=3)
     parser.add_argument('--milliseconds', type=int, default=3000)
-    parser.add_argument('--work', type=int, default=40_000_000,
-                        help='Per-request work cap (default: 40000000); pass 20000000 for historical comparisons')
+    parser.add_argument('--work', type=int, default=60_000_000,
+                        help='Per-request work cap (default: 60000000); pass 40000000 or 20000000 for historical comparisons')
     parser.add_argument('--model-engine', choices=['lcg-first', 'lcg-retained', 'lp-retained', 'integer-lp-retained', 'pb-retained',
                                                  'affine-retained', 'mitm-retained', 'views', 'main-counts'], default='lcg-first',
                         help='Count models only: direct original-coordinate algorithms, views, or main integer-count stage')

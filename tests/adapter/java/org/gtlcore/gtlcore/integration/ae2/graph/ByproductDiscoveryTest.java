@@ -29,10 +29,10 @@ final class ByproductDiscoveryTest {
         var build = new ByproductPatternIndex.Build(List.of(joint, joint, direct));
         while (!build.step(budget)) {}
         var index = build.result();
-        check(index.sources(side, List.of()).equals(List.of(joint)), "secondary-only source discovered");
+        check(index.sources(side, List.of()).equals(List.of(direct, joint)), "snapshot retains primary and secondary membership");
         check(index.sources(side, List.of(direct)).equals(List.of(direct, joint)), "primary source order retained");
-        check(index.sources(side, List.of(joint)).equals(List.of(joint)), "already registered secondary not duplicated");
-        check(index.sources(main, List.of()).isEmpty(), "primary lookup remains AE-owned");
+        check(index.sources(side, List.of(joint)).equals(List.of(joint, direct)), "already registered secondary not duplicated");
+        check(index.sources(main, List.of()).equals(List.of(joint)), "primary snapshot survives a live registry removal");
         check(index.sources(raw, List.of()).isEmpty(), "inputs are not fabricated output sources");
         build.close();
         check(budget.reservedBytes() == 0, "finished index ownership released");
@@ -52,9 +52,8 @@ final class ByproductDiscoveryTest {
         }
         check(first.sources(side, List.of(replacement)).size() == 1, "equal refreshed source duplicated");
         registered.changed(direct, true);
-        boolean stale = false;
-        try { first.sources(side, List.of()); } catch (IllegalStateException expected) { stale = true; }
-        check(stale, "stale byproduct view was reusable after a registry mutation");
+        check(first.sources(side, List.of(direct)).equals(List.of(joint)), "retained view changed after a registry mutation");
+        check(registered.view().sources(side, List.of()).equals(List.of(direct,joint)), "next view misses newly registered primary");
         registered.changed(joint, false);
         check(registered.view().sources(side, List.of(direct)).equals(List.of(direct)), "removed byproduct source retained");
 
@@ -67,11 +66,11 @@ final class ByproductDiscoveryTest {
                     default -> method.invoke(joint, arguments);
                 });
         registered.changed(dynamic, true);
-        check(registered.view().sources(side, List.of()).equals(List.of(dynamic)), "custom source missing");
+        check(registered.view().sources(side, List.of()).equals(List.of(direct,dynamic)), "custom source missing");
         registered.changed(dynamic, false);
         dynamicOutputs[0] = new GenericStack[] { new GenericStack(main, 1), new GenericStack(raw, 2) };
         registered.changed(dynamic, true);
-        check(registered.view().sources(side, List.of()).isEmpty() && registered.view().sources(raw, List.of()).equals(List.of(dynamic)),
+        check(registered.view().sources(side, List.of()).equals(List.of(direct)) && registered.view().sources(raw, List.of()).equals(List.of(dynamic)),
                 "equal custom definition retained stale outputs");
 
         var normalize = GtlPatternCatalog.class.getDeclaredMethod("normalize", IPatternDetails.class, String.class, KeyCounter.class, Level.class);
@@ -129,6 +128,15 @@ final class ByproductDiscoveryTest {
         var failure = new java.util.concurrent.CompletionException(new GraphPlanningFailure(GraphPlan.Result.INFEASIBLE, "checked"));
         check(GraphPlanningFailure.messageKey(failure).endsWith(".infeasible"), "proven infeasibility has its own message");
         check(GraphPlanningFailure.messageKey(new IllegalStateException("unexpected")) == null, "unexpected crashes retain original error path");
+        check(GraphPlanningFailure.messageKey(new java.util.concurrent.CompletionException(new GraphSnapshotChanged("changed")))
+                .endsWith(".snapshot_changed"), "real capture edits have a retry outcome, not a shortage or crash");
+        var definitions=GtlPatternCatalog.class.getDeclaredMethod("sameDefinitions",List.class,List.class);
+        definitions.setAccessible(true);
+        var a=new GtlPatternCatalog.Signature(PatternFingerprint.capture(joint),0);
+        var b=new GtlPatternCatalog.Signature(PatternFingerprint.capture(direct),0);
+        check((boolean)definitions.invoke(null,List.of(a,b),List.of(b,a)),"equal recipe permutations invalidate capture");
+        check(!(boolean)definitions.invoke(null,List.of(a,a),List.of(a,b)),"changed recipe multiplicity accepted");
+        check(!(boolean)definitions.invoke(null,List.of(a),List.of(new GtlPatternCatalog.Signature(a.values(),1))),"priority change accepted");
         check(GraphPlanningFailure.messageKey(new PlanningBudget.Exhausted(PlanningBudget.Limit.SEARCH_LIMIT)).endsWith(".search_limit"), "budget stop is not mislabeled infeasible");
         System.out.println("Byproduct sources: joint accounting, long quantities, duplicate sources, NBT and proof display passed");
     }

@@ -1,0 +1,88 @@
+Fractional packing completion
+=============================
+
+Problem
+-------
+The existing Boolean packing exchange allowed every LP-fractional variable
+to move, but the number of ordinary changes was reduced to keep its tables
+small. On compact capacity models, that domain could exclude a nearby exact
+solution even when the LP seed was useful. Retrying the same domain did not
+cover the omitted combinations.
+
+The additional domains keep fractional rounding independent of the ordinary
+exchange radius. They use the existing exact CountPackingExchange join:
+
+  coordinates    ordinary changes in left / right half
+       64                       2 / 2
+       40                       3 / 3
+       40                       4 / 2
+
+Every fractional coordinate in a selected face may round either way. The
+ordinary-change bound applies only to the remaining coordinates. Admission
+requires 6..10 fractional and 64..128 active coordinates, so the wide face
+covers at least half the active model. Each half is limited to 65,536 points.
+Models outside this shape retain their existing search sequence.
+
+Ownership and validation
+------------------------
+Legacy small exchanges run first. The three new domains share one captured
+work deadline, at most 8,388,608 units and at most half the request's remaining
+allowance. Original phase, candidate and shared request ceilings still apply.
+The old enumeration frontier is parked once and restored after a miss or an
+optional workspace refusal. The captured deadline is never renewed by a
+quantum, worker transfer, progress query or domain change.
+
+The main portfolio first preserves the ordinary searches' initial service:
+one third of the available request budget, capped at 12,582,912. Only then may
+an already owned rounding attempt receive preferential finite completion.
+The parent branch honors that completion and returns to its parked stage.
+This avoids spending the same completion window repeatedly or starving the
+other engines on easy inputs and larger models.
+
+The LP seed and fixed exterior are proposals. Each candidate must pass all
+original exact rows and variable bounds, followed by normal graph scheduling
+and primitive execution verification. A restricted-domain miss, memory
+refusal or work limit is not a full-model infeasibility proof. No native
+solver witness is passed to this search.
+
+Regression evidence
+-------------------
+At the historical 40M cap, a matched comparison of all 296 canonical mknap
+graphs changed 147 PASS / 149 unresolved to 151 PASS / 145 unresolved. No
+earlier positive was lost or spent more work. Their aggregate observed work
+changed from 1,117,264,164 to 1,089,759,005. Eight 100-coordinate hard cases
+were also run in orders 0, 1, 17 and 97, with zero and four workers at a fixed
+request cap. Each mode recovered 15 of the 32 variants; unresolved variants
+remain recorded and are not promoted to required successes.
+
+At the host's new 60M cap, the same eight canonical hard cases remain
+unresolved with the baseline engine; the new engine recovers six. All four
+prioritized cases with independent SCIP full-model witnesses are recovered.
+The four existing compact positive controls retain exactly the same work.
+These are matched-budget comparisons, not a claim that raising the cap alone
+improved the algorithm. The two remaining canonical hard cases stay unknown.
+
+  canonical case          new engine at 40M     new engine at 60M
+  mknapcb4_01_bks          verified solution    verified solution
+  mknapcb4_12_bks          unknown              verified solution
+  mknapcb4_05_bks          verified solution    verified solution
+  mknapcb4_10_bks          verified solution    verified solution
+  mknapcb4_19_bks          unknown              unknown
+  mknapcb4_00_bks          unknown              unknown
+  mknapcb4_08_bks          verified solution    verified solution
+  mknapcb4_13_bks          unknown              verified solution
+
+The independent SCIP positives were cases 01, 12, 08 and 13. The short native
+reference runs on the other four were inconclusive, not infeasibility proofs.
+
+CountPackingRoundingTest independently exhausts 648 small signed domains,
+then covers bit 63, large exact coefficients, restricted misses, cancellation,
+memory refusal and continuation across workers. Its public 100-coordinate
+fixture has a separately checked original-row witness. Search receives only
+the constraints. Its existing 40M budget and 7M direct-work guard remain fixed.
+
+The execution-boundaries registry pins successful graph/order combinations
+and independently verifies primitive prefixes, inventory, delivery and seeds.
+The standard runner now defaults to 60M; old explicitly budgeted regressions
+retain their lower limits. Complete-suite results and unresolved cases must
+be reported separately from these focused comparisons.

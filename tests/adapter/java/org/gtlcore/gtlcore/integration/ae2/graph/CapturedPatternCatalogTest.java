@@ -18,6 +18,8 @@ import appeng.crafting.pattern.AEProcessingPattern;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 final class CapturedPatternCatalogTest {
@@ -125,6 +127,30 @@ final class CapturedPatternCatalogTest {
             if (prepared.bindings().get(binding) != guarded) throw new AssertionError("Original provider handle lost");
             if (!prepared.compiler().producers(output).equals(originals)) throw new AssertionError("Detached catalog changed IDs, amounts or deduplication");
             if (!catalog.mayContainBinding(binding) || catalog.mayContainBinding("absent")) throw new AssertionError("Binding invalidation lookup changed");
+        }
+        var cacheOwner = new GtlPatternCatalog();
+        var rootsType = Class.forName(GtlPatternCatalog.class.getName() + "$Roots");
+        var rootsConstructor = rootsType.getDeclaredConstructor(AEKey.class, Set.class, boolean.class);
+        rootsConstructor.setAccessible(true);
+        var cacheField = GtlPatternCatalog.class.getDeclaredField("cache");
+        cacheField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        var cache = (Map<Object, GtlPatternCatalog.Structure>) cacheField.get(cacheOwner);
+        cache.put(rootsConstructor.newInstance(output, Set.of(), true), new GtlPatternCatalog.Structure(catalog,
+                Set.of(output), Set.of(), Set.of(), false, Map.of(), 0));
+        cacheOwner.invalidateBinding("absent");
+        catalog.checkValid();
+        if (cache.isEmpty()) throw new AssertionError("Unrelated binding failure evicted a valid catalog");
+        cacheOwner.invalidateBinding(binding);
+        if (!cache.isEmpty()) throw new AssertionError("Disproved binding retained in cache");
+        try (var scheduler = new PlanningScheduler(1, 4, 32, 100_000L)) {
+            var b = new PlanningBudget(0, 10_000, () -> false);
+            try {
+                scheduler.submit(catalog.build(b), b).get(5, TimeUnit.SECONDS);
+                throw new AssertionError("An in-flight owner reused a disproved compiled catalog");
+            } catch (java.util.concurrent.ExecutionException expected) {
+                if (!(expected.getCause() instanceof GraphSnapshotChanged)) throw expected;
+            }
         }
         // Large enough to enter the parallel encoder, including duplicate
         // bindings and simultaneous builders. Single-worker output is the oracle.

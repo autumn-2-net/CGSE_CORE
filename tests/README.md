@@ -10,6 +10,10 @@ python tests/run.py --java-home <jdk17> --suite standard --timeout 600
 The runner writes classes, logs and machine-readable results below `build/tests`.
 The 600-second process timeout allows large historical batches to finish on four
 logical CPUs; it does not change their per-request work limits.
+The main runner's default request budget is 60M, matching the host setting.
+Use `--work 40000000` or `--work 20000000` for matched historical comparisons.
+Pinned boundaries and individual tests retain their own explicit limits;
+raising the mainline budget does not relax those existing regression gates.
 Exit status **0** means every selected check passed, **1** means a failed assertion,
 compilation/setup failure or malformed fixture, and **2** means an explicit unresolved
 budget limit. A known SAT case remains SAT in the manifest when the current search
@@ -1459,3 +1463,16 @@ limits. `CountSupportedPipelineTest` pins the generated 257-variable model in
 `core/data/supported-sparse-257.txt`, including its planted integer oracle,
 primitive execution validation and an 11M observed-work guard at the unchanged
 40M request cap. All three programs are automatically discovered.
+
+`CountPackingRoundingTest` checks 648 small signed neighborhoods against literal
+enumeration, including every fractional rounding and separate bounds on ordinary
+changes. It covers bit 63, exact large coefficients, restricted misses, worker
+handoffs, cancellation and workspace refusal followed by restored enumeration.
+The public 100-variable fixture in `core/data/packing-rounding-100.txt` keeps a
+separate original-row witness; the algorithm receives no witness hint. All three
+new exchange geometries share one captured allowance. Preferential completion
+waits for the ordinary searches' initial service and preserves their frontiers.
+Gradle copies these fixtures into the isolated core-test working directory;
+the Python runner reads the same checked-in files from the repository root.
+See `docs/fractional-packing-rounding.txt` for the search domains, fixed completion
+allowance, matched-budget comparisons and remaining unknown cases.

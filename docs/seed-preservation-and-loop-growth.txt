@@ -1,0 +1,148 @@
+Seed preservation and fragmented growth loops
+============================================
+
+PRESERVE also applies to a cycle input which the selected word consumes net.
+Leaving only nonnegative-net prefix loans is insufficient: an order can deliver
+its target while consuming every remaining representation of a productive loop.
+
+SeedStartupGuard checks the candidate's funded final inventory, after delivery,
+against the available producer catalog. Its optimistic closure treats terminal
+inputs as replenishable and enabled recipes as unlimited, without spending their
+inputs. A still-closed cyclic deficit therefore needs a retained startup form.
+An open closure is only a necessary-condition check, not a recovery witness or
+a proof that the retained seed is minimal. Finite startup loans are propagated
+before requesting another representation of the same loop.
+
+The available catalog is separate from the recipes bound into the execution
+word. Stock pruning must not turn an unused growth recipe's output into a raw
+material. Exclusions still apply; an unchanged returned input is not a net
+producer. A bounded exact rational certificate exempts dissipative conversion
+components and pure conservative conversions without net coproducts. Growing,
+coproduct-producing and unsupported components keep the ordinary check. Explicit
+final reserves remain mandatory in every mode.
+
+The startup producer index is immutable and belongs to its compiler snapshot.
+It contains no stock, request exclusions or prior acceptance decisions. Only a
+completed index may be shared; cancelled construction stays private. Index
+residency is bounded and included in compiler cache metrics. Closure explores
+only backward dependencies of consumed inputs, propagates enabled producers
+immediately and stops when all queried inputs have a supply. Net-zero return
+recipes are indexed separately so a productive coproduct cannot disappear from
+the conservative-conversion check.
+
+A second exact certificate handles finite state transitions with several
+inputs: total internal tokens may not increase, and any positive external
+coproduct must strictly spend an internal token. This permits a finite state
+machine to finish without preserving its control token. If neither this nor
+the rational conversion certificate applies, the ordinary check remains.
+
+Positive-only stock scouts may defer startup checking while they already have
+other deficits. They still check the complete catalog before proposing a
+feasible word. Refinement carries only newly discovered startup loans, not
+temporary working catalysts from an abandoned word. Forked scouts own separate
+reserve maps. Public missing previews retain their full publication checks.
+The completed solve retains this loan provenance before closing its assembly,
+so refinement receives the startup requirement even after workspace cleanup.
+
+Physical restoration carries the full available catalog and the request's
+excluded recipes separately from the bindings used by the word. An excluded
+raw source cannot certify that a consumed startup material is replenishable.
+For ordinary terminal consumption, the existing immutable producer index can
+prove that no net-consumed produced input exists. That bounded check avoids
+rebuilding the startup closure without weakening its acceptance conditions.
+
+Candidate assembly, stock views, plan reuse, seed optimization and fallback
+publication share this condition. Refill pruning and prefix supply also check
+the resulting word. Temporary infinite cycle purchases used while searching
+are removed before publication: the final check uses real external supply and
+the stated finite bill. An empty prefix or terminal-only bill does not bypass
+the PRESERVE contract. Delivery itself consumes inventory: a target can lose its
+startup token even when the word has zero or positive net output, or is empty.
+
+Restricted captured-domain proposals also need the original producer domain,
+including unused recipes and input alternatives. Their publication check builds
+a bounded ancestor domain and checks each returned alternative independently.
+Concrete state transitions use the actual family predicates and entities;
+matching family names alone never establishes equivalent physical states.
+An unfinished domain check declines the proposal without claiming infeasibility.
+Ordinary tool wear can be exempted only after closing a bounded exact return
+domain and excluding feedback through manufacturing inputs and return products.
+The declared capacity is a guarantee, not a proof that unseen states descend.
+
+When count scheduling discovers a missing startup loan, CountDemandSearch can
+complete that proposal's existing integer counts against locally tightened
+material goals. Failure restores the original rows, goals, counts and allocation
+continuation. This does not mutate a compiler cache or make a proposal-specific
+loan mandatory for all recipe choices. Exact prefix, final stock and production
+verification still decide whether the candidate can be published.
+
+Ordinary fallback can repair a directly selected positive self-loop with a
+bounded prefix. That child cannot recursively launch cyclic/source/boundary
+search. The funded incumbent exists before the optional repair. Reusing an
+earlier startup closure requires the same immutable suffix/domain and
+componentwise nondecreasing produced-material final inventory and delta; other
+changes run a new check. Candidate lifecycle cleanup releases the added loan
+workspace on both acceptance and rejection.
+
+Runtime suffix replacement cannot downgrade an existing PRESERVE order to
+ordinary consumption. The mode check precedes inventory, obligation and program
+mutation; explicit recovery ownership must also survive replacement. Ordinary
+orders may opt into preservation, and same-mode replanning remains available.
+
+Execution growth
+----------------
+SequenceLoopIndex recognizes repeated sequence prefixes incrementally, including
+identity Repeat wrappers, without replacing saved PlanStep identities. The job
+shares a 65,536-work/storage admission cap; each tick performs at most 1,024
+indexing work. Restored cursors align with original period boundaries. This
+recognition never adds recipe firings or changes the saved word.
+
+PlanSourceCycles is an optional planning-side transformation for fragmented
+source cycles with different batch sizes. It emits a repeat plus exact leftover
+firings only when original counts and net deltas are unchanged, every prefix is
+funded, and no larger initial inventory is required. It also checks long-valued
+execution headroom, including target delivery and retained seeds. Components
+with incoming selected producers or consumed configuration inputs decline the
+transformation. Large/deep domains and local cutoffs retain the original word.
+After extracting a source cycle, an acyclic suffix may combine its scattered
+firings in producer order under the same bounded, exact inventory proof. This
+avoids fixing source growth while leaving dozens of small downstream passes.
+
+The two mechanisms address different representations. Recognizing equal
+periods alone cannot combine varying completed passes. Neither mechanism
+promises globally optimal throughput, and a newly planned safe word may require
+more work than an earlier word that consumed its last seed. Per-dispatch
+configuration consumption may differ when the number of pushes changes;
+ordinary material conservation and declared seed refunds remain mandatory.
+
+Structural refill proposals
+---------------------------
+CountDemandProjection reduces sparse single-output affine structure, solves a
+bounded numerical proposal and repairs/checks every original integer row.
+CountReverseSchedule provides another physical order for a verified count
+vector. RefillTerminalSearch uses these as a separately bounded proposal with
+only true terminal purchases, restores all original bindings and verifies the
+complete word before offering it to the existing refill frontier. Incomparable
+material bills remain alternatives. A cutoff, numerical failure or failed
+schedule is not an infeasibility proof and does not discard the incumbent.
+
+Maintained regression entry points
+---------------------------------
+The standalone test runner discovers these programs automatically:
+
+  SeedStartupGuardTest, CountStartupCompletionTest
+  SeedStartupCatalogTest, HistoricalResearchCasesTest
+  AllocationCandidateLifecycleTest, AllocationStartupCatalogTest
+  FallbackCycleBoundaryTest
+  RefillSupplyStartupTest, RefillBoundaryStartupTest
+  RefillReschedulingStartupTest, RefillSupplyCatalogTest
+  RefillCoordinateStockTest, RefillWordPruningTest
+  CapturedStartupPublicationTest, CapturedStateStartupFeedbackTest
+  SegmentedLoopGrowthTest, PlanSourceCyclesTest, PlanSourceCyclesRuntimeTest
+  ExecutionPreserveReplanTest
+  CountDemandProjectionTest, CountReverseScheduleTest, RefillTerminalSearchTest
+
+Run the focused programs through tests/run.py --suite core --case <expression>.
+Use --suite all for the complete maintained portable regression suite. Private
+player inputs and their independent replay evidence remain in the local case
+registry; they are not embedded in public tests or documentation.

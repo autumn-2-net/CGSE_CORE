@@ -3859,6 +3859,180 @@
       "evidence": "Existing canonical SAT oracle, independently replayed primitive execution, reservation and final target. Previously exhausted the unchanged40M cap. Deferred LP branching uses a completed exchange's unused service only after PB receives its original opportunity; all old frontiers and exact validation remain. Only verified successful orders are required here; order97 remains unresolved in both serial and fixed four-worker runs, retained separately as an unclaimed variant.",
       "workers": 4,
       "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_01_bks/fractional-rounding/40m",
+      "source": "cases/graph/27/27d9b8ad6be9c2ad4c2e0a10ce5b6786533cc9f1cb44b1c2ebe8f50d259d33b2.json",
+      "sha256_lf": "578b94ede77daab972c1c1e9a5cf4e24e9a227d7b1438ccdbd8523b8d75b0357",
+      "orders": [
+        0,
+        1,
+        17,
+        97
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 28000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs."
+    },
+    {
+      "name": "mknapcb4_05_bks/fractional-rounding/40m",
+      "source": "cases/graph/3c/3cf6caaed454d3073cb810bb8cfc743c8ee59c3eaee0e0afa3509120ce3dbdec.json",
+      "sha256_lf": "5482d31f63d31c5922896e8fa33bbd1778a2e51e92daa2ac80e976127fb6bdbf",
+      "orders": [
+        0,
+        1,
+        17,
+        97
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 29000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs."
+    },
+    {
+      "name": "mknapcb4_10_bks/fractional-rounding/40m",
+      "source": "cases/graph/3e/3e3172a0b7aa42e055e0b1d0ae44bc3e9b8a71787ced9793b9faf4c0bdca7d69.json",
+      "sha256_lf": "f128d73973a2253dbd5e3fa9ef8fad2c4ec77a3a99d1f1fe958ad52663cf62ca",
+      "orders": [
+        0,
+        1,
+        17,
+        97
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 31000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs."
+    },
+    {
+      "name": "mknapcb4_08_bks/fractional-rounding/40m",
+      "source": "cases/graph/9b/9b4c176b802f99aee8605eb0d229919baaa02d460fd4a47f182be31c1e04c4da.json",
+      "sha256_lf": "fa820c855ad7ba0f681097f818cf8c24fb11e0af9bad4d4fca17be2a25e33240",
+      "orders": [
+        0,
+        17
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 31000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs."
+    },
+    {
+      "name": "mknapcb4_13_bks/fractional-rounding/40m",
+      "source": "cases/graph/d9/d9fcf78ab0769d535eb98f64d3e8058f0ab8d4553021818b81c11ebca081211a.json",
+      "sha256_lf": "9ddfa4da98bb033160fc5cd4e420f4a76649eb4211e183983b362921c68141c1",
+      "orders": [
+        1
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 31000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs."
+    },
+    {
+      "name": "mknapcb4_01_bks/fractional-rounding/40m/four-workers-fixed",
+      "source": "cases/graph/27/27d9b8ad6be9c2ad4c2e0a10ce5b6786533cc9f1cb44b1c2ebe8f50d259d33b2.json",
+      "sha256_lf": "578b94ede77daab972c1c1e9a5cf4e24e9a227d7b1438ccdbd8523b8d75b0357",
+      "orders": [
+        0,
+        1,
+        17,
+        97
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 28000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_05_bks/fractional-rounding/40m/four-workers-fixed",
+      "source": "cases/graph/3c/3cf6caaed454d3073cb810bb8cfc743c8ee59c3eaee0e0afa3509120ce3dbdec.json",
+      "sha256_lf": "5482d31f63d31c5922896e8fa33bbd1778a2e51e92daa2ac80e976127fb6bdbf",
+      "orders": [
+        0,
+        1,
+        17,
+        97
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 29000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_10_bks/fractional-rounding/40m/four-workers-fixed",
+      "source": "cases/graph/3e/3e3172a0b7aa42e055e0b1d0ae44bc3e9b8a71787ced9793b9faf4c0bdca7d69.json",
+      "sha256_lf": "f128d73973a2253dbd5e3fa9ef8fad2c4ec77a3a99d1f1fe958ad52663cf62ca",
+      "orders": [
+        0,
+        1,
+        17,
+        97
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 31000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_08_bks/fractional-rounding/40m/four-workers-fixed",
+      "source": "cases/graph/9b/9b4c176b802f99aee8605eb0d229919baaa02d460fd4a47f182be31c1e04c4da.json",
+      "sha256_lf": "fa820c855ad7ba0f681097f818cf8c24fb11e0af9bad4d4fca17be2a25e33240",
+      "orders": [
+        0,
+        17
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 31000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_13_bks/fractional-rounding/40m/four-workers-fixed",
+      "source": "cases/graph/d9/d9fcf78ab0769d535eb98f64d3e8058f0ab8d4553021818b81c11ebca081211a.json",
+      "sha256_lf": "9ddfa4da98bb033160fc5cd4e420f4a76649eb4211e183983b362921c68141c1",
+      "orders": [
+        1
+      ],
+      "work": 40000000,
+      "maximum_observed_work": 31000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs.",
+      "workers": 4,
+      "expanded_budget": false
+    },
+    {
+      "name": "mknapcb4_12_bks/fractional-rounding/60m",
+      "source": "cases/graph/39/395145fd9679972969f74731cd609f285098096bd5ae709eb66cd492a7acb193.json",
+      "sha256_lf": "efc4a7c4ea72e1603d7cbaba71176b346667cd9c3f6597115636248f71e6054d",
+      "orders": [
+        0
+      ],
+      "work": 60000000,
+      "maximum_observed_work": 48000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs."
+    },
+    {
+      "name": "mknapcb4_13_bks/fractional-rounding/60m",
+      "source": "cases/graph/d9/d9fcf78ab0769d535eb98f64d3e8058f0ab8d4553021818b81c11ebca081211a.json",
+      "sha256_lf": "9ddfa4da98bb033160fc5cd4e420f4a76649eb4211e183983b362921c68141c1",
+      "orders": [
+        0
+      ],
+      "work": 60000000,
+      "maximum_observed_work": 37000000,
+      "expected": "SAT",
+      "evidence": "Original canonical SAT model, all original rows and primitive recipe execution independently checked. Exact fractional rounding keeps separate ordinary-exchange radii under one captured finite deadline; no reference witness supplied to search. Only verified successful orders are required. Existing 40M successes retain 40M caps; additional 60M successes match the host request allowance. Other recorded variants remain unresolved, never infeasibility proofs."
     }
   ]
 }

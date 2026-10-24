@@ -15,8 +15,36 @@ public final class RefillWordPruningTest {
         return MissingMaterialExpansionTest.recipe(id, in, out);
     }
     public static void main(String[] args) throws Exception {
-        growth(); coproductsAndCredit(); nestedAndLarge(); contracts(); randomWords(); summaryReuse(); lifecycle(); scheduler(false); scheduler(true);
+        growth(); coproductsAndCredit(); nestedAndLarge(); contracts(); randomWords(); summaryReuse(); lifecycle(); scheduler(false); scheduler(true); unusedStartupCatalog();
         System.out.println("RefillWordPruningTest: assertions=" + checks);
+    }
+    private static void unusedStartupCatalog() {
+        var touch = r("touch", Map.of("B", 1L), Map.of("B", 1L, "Q", 1L));
+        var convert = r("convert", Map.of("B", 1L), Map.of("A", 1L));
+        var finish = r("finish", Map.of("A", 1L, "Q", 1L), Map.of("G", 1L));
+        var unused = r("grow", Map.of("A", 1L), Map.of("B", 2L));
+        var available = List.of(touch, convert, finish, unused);
+        var word = new PlanStep.Sequence(List.of(new PlanStep.Batch("touch", 1),
+                new PlanStep.Batch("convert", 2), new PlanStep.Batch("finish", 1)));
+        var base = literalPlan(List.of(touch, convert, finish), word, Map.of(), Map.of(), Set.of());
+        // Funded old bill B2 leaves A1. A shorter B1 bill leaves neither form;
+        // only the unused A -> B2 producer reveals why that loses startup.
+        for (boolean preserve : List.of(false, true)) for (boolean excluded : List.of(false, true)) {
+            var original = preservation(base, preserve);
+            var budget = MissingMaterialExpansionTest.budget(100_000);
+            try (var pruning = new RefillWordPruning<>(original, Map.of(), Set.of(), true, false, budget, 8192)
+                    .startupCatalog(available, excluded ? Set.of("grow") : Set.of())) {
+                while (!pruning.step()) {}
+                var result = pruning.result(); literalVerify(result, Map.of(), Set.of());
+                boolean keepSeed = preserve && !excluded;
+                check(result.initialExact().get("B").equals(BigInteger.valueOf(keepSeed ? 2 : 1)),
+                        "unused producer or its exclusion was lost during pruning");
+                var summary = SequenceSummary.of(result.steps(), result.recipes());
+                check(result.initialExact().getOrDefault("A", ZERO).add(summary.delta("A"))
+                        .equals(keepSeed ? ONE : ZERO), "pruned preview lost the surviving startup form");
+            }
+            check(budget.reservedBytes() == 0, "startup catalog pruning retained memory");
+        }
     }
     private static List<GraphRecipe<String>> growthRecipes() {
         return List.of(r("grow", Map.of("A", 1000L, "raw", 1L), Map.of("A", 1001L)), r("finish", Map.of("A", 1001L), Map.of("G", 1L)));
@@ -107,9 +135,12 @@ public final class RefillWordPruningTest {
         original = literalPlan(List.of(sensitive, finish), word(100), Map.of(), Map.of(), Set.of());
         check(prune(original, Map.of(), Set.of(), true) == original, "Changed consumed-configuration push boundaries");
         var reusable = new GraphRecipe<>("grow", "physical", List.of(new GraphRecipe.Slot<>("A", 10L), new GraphRecipe.Slot<>("tool", 1L, 0, true, true)), Map.of("A", 11L, "tool", 1L));
-        original = literalPlan(List.of(reusable, finish), word(100), Map.of("tool", 1L), Map.of(), Set.of());
+        // PRESERVE must retain the growth startup as well as the reusable
+        // tool. One growth run would deliver G but destroy all ten A tokens.
+        original = literalPlan(List.of(reusable, finish), word(100), Map.of("tool", 1L, "A", 10L), Map.of(), Set.of());
         p = prune(original, Map.of(), Set.of(), true);
-        check(p.patternTimesExact().get("grow").equals(ONE) && p.initial().get("tool") == 1L, "Reusable tool startup lost");
+        check(p.patternTimesExact().get("grow").equals(BigInteger.valueOf(11)) && p.initial().get("tool") == 1L &&
+                p.seeds().get("A") == 10L, "Reusable tool or cycle startup lost");
         check(p.recipes().get("grow") == reusable && p.recipes().get("grow").binding().equals("physical"), "Physical recipe binding changed");
         try { p.initialExact().clear(); throw new AssertionError("Mutable publication"); } catch (UnsupportedOperationException expected) { checks++; }
     }
@@ -267,6 +298,11 @@ public final class RefillWordPruningTest {
         need.values().removeIf(n -> n.signum() == 0); var missing = new LinkedHashMap<String, BigInteger>();
         need.forEach((k, n) -> { var d = n.subtract(BigInteger.valueOf(stock.getOrDefault(k, 0L))); if (d.signum() > 0 && !external.contains(k)) missing.put(k, d); });
         return new GraphPlan<>("G", 1, !seeds.isEmpty(), word, bindings, need, seeds, missing, GraphPlan.Result.MISSING_INPUT, 0, 0);
+    }
+    /** Automatic cycle preservation is independent of explicit final reserves. */
+    static GraphPlan<String> preservation(GraphPlan<String> plan, boolean preserve) {
+        return new GraphPlan<>(plan.target(), plan.amount(), preserve, plan.steps(), plan.recipes(),
+                plan.initialExact(), plan.seeds(), plan.missingExact(), plan.result(), 0, 0);
     }
     private static List<String> literalWord(PlanStep word) {
         var result = new ArrayList<String>(); var todo = new ArrayDeque<PlanStep>(); todo.push(word);

@@ -10,6 +10,13 @@ public final class RefillCompositeWordTest {
  private static int checks;
  record Fixture(GraphPlan<String> plan,Map<String,Long> stock,long needed,long factor){}
  static Fixture fixture(int parts,int width,int factor,long goal,long seed,long joint,boolean shared,boolean reverse,int shape) {
+  return fixture(parts,width,factor,goal,seed,joint,shared,reverse,shape,true);
+ }
+ static Fixture fixture(int parts,int width,int factor,long goal,long seed,long joint,boolean shared,boolean reverse,int shape,boolean preserve) {
+  long originalRounds=Math.max(goal+seed,joint)+3;
+  // Restart needs three A, independently of the chosen segment batch width.
+  // Each round returns factor A, so round the final reserve to whole rounds.
+  if(preserve)seed=Math.max(seed,(3L+factor-1)/factor);
   int length=parts*width;var recipes=new ArrayList<GraphRecipe<String>>();
   for(int i=0;i<length;i++) {
    var in=new LinkedHashMap<String,Long>();var out=new LinkedHashMap<String,Long>();
@@ -21,7 +28,7 @@ public final class RefillCompositeWordTest {
   var end=new LinkedHashMap<String,Long>();end.put("A",(3+goal)*factor);if(joint>0)end.put("joint",joint*factor);
   recipes.add(MissingMaterialExpansionTest.recipe("finish",end,Map.of("G",1L)));if(reverse)Collections.reverse(recipes);
   long needed=Math.max(goal+seed,joint);var word=new ArrayList<PlanStep>();var cache=new ArrayList<PlanStep>();
-  for(int round=0;round<needed+3;round++)for(int part=0;part<parts;part++) {
+  for(int round=0;round<originalRounds;round++)for(int part=0;part<parts;part++) {
    PlanStep step;
    if(shared&&round>0)step=cache.get(part);
    else {
@@ -33,10 +40,12 @@ public final class RefillCompositeWordTest {
   }
   word.add(new PlanStep.Batch("finish",1));var seeds=new LinkedHashMap<String,Long>();seeds.put("tool",(long)factor);if(seed>0)seeds.put("A",seed*factor);
   var stock=new LinkedHashMap<String,Long>();stock.put("feed",(long)factor);stock.put("tool",(long)factor);
-  return new Fixture(RefillWordPruningTest.literalPlan(recipes,new PlanStep.Sequence(word),seeds,stock,Set.of()),stock,needed,factor);
+  var plan=RefillWordPruningTest.literalPlan(recipes,new PlanStep.Sequence(word),seeds,stock,Set.of());
+  if(!preserve)plan=new GraphPlan<>(plan.target(),plan.amount(),false,plan.steps(),plan.recipes(),plan.initialExact(),plan.seeds(),plan.missingExact(),plan.result(),0,0);
+  return new Fixture(plan,stock,needed,factor);
  }
  public static void main(String[] args) throws Exception {
-  families(); expansion(); contracts(); cutoffs(); handoff();
+  families(); ordinaryControls(); expansion(); contracts(); cutoffs(); handoff();
   System.out.println("RefillCompositeWordTest: assertions="+checks);
  }
  private static void families() {
@@ -60,6 +69,15 @@ public final class RefillCompositeWordTest {
   check(p.initialExact().get("feed").equals(BigInteger.valueOf(f.needed*f.factor)),"Missed segmented loop bound");
   check(p.initialExact().get("A").equals(BigInteger.valueOf(3*f.factor)),"Changed startup seed");
   check(p.initialExact().get("tool").equals(BigInteger.valueOf(f.factor)),"Lost returned tool");
+  if(p.preserveSeeds())check(p.seeds().getOrDefault("A",0L)>=3,"Missing restart reserve in preserving fixture");
+ }
+ private static void ordinaryControls() {
+  for(int factor:new int[]{1,2})for(long goal:new long[]{1,3})for(long seed:new long[]{0,2}) {
+   var f=fixture(2,2,factor,goal,seed,0,false,false,0,false);var b=budget();
+   var p=reduce(f.plan,f.stock,Set.of(),true,b,8192,null);bound(f,p);
+   check(p.initialExact().get("feed").equals(BigInteger.valueOf((goal+seed)*factor)),"Ordinary scoped bound changed");
+   check(b.reservedBytes()==0,"Ordinary control leaked");
+  }
  }
  private static void expansion() {
   for(int parts:new int[]{2,4,8})for(int width:new int[]{2,3})for(int factor:new int[]{1,2})

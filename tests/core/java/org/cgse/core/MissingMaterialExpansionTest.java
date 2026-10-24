@@ -16,9 +16,12 @@ public final class MissingMaterialExpansionTest {
         var indexed = new LinkedHashMap<String, GraphRecipe<String>>(); recipes.forEach(r -> indexed.put(r.id(), r)); return indexed;
     }
     static GraphPlan<String> partial(GraphRecipe<String> finish, Map<String, Long> stock) {
+        return partial(finish, stock, true);
+    }
+    static GraphPlan<String> partial(GraphRecipe<String> finish, Map<String, Long> stock, boolean preserve) {
         var missing = new LinkedHashMap<String, Long>();
         finish.inputs().forEach((k,v) -> { if (v > stock.getOrDefault(k, 0L)) missing.put(k, v - stock.getOrDefault(k, 0L)); });
-        return new GraphPlan<>("G", 1, true, new PlanStep.Batch(finish.id(), 1), Map.of(finish.id(), finish),
+        return new GraphPlan<>("G", 1, preserve, new PlanStep.Batch(finish.id(), 1), Map.of(finish.id(), finish),
                 finish.inputs(), Map.of(), missing, GraphPlan.Result.MISSING_INPUT, 0, 0);
     }
     static GraphPlan<String> expand(List<GraphRecipe<String>> recipes, GraphPlan<String> plan, Map<String, Long> stock) {
@@ -72,7 +75,9 @@ public final class MissingMaterialExpansionTest {
     static void cyclesAndEscapes() {
         var finish=recipe("finish",Map.of("A",2L),Map.of("G",1L));
         var recipes=new ArrayList<>(List.of(finish,recipe("a",Map.of("B",1L),Map.of("A",1L)),recipe("b",Map.of("A",1L),Map.of("B",1L))));
-        check(expand(recipes,partial(finish,Map.of()),Map.of()).missing().equals(Map.of("A",2L)),"closed cycle hid real seed");
+        var closed=expand(recipes,partial(finish,Map.of()),Map.of());
+        check(closed.missing().equals(Map.of("A",2L)) && closed.seeds().isEmpty(),"pure neutral conversion invented renewable startup");
+        check(expand(recipes,partial(finish,Map.of(),false),Map.of()).missing().equals(Map.of("A",2L)),"ordinary closed-cycle consumption changed");
         recipes.add(recipe("escape",Map.of("raw",3L),Map.of("B",1L)));
         for(int shuffle=0;shuffle<10;shuffle++){
             Collections.shuffle(recipes,new Random(shuffle));
@@ -81,12 +86,19 @@ public final class MissingMaterialExpansionTest {
         // A downstream item must not be mistaken for the cycle's startup seed.
         recipes.removeIf(r->r.id().equals("escape"));recipes.add(recipe("c",Map.of("A",1L),Map.of("C",1L)));
         var downstream=recipe("downstream",Map.of("C",2L),Map.of("G",1L));recipes.add(downstream);
-        check(expand(recipes,partial(downstream,Map.of()),Map.of()).missing().equals(Map.of("A",2L)),"downstream cycle boundary");
+        var retained = expand(recipes,partial(downstream,Map.of()),Map.of());
+        check(retained.missing().equals(Map.of("A",2L)),"downstream neutral conversion added a startup purchase: "+retained.missing());
+        check(retained.seeds().isEmpty(),"downstream pure conversion invented a renewable obligation");
+        check(expand(recipes,partial(downstream,Map.of(),false),Map.of()).missing().equals(Map.of("A",2L)),
+                "ordinary downstream consumption changed");
         var grow=recipe("grow",Map.of("A",1L,"feed",1L),Map.of("A",2L));
         var feed=recipe("feed",Map.of("raw",1L),Map.of("feed",1L));
         var demand=recipe("demand",Map.of("A",10L),Map.of("G",1L));
         var grown=expand(List.of(grow,feed,demand),partial(demand,Map.of()),Map.of());
-        check(grown.missing().equals(Map.of("A",1L,"raw",9L)),"seed growth failed to stop at its startup platform: "+grown.missing());
+        check(grown.missing().equals(Map.of("A",1L,"raw",10L)),"seed growth failed to restore its startup platform: "+grown.missing());
+        check(grown.seeds().getOrDefault("A",0L)==1,"grown word lost its startup obligation");
+        check(expand(List.of(grow,feed,demand),partial(demand,Map.of(),false),Map.of()).missing().equals(Map.of("A",1L,"raw",9L)),
+                "ordinary growth consumption changed");
     }
     static void returnedToolsAndCoproducts() {
         var finish=recipe("finish",Map.of("plate",5L,"B",1L),Map.of("G",1L));

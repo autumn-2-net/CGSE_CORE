@@ -13,6 +13,13 @@ public final class RefillNormalizedWordTest {
   return fixture(parts,width,factor,goal,seed,joint,separated,reverse,shape,false);
  }
  static Fixture fixture(int parts,int width,int factor,long goal,long seed,long joint,boolean separated,boolean reverse,int shape,boolean dependent) {
+  return fixture(parts,width,factor,goal,seed,joint,separated,reverse,shape,dependent,true);
+ }
+ static Fixture fixture(int parts,int width,int factor,long goal,long seed,long joint,boolean separated,boolean reverse,int shape,boolean dependent,boolean preserve) {
+  long rounds=Math.max(goal+seed,joint)+3;
+  // One primitive restart needs 3 A, independent of the grouped repeat factor.
+  // Whole grouped rounds may retain a little more, hence ceil(3 / factor).
+  if(preserve)seed=Math.max(seed,(3L+factor-1)/factor);
   int length=parts*width;var recipes=new ArrayList<GraphRecipe<String>>();
   for(int i=0;i<length;i++) {
    var in=new LinkedHashMap<String,Long>();var out=new LinkedHashMap<String,Long>();
@@ -24,7 +31,7 @@ public final class RefillNormalizedWordTest {
   var end=new LinkedHashMap<String,Long>();end.put("A",(3+goal)*factor);if(joint>0)end.put("joint",joint*factor);
   recipes.add(MissingMaterialExpansionTest.recipe("finish",end,Map.of("G",1L)));
   long needed=Math.max(goal+seed,joint);var word=new ArrayList<PlanStep>();
-  for(int round=0;round<needed+3;round++) {
+  for(int round=0;round<rounds;round++) {
    for(int part=0,cursor=0;cursor<length;part++) {
     int span=shape==3?Math.min(length-cursor,Math.max(1,width+((round+part)%2==0?1:-1))):Math.min(width,length-cursor);
     var body=new ArrayList<PlanStep>();for(int i=0;i<span;i++)body.add(new PlanStep.Batch("r"+(cursor+i),1));
@@ -50,17 +57,19 @@ public final class RefillNormalizedWordTest {
   if(reverse)Collections.reverse(recipes);
   word.add(new PlanStep.Batch("finish",1));var seeds=new LinkedHashMap<String,Long>();seeds.put("tool",(long)factor);if(seed>0)seeds.put("A",seed*factor);
   var stock=new LinkedHashMap<String,Long>();stock.put("feed",(long)factor);stock.put("tool",(long)factor);
-  return new Fixture(RefillWordPruningTest.literalPlan(recipes,new PlanStep.Sequence(word),seeds,stock,Set.of()),stock,dependent?needed+3:needed,factor);
+  var plan=RefillWordPruningTest.literalPlan(recipes,new PlanStep.Sequence(word),seeds,stock,Set.of());
+  if(!preserve)plan=withPreserve(plan,false);
+  return new Fixture(plan,stock,dependent?rounds:needed,factor);
  }
  public static void main(String[] args) throws Exception {
-  families(); dependentGaps(); expansion(); contracts(); cutoffs(); handoff();
+  families(false); families(true); implicitStartup(); dependentGaps(); expansion(); contracts(); cutoffs(); handoff();
   System.out.println("RefillNormalizedWordTest: assertions="+checks);
  }
- private static void families() {
+ private static void families(boolean preserve) {
   int atBound=0,primaryAtBound=0,total=0;
   for(int parts:new int[]{2,4,8})for(int width:new int[]{2,3})for(int factor:new int[]{1,2})for(long goal:new long[]{1,3})
   for(long seed:new long[]{0,2})for(long joint:new long[]{0,3})for(boolean separated:List.of(false,true))for(boolean reverse:List.of(false,true))for(int shape=0;shape<(factor==1?5:3);shape++) {
-   var f=fixture(parts,width,factor,goal,seed,joint,separated,reverse,shape);var b=budget();GraphPlan<String> result;
+   var f=fixture(parts,width,factor,goal,seed,joint,separated,reverse,shape,false,preserve);var b=budget();GraphPlan<String> result;
    try(var owner=owner(f.plan,b)) {
     while(!owner.step()){}long held=b.reservedBytes(),before=b.nodes();
     result=reduce(f.plan,f.stock,Set.of(),true,b,8192,owner.summary());
@@ -80,8 +89,33 @@ public final class RefillNormalizedWordTest {
    for(int i=0;i<parts*width;i++)check(result.patternTimesExact().get("r"+i).equals(BigInteger.valueOf(f.needed*factor)),"Split a required segment");
    for(var e:f.plan.patternTimesExact().entrySet())if(e.getKey().startsWith("side"))check(e.getValue().equals(result.patternTimesExact().get(e.getKey())),"Lost compulsory gap");
   }
-  System.out.println("Normalized families: default bound="+atBound+"/"+total+", primary="+primaryAtBound+"/1152");
+  System.out.println("Normalized families: preserve="+preserve+", default bound="+atBound+"/"+total+", primary="+primaryAtBound+"/1152");
   check(total==1536&&atBound==1536&&primaryAtBound==1152,"Default-budget quality regressed: "+atBound+"/"+total);
+ }
+ private static GraphPlan<String> withPreserve(GraphPlan<String> plan,boolean preserve) {
+  return new GraphPlan<>(plan.target(),plan.amount(),preserve,plan.steps(),plan.recipes(),plan.initialExact(),plan.seeds(),plan.missingExact(),plan.result(),0,0);
+ }
+ private static BigInteger finalA(GraphPlan<String> plan) {
+  return plan.initialExact().getOrDefault("A",BigInteger.ZERO).add(SequenceSummary.of(plan.steps(),plan.recipes()).delta("A"));
+ }
+ private static void implicitStartup() {
+  for(int factor:new int[]{1,2})for(long seed:new long[]{0,2}) {
+   var f=fixture(2,2,factor,1,seed,0,false,false,0,false,false);var b=budget();
+   var ordinary=reduce(f.plan,f.stock,Set.of(),true,b,8192,null);bound(f,ordinary);
+   check(finalA(ordinary).equals(BigInteger.valueOf(seed*factor)),"Legacy conservation oracle changed");
+   if(seed*factor<3) {
+    // The old tight oracle was physically executable but destroyed startup.
+    // It is valid only when automatic preservation is disabled.
+    var audit=budget();
+    try(var guard=new SeedStartupGuard<>(ordinary.recipes().values(),SequenceSummary.of(ordinary.steps(),ordinary.recipes()),
+            ordinary.initial(),ordinary.seeds(),Set.of(),ordinary.target(),ordinary.amount(),audit)) {
+     while(!guard.step()){}check(guard.lost().getOrDefault("A",0L)>=3,"Unsafe legacy oracle was not detected");
+    }check(audit.reservedBytes()==0,"Startup oracle workspace");
+   }
+   var original=withPreserve(f.plan,true);b=budget();var safe=reduce(original,f.stock,Set.of(),true,b,8192,null);
+   check(finalA(safe).compareTo(BigInteger.valueOf(3))>=0,"Implicit preservation accepted an exhausted startup");
+   check(b.reservedBytes()==0,"Implicit startup workspace");
+  }
  }
  private static void bound(Fixture f,GraphPlan<String> p) {
   // Fixed startup A, feed per round, net A/joint growth and retained seeds
@@ -89,6 +123,7 @@ public final class RefillNormalizedWordTest {
   check(p.initialExact().get("feed").equals(BigInteger.valueOf(f.needed*f.factor)),"Missed normalized loop bound");
   check(p.initialExact().get("A").equals(BigInteger.valueOf(3*f.factor)),"Changed startup seed");
   check(p.initialExact().get("tool").equals(BigInteger.valueOf(f.factor)),"Lost returned tool");
+  if(p.preserveSeeds())check(finalA(p).compareTo(BigInteger.valueOf(3))>=0,"Preserved word cannot restart its loop");
  }
  private static void dependentGaps() {
   for(int parts:new int[]{2,4,8})for(int width:new int[]{2,3})for(int factor:new int[]{1,2})for(boolean reverse:List.of(false,true))for(int shape=0;shape<3;shape++) {
