@@ -2,6 +2,29 @@
   "work": 20000000,
   "cases": [
     {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": ["generated/sparse-equality-n144-s1/equality-messages"],
+      "expected": "SAT",
+      "work": 60000000,
+      "reason": "Retained sum-product value ordering complements exact equality supports after the ordinary initial paths. The unchanged 60M main pipeline must restore original coordinates and independently replay primitive execution; message scores cannot prove infeasibility."
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": ["generated/sparse-equality-n144-s1/equality-messages-order-1"],
+      "corpus_order": 1,
+      "expected": "SAT",
+      "work": 60000000,
+      "reason": "Protect the same reference-positive equality system after full-corpus row, term and variable permutation; exact original-row and primitive replay checks remain required."
+    },
+    {
+      "id": "898e00c6bbdb43eb053d5f8ceb28fdab6396cb520e14a0231d869656188c65f3",
+      "names": ["generated/sparse-equality-n144-s1/equality-messages-order-2"],
+      "corpus_order": 2,
+      "expected": "SAT",
+      "work": 60000000,
+      "reason": "Protect the second full-corpus permutation of the reference-positive equality system at the unchanged 60M cap."
+    },
+    {
       "id": "b27775fba4017cfff15dd5977caa63d8227cd50b0c4ecbc38e480ada4a08d2cf",
       "names": ["wide-68/integer-lp-original-coordinates"],
       "expected": "SAT",

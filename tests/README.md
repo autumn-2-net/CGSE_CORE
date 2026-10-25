@@ -1464,6 +1464,20 @@ limits. `CountSupportedPipelineTest` pins the generated 257-variable model in
 primitive execution validation and an 11M observed-work guard at the unchanged
 40M request cap. All three programs are automatically discovered.
 
+`CountMessageSearchTest` checks the complementary finite-equality search whose
+sum-product messages order values without proving or deleting anything. Exact
+supports perform private pruning; original BigInteger rows accept candidates.
+The tests cover translated/scaled integers, marginal ties, failed-child
+backtracking, worker handoffs, slice-size invariance, cancellation and memory
+refusal. `CountMessagePortfolioTest` checks late admission after the existing
+exact paths, proof isolation and a single captured completion allowance. Both
+are automatically discovered; no native witness is passed to the algorithm.
+`CountMessagePipelineTest` pins two independently generated 144-variable
+neighbors and their planted integer witnesses in `core/data/message-sparse-144-*.txt`.
+It validates the main count pipeline and primitive execution at 60M. The count
+boundary manifest separately protects the historical reference-positive system
+in three full-corpus permutations at the same cap.
+
 `CountPackingRoundingTest` checks 648 small signed neighborhoods against literal
 enumeration, including every fractional rounding and separate bounds on ordinary
 changes. It covers bit 63, exact large coefficients, restricted misses, worker
