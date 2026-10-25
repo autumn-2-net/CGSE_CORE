@@ -1472,9 +1472,19 @@ backtracking, worker handoffs, slice-size invariance, cancellation and memory
 refusal. `CountMessagePortfolioTest` checks late admission after the existing
 exact paths, proof isolation and a single captured completion allowance. Both
 are automatically discovered; no native witness is passed to the algorithm.
+
+`CountMessageWindowTest` checks initial and later nonuniform factor messages against both
+untruncated dense polynomial sums (bitwise floating results) and independently
+enumerated weighted complete tuples. It covers target endpoints, negative coefficients,
+zero-width variables, interior domain holes, large offsets/scales and tiny continuation slices.
+The target-window derivation and scope are in
+[`docs/equality-message-search.txt`](../docs/equality-message-search.txt).
 `CountMessagePipelineTest` pins two independently generated 144-variable
 neighbors and their planted integer witnesses in `core/data/message-sparse-144-*.txt`.
-It validates the main count pipeline and primitive execution at 60M. The count
+It also checks a generated 257-variable model and two explicit coordinate,
+row and term permutations in `core/data/message-sparse-257-1*.txt`. These
+permutations do not depend on the corpus runner's RNG stream. It validates the
+main count pipeline and primitive execution at 60M. The count
 boundary manifest separately protects the historical reference-positive system
 in three full-corpus permutations at the same cap.
 

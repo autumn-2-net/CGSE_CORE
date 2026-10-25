@@ -237,8 +237,16 @@ final class CountMessageSearch implements CountContinuation {
             int v = value++; budget.check();
             if ((masks[i] & (1 << v)) == 0) return;
             int shift = Math.abs(f.coefficient[term]) * (f.coefficient[term] > 0 ? v : widths[i] - v);
-            double probability = incoming[term][v]; budget.charge(spans[term] + 1L);
-            for (int s = 0; s <= spans[term]; s++) prefix[term + 1][s + shift] += prefix[term][s] * probability;
+            // Nonnegative contribution coordinates can reach the target only
+            // when this prefix and its destination leave enough suffix range.
+            // The same window bounds the reverse derivative below. Discarded
+            // states contribute exactly zero to every factor message.
+            int first = Math.max(Math.max(0, f.rhs - (f.range - spans[term])),
+                    Math.max(0, f.rhs - (f.range - spans[term + 1])) - shift);
+            int last = Math.min(Math.min(spans[term], f.rhs), Math.min(spans[term + 1], f.rhs) - shift);
+            budget.charge(8L + Math.max(0, last - first + 1));
+            double probability = incoming[term][v];
+            for (int s = first; s <= last; s++) prefix[term + 1][s + shift] += prefix[term][s] * probability;
             return;
         }
         if (factorPart == 3) {
@@ -250,8 +258,12 @@ final class CountMessageSearch implements CountContinuation {
         if (value <= widths[i]) {
             int v = value++; budget.check(); if ((masks[i] & (1 << v)) == 0) return;
             int shift = Math.abs(f.coefficient[term]) * (f.coefficient[term] > 0 ? v : widths[i] - v);
-            double probability = incoming[term][v], sum = 0; budget.charge(2L * (spans[term] + 1));
-            for (int s = 0; s <= spans[term]; s++) {
+            int first = Math.max(Math.max(0, f.rhs - (f.range - spans[term])),
+                    Math.max(0, f.rhs - (f.range - spans[term + 1])) - shift);
+            int last = Math.min(Math.min(spans[term], f.rhs), Math.min(spans[term + 1], f.rhs) - shift);
+            budget.charge(8L + 2L * Math.max(0, last - first + 1));
+            double probability = incoming[term][v], sum = 0;
+            for (int s = first; s <= last; s++) {
                 sum += prefix[term][s] * adjoint[s + shift]; nextAdjoint[s] += probability * adjoint[s + shift];
             }
             message[v] = sum; return;

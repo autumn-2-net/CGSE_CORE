@@ -1,0 +1,44 @@
+Bounded messages for sparse integer equalities
+=============================================
+
+CountMessageSearch is an optional candidate search for finite, narrow domains
+and paired equality rows. Its floating-point messages choose branching order.
+CountEqualitySupport removes values using exact integer supports; a returned
+candidate must satisfy the original BigInteger bounds and every original row.
+Neither a numerical failure nor an exhausted local search produces a negative
+proof for the original model.
+
+The main portfolio admits this search late, after at least 16,777,216 request
+work units, for supported views with more than 128 variables. It captures one
+nonrenewable completion allowance, leaving part of the remaining request work
+for other algorithms. The retained continuation owns its own work accounting;
+worker handoff and competing algorithms cannot renew its allowance. Root
+warmup, child warmup, exact propagation, cancellation and memory reservation
+remain part of the continuation.
+
+Each normalized equality has nonnegative contributions with total possible
+span R and target T. After k variables, the possible prefix span is P[k]. A
+prefix value s can contribute to T only when
+
+    max(0, T - (R - P[k])) <= s <= min(P[k], T).
+
+For a transition of size d, both s and s+d must lie in their corresponding
+prefix windows. Forward convolution and the reverse derivative pass therefore
+visit the intersection of those two windows. Every omitted term is outside
+the target's support. Retained additions keep their original order; coefficient
+signs are already represented by reversed value offsets. Bounds and original
+model arithmetic remain exact, including translated and scaled integer rows.
+
+The reusable arrays are still cleared over their full active spans. This
+avoids stale values when changing factors, revisiting a branch or narrowing a
+domain. Window construction and retained cells are charged to the same request
+budget. Scratch memory and the maximum amount of work in one step do not grow.
+
+This optimization does not change damping, variable scoring, warmup lengths,
+local/request limits or the main portfolio's admission rules. Faster message
+updates can provide more search within a fixed allowance, but do not by
+themselves guarantee that another difficult equality system becomes solvable.
+
+Tests check messages against an independent dense convolution/derivative
+reference and small tuple enumeration, in addition to original-row witness
+validation and the existing lifecycle and whole-pipeline regressions.
