@@ -39,6 +39,24 @@ The parent branch honors that completion and returns to its parked stage.
 This avoids spending the same completion window repeatedly or starving the
 other engines on easy inputs and larger models.
 
+The outer graph planner and the integer branch queue also share their work
+with retained stock views and ordinary branches. Their independent fractional
+service limits can otherwise postpone the same expanded attempt twice. After
+16,777,216 request work units, a unique live expanded owner may receive one
+outer completion window. It is bounded by that owner's existing remaining
+work, 8,388,608 work units, and seven eighths of the remaining request budget.
+The captured deadline is global: competing work consumes it too. It does not
+raise the request budget, change the exchange domains or renew the local cap.
+
+The same branch is selected from the pending or deferred queue during this
+window. Ordinary siblings keep their state and queue order. Every executed
+operation still counts toward actual search work and the request limit; this
+extra service creates neither ordinary frontier credit nor continuation debt.
+Any prior stock-view turn is settled before the window begins. Completion,
+owner loss, expiry and cancellation clear the retained owner, and ordinary
+scheduling resumes. A later owner cannot renew the one captured opportunity.
+Owner discovery is charged, throttled, and excludes proof-only branches.
+
 The LP seed and fixed exterior are proposals. Each candidate must pass all
 original exact rows and variable bounds, followed by normal graph scheduling
 and primitive execution verification. A restricted-domain miss, memory
@@ -47,6 +65,9 @@ solver witness is passed to this search.
 
 Regression evidence
 -------------------
+The following comparisons cover the fractional-domain expansion, before the
+later outer completion service described above.
+
 At the historical 40M cap, a matched comparison of all 296 canonical mknap
 graphs changed 147 PASS / 149 unresolved to 151 PASS / 145 unresolved. No
 earlier positive was lost or spent more work. Their aggregate observed work
@@ -75,6 +96,13 @@ improved the algorithm. The two remaining canonical hard cases stay unknown.
 The independent SCIP positives were cases 01, 12, 08 and 13. The short native
 reference runs on the other four were inconclusive, not infeasibility proofs.
 
+The later outer completion service recovers mknapcb4_00_bks at 45,446,090
+charged work under the same 60M request cap. Its exact point and primitive
+execution are checked independently; it is not claimed as a native reference
+success. The previously recovered balanced-neighborhood case 13 also remains
+solvable, and case 19 remains unresolved. Observation work is charged explicitly,
+so some existing requests can incur a small accounting overhead.
+
 CountPackingRoundingTest independently exhausts 648 small signed domains,
 then covers bit 63, large exact coefficients, restricted misses, cancellation,
 memory refusal and continuation across workers. Its public 100-coordinate
@@ -86,3 +114,8 @@ and independently verifies primitive prefixes, inventory, delivery and seeds.
 The standard runner now defaults to 60M; old explicitly budgeted regressions
 retain their lower limits. Complete-suite results and unresolved cases must
 be reported separately from these focused comparisons.
+
+CountPackingCompletionTest exercises the two outer scheduling layers with a
+live expanded search from the same public fixture. It checks retained branch
+identity across worker dispatch, charged work, independent service ledgers,
+stale queue observations, proof exclusion, deadline expiry and cancellation.

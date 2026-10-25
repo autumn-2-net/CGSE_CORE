@@ -1500,3 +1500,12 @@ Gradle copies these fixtures into the isolated core-test working directory;
 the Python runner reads the same checked-in files from the repository root.
 See `docs/fractional-packing-rounding.txt` for the search domains, fixed completion
 allowance, matched-budget comparisons and remaining unknown cases.
+
+`CountPackingCompletionTest` guards real expanded ownership across the inner
+branch queues and outer stock/count service, retaining fixed deadlines and
+separate effort ledgers. `CountPackingObservationTest` checks charged discovery
+and cooldown on large queues. `CountPackingCompletionPipelineTest` pins another
+public 100-coordinate packing model and independently checks its Boolean rows,
+primitive prefixes, initial reservation and delivered target at the unchanged
+60M request cap, with a 50M observed-work guard. The fixture's checked witness
+is not supplied to planning.

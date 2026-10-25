@@ -321,6 +321,12 @@ final class CountViewSearch implements AutoCloseable {
         return 0;
     }
 
+    CountPackingCore activePackingCompletion() {
+        for (Search search : searches) if (!search.done && search.scheduling.eligible &&
+                search.specialist instanceof CountPackingCore packing && packing.expandedCompletionWork() > 0) return packing;
+        return null;
+    }
+
     /** A single captured opportunity for a narrow equality candidate, never a renewed grant. */
     long messageCompletionQuantum() {
         for (Search search : searches) if (pendingMessageCompletion(search))
