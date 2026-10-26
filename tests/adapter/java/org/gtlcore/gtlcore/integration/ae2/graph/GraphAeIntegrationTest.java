@@ -85,6 +85,7 @@ public final class GraphAeIntegrationTest {
         GraphFallbackIntegrationTest.run(input, output, actualPattern);
         GraphBudgetConfigTest.run(input, output);
         GraphPlanReuseIntegrationTest.run(input, output);
+        GraphConfirmationResumeTest.run(output);
         wideQuantity(input, output, actualPattern);
         var normalize = GtlPatternCatalog.class.getDeclaredMethod("normalize", IPatternDetails.class, String.class, KeyCounter.class, Level.class);
         normalize.setAccessible(true);
@@ -112,6 +113,7 @@ public final class GraphAeIntegrationTest {
         PatternFingerprintTest.run();
         CapturedPatternCatalogTest.run();
         CapturedPatternExpansionTest.run();
+        GraphFuzzyStockCacheTest.run();
         ExactProcessingCaptureTest.run();
         GraphAeAdapterTest.run();
         ByproductDiscoveryTest.run();

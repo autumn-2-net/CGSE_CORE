@@ -42,6 +42,7 @@ final class GraphAeAdapterTest {
         ItemStack encoded = new ItemStack(Items.PAPER);
         encoded.setTag(data);
         IPatternDetails pattern = new AEProcessingPattern(AEItemKey.of(encoded));
+        GraphProviderRequirementsTest.run(pattern);
         var recipe = new GraphRecipe<AEKey>("fluid", PatternFingerprint.of(pattern),
                 List.of(new GraphRecipe.Slot<>(water, 1000, 0)), Map.of(lava, 1000L));
         TestProvider provider = new TestProvider(pattern);
@@ -216,6 +217,11 @@ final class GraphAeAdapterTest {
         @Override
         public String gtlcore$graphBlockReason(IPatternDetails pattern) {
             return missingTool ? "MISSING_TOOL" : "PROVIDER_REJECTED";
+        }
+
+        @Override
+        public net.minecraft.network.chat.Component gtlcore$graphSharedToolProblem(IPatternDetails pattern) {
+            return !toolsPresent && missingTool ? net.minecraft.network.chat.Component.literal("missing tool") : null;
         }
 
         @Override
