@@ -46,6 +46,7 @@ public final class GraphAeIntegrationTest {
         AEKeyTypesInternal.setRegistry(() -> registry);
         AEKeyTypesInternal.register(AEKeyType.items());
         AEKeyTypesInternal.register(AEKeyType.fluids());
+        GraphInventoryReservationTest.run();
         AEKey input = AEItemKey.of(Items.IRON_INGOT), output = AEItemKey.of(Items.IRON_BLOCK);
         long amount = 9_007_199_254_740_993L;
         var recipe = new GraphRecipe<AEKey>("test", "test", List.of(new GraphRecipe.Slot<>(input, 1)), Map.of(output, 1L));
