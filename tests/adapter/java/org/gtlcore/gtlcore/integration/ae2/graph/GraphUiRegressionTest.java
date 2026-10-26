@@ -161,7 +161,9 @@ public final class GraphUiRegressionTest {
             } while (offset < view.page(0).total());
             var projection = GraphRingProjection.of(rows, target);
             var selected = new ArrayList<GraphRecipe<AEKey>>(); int references = 0;
+            var recipeRows = new LinkedHashMap<String, GraphRingView.Row>();
             for (var row : projection.rows()) if (row.kind() == GraphRingView.Kind.RECIPE) {
+                recipeRows.put(row.id(), row);
                 var slots = row.inputs().stream().map(v -> new GraphRecipe.Slot<>(v.what(), v.amount())).toList();
                 var outputs = new LinkedHashMap<AEKey, Long>(); row.outputs().forEach(v -> outputs.put(v.what(), v.amount()));
                 selected.add(new GraphRecipe<>(row.id(), row.id(), slots, outputs));
@@ -169,6 +171,8 @@ public final class GraphUiRegressionTest {
             }
             check(references > 0, "Missing cycle source recipe in native view");
             var topology = new PlanTopology<>(selected);
+            var sourceGroups = GraphRingProjection.sourceCycleGroups(topology, Map.copyOf(recipeRows));
+            check(!sourceGroups.isEmpty(), "Reference cycle looks like an execution cycle");
             for (var key : plan.missingExact().keySet()) {
                 var node = topology.nodes().stream().filter(n -> key.equals(n.resource())).findFirst().orElseThrow();
                 check(topology.groups().get(topology.groupOf(node.id())).cyclic(), "Cycle lost between planner and rendered topology");
@@ -176,6 +180,10 @@ public final class GraphUiRegressionTest {
                 check((row.missingSourceMask() & (1 << GraphPlan.MissingSource.CYCLE_BOUNDARY.ordinal())) != 0, "Refill mask lost after packet and grouping");
             }
             check(plan.patternTimesExact().equals(originalCounts) && plan.missingExact().equals(originalMissing), "View changed native execution/bill");
+            var executedRows = new LinkedHashMap<String, GraphRingView.Row>();
+            recipeRows.forEach((id, row) -> executedRows.put(id, new GraphRingView.Row(row.kind(), row.id(), row.icon(),
+                    java.math.BigInteger.ONE, row.seed(), row.missing(), row.inputs(), row.outputs(), row.parent(), row.missingSourceMask())));
+            check(GraphRingProjection.sourceCycleGroups(topology, Map.copyOf(executedRows)).isEmpty(), "Executed cycle labelled as source-only");
             check(budget.reservedBytes() == 0, "Native view test workspace leaked");
         }
         System.out.println("UI refill cycles: main/fallback Long.MAX_VALUE packet, projection and topology passed");

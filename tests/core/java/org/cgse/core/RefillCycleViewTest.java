@@ -124,8 +124,30 @@ public final class RefillCycleViewTest {
         limited = annotate(recipes, p, Set.of(), budget());
         check(topology(limited, recipes).groups().stream().noneMatch(PlanTopology.Group::cyclic), "Oversized optional shape admitted");
     }
+
+    private static void lossySourceReferences() {
+        var recipes = List.of(r("compress", Map.of("dust", 4L), Map.of("gem", 3L)),
+                r("grind", Map.of("gem", 1L), Map.of("dust", 1L)));
+        for (boolean fallback : List.of(false, true)) for (long amount : new long[]{6, Long.MAX_VALUE}) {
+            var compiler = new GraphCompiler<>(recipes); var b = budget();
+            var plan = fallback ? GraphFallback.plan(compiler, "gem", amount, Map.of("gem", 1L), Set.of(), Map.of(), true, true, b) :
+                    new GraphPlanner<>(compiler).plan("gem", amount, Map.of("gem", 1L), true, true, b);
+            var runs = BigInteger.valueOf(amount).add(BigInteger.TWO).divide(BigInteger.valueOf(3));
+            check(plan.patternTimesExact().equals(Map.of("compress", runs)), "Lossy return included in execution");
+            check(plan.missingExact().equals(Map.of("dust", runs.multiply(BigInteger.valueOf(4)))), "Lossy source trace inflated refill");
+            var view = new PlanRingView<>(plan, plan.patternTimesExact().keySet());
+            var reference = view.rows().stream().filter(row -> row.kind() == PlanRingView.Kind.RECIPE && row.id().equals("grind")).findFirst().orElseThrow();
+            check(reference.count().signum() == 0, "Lossy source reference reports production");
+            check(view.rows().stream().noneMatch(row -> row.kind() == PlanRingView.Kind.BATCH && row.id().equals("grind")), "Display reference became an executable batch");
+            cyclic(topology(plan, recipes), "gem");
+            PlanVerifier.verify(new GraphPlan<>(plan.target(), plan.amount(), plan.preserveSeeds(), plan.steps(), plan.recipes(),
+                    plan.initialExact(), plan.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0));
+            check(b.reservedBytes() == 0, "Lossy reference workspace leaked");
+        }
+    }
+
     public static void main(String[] args) {
-        publicPaths(); scopesAndCopies(); limits();
+        publicPaths(); scopesAndCopies(); limits(); lossySourceReferences();
         System.out.println("RefillCycleViewTest: assertions=" + checks);
     }
 }

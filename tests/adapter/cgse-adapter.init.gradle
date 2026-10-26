@@ -3,7 +3,8 @@
 // An independent checkout location can be selected with -PcgseRoot=/path/to/CGSE_CORE.
 gradle.projectsEvaluated {
     rootProject {
-        def cgseRoot = hasProperty('cgseRoot') ? file(property('cgseRoot')) : new File(rootDir, '../CGSE_CORE').canonicalFile
+        def requestedRoot = gradle.startParameter.projectProperties['cgseRoot']
+        def cgseRoot = requestedRoot ? file(requestedRoot) : new File(rootDir, '../CGSE_CORE').canonicalFile
         def testRoot = new File(cgseRoot, 'tests/adapter/java')
         if (!testRoot.isDirectory()) {
             throw new GradleException("Missing CGSE adapter tests: ${testRoot}. Supply -PcgseRoot=<checkout>.")
@@ -13,6 +14,12 @@ gradle.projectsEvaluated {
             resources.setSrcDirs([])
             compileClasspath = sourceSets.main.output + sourceSets.main.compileClasspath
             runtimeClasspath = output + compileClasspath
+        }
+        def engine = rootProject.findProject(':cgse-engine')
+        if (engine != null) {
+            // The compile variant supplies engine classes but not its generated
+            // identity resource. Exercise the same compatibility guard as a jar.
+            adapterTests.runtimeClasspath += engine.sourceSets.main.output
         }
         configurations[adapterTests.implementationConfigurationName].extendsFrom(configurations.implementation)
         configurations[adapterTests.compileOnlyConfigurationName].extendsFrom(configurations.compileOnly)
@@ -25,6 +32,7 @@ gradle.projectsEvaluated {
             group = 'verification'
             description = 'Run migrated CGSE integration tests with actual AE/Minecraft APIs.'
             dependsOn tasks.named(adapterTests.classesTaskName)
+            if (engine != null) dependsOn engine.tasks.named('classes')
             classpath = adapterTests.runtimeClasspath
             mainClass = 'org.gtlcore.gtlcore.integration.ae2.graph.GraphAeIntegrationTest'
             def output = layout.buildDirectory.dir('cgse-adapter-validation').get().asFile
