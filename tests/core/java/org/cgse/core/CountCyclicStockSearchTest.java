@@ -186,7 +186,9 @@ public final class CountCyclicStockSearchTest {
         // all ten initial tokens would require 96 ore and is optional only.
         var proposal = solve(compiler, 32, stock, Set.of(), Map.of(), Set.of(), true,
                 2_000_000, 64L << 20);
-        if (proposal != null) verify(proposal, recipes, stock, Set.of());
+        check(proposal != null, "Failed full-stock retention discarded the funded minimum startup completion");
+        check(verify(proposal, recipes, stock, Set.of()).get("a").equals(BigInteger.ONE),
+                "Minimum completion retained the wrong startup quantity");
         var budget = budget(16_000_000, 64L << 20);
         try (var ordinary = new CountDemandSearch<>(compiler, "goal", 32, stock, Set.of(), Map.of(), Set.of(),
                 true, true, budget, System.nanoTime())) {
@@ -224,11 +226,11 @@ public final class CountCyclicStockSearchTest {
             var compiler = new GraphCompiler<>(recipes);
             // The same compiled catalog first sees a real deficit and then a
             // funded request. A failed optional proposal must not poison reuse.
-            for (boolean funded : new boolean[]{false, true}) {
+            for (boolean preserve : new boolean[]{false, true}) for (boolean funded : new boolean[]{false, true}) {
                 var stock = Map.of("s0", 1L, "ore", funded ? 64L : 0L);
                 var budget = budget(16_000_000, 128L << 20);
                 budget.enableMetrics();
-                var plan = new GraphPlanner<>(compiler).plan("goal", 64, stock, true, true, budget);
+                var plan = new GraphPlanner<>(compiler).plan("goal", 64, stock, preserve, true, budget);
                 if (funded) {
                     check(plan.feasible(), "A prior shortage poisoned a funded large cycle");
                     verify(plan, recipes, stock, Set.of());
