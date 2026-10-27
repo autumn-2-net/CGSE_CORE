@@ -700,7 +700,7 @@ final class AllocationSearch<K> {
                             missing.isEmpty() ? GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL : GraphPlan.Result.MISSING_INPUT,
                             budget.nodes(), System.nanoTime() - started);
                     if (force && !external.contains(target) && summary.delta(target).compareTo(BigInteger.valueOf(amount)) < 0) {
-                        verifying = new PlanVerification<>(proposed, budget);
+                        verifying = new PlanVerification<>(proposed, budget, this);
                         stage = 5;
                         return false;
                     }

@@ -201,22 +201,27 @@ final class CountDemandProjection implements AutoCloseable {
             if (value == null) unbounded++; else minimum = minimum.add(t.getValue().multiply(value));
         }
         if (unbounded == 0 && minimum.compareTo(row.upper()) > 0) throw new Limit();
+        BigInteger slack = row.upper().subtract(minimum);
         for (var t : row.terms().entrySet()) {
             hit(); int v = t.getKey(); BigInteger a = t.getValue();
             BigInteger old = a.signum() > 0 ? low[v] : high[v];
             if (unbounded - (old == null ? 1 : 0) != 0 || a.signum() == 0) continue;
-            BigInteger rhs = row.upper().subtract(minimum);
+            BigInteger rhs = slack;
             if (old != null) rhs = rhs.add(a.multiply(old));
             BigInteger next;
             if (a.signum() > 0) {
                 if (rhs.signum() < 0) throw new Limit();
+                // Test the existing integer bound before allocating a quotient.
+                // floor(rhs / a) >= high is exactly rhs >= a * high.
+                if (high[v] != null && rhs.compareTo(a.multiply(high[v])) >= 0) continue;
                 next = rhs.divide(a);
-                if (high[v] != null && next.compareTo(high[v]) >= 0) continue;
                 high[v] = next;
             } else {
                 if (rhs.signum() >= 0) continue;
+                // With a negative coefficient, ceil(rhs / a) <= low is
+                // equivalent to rhs >= a * low, including equality.
+                if (rhs.compareTo(a.multiply(low[v])) >= 0) continue;
                 next = CheckedAmounts.ceilDiv(rhs.negate(), a.negate());
-                if (next.compareTo(low[v]) <= 0) continue;
                 low[v] = next;
             }
             bounded(next);
@@ -384,7 +389,8 @@ final class CountDemandProjection implements AutoCloseable {
         var integers = new LinkedHashMap<Integer, BigInteger>(); BigInteger common = BigInteger.ZERO;
         for (var t : terms.entrySet()) {
             hit(); BigInteger a = t.getValue().numerator().multiply(denominator.divide(t.getValue().denominator())); bounded(a);
-            integers.put(freeIndex[t.getKey()], a); common = common.gcd(a.abs());
+            integers.put(freeIndex[t.getKey()], a);
+            if (!common.equals(BigInteger.ONE)) common = common.gcd(a.abs());
         }
         BigInteger b = bound.numerator().multiply(denominator.divide(bound.denominator()));
         if (common.signum() == 0) throw new Limit();
@@ -491,7 +497,10 @@ final class CountDemandProjection implements AutoCloseable {
         var parts = value.divideAndRemainder(positive);
         return value.signum() < 0 && parts[1].signum() != 0 ? parts[0].subtract(BigInteger.ONE) : parts[0];
     }
-    private static BigInteger lcm(BigInteger a, BigInteger b) { BigInteger next = a.divide(a.gcd(b)).multiply(b); bounded(next); return next; }
+    private static BigInteger lcm(BigInteger a, BigInteger b) {
+        BigInteger next = a.equals(b) || b.equals(BigInteger.ONE) ? a : a.equals(BigInteger.ONE) ? b : a.divide(a.gcd(b)).multiply(b);
+        bounded(next); return next;
+    }
     private static void bounded(BigInteger value) { if (value.bitLength() > 1024) throw new Limit(); }
     private void enqueue(int row) { if (!queued.get(row)) { queued.set(row); queue.addLast(row); } }
     private int pop() { int row = queue.removeFirst(); queued.clear(row); return row; }

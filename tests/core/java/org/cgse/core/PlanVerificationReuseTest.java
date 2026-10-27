@@ -53,7 +53,7 @@ public final class PlanVerificationReuseTest {
             }
             check(budget.reservedBytes() == 0, "Assembly verifier leaked");
         }
-        partialGain(); returnedGain(); wideGain(); interrupted();
+        partialGain(); returnedGain(); wideGain(); incompleteAssembly(); interrupted();
         System.out.println("PlanVerificationReuseTest: assertions=" + checks);
     }
 
@@ -189,6 +189,33 @@ public final class PlanVerificationReuseTest {
             }
         }
         check(budget.reservedBytes() == 0, "Cancelled reuse leaked");
+    }
+
+    /** A builder from another, still incomplete attempt must not supply the
+     * completion token for this plan, even when its recipe word is equivalent. */
+    private static void incompleteAssembly() {
+        var completedBudget = budget();
+        try (var completed = chain(16, false, completedBudget)) {
+            while (!completed.step()) {}
+            check(completed.plan != null, "Completed isolation fixture is missing");
+            for (boolean folded : List.of(false, true)) {
+                var partialBudget = budget();
+                try (var partial = chain(16, false, partialBudget)) {
+                    if (folded) while (partial.summary == null) check(!partial.step(), "Partial fixture finished early");
+                    check(partial.proposed == null, "Incomplete fixture already published a plan");
+                    var verificationBudget = budget();
+                    try (var work = new PlanVerification<>(completed.plan, verificationBudget, partial)) {
+                        while (!work.step()) {}
+                        check(work.physicalProduced("product").equals(BigInteger.valueOf(16)),
+                                "Incomplete assembly suppressed independent production metadata");
+                        same(work.summary(), SequenceSummary.of(completed.plan.steps(), completed.plan.recipes()));
+                    }
+                    check(verificationBudget.reservedBytes() == 0, "Independent incomplete-builder verification leaked");
+                }
+                check(partialBudget.reservedBytes() == 0, "Incomplete builder leaked");
+            }
+        }
+        check(completedBudget.reservedBytes() == 0, "Completed isolation builder leaked");
     }
 
     private static AllocationSearch.Candidate<String> chain(int length, boolean force, PlanningBudget budget) {
