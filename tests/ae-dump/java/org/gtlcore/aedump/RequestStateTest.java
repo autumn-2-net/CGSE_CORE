@@ -51,6 +51,18 @@ public final class RequestStateTest {
         check(plan.feasible() && Reflect.<Map<String, Long>>get(RequestState.solver(host), "available").isEmpty(), "Direct-emission actual input lost");
 
         budget = new PlanningBudget(0, 1_000_000, () -> false);
+        var preview = request(compiler, Map.of(), Set.of(), true, budget);
+        host = new Host(preview);
+        plan = finish(preview, budget);
+        var previewState = RequestState.coordinator(host);
+        check(plan.conditionalPreview() && !plan.missingExact().isEmpty(), "Verified primary supply preview lost");
+        check(Boolean.FALSE.equals(previewState.get("fallbackAttempted")) && Boolean.FALSE.equals(previewState.get("fallbackMode")),
+                "Primary preview incorrectly recorded as an ACYCLIC attempt");
+        check(Reflect.get(RequestState.solver(host), "selected") == plan, "Primary preview missing from capture");
+
+        budget = new PlanningBudget(0, 1_000_000, () -> false);
+        // Exhaust only FULL; recovery owns the same limits with fresh counters.
+        for (int i = 0; i < 1_000_000; i++) budget.check();
         var fallback = request(compiler, Map.of(), Set.of(), true, budget);
         host = new Host(fallback);
         plan = finish(fallback, budget);
@@ -63,7 +75,7 @@ public final class RequestStateTest {
         check(Reflect.get(RequestState.solver(host), "available") == null, "Early capture falsely claims actual solver input");
         check(RequestState.coordinator(host).containsKey("snapshotNanos"), "Early capture lost host timing");
         check(RequestState.solver(ordinary) == ordinary, "Direct coordinator inspection changed");
-        System.out.println("RequestStateTest passed: host timing, exact integers, ordinary plan, emission, fallback, early capture");
+        System.out.println("RequestStateTest passed: host timing, exact integers, ordinary plan, emission, primary preview, ACYCLIC recovery, early capture");
     }
 
     private static RequestPlanningWork<String> request(GraphCompiler<String> compiler, Map<String, Long> stock,

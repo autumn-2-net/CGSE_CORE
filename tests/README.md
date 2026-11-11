@@ -14,6 +14,57 @@ The main runner's default request budget is 60M, matching the host setting.
 Use `--work 40000000` or `--work 20000000` for matched historical comparisons.
 Pinned boundaries and individual tests retain their own explicit limits;
 raising the mainline budget does not relax those existing regression gates.
+
+The FULL/ACYCLIC migration keeps the historical fallback tests. Their physical
+self-return/growth fixtures remain full-mode obligations; strict DAG results
+must explicitly report restricted coverage. `GraphDomainCompilationTest`
+checks the common recipe domain, while `RequestRecoveryEntryTest` exercises
+scheduled resource-limit handoff with one and four workers, equal configured
+limits, fresh accounts, cancellation and retained primary previews.
+`AcyclicGraphCompilationTest` checks that the preprocessed domain passes through
+the generic compiler without physical cyclic regions, including shared inputs,
+coproducts and recipe ordering. Recovery
+does not infer cycle seeds or try catalyst policies; explicit final inventory
+requirements remain ordinary request constraints.
+`OrdinaryCoproductAllocationTest` checks generic joint counts in both modes,
+finite stock, explicit final reserves, recipe ordering and preservation of a
+verified incumbent when optional count allocation reaches its budget.
+`GenericDagQuantityTest` independently replays shared inventory, batch rounding,
+explicit final reserves and quantities beyond long against closed-form counts.
+`CountDemandExactLowerTest` checks exact structural count proposals before
+numerical projection, including continuation after row or physical rejection.
+`PrimaryGraphModeTest` and `PrimaryProductionRetentionTest` cover forced
+manufacturing and publication boundaries. Supplying the requested target alone
+is not a valid forced-craft witness, even when a plain inventory replay succeeds.
+`RefillPruningRetentionTest` checks that an already verified improved word
+survives a parent limit, while incomplete validation and insufficient net
+production cannot acquire the same certificate.
+`PrimaryPositiveRefillTest` checks constructive preview admission under the
+supported MINIMAL catalyst policy without an inventory-impossibility proof,
+continued feasible search, incumbent priority,
+explicit final reserves, cross-worker accounting, optional memory refusal,
+unfinished verification and both normal and resource-limited exits.
+It also checks that direct goal-builder results use the parent's actual stock,
+that incomplete deficit conversion cannot be published, and that a converted
+fully funded witness wins over a later conditional preview.
+`RefillDeficitNormalizationTest` checks importing main and alternative supply
+plans from a zero-target-stock construction into the caller's actual inventory,
+including exact deficits, physical execution, source labels and partial limits.
+The source-search regressions retain required production and final reserves
+while allowing unnecessary surplus to shrink, and compare complete producers
+against funded partial batches without discarding an accepted mixture.
+`RefillCandidateRetentionTest` checks earlier-candidate retention with the explicit
+MINIMAL policy, including actual-stock deficits, physical execution, target
+manufacture and the entire material vector. The two unresolved default-STOCK
+quality cases remain runnable with `--pending-quality-262` and
+`--pending-quality-446`: they keep their original inputs and strict material
+bounds and report failure until repaired. The default run explicitly reports
+those original-policy cases as not run; they are not passing coverage.
+`HistoricalFallbackDirectTest` and `HistoricalFallbackEdgeTest` preserve all 26
+original direct-fallback inputs in both modes at their original budgets. Returned physical tools remain FULL
+success obligations and explicit ACYCLIC exclusions; ordinary successes stay
+required in both modes. The archived source and its hash remain unchanged.
+
 Exit status **0** means every selected check passed, **1** means a failed assertion,
 compilation/setup failure or malformed fixture, and **2** means an explicit unresolved
 budget limit. A known SAT case remains SAT in the manifest when the current search

@@ -256,6 +256,33 @@ public final class CapturedFlowAllocationTest {
                 var boundaryBudget = budget();
                 var boundary = new CapturedCatalog<>(catalogEntries).plan("out", 2, Map.of("raw", 1L), false, true, boundaryBudget);
                 if (boundary.plan().feasible()) verifyStock(boundary.plan(), Map.of("raw", 1L), Set.of());
+                else if (boundary.plan().conditionalPreview()) {
+                    // A funded alternative-input bill is a positive conditional
+                    // witness, not a negative result from the declined flow model.
+                    var plan = boundary.plan();
+                    var funded = GraphPlan.ownedRefill(plan, plan.steps(), plan.recipes(), plan.initialExact(), Map.of(),
+                            GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL, 0);
+                    PlanVerifier.verify(funded);
+                    check(SequenceSummary.of(plan.steps(), plan.recipes()).delta("out").compareTo(BigInteger.TWO) >= 0,
+                            "conditional dispatch preview did not manufacture the request");
+                    for (var initial : plan.initialExact().entrySet())
+                        check(initial.getValue().compareTo(BigInteger.valueOf(initial.getKey().equals("raw") ? 1L : 0L)
+                                .add(plan.missingExact().getOrDefault(initial.getKey(), BigInteger.ZERO))) <= 0,
+                                "conditional preview used stock beyond its declared bill");
+                    var bindingBudget = budget();
+                    for (var actual : plan.recipes().values()) {
+                        var source = catalogEntries.stream().filter(e -> e.binding().equals(actual.binding())).findFirst().orElseThrow();
+                        boolean matched = false;
+                        try (var domain = source.recipe().domain(bindingBudget)) {
+                            for (var rank = BigInteger.ZERO; rank.compareTo(domain.size()) < 0; rank = rank.add(BigInteger.ONE)) {
+                                var resolved = domain.resolve(rank);
+                                if (actual.slots().equals(resolved.slots()) && actual.outputs().equals(resolved.outputs())) { matched = true; break; }
+                            }
+                        }
+                        check(matched, "conditional preview escaped original captured source bindings");
+                    }
+                    check(bindingBudget.reservedBytes() == 0, "conditional source verification leaked");
+                }
                 else check(boundary.plan().result() == GraphPlan.Result.SEARCH_LIMIT || boundary.plan().result() == GraphPlan.Result.UNKNOWN,
                         "declined per-push model escaped as a global negative: " + boundary.plan().result());
                 check(boundaryBudget.reservedBytes() == 0, "dispatch capacity boundary leaked");

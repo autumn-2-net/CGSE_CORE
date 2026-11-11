@@ -25,13 +25,100 @@ views cannot certify missing material for the full capture. Hosts must preserve
 all captured providers and candidates to use this entry point. See
 captured-candidate-domains.txt for restoration, budget and adapter boundaries.
 
-PlanningBudget is one cumulative request budget. Workers share it; compilation
-and search accounting remain separate, while memory/time/cancellation apply to
-the request. Closing a continuation releases its resources.
+PlanningBudget is one cumulative solve-attempt budget. Workers in that attempt
+share it; compilation and search accounting remain separate. Closing a
+continuation releases its resources. Request cancellation applies to both
+attempts; exhaustion or internal cancellation of the first attempt does not
+consume or cancel the second attempt's account.
 
 PlanningRequest<K,P> owns future, cancellation and progress. RequestPlanningWork<K>
-coordinates main planning, optional catalyst work and bounded fallback; the host
+coordinates main planning, optional catalyst work and a second restricted solve; the host
 maps a successful GraphPlan<K> to its external plan object.
+
+One solver, two graph modes
+---------------------------
+GraphPlanningWork is the only graph planning implementation. RequestPlanningWork
+first runs FULL. A feasible plan, a verified material-supply preview, or a strict
+full-model infeasibility proof ends the request. UNKNOWN/INCOMPLETE_MODEL or a
+time, work, memory or graph limit without a valid retained result can start
+ACYCLIC when recovery is enabled. Cancellation and unsupported semantics do not.
+
+The second attempt restarts the original request with the same configured
+primary time/work/compilation/memory limits and fresh counters/frontier. It shares
+immutable catalog data, not failed search state. A second failure cannot erase
+a valid incumbent or prove the complete model infeasible. Public fallback names
+remain for host ABI 0.3 compatibility; FallbackLimits is deprecated and ignored.
+GraphFallback is only a thin ACYCLIC facade, not another search algorithm.
+
+GraphDomainCompilation builds a deterministic target-first material order and
+retains recipes whose physical input/output dependencies respect that order.
+Every physical coproduct participates; reusable virtual configuration read arcs
+do not create physical production. This retains compatible recipes within an
+original SCC instead of discarding the entire SCC. It selects one restricted
+DAG, not every possible acyclic selection. Physical self-return, catalytic and
+growth cycles are excluded and remain FULL-mode responsibilities.
+
+All source, count and allocation search paths use the same restricted compiler.
+The original physical catalog is retained for binding checks and coverage
+labels, not as a back door into excluded producers. ACYCLIC does not revisit
+its cycles to infer or optimize seeds, repair startup, or construct cyclic
+refill words. After preprocessing, selected recipes use ordinary dependency
+compilation and the same generic solver; there is no separate ACYCLIC arithmetic
+implementation. The generic compiler may partition dependencies, but the
+preprocessed physical graph has no cyclic region to solve. Explicit final inventory requirements remain
+ordinary constraints; automatic cycle preservation belongs only to FULL.
+Both modes verify execution and the complete request, including forced production; supplying the target alone is
+not a manufacturing witness. ACYCLIC results carry restricted coverage and never
+claim full-model infeasibility or optimality. A missing key with an excluded
+original producer is labeled EXCLUDED_SOURCES rather than a proven raw material.
+
+Shared backend correctness
+--------------------------
+Joint coproduct demand is checked against the selected physical recipes in both
+modes. Independent dependency expansion can over-count a producer whose outputs
+are already supplied by another selected recipe. The existing count search may
+reduce that verified plan, but must preserve its inventory and supply envelope;
+an optional search limit keeps the verified incumbent.
+
+Structural count search first tries an exact integer lower-bound vector. It
+must satisfy every original model row and pass physical execution verification.
+A failed row, missing startup resource or refused optional memory reservation
+resumes the ordinary numerical search; a net-balance vector alone is not an
+execution proof. These checks repair generic planning defects and do not define
+another solver for ACYCLIC.
+
+A constructive supply witness does not require a proof that current inventory
+is insufficient. An optional, work-bounded turn of the existing refill
+continuation can verify such a witness while preserving the ordinary search
+frontier. It uses the same attempt budget and keeps its retained memory charged.
+Without a full-model impossibility proof it remains a conditional preview;
+later feasible results take priority. A limit or inconclusive exit must not
+erase this already verified witness or trigger fresh work on an exhausted
+account.
+The goal-based preview continuation currently supports the single-lane catalyst
+policy. Parallel catalyst policies use the existing planning/bootstrap path,
+which owns their additional-production allowance and required returned seeds;
+a physical manufacturing certificate alone cannot replace that policy check.
+
+Importing a supply plan from another inventory view must recompute its finite
+deficits against the caller's stock convention, for the main plan and every
+alternative. A forced-production view may ignore target stock while the caller
+can use it as returned startup inventory. The executable word and manufacturing
+proof stay unchanged; the old view's purchase quantities are not reusable.
+This includes both direct goal-builder exports and canonical alternatives.
+Unfinished conversion cannot publish the old bill, while a completed conversion
+can survive a later limit. A fully funded, verified manufacturing word is a
+feasible result and takes priority over conditional supply previews.
+Physical verification of a suffix is separate from completing its supply
+boundary. When expansion is interrupted, that suffix must not reappear as a
+finished material bill. A separately completed supply witness or feasible plan
+can still survive the interruption.
+
+Supply-route optimization preserves the requested production and final inventory
+obligations, not incidental overproduction from an earlier word. Accepted route
+changes must update reallocation eligibility. If a funded partial batch displaces
+a complete preferred producer, the same bounded search may compare both choices;
+the verified mixed-route incumbent remains available throughout that comparison.
 
 GraphJobRuntime<K> owns logical execution and persisted snapshots. The GTL
 GraphJobCodec, maintained in GTLCore, translates the unchanged NBT schema.

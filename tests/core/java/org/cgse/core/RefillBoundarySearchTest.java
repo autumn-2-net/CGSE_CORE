@@ -20,8 +20,21 @@ public final class RefillBoundarySearchTest {
         verify(result, stock);
         var fallback = GraphFallback.plan(new GraphCompiler<>(recipes), "g", 1, stock, Set.of(), Map.of(), false, true,
                 new PlanningBudget(0, 8_000_000, 128L << 20, () -> false, System::nanoTime));
-        check(fallback.missingExact().equals(Map.of("ore", BigInteger.ONE)), "fallback expands a seeded cycle to its base input");
-        verify(fallback, stock);
+        check(fallback.result() == GraphPlan.Result.INCOMPLETE_MODEL && !fallback.patternTimes().containsKey("ab"),
+                "ACYCLIC executed physical self-feedback or asserted a full proof");
+        if (fallback.missingExact().isEmpty()) {
+            check(fallback.patternTimesExact().isEmpty(), "Restricted no-result published a partial word");
+        } else {
+            check(SequenceSummary.of(fallback.steps(),fallback.recipes()).delta("g").compareTo(BigInteger.ONE)>=0,
+                    "Restricted bill did not manufacture g");
+            verify(fallback, stock);
+        }
+        var full = new GraphPlanner<>(new GraphCompiler<>(recipes)).plan("g", 1, stock, false, true,
+                new PlanningBudget(0, 8_000_000, 128L << 20, () -> false, System::nanoTime));
+        check(full.missingExact().equals(Map.of("ore", BigInteger.ONE)), "FULL lost the seeded-cycle base-only bill");
+        check(SequenceSummary.of(full.steps(),full.recipes()).delta("g").compareTo(BigInteger.ONE)>=0,
+                "FULL seeded-cycle bill did not manufacture g");
+        verify(full, stock);
         var oldMissing = original.missingExact();
         check(result.alternatives().stream().anyMatch(p -> p.missingExact().equals(oldMissing)), "retain old verified tradeoff");
         result = improve(recipes, original, Map.of("a", 1L, "ore", 1L));

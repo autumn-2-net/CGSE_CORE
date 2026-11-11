@@ -155,7 +155,15 @@ public final class ServiceExtractionTest {
         var checkpoint = new GraphJobRuntime.ReplanCheckpoint<>(1, "product", 4, Map.<String, Long>of(), Map.of("ore", 3L));
         check(run(work(compiler, 4, Map.of("ore", 1L), Set.of(), checkpoint, false, false, false, budget())).feasible(), "replan solve must include owned/in-flight forecast");
         var unavailable = work(new GraphCompiler<>(List.of()), 5, Map.of(), Set.of(), null, true, false, false, budget());
-        check(run(unavailable).amount() == 5, "unavailable target must not trigger meaningless craft-less probes");
+        try {
+            run(unavailable);
+            throw new AssertionError("Absent source supplied a forced manufacturing word");
+        } catch (java.util.concurrent.ExecutionException expected) {
+            check(PlanningFailure.result(expected) == GraphPlan.Result.UNKNOWN,
+                    "Absent source must remain an unresolved manufacture request");
+        }
+        check(unavailable.budget().searchWork() < 256 && !unavailable.work().fallbackMode(),
+                "unavailable target triggered meaningless craft-less or recovery probes");
 
         var quickBudget = budget();
         var fallback = work(compiler, 4, Map.of("ore", 4L), Set.of(), null, false, true, false, quickBudget);
@@ -166,11 +174,26 @@ public final class ServiceExtractionTest {
                 "limited search must retain feasible result with reduced proof status");
         var bounded = work(compiler, 10, Map.of("ore", 4L), Set.of(), null, false, false, true, budget());
         try {
-            run(bounded);
-            throw new AssertionError("bounded alternatives cannot publish an unproven missing preview");
+            var preview = run(bounded);
+            check(preview.conditionalPreview() && preview.result() == GraphPlan.Result.INCOMPLETE_MODEL && preview.amount() == 10,
+                    "bounded alternatives promoted a preview to a full-model conclusion");
+            verifyPreview(preview, Map.of("ore", 4L));
         } catch (java.util.concurrent.ExecutionException expected) {
             check(PlanningFailure.result(expected) == GraphPlan.Result.INCOMPLETE_MODEL,
                     "bounded alternatives must report incomplete coverage, not exhausted search");
+        }
+    }
+
+    private static void verifyPreview(GraphPlan<String> plan, Map<String, Long> stock) {
+        var funded = GraphPlan.ownedRefill(plan, plan.steps(), plan.recipes(), plan.initialExact(), Map.of(),
+                GraphPlan.Result.FEASIBLE_NOT_PROVEN_OPTIMAL, 0);
+        PlanVerifier.verify(funded);
+        check(SequenceSummary.of(plan.steps(), plan.recipes()).delta(plan.target()).compareTo(java.math.BigInteger.valueOf(plan.amount())) >= 0,
+                "preview did not manufacture its request");
+        for (var entry : plan.initialExact().entrySet()) {
+            var deficit = entry.getValue().subtract(java.math.BigInteger.valueOf(stock.getOrDefault(entry.getKey(), 0L))).max(java.math.BigInteger.ZERO);
+            check(plan.missingExact().getOrDefault(entry.getKey(), java.math.BigInteger.ZERO).equals(deficit),
+                    "preview bill does not match physical stock");
         }
     }
 

@@ -70,8 +70,12 @@ public final class RefillCycleViewTest {
             check(!plan.missingExact().isEmpty(), "Missing bill vanished");
             var topology = topology(plan, recipes);
             for (var key : plan.missingExact().keySet()) {
-                check(plan.missingBoundary(key).source() == GraphPlan.MissingSource.CYCLE_BOUNDARY, "Missing boundary annotation");
-                cyclic(topology, key);
+                check(plan.missingBoundary(key).source() == (fallback ? GraphPlan.MissingSource.EXCLUDED_SOURCES :
+                        GraphPlan.MissingSource.CYCLE_BOUNDARY), "Missing boundary annotation");
+                if (fallback) {
+                    check(plan.result() == GraphPlan.Result.INCOMPLETE_MODEL, "Restricted view became a global proof");
+                    check(topology.groups().stream().noneMatch(PlanTopology.Group::cyclic), "ACYCLIC view restored a production cycle");
+                } else cyclic(topology, key);
             }
             check(PlanVerifier.initialExact(plan.steps(), plan.recipes(), "G", amount, plan.seeds()).equals(plan.initialExact()), "Invalid execution witness");
             check(plan.missingExact().equals(plan.initialExact()), "Unfunded refill witness");
@@ -136,10 +140,22 @@ public final class RefillCycleViewTest {
             check(plan.patternTimesExact().equals(Map.of("compress", runs)), "Lossy return included in execution");
             check(plan.missingExact().equals(Map.of("dust", runs.multiply(BigInteger.valueOf(4)))), "Lossy source trace inflated refill");
             var view = new PlanRingView<>(plan, plan.patternTimesExact().keySet());
-            var reference = view.rows().stream().filter(row -> row.kind() == PlanRingView.Kind.RECIPE && row.id().equals("grind")).findFirst().orElseThrow();
-            check(reference.count().signum() == 0, "Lossy source reference reports production");
+            if (fallback) {
+                check(plan.result() == GraphPlan.Result.INCOMPLETE_MODEL, "Restricted lossy view became a full-model conclusion");
+                check(plan.missingBoundary("dust").source() == GraphPlan.MissingSource.EXCLUDED_SOURCES,
+                        "Restricted lossy return was classified as raw supply");
+                check(view.rows().stream().noneMatch(row -> row.kind() == PlanRingView.Kind.RECIPE && row.id().equals("grind")),
+                        "ACYCLIC view restored an excluded cyclic source reference");
+                check(topology(plan, recipes).groups().stream().noneMatch(PlanTopology.Group::cyclic),
+                        "ACYCLIC lossy view restored a production cycle");
+            } else {
+                var reference = view.rows().stream().filter(row -> row.kind() == PlanRingView.Kind.RECIPE && row.id().equals("grind")).findFirst().orElseThrow();
+                check(reference.count().signum() == 0, "Lossy source reference reports production");
+                cyclic(topology(plan, recipes), "gem");
+            }
             check(view.rows().stream().noneMatch(row -> row.kind() == PlanRingView.Kind.BATCH && row.id().equals("grind")), "Display reference became an executable batch");
-            cyclic(topology(plan, recipes), "gem");
+            check(SequenceSummary.of(plan.steps(), plan.recipes()).delta("gem").compareTo(BigInteger.valueOf(amount)) >= 0,
+                    "Lossy refill substituted supplied target for actual manufacturing");
             PlanVerifier.verify(new GraphPlan<>(plan.target(), plan.amount(), plan.preserveSeeds(), plan.steps(), plan.recipes(),
                     plan.initialExact(), plan.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0));
             check(b.reservedBytes() == 0, "Lossy reference workspace leaked");

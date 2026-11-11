@@ -18,7 +18,7 @@ public final class ConfigurableBudgetTest {
         largeLimits();
         sharedRetention();
         fallbackLimits();
-        System.out.println("Configurable budgets: independent caps, zero retention, parallel/overflow boundaries and bounded fallback passed");
+        System.out.println("Configurable budgets: independent caps, zero retention, parallel/overflow boundaries and independent primary-configured recovery passed");
     }
 
     private static PlanningBudget budget(long search, long compilation, long cache) {
@@ -94,36 +94,37 @@ public final class ConfigurableBudgetTest {
                 primary, () -> false, report -> {});
     }
 
+    @SuppressWarnings("deprecation")
     private static void fallbackLimits() {
-        var defaults = RequestPlanningWork.FallbackLimits.DEFAULT;
-        check(defaults.milliseconds() == 250 && defaults.maxWork() == 131_072 && defaults.maxBytes() == 16L << 20,
-                "Legacy fallback defaults changed");
-        var primary = budget(1, 1, 0);
-        primary.check();
-        var request = request(primary).fallbackLimits(new RequestPlanningWork.FallbackLimits(0, 10_000, 1L << 20));
-        try {
-            var plan = request.limited(new PlanningBudget.Exhausted(PlanningBudget.Limit.SEARCH_LIMIT));
-            check(request.fallbackMode() && plan.feasible() && plan.patternTimes().size() == 5,
-                    "Configured fallback failed to recover an ordinary chain");
-            PlanVerifier.verify(plan);
-            check(primary.searchWork() == 1 && primary.compilationWork() == 0 && primary.cachePreparationWork() == 0,
-                    "Fallback spent or refunded primary work");
-            try { request.fallbackLimits(defaults); throw new AssertionError("Running request limits changed"); }
-            catch (IllegalStateException expected) {}
-        } finally { request.close(); }
-        for (var limit : List.of(new RequestPlanningWork.FallbackLimits(0, 1, 1L << 20),
-                new RequestPlanningWork.FallbackLimits(0, 10_000, 1))) {
-            primary = budget(1, 1, 0);
-            request = request(primary).fallbackLimits(limit);
+        // Legacy fallback settings are API compatibility only. Recovery must
+        // receive the primary configuration with fresh independent counters.
+        for (var legacy : List.of(new RequestPlanningWork.FallbackLimits(0, 1, 1),
+                new RequestPlanningWork.FallbackLimits(1, 10_000, 1L << 20))) {
+            var primary = budget(100_000, 100_000, 0);
+            primary.charge(100_000);
+            var request = request(primary).fallbackLimits(legacy);
             try {
-                var cause = new PlanningBudget.Exhausted(PlanningBudget.Limit.SEARCH_LIMIT);
-                try { request.limited(cause); throw new AssertionError("Fallback ignored its cap"); }
-                catch (PlanningBudget.Exhausted failure) { check(failure == cause, "Fallback replaced primary failure"); }
-                check(!request.fallbackMode() && request.costs().fallback() != null, "Failed fallback was not accounted");
-                check(primary.diagnostics().contains(limit.maxWork() == 1 ? "stopped=SEARCH_LIMIT" : "stopped=MEMORY_LIMIT"),
-                        "Wrong fallback failure");
+                var plan = request.limited(new PlanningBudget.Exhausted(PlanningBudget.Limit.SEARCH_LIMIT));
+                check(request.fallbackMode() && plan.feasible() && plan.patternTimes().size() == 5,
+                        "Fresh primary-configured recovery failed an ordinary chain");
+                PlanVerifier.verify(plan);
+                check(primary.searchWork() == 100_000 && primary.compilationWork() == 0
+                                && primary.cachePreparationWork() == 0,
+                        "Recovery spent or refunded primary work");
+                try { request.fallbackLimits(legacy); throw new AssertionError("Running request limits changed"); }
+                catch (IllegalStateException expected) {}
             } finally { request.close(); }
         }
+        // The same tiny primary configuration must fail independently in both
+        // phases; an ignored legacy cap must not enlarge recovery.
+        var primary = budget(1, 1, 0);
+        var request = request(primary).fallbackLimits(new RequestPlanningWork.FallbackLimits(0, 100_000, 16L << 20));
+        try {
+            var cause = new PlanningBudget.Exhausted(PlanningBudget.Limit.SEARCH_LIMIT);
+            try { request.limited(cause); throw new AssertionError("Recovery enlarged primary caps"); }
+            catch (PlanningBudget.Exhausted failure) { check(failure == cause, "Recovery replaced primary failure"); }
+            check(request.costs().fallback() != null, "Failed recovery was not accounted");
+        } finally { request.close(); }
         for (long[] limits : List.of(new long[]{-1, 1, 1}, new long[]{Long.MAX_VALUE, 1, 1},
                 new long[]{0, 0, 1}, new long[]{0, 1, 0})) {
             try { new RequestPlanningWork.FallbackLimits(limits[0], limits[1], limits[2]); throw new AssertionError("Invalid fallback cap"); }

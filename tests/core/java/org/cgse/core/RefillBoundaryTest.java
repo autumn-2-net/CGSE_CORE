@@ -64,8 +64,10 @@ public final class RefillBoundaryTest {
             var plan = fallback ? GraphFallback.plan(compiler, "G", 1, Map.of(), Set.of(), Map.of(), false, true, budget) :
                     new GraphPlanner<>(compiler).plan("G", 1, Map.of(), false, true, budget);
             check(!plan.missingExact().isEmpty(), "No public refill");
-            for (String key : plan.missingExact().keySet()) source(plan, key, cyclic ? GraphPlan.MissingSource.CYCLE_BOUNDARY :
+            for (String key : plan.missingExact().keySet()) source(plan, key, cyclic ?
+                    (fallback ? GraphPlan.MissingSource.EXCLUDED_SOURCES : GraphPlan.MissingSource.CYCLE_BOUNDARY) :
                     GraphPlan.MissingSource.TERMINAL_UNDER_CURRENT_COVERAGE, false);
+            if (fallback) check(plan.result() == GraphPlan.Result.INCOMPLETE_MODEL, "Restricted boundary became a global proof");
             MissingMaterialExpansionTest.verify(plan, Map.of()); check(budget.reservedBytes() == 0, "Public workspace");
         }
     }

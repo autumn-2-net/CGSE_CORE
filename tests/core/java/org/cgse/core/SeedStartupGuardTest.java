@@ -335,16 +335,34 @@ public final class SeedStartupGuardTest {
         check(candidate(direct, recipes, Map.of("A", 3L, "ore", 30L), true, false) == null,
                 "unused growth recipe hid consumed final seed");
         var budget = budget();
-        check(GraphFallback.witnessByCost(compiler, "T", 1, Map.of("A", 3L, "ore", 30L), Set.of(),
-                Map.of(), true, true, budget, 50000) == null, "ordinary fallback published depleted cycle");
-        check(budget.reservedBytes() == 0, "fallback guard leaked");
+        var full = new GraphPlanner<>(compiler).plan("T", 1, Map.of("A", 3L, "ore", 30L), true, true, budget);
+        check(full.feasible(), "FULL lost the funded seed-restoring growth witness");
+        verify(full);
+        check(budget.reservedBytes() == 0, "FULL seed guard leaked");
         budget = budget();
         var fallback = GraphFallback.plan(compiler, "T", 1, Map.of("A", 3L, "ore", 30L), Set.of(),
                 Map.of(), true, true, budget);
-        check(!fallback.feasible() && fallback.seeds().getOrDefault("A", 0L) >= 1,
-                "ordinary refill republished the seedless word rejected by its quick probe");
+        check(fallback.feasible() && fallback.patternTimes().equals(Map.of("finish", 1L)),
+                "ACYCLIC did not consume ordinary feedstock through finish");
+        check(fallback.seeds().isEmpty() && fallback.missingExact().isEmpty(),
+                "ACYCLIC inferred an automatic reserve from the original growth cycle");
+        check(SequenceSummary.of(fallback.steps(), fallback.recipes()).delta("A").equals(BigInteger.valueOf(-3)),
+                "ACYCLIC restarted or replenished consumed ordinary feedstock");
         verify(fallback);
-        check(budget.reservedBytes() == 0, "ordinary refill startup guard leaked");
+        check(budget.reservedBytes() == 0, "ACYCLIC startup guard leaked");
+        // Explicit final inventory is an ordinary obligation in the DAG. It
+        // does not authorize restoring the excluded growth recipe.
+        for (long held : new long[]{3, 4}) {
+            budget = budget();
+            var checkpoint = GraphFallback.plan(compiler, "T", 1, Map.of("A", held, "ore", 30L), Set.of(),
+                    Map.of("A", 1L), true, true, budget);
+            check(checkpoint.patternTimes().equals(Map.of("finish", 1L)) && checkpoint.seeds().equals(Map.of("A", 1L)),
+                    "ACYCLIC ignored explicit final inventory or restarted the excluded cycle");
+            check(checkpoint.feasible() == (held == 4) && checkpoint.missingExact().equals(
+                    held == 4 ? Map.of() : Map.of("A", BigInteger.ONE)), "Incorrect explicit final-inventory bill");
+            verify(checkpoint);
+            check(budget.reservedBytes() == 0, "ACYCLIC explicit final-inventory workspace leaked");
+        }
         var stale = new GraphPlan<>("T", 1, true, simpleWord(), recipes,
                 Map.of("A", BigInteger.ONE, "ore", BigInteger.TWO), Map.of(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0);
         for (long a : new long[]{1, 2}) {

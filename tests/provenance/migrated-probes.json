@@ -2,6 +2,15 @@
   "schema": 1,
   "entries": [
     {
+      "id": "FallbackEdgeProbe-aed28cd71e35",
+      "original_path": "probes/java/cgse-feedback-fixes-20261003/FallbackEdgeProbe-aed28cd71e35/FallbackEdgeProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalFallbackEdgeTest.java",
+      "class": "org.cgse.core.HistoricalFallbackEdgeTest",
+      "migration": "Preserve all nine original inputs and budgets in FULL and ACYCLIC; only returned-tool and parent-tool-borrow positive cases become explicit restricted negatives in ACYCLIC. Preserve every FULL assertion and other cases, with independent exact serial replay, stock/final-reserve and net-production checks.",
+      "source_artifact_sha256": "aed28cd71e35da5836dca0a8ae338ede01266ca9a409f1103ff821d810f8cd06",
+      "original_sha256_lf": "ee1170b754d1bde2384cb66e739caa379549fd9bbf7c1272df5ff66e2817b35e"
+    },
+    {
       "id": "BudgetMemoryProbe-4aeca0d03aa2",
       "original_path": "probes/java/solver-remaining-20261003/BudgetMemoryProbe-4aeca0d03aa2/BudgetMemoryProbe.java",
       "replacement": "core/java/org/cgse/core/HistoricalBudgetMemoryTest.java",
@@ -78,7 +87,7 @@
       "original_path": "probes/java/solver-expansion-20261003/RestartSafety-d2a049fe09fd/RestartSafety.java",
       "replacement": "core/java/org/cgse/core/HistoricalRestartTest.java",
       "class": "org.cgse.core.HistoricalRestartTest",
-      "migration": "Retain priority, incomplete reachability, external/reusable inputs and lifecycle cases; a completed reverse-chain closure is allowed.",
+      "migration": "Retain original source-choice raw4 upper bound, reachability, external inputs and lifecycle cases. An intermediate eager-scout raw2 result is not a guaranteed optimum; the final same-input bill equals the original raw4 baseline after correcting source-ranking overhead. Replace retired GraphFallbackSources internals with frontend domain construction; physical tool-return recipes are explicit ACYCLIC exclusions and remain FULL obligations in HistoricalFallbackDirectTest and HistoricalFallbackEdgeTest. Keep original low-work/memory, cancellation and overflow checks.",
       "source_artifact_sha256": "d2a049fe09fd4eca808836c5533bd5ba7e0242056bf77ea636597c073baf79c1",
       "original_sha256_lf": "342949afcbf54259d7de2e2e7fcaa754b7732f192acf92d6d2f540500aa581b1"
     },
@@ -441,6 +450,15 @@
       "migration": "Retain the six ordinary explicit-Q scheduling witnesses. With PRESERVE, A+B is conserved and Q spends one token, so independently funded controls start with A=2. All other original fixtures keep PRESERVE, including finite binary state machines; archive unchanged. A=1 plus Q and productive startup is independently inconsistent; its current preview search remains a separately recorded unresolved case, not a feasible oracle.",
       "source_artifact_sha256": "1c18cd41a85bddca35c4bd40946628bb1328fb3e6053e67652068ec0398c472c",
       "original_sha256_lf": "78478028cd86108c33d1600821d580091ee6e924ce226187edb48a681876670f"
+    },
+    {
+      "id": "FallbackDirectProbe-1327265cbffa",
+      "original_path": "probes/java/cgse-feedback-fixes-20261003/FallbackDirectProbe-1327265cbffa/FallbackDirectProbe.java",
+      "replacement": "core/java/org/cgse/core/HistoricalFallbackDirectTest.java",
+      "class": "org.cgse.core.HistoricalFallbackDirectTest",
+      "migration": "Preserve all17 inputs, exact amounts, funded physical checks and131072 work/16MiB budget. Run both shared-primary modes. Original positive physical-tool-return cases remain FULL obligations and explicitly become restricted ACYCLIC negatives; ordinary positive cases remain positive in both modes. Verify every supply witness and preserve original archived source.",
+      "source_artifact_sha256": "1327265cbffaddd9b5b7dfc70b4ad7383333a2f1c200955fc07bc94c7ba1d5ad",
+      "original_sha256_lf": "b24fa6f061ac1c54a8c5d7fbd42825e71e106d899162123131fe6ae11e63700f"
     }
   ]
 }

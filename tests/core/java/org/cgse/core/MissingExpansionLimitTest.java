@@ -22,7 +22,8 @@ public final class MissingExpansionLimitTest {
         final PlanningBudget budget;
         long held;
         Limits() { this(64L << 20); }
-        Limits(long bytes) { budget = new PlanningBudget(1, 4_000_000, bytes, cancel::get, time::get); }
+        Limits(long bytes) { this(bytes, 4_000_000); }
+        Limits(long bytes, long work) { budget = new PlanningBudget(1, work, bytes, cancel::get, time::get); }
         void arm(PlanningBudget.Limit limit) {
             switch (limit) {
                 case SEARCH_LIMIT -> budget.charge(budget.remainingWork());
@@ -45,7 +46,7 @@ public final class MissingExpansionLimitTest {
         throw new AssertionError("Expansion fixture did not terminate");
     }
     public static void main(String[] args) throws Exception {
-        rootProofs(); noRootProof(); completedPublication(); capturedScope(); ordinaryOwner(); cancelled();
+        rootProofs(); noRootProof(); ordinaryChainCutoff(); completedPublication(); capturedScope(); ordinaryOwner(); cancelled();
         System.out.println("MissingExpansionLimitTest: assertions=" + checks);
     }
     private static void rootProofs() throws Exception {
@@ -85,20 +86,60 @@ public final class MissingExpansionLimitTest {
         // Funded raw stock makes net balances feasible. Refused optional proof
         // workspace leaves the startup question unproved, even though a funded
         // suffix and its missing seed are available to the preview stage.
-        for (long bytes : new long[] {32L << 10, 256L << 10}) for (var limit : LIMITS) {
-            var limits = new Limits(bytes); var b = limits.budget;
+        for (long workLimit : new long[] {8192, 4_000_000}) for (long bytes : new long[] {32L << 10, 256L << 10}) for (var limit : LIMITS) {
+            var limits = new Limits(bytes, workLimit); var b = limits.budget;
             var work = new GraphPlanningWork<>(new GraphCompiler<>(recipes()), "G", 1, Map.of("raw", 1001L), false, false, b);
             try {
                 reach(work);
                 check(!Boolean.TRUE.equals(read(work, "quantityBlocked")), "Fixture unexpectedly completed a root proof");
                 limits.arm(limit);
                 while (!work.step()) {}
-                check(work.result().result() == GraphPlan.Result.valueOf(limit.name()), "Funded suffix or startup failure became root proof");
-                check(work.result().missingExact().isEmpty() && !b.failureDetail().startsWith("PROVEN_INFEASIBLE:"), "Unfinished preview/proof escaped");
+                var plan = work.result();
+                if (read(work, "positiveRefillVerified") != null) {
+                    check(plan == read(work, "positiveRefillVerified") && plan.conditionalPreview(),
+                            "Unexpanded suffix replaced the independently completed conditional witness");
+                    check(plan.patternTimes().equals(Map.of("grow", 1L, "finish", 1L)) && plan.missing().equals(Map.of("A", 1000L)),
+                            "Retained incomplete-boundary suffix instead of the complete positive program");
+                    MissingMaterialExpansionTest.verify(plan, Map.of("raw", 1001L));
+                    check(SequenceSummary.of(plan.steps(), plan.recipes()).delta("G").equals(java.math.BigInteger.ONE),
+                            "Conditional witness lost its manufacturing proof");
+                } else {
+                    check(plan.result() == GraphPlan.Result.valueOf(limit.name()), "Funded suffix or startup failure became root proof");
+                    check(plan.missingExact().isEmpty(), "Unfinished preview escaped without a completed boundary");
+                }
+                check(!b.failureDetail().startsWith("PROVEN_INFEASIBLE:"), "Unfinished preview became root proof");
             } finally { limits.close(); work.close(); }
             check(b.reservedBytes() == 0, "Unproved refill handoff leaked");
         }
     }
+    private static void ordinaryChainCutoff() throws Exception {
+        var chain = List.of(MissingMaterialExpansionTest.recipe("source", Map.of("raw", 1L), Map.of("middle", 1L)),
+                MissingMaterialExpansionTest.recipe("finish", Map.of("middle", 1L), Map.of("G", 1L)));
+        for (var limit : LIMITS) {
+            var limits = new Limits(); var b = limits.budget;
+            var work = new GraphPlanningWork<>(new GraphCompiler<>(chain), "G", 1, Map.of(), false, false, b);
+            try {
+                reach(work);
+                check(Boolean.TRUE.equals(read(work, "refillBoundaryPending")), "ordinary chain did not mark pending expansion");
+                @SuppressWarnings("unchecked") var expansion = (MissingMaterialExpansion<String>) read(work, "missingExpansion");
+                if (expansion.result() != null) {
+                    check(expansion.result().missing().equals(Map.of("raw", 1L)), "ordinary boundary contained an unexpanded intermediate");
+                    MissingMaterialExpansionTest.verify(expansion.result(), Map.of());
+                }
+                limits.arm(limit);
+                while (!work.step()) {}
+                if (!work.result().missingExact().isEmpty()) {
+                    check(work.result().missing().equals(Map.of("raw", 1L)), "ordinary chain published an intermediate shopping leaf");
+                    MissingMaterialExpansionTest.verify(work.result(), Map.of());
+                } else check(work.result().result() == GraphPlan.Result.INFEASIBLE,
+                        "ordinary chain lost its separately completed root proof");
+                var repeated = work.limited(new PlanningBudget.Exhausted(limit));
+                check(!repeated.missingExact().containsKey("middle"), "repeated publication revived an unexpanded ordinary intermediate");
+            } finally { limits.close(); work.close(); }
+            check(b.reservedBytes() == 0, "ordinary chain cutoff leaked workspace");
+        }
+    }
+
     private static List<CapturedCatalog.Entry<String>> entries() {
         var result = new ArrayList<CapturedCatalog.Entry<String>>();
         for (var recipe : recipes()) {

@@ -44,11 +44,23 @@ public final class GraphCoreTest {
                         Map.of("target", stored), true, true, budget);
                 while (!work.step()) {}
                 var plan = work.result();
-                eq(GraphPlan.Result.MISSING_INPUT, plan.result(), "Absent target source returns AE missing preview");
-                eq(Map.of("target", amount), plan.missing(), "New crafting must not reuse existing target stock");
-                eq(Map.of("target", amount), plan.initial(), "Funding the missing target satisfies delivery");
+                // A raw-target shopping leaf is not a forced manufacturing word.
+                eq(GraphPlan.Result.UNKNOWN, plan.result(), "Absent source cannot certify new target production");
+                eq(Map.of(), plan.missing(), "Missing target stock must not masquerade as forced manufacturing");
+                eq(Map.of(), plan.initial(), "Stored target cannot fund a new forced manufacture");
                 eq(Map.of(), plan.patternTimes(), "Missing target must not invent a recipe");
                 eq(true, budget.nodes() < 100, "Absent pattern must not enter alternative searches");
+                work.close();
+                eq(0L, budget.reservedBytes(), "Absent target workspace released");
+                var deliveryBudget = new PlanningBudget(0, 1000, () -> false);
+                var delivery = new GraphPlanningWork<>(new GraphCompiler<String>(List.of()), "target", amount,
+                        Map.of("target", amount), true, false, deliveryBudget);
+                while (!delivery.step()) {}
+                eq(true, delivery.result().feasible(), "Non-force delivery can use existing target stock");
+                eq(Map.of(), delivery.result().patternTimes(), "Stock delivery invented a recipe");
+                PlanVerifier.verify(delivery.result());
+                delivery.close();
+                eq(0L, deliveryBudget.reservedBytes(), "Stock delivery workspace released");
             }
         }
         var recipe = recipe("make", Map.of("raw", 1L), Map.of("target", 1L));
@@ -58,10 +70,12 @@ public final class GraphCoreTest {
         while (!funded.step()) {}
         eq(true, funded.result().feasible(), "Available source still crafts the request");
         eq(10L, funded.result().patternTimes().get("make"), "Existing target stock does not reduce a fresh order");
+        PlanVerifier.verify(funded.result()); funded.close();
         var emitted = new GraphPlanningWork<>(new GraphCompiler<String>(List.of()), "target", 10, Map.of(),
                 Set.of("target"), true, false, new PlanningBudget(0, 10000, () -> false));
         while (!emitted.step()) {}
         eq(true, emitted.result().feasible(), "External target supply is still executable without a pattern");
+        PlanVerifier.verify(emitted.result()); emitted.close();
     }
 
     private static void preparedCatalog() throws Exception {

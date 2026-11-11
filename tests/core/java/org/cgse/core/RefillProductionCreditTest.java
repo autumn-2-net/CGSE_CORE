@@ -5,139 +5,67 @@ package org.cgse.core;
 import java.math.BigInteger;
 import java.util.*;
 
-/** Target stock is a possible cycle seed, never a substitute for forced production. */
+/** A replacement word need not reproduce the previous word's batch surplus. */
 public final class RefillProductionCreditTest {
+    private static void check(boolean okay, String reason) { if (!okay) throw new AssertionError(reason); }
+    private static GraphRecipe<String> r(String id, long input, long output) {
+        return new GraphRecipe<>(id, id, List.of(new GraphRecipe.Slot<>("raw", input)), Map.of("T", output));
+    }
+    private static void complementaryRoutes() {
+        var random = new Random(2992026);
+        for (int trial = 0; trial <= 411; trial++) {
+            var recipes = new ArrayList<GraphRecipe<String>>(); var stock = new HashMap<String, Long>();
+            for (int i = 0; i < 6; i++) stock.put("k" + i, (long) random.nextInt(8));
+            for (int i = 0; i < 8; i++) {
+                var in = new LinkedHashMap<String, Long>(); var out = new LinkedHashMap<String, Long>();
+                for (int j = 0; j < 1 + random.nextInt(2); j++) in.merge("k" + random.nextInt(6), 1L + random.nextInt(3), Long::sum);
+                for (int j = 0; j < 1 + random.nextInt(2); j++) out.merge("k" + random.nextInt(6), 1L + random.nextInt(3), Long::sum);
+                recipes.add(new GraphRecipe<>("r" + i, "r" + i, in.entrySet().stream()
+                        .map(e -> new GraphRecipe.Slot<>(e.getKey(), e.getValue())).toList(), out));
+            }
+            int amount = 1 + random.nextInt(6);
+            if (trial != 232 && trial != 411) continue;
+            for (var mode : GraphMode.values()) {
+                var budget = new PlanningBudget(0, 131072, 16L << 20, () -> false, System::nanoTime);
+                var work = new GraphPlanningWork<>(new GraphCompiler<>(recipes), "k0", amount, stock,
+                        Set.of(), Map.of(), true, true, budget, mode);
+                try {
+                    while (!work.step()) {}
+                    var plan = work.result();
+                    var expected = trial == 232 ? Map.of("k1", BigInteger.valueOf(4)) :
+                            Map.of("k3", BigInteger.valueOf(mode == GraphMode.FULL ? 2 : 8));
+                    check(plan.missingExact().equals(expected), "Lost complementary stock/whole-source route: " + trial + " " + mode + " " + plan.missingExact());
+                    plan.initialExact().forEach((key, count) -> check(plan.missingExact().getOrDefault(key, BigInteger.ZERO)
+                            .equals(count.subtract(BigInteger.valueOf(stock.getOrDefault(key, 0L))).max(BigInteger.ZERO)), "Incorrect exact deficit"));
+                    check(SequenceSummary.of(plan.steps(), plan.recipes()).delta("k0").compareTo(BigInteger.valueOf(amount)) >= 0,
+                            "Stock loan replaced manufacturing");
+                    PlanVerifier.verify(new GraphPlan<>(plan.target(), plan.amount(), plan.preserveSeeds(), plan.steps(),
+                            plan.recipes(), plan.initialExact(), plan.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0));
+                } finally { work.close(); }
+                check(budget.reservedBytes() == 0, "Complementary route workspace leaked");
+            }
+        }
+    }
     public static void main(String[] args) {
-        for (int order = 0; order < 6; order++) for (long targetStock : new long[]{0, 1, 100}) {
-            checkCase(order, targetStock, false, false);
-            checkCase(order, targetStock, false, true);
-            checkCase(order, targetStock, true, false);
-        }
-        cancelledRepair();
-        System.out.println("RefillProductionCreditTest PASS: 54 ordered cycle/escape/growth witnesses, exact production and cancellation");
-    }
-
-    private static void checkCase(int order, long targetStock, boolean growth, boolean escape) {
-        var recipes = recipes(growth, escape);
-        Collections.shuffle(recipes, new Random(order));
-        Map<String, Long> stock = Map.of("G", targetStock);
-        var original = original(recipes, stock, growth);
-        var budget = budget();
-        GraphPlan<String> plan;
-        try (var expansion = new MissingMaterialExpansion<>(new GraphCompiler<>(recipes), original, stock,
-                Set.of(), Set.of(), true, false, budget)) {
-            while (!expansion.step()) {}
-            plan = expansion.result();
-        }
-        check(budget.reservedBytes() == 0, "retained production repair workspace");
-        check(plan != null, "lost funded suffix");
-        // Execute primitive firings from stock plus the advertised bill. Count
-        // net target production separately from the supplied target inventory.
-        var held = new HashMap<String, BigInteger>();
-        stock.forEach((k,v) -> held.put(k, BigInteger.valueOf(v)));
-        plan.missingExact().forEach((k,v) -> held.merge(k,v,BigInteger::add));
-        BigInteger before = held.getOrDefault("G", BigInteger.ZERO);
-        BigInteger[] target = {before, BigInteger.ZERO};
-        fire(plan.steps(), plan.recipes(), held, target);
-        // Productive growth may consume an initial target as startup material.
-        // Require positive net gain and newly manufactured deliverable tokens;
-        // neither initial stock nor a zero-gain turnover satisfies the order.
-        check(held.getOrDefault("G", BigInteger.ZERO).compareTo(before) > 0 &&
-                        target[1].compareTo(BigInteger.valueOf(plan.amount())) >= 0,
-                "refill spent verified production: " + plan.missingExact());
-        held.merge("G", BigInteger.valueOf(plan.amount()).negate(), BigInteger::add);
-        original.seeds().forEach((k,v) -> check(held.getOrDefault(k, BigInteger.ZERO).compareTo(BigInteger.valueOf(v)) >= 0,
-                "lost mandatory seed: " + k));
-        check(!plan.missingExact().containsKey("X"), "left an expandable downstream material");
-        if (!growth) check(plan.missingExact().equals(Map.of(escape ? "raw" : "A", BigInteger.TWO)),
-                "incorrect cycle/escape bill: " + plan.missingExact());
-    }
-
-    private static void cancelledRepair() {
-        var recipes = recipes(false, false);
-        var original = original(recipes, Map.of(), false);
-        // Include stops after prefix construction and after the one-time
-        // production repair, without depending on internal phase numbering.
-        for (int stop = 0; stop < 65; stop++) {
-            var cancel = new java.util.concurrent.atomic.AtomicBoolean();
-            var budget = new PlanningBudget(0, 1_000_000, 16L << 20, cancel::get, System::nanoTime);
-            try (var expansion = new MissingMaterialExpansion<>(new GraphCompiler<>(recipes), original, Map.of(),
-                    Set.of(), Set.of(), true, false, budget)) {
-                boolean done = false;
-                for (int i = 0; i < stop && !done; i++) done = expansion.step();
-                if (!done) {
-                    cancel.set(true);
-                    try { expansion.step(); throw new AssertionError("ignored cancellation"); }
-                    catch (java.util.concurrent.CancellationException expected) { /* Cooperative repair. */ }
-                }
+        var expensive = r("old", 3, 2); var cheap = r("replacement", 1, 1);
+        var recipes = List.of(expensive, cheap); var full = new GraphCompiler<>(recipes);
+        for (var mode : GraphMode.values()) {
+            var compiler = new GraphCompiler<>(recipes, mode, full.verificationCatalog());
+            var initial = Map.of("raw", BigInteger.valueOf(3));
+            var original = new GraphPlan<>("T", 1, false, new PlanStep.Batch("old", 1),
+                    Map.of("old", expensive), initial, Map.of(), initial, GraphPlan.Result.MISSING_INPUT, 0, 0);
+            var budget = new PlanningBudget(0, 131072, 16L << 20, () -> false, System::nanoTime);
+            try (var search = new RefillSourceSearch<>(compiler, original, Map.of(), Set.of(), Set.of(), true, false, budget)) {
+                while (!search.step()) {}
+                var plan = search.result();
+                check(plan.missingExact().equals(Map.of("raw", BigInteger.ONE)), mode + " preserved unnecessary old production: " + plan.missingExact());
+                check(SequenceSummary.of(plan.steps(), plan.recipes()).delta("T").equals(BigInteger.ONE), "Replacement exceeds requested production");
+                PlanVerifier.verify(new GraphPlan<>(plan.target(), plan.amount(), plan.preserveSeeds(), plan.steps(),
+                        plan.recipes(), plan.initialExact(), plan.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0));
             }
-            check(budget.reservedBytes() == 0, "cancelled repair retained workspace");
+            check(budget.reservedBytes() == 0, "Source refinement memory leaked");
         }
+        complementaryRoutes();
+        System.out.println("RefillProductionCreditTest PASS");
     }
-
-    private static void fire(PlanStep step, Map<String, GraphRecipe<String>> recipes, Map<String, BigInteger> held,
-                             BigInteger[] target) {
-        if (step instanceof PlanStep.Sequence seq) {
-            for (var child : seq.children()) fire(child, recipes, held, target);
-        } else if (step instanceof PlanStep.Repeat repeat) {
-            check(repeat.times() < 1000, "primitive oracle bound");
-            for (long i=0; i<repeat.times(); i++) fire(repeat.body(), recipes, held, target);
-        } else {
-            var batch = (PlanStep.Batch) step;
-            check(batch.runs() < 1000, "primitive oracle bound");
-            var recipe = recipes.get(batch.recipe());
-            for (long i=0; i<batch.runs(); i++) {
-                BigInteger consumed = BigInteger.valueOf(recipe.inputs().getOrDefault("G", 0L));
-                BigInteger old = target[0].min(consumed);
-                target[0] = target[0].subtract(old);
-                target[1] = target[1].subtract(consumed.subtract(old));
-                check(target[1].signum() >= 0, "unfunded target firing");
-                recipe.inputs().forEach((k,v) -> {
-                    var remaining = held.getOrDefault(k, BigInteger.ZERO).subtract(BigInteger.valueOf(v));
-                    check(remaining.signum() >= 0, "unfunded input " + k);
-                    held.put(k, remaining);
-                });
-                recipe.outputs().forEach((k,v) -> held.merge(k, BigInteger.valueOf(v), BigInteger::add));
-                target[1] = target[1].add(BigInteger.valueOf(recipe.outputs().getOrDefault("G", 0L)));
-            }
-        }
-    }
-
-    private static ArrayList<GraphRecipe<String>> recipes(boolean growth, boolean escape) {
-        var recipes = new ArrayList<GraphRecipe<String>>();
-        // W is a separate mandatory reserve. Its route consumes G, while G/A
-        // form a lower-rank SCC. Expansion must restore the spent G even when
-        // that requires adding an actual loan at the SCC boundary.
-        if (growth) recipes.add(recipe("grow", Map.of("G",1L,"feed",1L), Map.of("G",2L)));
-        recipes.add(recipe("finish", Map.of("A",1L), Map.of("G",1L)));
-        recipes.add(recipe("recycle", Map.of("G",1L), Map.of("A",1L)));
-        recipes.add(recipe("part", Map.of("G",1L), Map.of("X",1L)));
-        recipes.add(recipe("reserve", Map.of("X",1L), Map.of("W",1L)));
-        if (escape) recipes.add(recipe("escape", Map.of("raw",1L), Map.of("G",1L)));
-        return recipes;
-    }
-
-    private static GraphPlan<String> original(List<GraphRecipe<String>> recipes, Map<String, Long> stock, boolean growth) {
-        var indexed = new LinkedHashMap<String, GraphRecipe<String>>();
-        recipes.forEach(r -> indexed.put(r.id(),r));
-        var steps = new ArrayList<PlanStep>();
-        steps.add(new PlanStep.Batch("reserve",1)); steps.add(new PlanStep.Batch("finish",1));
-        if (growth) steps.add(new PlanStep.Batch("grow",1));
-        var word = new PlanStep.Sequence(steps);
-        long amount = growth ? 2 : 1;
-        var seeds = Map.of("W",1L);
-        var initial = PlanVerifier.initialExact(word,indexed,"G",amount,seeds);
-        var missing = new LinkedHashMap<String,BigInteger>();
-        initial.forEach((k,v) -> {
-            var gap = v.subtract(BigInteger.valueOf(stock.getOrDefault(k,0L)));
-            if (gap.signum() > 0) missing.put(k,gap);
-        });
-        return new GraphPlan<>("G",amount,true,word,indexed,initial,seeds,missing,GraphPlan.Result.MISSING_INPUT,0,0);
-    }
-
-    private static GraphRecipe<String> recipe(String id, Map<String,Long> inputs, Map<String,Long> outputs) {
-        return MissingMaterialExpansionTest.recipe(id,inputs,outputs);
-    }
-    private static PlanningBudget budget() { return new PlanningBudget(0, 2_000_000, 32L << 20, () -> false, System::nanoTime); }
-    private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
 }

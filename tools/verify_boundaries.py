@@ -17,7 +17,7 @@ def main():
     problems = []
     for source in sources:
         text = source.read_text('utf8')
-        if not text.startswith('package org.cgse.core;'):
+        if not re.match(r'\A(?:\s+|//[^\n]*(?:\n|\Z)|/\*.*?\*/)*package org\.cgse\.core;', text, re.S):
             problems.append(source.name + ': unexpected package')
         for name in re.findall(r'^import\s+(?:static\s+)?([^;]+);', text, re.M):
             if not name.startswith(('java.', 'org.cgse.core.')) or name.startswith('java.awt.'):

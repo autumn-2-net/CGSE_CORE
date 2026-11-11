@@ -77,7 +77,9 @@ public final class RefillWordPruningTest {
             check(b.reservedBytes() == 0, "Main workspace");
             b = MissingMaterialExpansionTest.budget(100_000);
             var fallback = GraphFallback.plan(compiler, "G", 1, Map.of(), Set.of(), Map.of(), false, force, b);
-            check(fallback.missing().equals(Map.of("A", 1000L, "raw", 1L)), "Fallback suffix");
+            check(fallback.result() == GraphPlan.Result.INCOMPLETE_MODEL &&
+                    fallback.missing().equals(Map.of("A", 1001L)) && !fallback.patternTimes().containsKey("grow"),
+                    "ACYCLIC executed physical growth or transferred its suffix bill");
             literalVerify(fallback, Map.of(), Set.of()); check(b.reservedBytes() == 0, "Fallback workspace");
         }
     }

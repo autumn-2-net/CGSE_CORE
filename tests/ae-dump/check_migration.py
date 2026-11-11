@@ -23,6 +23,8 @@ ROUTER_DESCRIPTOR = (
 )
 ROUTER_REUSE_DESCRIPTOR = ROUTER_DESCRIPTOR.replace(
     "ZZ)", "ZZLorg/cgse/core/RequestPlanningWork$ReuseCandidate;)")
+ROUTER_INVENTORY_DESCRIPTOR = ROUTER_REUSE_DESCRIPTOR.replace(
+    "ReuseCandidate;)", "ReuseCandidate;Lorg/gtlcore/gtlcore/integration/ae2/crafting/ManualCraftingInventoryLock$AvailabilityContext;)")
 
 
 def require(condition, message):
@@ -52,7 +54,9 @@ def static_checks():
     router = (JAVA / "mixin/RouterMixin.java").read_text(encoding="utf-8")
     require('method = "begin' + ROUTER_DESCRIPTOR + '"' in router, "Router JVM descriptor does not name the extracted checkpoint")
     require('method = "begin' + ROUTER_REUSE_DESCRIPTOR + '"' in router, "Missing current host reuse handoff descriptor")
-    require(router.count('@Group(name = "cgseBegin", min = 1, max = 1)') == 2,
+    require('method = "begin' + ROUTER_INVENTORY_DESCRIPTOR + '"' in router,
+            "Missing host inventory ownership handoff descriptor")
+    require(router.count('@Group(name = "cgseBegin", min = 1, max = 1)') == 3,
             "Exactly one supported host begin descriptor must bind")
     script = (TOOL / "build-with-core.init.gradle").read_text(encoding="utf-8")
     require("findProperty('cgseAeDumpDir')" in script and "p.file(location).canonicalFile" in script,
@@ -102,7 +106,7 @@ def main():
                                            "org.gtlcore.gtlcore.integration.ae2.graph.CraftingEngineRouter"],
                                           text=True, encoding="utf-8", timeout=30)
         require(any(re.search(r"\bbegin\([^\n]*\);\s+descriptor: " + re.escape(descriptor), bytecode)
-                    for descriptor in (ROUTER_DESCRIPTOR, ROUTER_REUSE_DESCRIPTOR)),
+                    for descriptor in (ROUTER_DESCRIPTOR, ROUTER_REUSE_DESCRIPTOR, ROUTER_INVENTORY_DESCRIPTOR)),
                 "Actual GTL Router.begin bytecode does not match a supported AEDUMP Mixin selector")
         print("AEDUMP Router Mixin descriptor matches compiled GTL host bytecode", flush=True)
 

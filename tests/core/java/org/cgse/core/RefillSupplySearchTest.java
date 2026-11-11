@@ -36,7 +36,7 @@ public final class RefillSupplySearchTest {
         return result;
     }
     public static void main(String[] args) throws Exception {
-        quantities(); obligations(); mainAndFallback(); restrictions(); largeCounts(); limits(); parentRetention(); scheduler(false); scheduler(true); constructorLimits();
+        quantities(); obligations(); mainAndFallback(); restrictions(); largeCounts(); limits(); parentRetention(); scheduler(false); scheduler(true); constructorLimits(); tradingCertificateRetention();
         System.out.println("RefillSupplySearchTest: assertions=" + checks);
     }
     private static void quantities() {
@@ -197,6 +197,8 @@ public final class RefillSupplySearchTest {
                 if (value != null && value.missing().containsKey("B") && value.missing().get("B") < 6 &&
                         value.missing().getOrDefault("feed", 0L) == 0) accepted = value;
             }
+            @SuppressWarnings("unchecked") var expansion = (MissingMaterialExpansion<String>) field(work, "missingExpansion");
+            check(expansion.productionVerifiedResult(accepted), "Completed cyclic improvement lost physical production certificate");
             b.charge(b.remainingWork());
             while (!work.step()) {}
             check(work.result() == accepted, "Parent limit lost a verified cyclic improvement");
@@ -204,6 +206,40 @@ public final class RefillSupplySearchTest {
         } finally { work.close(); }
         check(b.reservedBytes() == 0, "Parent publication lifecycle");
     }
+    private static void tradingCertificateRetention() throws Exception {
+        var stock = Map.of("feed", 4L); var f = fixture(stock, 1, false, 2);
+        var b = MissingMaterialExpansionTest.budget(4_000_000); var compiler = new GraphCompiler<>(f.recipes);
+        try (var order = new RefillProducerOrder<>(compiler, f.original.missingExact().keySet(), Set.of(), Set.of(), b)) {
+            while (!order.step()) {}
+            try (var work = new RefillSupplySearch<>(f.original, order, stock, Set.of(), true, false, b).tradeoffs(compiler, Set.of())) {
+                GraphPlan<String> incumbent = null; boolean reached = false;
+                for (int step = 0; step < 100_000 && !reached; step++) {
+                    check(!work.step(), "Never reached a pending tradeoff refinement");
+                    var selected = work.result();
+                    if (selected != f.original && work.productionVerifiedResult(selected)) incumbent = selected;
+                    if (incumbent != null && selected == incumbent && Boolean.TRUE.equals(field(work, "trading")) &&
+                            field(work, "phase").toString().equals("REFINE")) {
+                        reached = true;
+                        check(work.productionVerifiedResult(incumbent), "A new tradeoff candidate erased the selected word's certificate");
+                        var display = incumbent.withMissingSources(GraphPlan.MissingSource.UNASSESSED, Map.of())
+                                .withRefillCycles(List.of()).withAlternatives(List.of());
+                        check(display.netProductionVerified(), "Pure display metadata erased a physical proof");
+                        var changed = GraphPlan.ownedRefill(display, new PlanStep.Sequence(List.of()), display.recipes(),
+                                display.initialExact(), display.missingExact(), display.result(), display.searchNodes());
+                        check(!changed.netProductionVerified(), "Changed physical word inherited a stale production proof");
+                        b.charge(b.remainingWork());
+                        while (!work.step()) {}
+                        check(work.result() == incumbent && work.productionVerifiedResult(work.result()),
+                                "Tradeoff cutoff lost its selected certified incumbent");
+                        RefillWordPruningTest.literalVerify(work.result(), stock, Set.of());
+                    }
+                }
+                check(reached, "Tradeoff certificate retention boundary was not exercised");
+            }
+        }
+        check(b.reservedBytes() == 0, "Tradeoff certificate lifecycle leaked workspace");
+    }
+
     private static void constructorLimits() {
         var recipes = fixture(Map.of(), 0, false, 2).recipes.subList(0, 2);
         var stock = new LinkedHashMap<String, BigInteger>();

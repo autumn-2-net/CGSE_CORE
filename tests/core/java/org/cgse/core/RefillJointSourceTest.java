@@ -51,6 +51,15 @@ public final class RefillJointSourceTest {
                 if (order == 2) Collections.shuffle(recipes, new Random(20261020));
                 var stock = tool ? Map.of("tool", 1L, "raw", 1L) : Map.<String, Long>of();
                 var answer = solve(recipes, stock, entry);
+                if (tool && entry.equals("fallback")) {
+                    check(answer.result() == GraphPlan.Result.INCOMPLETE_MODEL &&
+                            answer.missing().equals(Map.of("A", 4 * quantity, "B", 4 * quantity)) &&
+                            !answer.patternTimes().containsKey("useX") && !answer.patternTimes().containsKey("useY"),
+                            "ACYCLIC restored physical returned-tool sources");
+                    // The identical input/order retains the original optimal
+                    // mixture oracle in both FULL and full refill entries.
+                    continue;
+                }
                 long raw = 2 * quantity - (tool ? 1 : 0);
                 check(answer.missing().equals(Map.of("raw", raw)), "Mixture " + quantity + "/" + order + "/" + tool + "/" + entry + ": " + answer.missing());
                 if (tool) check(answer.initial().get("tool") == 1L, "Multiplied shared startup entity");
@@ -68,7 +77,11 @@ public final class RefillJointSourceTest {
         for (String entry : List.of("expand", "fallback", "main")) {
             check(solve(direct, Map.of(), entry).missing().equals(Map.of("raw", 2L)), "One-hop joint sources " + entry);
             var answer = solve(routes(1, true), Map.of(), entry);
-            check(answer.missing().equals(Map.of("raw", 2L, "tool", 1L)), "Missing returned tool must be funded once " + entry);
+            check(answer.missing().equals(entry.equals("fallback") ? Map.of("A", 4L, "B", 4L) :
+                    Map.of("raw", 2L, "tool", 1L)), "Returned-tool domain bill " + entry);
+            if (entry.equals("fallback")) check(answer.result() == GraphPlan.Result.INCOMPLETE_MODEL &&
+                    !answer.patternTimes().containsKey("useX") && !answer.patternTimes().containsKey("useY"),
+                    "Restricted returned-tool source became executable");
         }
     }
     private static void exactCorners() {
@@ -154,13 +167,31 @@ public final class RefillJointSourceTest {
         var recipes = routes(1, false); BigInteger q = BigInteger.ONE.shiftLeft(80).add(BigInteger.valueOf(13));
         var word = new PlanStep.Sequence(List.of(PlanStep.batch("makeX", q.multiply(BigInteger.TWO)), PlanStep.batch("makeY", q),
                 PlanStep.batch("useX", q.multiply(BigInteger.TWO)), PlanStep.batch("useY", q), PlanStep.batch("finish", q)));
-        var bindings = new LinkedHashMap<String, GraphRecipe<String>>(); recipes.forEach(r -> bindings.put(r.id(), r));
+        var bindings = new LinkedHashMap<String, GraphRecipe<String>>(); for (var recipe : recipes) bindings.put(recipe.id(), recipe);
         var old = new GraphPlan<>("G", 1, false, word, bindings, Map.of("raw", q.multiply(BigInteger.valueOf(3))),
                 Map.of(), Map.of("raw", q.multiply(BigInteger.valueOf(3))), GraphPlan.Result.MISSING_INPUT, 0, 0);
         var answer = refine(recipes, old, Set.of(), Set.of(), budget());
-        check(answer.missingExact().equals(Map.of("raw", q.multiply(BigInteger.TWO))), "Large mixture counts narrowed");
+        // The original enormous word is retained as input evidence, but only
+        // one output is requested and there is no final reserve for its surplus.
+        check(answer.missingExact().equals(Map.of("raw", BigInteger.TWO)), "Unrequested old surplus became mandatory");
         var counts = answer.patternTimesExact();
-        for (var r : recipes) check(counts.get(r.id()).equals(q), "Lost exact forced credit " + r.id());
+        for (var r : recipes) check(counts.get(r.id()).equals(BigInteger.ONE), "Unrequested old count retained " + r.id());
+        PlanVerifier.verify(GraphPlan.ownedRefill(answer, answer.steps(), answer.recipes(), answer.initialExact(), Map.of(), GraphPlan.Result.FEASIBLE, 0));
+        // A real long-sized order with doubled recipe inputs requires each
+        // balanced branch to execute 2*MAX batches. Four units of A+B per
+        // branch batch independently bound raw below by 4*MAX, attained here.
+        recipes = routes(2, false);
+        BigInteger amount = BigInteger.valueOf(Long.MAX_VALUE), branch = amount.multiply(BigInteger.TWO);
+        word = new PlanStep.Sequence(List.of(PlanStep.batch("makeX", branch.multiply(BigInteger.TWO)), PlanStep.batch("makeY", branch),
+                PlanStep.batch("useX", branch.multiply(BigInteger.TWO)), PlanStep.batch("useY", branch), PlanStep.batch("finish", amount)));
+        bindings = new LinkedHashMap<>(); for (var recipe : recipes) bindings.put(recipe.id(), recipe);
+        old = new GraphPlan<>("G", Long.MAX_VALUE, false, word, bindings, Map.of("raw", branch.multiply(BigInteger.valueOf(3))),
+                Map.of(), Map.of("raw", branch.multiply(BigInteger.valueOf(3))), GraphPlan.Result.MISSING_INPUT, 0, 0);
+        answer = refine(recipes, old, Set.of(), Set.of(), budget());
+        check(answer.missingExact().equals(Map.of("raw", amount.multiply(BigInteger.valueOf(4)))), "Actual large mixture demand narrowed");
+        counts = answer.patternTimesExact();
+        for (var recipe : recipes) check(counts.get(recipe.id()).equals(recipe.id().equals("finish") ? amount : branch),
+                "Actual required BigInteger count narrowed: " + recipe.id());
         PlanVerifier.verify(GraphPlan.ownedRefill(answer, answer.steps(), answer.recipes(), answer.initialExact(), Map.of(), GraphPlan.Result.FEASIBLE, 0));
     }
     private static void limits() throws Exception {

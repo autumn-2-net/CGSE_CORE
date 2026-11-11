@@ -29,27 +29,32 @@ public final class RequestCoverageTest {
     }
 
     private static void naturalCounterexample() throws Exception {
-        // Sweep the proof/preview handoff instead of depending on one exact
-        // instruction count. Faster refill construction may finish at 256 now.
+        // Sweep resource, scoped-proof and completed-preview outcomes instead
+        // of depending on one exact instruction count. A retained manufacturing
+        // certificate can legitimately skip another verification phase; do not
+        // require an artificial extra limit between proof and preview.
         // A legal omitted producer is independently shown feasible below.
         var recipes = chain();
-        boolean proof = false, preview = false;
+        boolean proof = false, preview = false, limited = false;
         PlanningBudget b;
-        for (long cap = 192; cap <= 320; cap += 16) {
+        for (long cap = 32; cap <= 512; cap += 16) {
             b = budget(cap);
             var request = request(recipes, Map.of("funded", 1L), false, true, b, report -> {});
             try {
-                run(request, b);
-                throw new AssertionError("Restricted proof unexpectedly became a plan");
+                var plan = run(request, b);
+                check(plan.conditionalPreview() && !plan.feasible(), "Restricted proof became an executable plan");
+                funded(plan);
+                preview = true;
             } catch (ExecutionException failure) {
-                check(PlanningFailure.result(failure) == GraphPlan.Result.INCOMPLETE_MODEL,
+                var reason = PlanningFailure.result(failure);
+                check(reason == GraphPlan.Result.INCOMPLETE_MODEL || reason == GraphPlan.Result.SEARCH_LIMIT,
                         "Natural restricted proof escaped as " + PlanningFailure.result(failure));
+                limited |= reason == GraphPlan.Result.SEARCH_LIMIT;
                 proof |= b.failureDetail().contains("captured_result=INFEASIBLE");
-                preview |= b.failureDetail().contains("captured_result=MISSING_INPUT");
             }
             check(b.reservedBytes() == 0, "Natural handoff leaked ownership");
         }
-        check(proof && preview, "Natural proof/preview boundary was not exercised");
+        check(proof && preview && limited, "Natural resource/proof/preview boundaries were not exercised");
         var complete = new ArrayList<>(recipes);
         complete.add(recipe("omitted", "funded", "x0"));
         for (boolean reverse : new boolean[]{false, true}) {
@@ -86,16 +91,13 @@ public final class RequestCoverageTest {
                 var request = request(chain(), Map.of(), fallback, bounded, b, observed::set);
                 try {
                     var plan = run(request, b);
-                    check(!bounded || fallback, "Restricted missing preview escaped without fallback marking");
-                    check(plan.result() == GraphPlan.Result.MISSING_INPUT && !plan.missingExact().isEmpty(), "Missing preview lost");
-                    check(request.fallbackMode() == bounded, "Fallback presentation flag wrong");
-                    if (bounded) check(observed.get().trigger() == GraphPlan.Result.INCOMPLETE_MODEL,
-                            "Incomplete capture mislabeled as exhausted search");
-                    else check(observed.get() == null, "Complete missing preview needlessly fell back");
+                    check(plan.result() == (bounded ? GraphPlan.Result.INCOMPLETE_MODEL : GraphPlan.Result.MISSING_INPUT)
+                            && !plan.missingExact().isEmpty(), "Missing preview lost or mislabeled");
+                    check(!request.fallbackMode() && observed.get() == null, "Verified main preview triggered ACYCLIC");
+                    funded(plan);
                     check(request.reuseCandidate() == null, "Missing preview exported as reusable solution");
                 } catch (ExecutionException failure) {
-                    check(bounded && !fallback && PlanningFailure.result(failure) == GraphPlan.Result.INCOMPLETE_MODEL,
-                            "Unexpected missing-preview failure " + failure);
+                    throw new AssertionError("Verified missing preview was discarded", failure);
                 }
             }
         }
@@ -121,19 +123,21 @@ public final class RequestCoverageTest {
         check(request.fallbackMode() && !request.result().missingExact().isEmpty(), "Fallback of restricted proof did not produce scoped preview");
         request.close();
 
-        // A retained full-order missing preview in craft-less search must cross
-        // the same coverage guard when a later probe exhausts its allowance.
+        // A verified bill survives a later limit with conditional coverage;
+        // missing alternatives do not erase an already checked physical word.
         for (boolean attempted : new boolean[]{false, true}) {
             b = budget(1_000_000);
             request = request(chain(), Map.of(), attempted, true, b, report -> {});
-            set(request, "selected", outcome(GraphPlan.Result.MISSING_INPUT, Map.of("x4", 1L)));
+            var supply = new GraphPlanner<>(new GraphCompiler<>(chain())).plan("x0", 1, Map.of(), false, true, budget(1_000_000));
+            funded(supply);
+            set(request, "selected", supply);
             set(request, "partialSearch", true);
             set(request, "fallbackAttempted", attempted);
             try {
-                request.limited(new PlanningBudget.Exhausted(PlanningBudget.Limit.SEARCH_LIMIT));
-                throw new AssertionError("Retained restricted missing preview escaped at limit");
-            } catch (PlanningFailure failure) {
-                check(failure.result() == GraphPlan.Result.INCOMPLETE_MODEL, "Retained preview reported wrong outcome");
+                var retained = request.limited(new PlanningBudget.Exhausted(PlanningBudget.Limit.SEARCH_LIMIT));
+                check(retained.conditionalPreview() && !request.fallbackMode(), "Verified conditional bill was replaced");
+                check(retained.missingExact().equals(supply.missingExact()), "Retained bill changed at limit");
+                funded(retained);
             } finally { request.close(); }
         }
     }
@@ -336,6 +340,11 @@ public final class RequestCoverageTest {
 
     private static GraphPlan<String> outcome(GraphPlan.Result result, Map<String, Long> missing) {
         return new GraphPlan<>("x0", 1, false, new PlanStep.Sequence(List.of()), Map.of(), Map.of(), Map.of(), missing, result, 0, 0);
+    }
+
+    private static void funded(GraphPlan<String> plan) {
+        PlanVerifier.verify(new GraphPlan<>(plan.target(), plan.amount(), plan.preserveSeeds(), plan.steps(), plan.recipes(),
+                plan.initialExact(), plan.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, plan.searchNodes(), plan.planningNanos()));
     }
 
     private static List<GraphRecipe<String>> chain() {

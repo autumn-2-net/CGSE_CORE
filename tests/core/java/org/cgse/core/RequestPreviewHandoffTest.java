@@ -24,12 +24,13 @@ public final class RequestPreviewHandoffTest {
                     var exhausted = new PlanningBudget.Exhausted(limit);
                     try {
                         var retained = request.limited(exhausted);
-                        check(!bounded, "Restricted ordinary proof escaped its coverage guard");
+                        check(retained.result() == (bounded ? GraphPlan.Result.INCOMPLETE_MODEL : GraphPlan.Result.MISSING_INPUT),
+                                "Retained preview lost its capture coverage");
                         check(retained.amount() == 5 && retained.missing().equals(Map.of("raw", 10L)), "Completed refill was lost");
                         verify(retained);
                         check(!request.fallbackMode() && request.reuseCandidate() == null, "Preview gained fallback or feasibility provenance");
                     } catch (PlanningBudget.Exhausted failure) {
-                        check(bounded && failure == exhausted, "Complete refill was replaced by a resource failure");
+                        throw new AssertionError("Verified full-order refill was replaced by a resource failure", failure);
                     }
                 } finally { request.close(); }
                 check(b.reservedBytes() == 0, "Handoff leaked workspace");
@@ -74,6 +75,7 @@ public final class RequestPreviewHandoffTest {
 
     private static void verify(GraphPlan<String> p) {
         check(!p.feasible(), "Unfunded preview became executable");
+        check(p.patternTimes().equals(Map.of("make", p.amount())), "Supplied target replaced actual manufacturing");
         PlanVerifier.verify(new GraphPlan<>(p.target(), p.amount(), p.preserveSeeds(), p.steps(), p.recipes(), p.initialExact(),
                 p.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, p.searchNodes(), p.planningNanos()));
     }

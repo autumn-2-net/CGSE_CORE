@@ -85,8 +85,14 @@ public final class RefillSourceSearchTest {
             var recipes = routes(1, 7, false, false, tool);
             Map<String, Long> stock = tool ? Map.of("raw", held, "tool", 1L) : Map.of("raw", held);
             var answer = solve(recipes, stock, "fallback");
-            check(answer.missing().equals(Map.of("raw", 7 - held)), "Stock/tool changed terminal normalization");
-            if (tool) check(answer.initial().get("tool") == 1, "Returned tool was multiplied");
+            if (tool) {
+                check(answer.result() == GraphPlan.Result.INCOMPLETE_MODEL && answer.missing().equals(Map.of("A", 7L)) &&
+                        !answer.patternTimes().containsKey("useX") && !answer.patternTimes().containsKey("useY"),
+                        "ACYCLIC restored physical returned-tool sources");
+                var full = solve(recipes, stock, "main");
+                check(full.missing().equals(Map.of("raw", 7 - held)), "FULL lost original returned-tool terminal normalization");
+                check(full.initial().get("tool") == 1, "FULL multiplied returned tool");
+            } else check(answer.missing().equals(Map.of("raw", 7 - held)), "Stock changed terminal normalization");
         }
         var recipes = routes(1, 1, true, false, false);
         var original = oldPlan(recipes, Map.of());
@@ -227,7 +233,10 @@ public final class RefillSourceSearchTest {
         try (var work = new RefillSourceSearch<>(new GraphCompiler<>(recipes), plan, Map.of(), Set.of(), Set.of(), true, false, b)) {
             while (!work.step()) {}
             var answer = work.result();
-            check(answer.missingExact().equals(Map.of("raw", n)), "Clipped exact count or forced production");
+            BigInteger obligation = BigInteger.valueOf(Long.MAX_VALUE).multiply(BigInteger.TWO);
+            check(answer.missingExact().equals(Map.of("raw", obligation)), "Clipped exact delivery plus final reserve");
+            check(answer.patternTimesExact().get("finish").equals(obligation), "Exact obligation count narrowed");
+            check(answer.seeds().equals(Map.of("G", Long.MAX_VALUE)), "Final reserve changed");
             PlanVerifier.verify(GraphPlan.ownedRefill(answer, answer.steps(), answer.recipes(), answer.initialExact(), Map.of(), GraphPlan.Result.FEASIBLE, 0));
         }
         check(b.reservedBytes() == 0, "Exact count workspace");
