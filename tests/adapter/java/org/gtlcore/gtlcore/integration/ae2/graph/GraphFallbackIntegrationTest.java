@@ -26,7 +26,7 @@ public final class GraphFallbackIntegrationTest {
     }
     static void check(boolean ok,String why){if(!ok)throw new AssertionError(why);}
     static Object work(AEKey input,AEKey target,IPatternDetails binding,boolean bounded,boolean cancelled,boolean prepared)throws Exception {
-        var budget=new PlanningBudget(0,1,()->false);
+        var budget=new PlanningBudget(0,10_000,()->false);
         var request=new GraphPlanningRequest(budget);
         var constructor=type.getDeclaredConstructors()[0];constructor.setAccessible(true);
         Object[] arguments={null,new CompletableFuture<>(),target,7L,CalculationStrategy.REPORT_MISSING_ITEMS,budget,null,true,request};
@@ -52,6 +52,20 @@ public final class GraphFallbackIntegrationTest {
     static AeGraphPlan limited(Object w,PlanningBudget.Limit limit) {
         return (AeGraphPlan)((PlanningScheduler.Work<?>)w).limited(new PlanningBudget.Exhausted(limit));
     }
+    static void verifyPreview(GraphPlan<AEKey> plan,AEKey input,AEKey target) {
+        PlanVerifier.verify(new GraphPlan<>(plan.target(),plan.amount(),plan.preserveSeeds(),plan.steps(),plan.recipes(),
+                plan.initialExact(),plan.seeds(),Map.of(),GraphPlan.Result.FEASIBLE,0,0));
+        check(SequenceSummary.of(plan.steps(),plan.recipes()).delta(target).compareTo(java.math.BigInteger.valueOf(7))>=0,
+                "Target stock replaced actual manufacturing");
+        var keys=new HashSet<>(plan.initialExact().keySet());keys.addAll(plan.missingExact().keySet());
+        for(AEKey key:keys){
+            long stock=key.equals(input)?5:key.equals(target)?100:0;
+            var expected=plan.initialExact().getOrDefault(key,java.math.BigInteger.ZERO)
+                    .subtract(java.math.BigInteger.valueOf(stock)).max(java.math.BigInteger.ZERO);
+            check(plan.missingExact().getOrDefault(key,java.math.BigInteger.ZERO).equals(expected),"Declared AE bill disagrees with real stock");
+        }
+        for(var actual:plan.recipes().values())check(actual.binding().equals("binding"),"Preview escaped captured source binding");
+    }
     static void reject(Object w,PlanningBudget.Limit limit) {
         try{limited(w,limit);throw new AssertionError("fallback bypassed "+limit);}catch(PlanningBudget.Exhausted expected){check(expected.limit()==limit,"failure changed");}
     }
@@ -62,10 +76,29 @@ public final class GraphFallbackIntegrationTest {
             ConfigHolder.INSTANCE=new ConfigHolder();
             check(ConfigHolder.INSTANCE.ae.ae2GraphFallback,"fallback not enabled by default");
             for(var limit:List.of(PlanningBudget.Limit.SEARCH_LIMIT,PlanningBudget.Limit.TIMEOUT,PlanningBudget.Limit.MEMORY_LIMIT,PlanningBudget.Limit.GRAPH_LIMIT)) {
-                var result=limited(work(input,target,binding,false,false,true),limit);
-                check(result.fallback()&&result.simulation()&&result.missingItems().get(input)==1,"wrong routed fallback");
-                check(result.patternTimes().get(binding)==3&&result.graph().seeds().isEmpty(),"binding or seed leak");
+                Object owner=work(input,target,binding,false,false,true);
+                try {
+                    var result=limited(owner,limit);
+                    check(result.fallback()&&result.simulation()&&result.missingItems().get(input)==1,"wrong routed fallback");
+                    check(result.patternTimes().get(binding)==3&&result.graph().seeds().isEmpty(),"binding or seed leak");
+                    verifyPreview(result.graph(),input,target);
+                } finally { ((PlanningScheduler.Work<?>)owner).close(); }
             }
+            // A physically verified main supply preview ends this request.
+            // It must not launch another graph domain just because it is missing stock.
+            var recipe=new GraphRecipe<AEKey>("fallback","binding",List.of(new GraphRecipe.Slot<>(input,2)),Map.of(target,3L));
+            var mainPlan=new GraphPlanner<>(new GraphCompiler<>(List.of(recipe))).plan(target,7,Map.of(input,5L,target,100L),true,true,
+                    new PlanningBudget(0,10_000,()->false));
+            check(!mainPlan.feasible()&&!mainPlan.missingExact().isEmpty(),"Main preview fixture did not reach a supply bill");
+            Object main=work(input,target,binding,false,false,true);
+            try {
+                field(main,"selected",mainPlan);
+                check(finish(main),"valid main preview did not finish");
+                var result=(AeGraphPlan)((PlanningScheduler.Work<?>)main).result();
+                check(!result.fallback()&&result.simulation()&&result.missingItems().get(input)==1,
+                        "Valid main preview incorrectly started ACYCLIC");
+                verifyPreview(result.graph(),input,target);
+            } finally { ((PlanningScheduler.Work<?>)main).close(); }
             Object unknown=work(input,target,binding,true,false,true);
             check(finish(unknown),"UNKNOWN fallback did not finish");
             check(((AeGraphPlan)((PlanningScheduler.Work<?>)unknown).result()).fallback(),"bounded alternatives lost marker");

@@ -169,11 +169,21 @@ public final class GraphUiRegressionTest {
                 selected.add(new GraphRecipe<>(row.id(), row.id(), slots, outputs));
                 if (row.count().signum() == 0) references++;
             }
-            check(references > 0, "Missing cycle source recipe in native view");
             var topology = new PlanTopology<>(selected);
             var sourceGroups = GraphRingProjection.sourceCycleGroups(topology, Map.copyOf(recipeRows));
-            check(!sourceGroups.isEmpty(), "Reference cycle looks like an execution cycle");
-            for (var key : plan.missingExact().keySet()) {
+            if (fallback) {
+                // ACYCLIC is compiled before solving. Its view must not re-import
+                // the original cycle merely to decorate a restricted supply bill.
+                check(references == 0 && sourceGroups.isEmpty() && topology.groups().stream().noneMatch(g -> g.cyclic()),
+                        "Acyclic retry reintroduced source-cycle analysis in the native view");
+                check(!plan.missingExact().isEmpty(), "Empty-stock acyclic fixture lost its supply bill");
+                PlanVerifier.verify(new GraphPlan<>(plan.target(), plan.amount(), plan.preserveSeeds(), plan.steps(),
+                        plan.recipes(), plan.initialExact(), plan.seeds(), Map.of(), GraphPlan.Result.FEASIBLE, 0, 0));
+            } else {
+                check(references > 0, "Missing FULL cycle source recipe in native view");
+                check(!sourceGroups.isEmpty(), "Reference cycle looks like an execution cycle");
+            }
+            for (var key : fallback ? Set.<AEKey>of() : plan.missingExact().keySet()) {
                 var node = topology.nodes().stream().filter(n -> key.equals(n.resource())).findFirst().orElseThrow();
                 check(topology.groups().get(topology.groupOf(node.id())).cyclic(), "Cycle lost between planner and rendered topology");
                 var row = projection.rows().stream().filter(r -> r.kind() == GraphRingView.Kind.RESOURCE && key.equals(r.icon().what())).findFirst().orElseThrow();
@@ -186,6 +196,6 @@ public final class GraphUiRegressionTest {
             check(GraphRingProjection.sourceCycleGroups(topology, Map.copyOf(executedRows)).isEmpty(), "Executed cycle labelled as source-only");
             check(budget.reservedBytes() == 0, "Native view test workspace leaked");
         }
-        System.out.println("UI refill cycles: main/fallback Long.MAX_VALUE packet, projection and topology passed");
+        System.out.println("UI refill cycles: FULL source cycles and ACYCLIC domain, Long.MAX_VALUE packet/projection/topology passed");
     }
 }

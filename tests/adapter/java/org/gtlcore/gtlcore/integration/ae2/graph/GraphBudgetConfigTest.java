@@ -32,8 +32,8 @@ final class GraphBudgetConfigTest {
             migration();
             configuredAccounts();
             retainedCacheLimit(input, output);
-            routedFallback(input, output, 1, false);
-            routedFallback(input, output, 10_000, true);
+            routedFallback(input, output, 1);
+            routedFallback(input, output, 10_000);
             System.out.println("Graph budget configuration: YAML migration/priority/defaults/ranges, independent accounts, INT_MAX parallel expansion and routed fallback passed");
         } finally { ConfigHolder.INSTANCE = previous; }
     }
@@ -88,7 +88,7 @@ final class GraphBudgetConfigTest {
                 !mixed.ae.ae2GraphFallback, "AE values or legacy performance budgets were lost");
         check(mixed.performance.ae2StorageServiceUpdateInterval == 7, "Unrelated performance setting changed");
         check(mixed.ae.ae2GraphCompilerMaxSteps == 0 && mixed.ae.ae2GraphCachePreparationMaxSteps == 8192 &&
-                mixed.ae.ae2GraphFallbackTimeoutMs == 250 && mixed.ae.ae2GraphFallbackMaxSteps == 131072 &&
+                mixed.ae.ae2GraphFallbackTimeoutMs == 0 && mixed.ae.ae2GraphFallbackMaxSteps == 131072 &&
                 mixed.ae.ae2GraphFallbackMemoryMiB == 16, "New settings did not use compatible defaults");
         var legacy = load("old-category", migrate(old.replace("ae:\n  ae2GraphPlannerMaxSteps: 91000\n", "")));
         check(legacy.ae.ae2GraphPlannerMaxSteps == 71000, "Flat key overwrote the old category");
@@ -193,7 +193,7 @@ final class GraphBudgetConfigTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static void routedFallback(AEKey input, AEKey output, int fallbackWork, boolean expected) throws Exception {
+    private static void routedFallback(AEKey input, AEKey output, int fallbackWork) throws Exception {
         ConfigHolder.INSTANCE = new ConfigHolder();
         ConfigHolder.INSTANCE.diagnostics.ae2GraphDiagnosticLogging = false;
         ConfigHolder.INSTANCE.ae.ae2GraphFallbackTimeoutMs = 0;
@@ -203,7 +203,8 @@ final class GraphBudgetConfigTest {
         outputs.add(GenericStack.writeTag(new GenericStack(output, 1)));
         tag.put("in", inputs); tag.put("out", outputs);
         var binding = new AEProcessingPattern(AEItemKey.of(Items.PAPER, tag));
-        var budget = new PlanningBudget(0, 1, () -> false);
+        long configuredWork = 10_000;
+        var budget = new PlanningBudget(0, configuredWork, 64L << 20, () -> false, System::nanoTime);
         var recipe = new GraphRecipe<AEKey>("make", "binding", List.of(new GraphRecipe.Slot<>(input, 1)), Map.of(output, 1L));
         var catalog = new CapturedPatternCatalog(List.of(), 1);
         var prepared = CapturedPatternCatalog.class.getDeclaredField("prepared"); prepared.setAccessible(true);
@@ -215,18 +216,67 @@ final class GraphBudgetConfigTest {
         var work = (PlanningScheduler.Work<ICraftingPlan>) constructor.newInstance(null,
                 CompletableFuture.completedFuture(snapshot), output, 1L, CalculationStrategy.REPORT_MISSING_ITEMS,
                 budget, null, true, new GraphPlanningRequest(budget), null);
-        // A subsequent config reload must not change an already captured request.
-        ConfigHolder.INSTANCE.ae.ae2GraphFallbackMaxSteps = expected ? 1 : 10_000;
-        try (var scheduler = new PlanningScheduler(1, 2, 128, 2_000_000)) {
-            try {
-                var result = (AeGraphPlan) scheduler.submit(work, budget).get(10, TimeUnit.SECONDS);
-                check(expected && result.fallback() && !result.simulation(), "Router did not apply captured fallback cap");
-                PlanVerifier.verify(result.graph());
-            } catch (ExecutionException failure) {
-                check(!expected && PlanningFailure.result(failure) == GraphPlan.Result.SEARCH_LIMIT, "Unexpected routed failure: " + failure);
-                check(budget.diagnostics().contains("stopped=SEARCH_LIMIT"), "Failure occurred before configured fallback");
+        // Retired per-fallback settings cannot alter either primary configuration.
+        ConfigHolder.INSTANCE.ae.ae2GraphFallbackMaxSteps = fallbackWork == 1 ? 10_000 : 1;
+        var armed = new java.util.concurrent.atomic.AtomicBoolean();
+        var fresh = new java.util.concurrent.atomic.AtomicReference<PlanningBudget>();
+        var retiredWork = new java.util.concurrent.atomic.AtomicLong(-1);
+        var observing = new PlanningScheduler.Work<ICraftingPlan>() {
+            public boolean advance(PlanningScheduler.Slice slice) {
+                try {
+                    var field = type.getDeclaredField("planning"); field.setAccessible(true);
+                    var planning = (RequestPlanningWork<?>) field.get(work);
+                    if (planning != null && armed.compareAndSet(false, true)) {
+                        // Exhaust only after real host preparation. Enter the
+                        // same advance before yielding so the inner coordinator
+                        // owns the handoff, rather than a synchronous limited().
+                        var method = PlanningBudget.class.getDeclaredMethod("charge", long.class); method.setAccessible(true);
+                        try { method.invoke(budget, configuredWork + 1); throw new AssertionError("Parent account was not exhausted"); }
+                        catch (InvocationTargetException expected) {
+                            check(expected.getCause() instanceof PlanningBudget.Exhausted exhausted &&
+                                    exhausted.limit() == PlanningBudget.Limit.SEARCH_LIMIT, "Wrong primary limit");
+                        }
+                    }
+                    boolean done = work.advance(slice);
+                    var active = work.activeBudget();
+                    if (active != null && active != budget && fresh.compareAndSet(null, active)) {
+                        check(armed.get() && active.searchWork() < configuredWork, "Recovery inherited spent work");
+                        var maximum = PlanningBudget.class.getDeclaredField("maxNodes"); maximum.setAccessible(true);
+                        var bytes = PlanningBudget.class.getDeclaredField("maxBytes"); bytes.setAccessible(true);
+                        check(maximum.getLong(active) == configuredWork && maximum.getLong(budget) == configuredWork,
+                                "Recovery changed the configured primary work cap");
+                        check(bytes.getLong(active) == bytes.getLong(budget), "Recovery changed configured memory");
+                        var compilation = PlanningBudget.class.getDeclaredField("maxCompilationNodes"); compilation.setAccessible(true);
+                        var timeout = PlanningBudget.class.getDeclaredField("timeoutNanos"); timeout.setAccessible(true);
+                        check(compilation.getLong(active) == compilation.getLong(budget) && timeout.getLong(active) == timeout.getLong(budget),
+                                "Recovery changed configured compilation or time cap");
+                        retiredWork.set(budget.searchWork());
+                    }
+                    return done;
+                } catch (ReflectiveOperationException failure) { throw new AssertionError(failure); }
             }
+            // This must delegate through the actual host wrapper: omitting its
+            // activeBudget override would resume the cancelled primary account.
+            public PlanningBudget activeBudget() { return work.activeBudget(); }
+            public CompletableFuture<?> waitingFor() { return work.waitingFor(); }
+            public ICraftingPlan result() { return work.result(); }
+            public ICraftingPlan limited(PlanningBudget.Exhausted limit) { return work.limited(limit); }
+            public void close() { work.close(); }
+        };
+        try (var scheduler = new PlanningScheduler(1, 2, 128, 2_000_000)) {
+            var result = (AeGraphPlan) scheduler.submit(observing, budget).get(10, TimeUnit.SECONDS);
+            check(armed.get() && fresh.get() != null && result.fallback() && !result.simulation(),
+                    "Router did not resume an independent same-configuration primary call");
+            check(budget.searchWork() == retiredWork.get() && fresh.get().searchWork() > 0,
+                    "Recovery work was charged to the retired primary account");
+            check(result.graph().amount() == 1 && result.graph().patternTimes().equals(Map.of("make", 1L)),
+                    "Recovery changed the original request or physical binding");
+            PlanVerifier.verify(result.graph());
+            for (var entry : result.graph().initialExact().entrySet())
+                check(entry.getValue().compareTo(java.math.BigInteger.valueOf(entry.getKey().equals(input) ? 2L : 0L)) <= 0,
+                        "Recovery spent unavailable stock");
         }
+        check(budget.reservedBytes() == 0 && fresh.get().reservedBytes() == 0, "Routed recovery leaked account ownership");
     }
 
     private static Object charge(PlanningBudget b, String name, long amount) throws Exception {
